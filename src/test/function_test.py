@@ -80,7 +80,7 @@ def test_environment() -> bool:
         qdrant = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"))
 
         # Test connection
-        collections = qdrant.get_collections()
+        qdrant.get_collections()
         print("✅ Qdrant connection successful")
 
     except Exception as e:
@@ -90,7 +90,7 @@ def test_environment() -> bool:
     return True
 
 
-def test_chunker():
+def test_chunker() -> bool:
     """Test the code chunker with sample files."""
     print("\n🔧 Testing Code Chunker...")
 
@@ -185,7 +185,7 @@ const userService = new UserService('https://api.example.com');
     return True
 
 
-async def test_full_workflow(test_path: str | None = None):
+async def test_full_workflow(test_path: str | None = None) -> bool:
     # sourcery skip: avoid-global-variables, no-long-functions
     """Test the complete indexing and search workflow."""
     print("\n🚀 Testing Full Workflow...")

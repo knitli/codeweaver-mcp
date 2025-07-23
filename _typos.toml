@@ -19,6 +19,7 @@ extend-ignore-identifiers-re = [
   "i18n-tc",
   "strat",
   "Inferrable",
+  "typ",
 ]
 
 [files]
@@ -34,6 +35,7 @@ extend-exclude = [
   "external",
   "vendor",
   ".git",
+  ".venv/**/*",
   "/usr/share/code/**/*",
   "eslint.config.mjs",
   "docs/manifest.json",

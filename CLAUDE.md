@@ -134,10 +134,14 @@ The system supports 20+ programming languages with proper AST-aware chunking:
 ## Development Notes
 
 ### Code Style
-- Uses Google docstring convention
+- Uses Google docstring convention with plain language, active voice, and present tense
+- DO NOT USE f-strings in *logging* statements
 - Line length: 100 characters
 - Auto-fixes enabled in ruff configuration
-- Type hints required for public functions
+- Type hints required for public functions (encouraged for all)
+- Use modern Python typing (>=3.11): `typing.Self`, `typing.Literal`, piped unions (`int | str`), constructors-as-types (`list[str]`), etc.
+- **strong typing**: Use `typing.TypedDict` for structured data, `typing.Protocol` for interfaces, `typing.NamedTuple` for immutable data structures, and `enum.Enum` types for fixed sets of values.
+  - Avoid generic types like dict[str, Any] if your know the structure -- use TypedDict or NamedTuple instead.
 
 ### Dependencies
 - **Production**: `ast-grep-py`, `fastmcp`, `qdrant-client`, `rignore`, `watchdog`

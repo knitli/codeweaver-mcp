@@ -3,9 +3,9 @@ import "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Builtins.
 
 local linters = new Mapping<String, Step> {
     // uses builtin prettier linter config
-    ["actionlint"] = Builtins.actionlint,
+    ["actionlint"] = Builtins.actionlint
 
-    ["taplo"] = Builtins.taplo,
+    ["taplo"] = Builtins.taplo
         // yaml
     ["ymlfmt"] = new Step {
       workspace_indicator = ".yamlfmt.yml"
@@ -22,7 +22,7 @@ local linters = new Mapping<String, Step> {
         fix = "typos --write-changes --config {{ workspace_indicator }} {{ files }}"
     }
 
-    ["ruff"] = Builtins.ruff,
+    ["ruff"] = Builtins.ruff
 
     // define a custom linter
     ["pkl"] {
@@ -38,7 +38,6 @@ hooks {
     }
     // instead of pre-commit, you can instead define pre-push hooks
     ["pre-push"] {
-        check = true // only check files, do not modify them
         steps = linters
     }
 
