@@ -3,7 +3,26 @@ import "package://github.com/jdx/hk/releases/download/v1.2.0/hk@1.2.0#/Builtins.
 
 local linters = new Mapping<String, Step> {
     // uses builtin prettier linter config
-    ["prettier"] = Builtins.prettier
+    ["actionlint"] = Builtins.actionlint,
+
+    ["taplo"] = Builtins.taplo,
+        // yaml
+    ["ymlfmt"] = new Step {
+      workspace_indicator = ".yamlfmt.yml"
+      glob = List( "*.{.yaml,yml}")
+      batch = true
+      check  = "yamlfmt -conf {{ workspace_indicator }} -lint {{ files }}"
+      fix = "yamlfmt -conf {{ workspace_indicator }} {{ files }}"
+    }
+
+    ["typos"] = new Step {
+        workspace_indicator = "_typos.toml"
+        glob = List( "*README", "*.{login,astro,bash,bash_logout,bashrc,browserlistrc,conf,config,csh,css,cts,fish,gitattributes,gitmodules,html,htmx,ini,j2,jinja,jinja2,json,json5,jsonc,jsonl,ksh,md,mdown,mdtext,mdtxt,mdwn,mdx,mk,mkd,mts,nix,nu,pkl,profile,py,quokka,rs,sass,scss,sh,sh,shellcheckrc,sql,sqlite,stylelintrc,svelte,tcsh,toml,ts,tsx,txt,yaml,yml,zlogin,zlogout,zprofile,zsh,zshenv,zshrc}", "*Dockerfile*", "*Makefile*", "*makefile*", "CHANGELOG*", "CODE_OF_CONDUCT*", "CONTRIBUTING*", "HACKING*", "LICENSE", "README*", "SECURITY*", "UNLICENSE")
+        check = "typos -j 8 --config {{ workspace_indicator }} {{ files }}"
+        fix = "typos --write-changes --config {{ workspace_indicator }} {{ files }}"
+    }
+
+    ["ruff"] = Builtins.ruff,
 
     // define a custom linter
     ["pkl"] {
@@ -15,26 +34,14 @@ local linters = new Mapping<String, Step> {
 hooks {
     ["pre-commit"] {
         fix = true    // automatically modify files with available linter fixes
-        stash = "git" // stashes unstaged changes while running fix steps
-        steps {
-            // "prelint" here is simply a name to define the step
-            ["prelint"] {
-                // if a step has a "check" script it will execute that
-                check = "mise run prelint"
-                exclusive = true // ensures that the step runs in isolation
-            }
-            ...linters // add all linters defined above
-            ["postlint"] {
-                check = "mise run postlint"
-                exclusive = true
-            }
-        }
+        steps = linters
     }
     // instead of pre-commit, you can instead define pre-push hooks
     ["pre-push"] {
+        check = true // only check files, do not modify them
         steps = linters
     }
-    // "fix" and "check" are special steps for `hk fix` and `hk check` commands
+
     ["fix"] {
         fix = true
         steps = linters

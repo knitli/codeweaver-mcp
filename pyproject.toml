@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 [project]
 authors = [
     { name = "Knitli Inc.", email = "knitli@knit.li" },
@@ -14,6 +19,7 @@ dependencies = [
     "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
     "watchdog>=6.0.0",
+    "tomli>=2.0.0; python_version<'3.11'",
 ]
 
 [project.scripts]
@@ -26,4 +32,5 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "pytest>=8.4.1",
+    "superclaude>=3.0.0.2",
 ]

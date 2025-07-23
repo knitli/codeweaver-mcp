@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeVoyager - AI Assistant Usage Guide
 
 This guide explains how to effectively use CodeVoyager, a semantic code search MCP server, to help developers understand and navigate their codebases.

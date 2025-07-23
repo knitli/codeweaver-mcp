@@ -1,8 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileCopyrightText: 2025 Knitli Inc. <knitli@knit.li>
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-# SPDX-License-Identifier: MIT OR Apache-2.0
 #
-# Set default behavior to automatically normalize line endings
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 * text=auto
 
 # Force most text files to always use LF

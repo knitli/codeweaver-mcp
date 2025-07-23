@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver
 
 **Semantic code search powered by Voyage AI and ast-grep**
@@ -109,15 +116,10 @@ Thanks to ast-grep's tree-sitter integration, CodeWeaver supports intelligent pa
 
 | **Web Technologies** | **Systems Programming** | **Popular Languages** |
 |----------------------|------------------------|----------------------|
-| HTML, CSS, SCSS | Rust, Go, C/C++, Zig | Python, Java, Kotlin |
+| HTML, CSS | Rust, Go, C/C++ | Python, Java, Kotlin |
 | JavaScript, TypeScript | C#, Swift | Ruby, PHP, Scala |
-| Vue, Svelte, React JSX | | Dart, Lua, Perl |
+| React TSX, Json, Yaml | Bash | Lua, Nix, Solidity |
 
-| **Functional Languages** | **Data & Config** | **Other** |
-|-------------------------|------------------|-----------|
-| Haskell, OCaml, Elm | JSON, YAML, TOML | Shell scripts (Bash, Zsh) |
-| Elixir, Erlang | XML, SQL, Protobuf | Docker, CMake |
-| Clojure | | R, Julia, LaTeX |
 
 ## ??? Advanced Features
 
@@ -198,7 +200,7 @@ Choose embedding dimensions based on your needs:
 
 **Voyage AI**: Sign up at [dash.voyageai.com](https://dash.voyageai.com/) for best-in-class code embeddings.
 
-**Qdrant Cloud**: Create a cluster at [cloud.qdrant.io](https://cloud.qdrant.io/) or run locally with Docker:
+**Qdrant Cloud** (recommended): Qdrant cloud offers a free tier that will handle most open source projects. Create a cluster at [cloud.qdrant.io](https://cloud.qdrant.io/) or run locally with Docker:
 ```bash
 docker run -p 6333:6333 qdrant/qdrant
 ```
