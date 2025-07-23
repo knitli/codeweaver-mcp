@@ -1,0 +1,29 @@
+[project]
+authors = [
+    { name = "Knitli Inc.", email = "knitli@knit.li" },
+    { name = "Adam Poulemanos", email = "adam@knit.li" },
+]
+name = "code-weaver-mcp"
+version = "0.1.0"
+description = "An Ast-Grep and Qdrant powered MCP code indexing and search server"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ast-grep-py>=0.39.1",
+    "fastmcp>=2.10.6",
+    "qdrant-client>=1.15.0",
+    "rignore>=0.6.4",
+    "watchdog>=6.0.0",
+]
+
+[project.scripts]
+code-weaver = "code_weaver:main"
+
+[build-system]
+requires = ["uv_build>=0.8.2,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]

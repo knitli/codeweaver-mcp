@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "~/thread",
+        "~/.cargo"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "args": [
+        "--bun",
+        "@upstash/context7-mcp@latest"
+      ],
+      "command": "bunx",
+      "type": "stdio"
+    },
+    "sequential-thinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx",
+      "type": "stdio"
+    }
+  }
+}

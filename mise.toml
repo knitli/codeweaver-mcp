@@ -1,0 +1,16 @@
+[tools]
+ast-grep = "latest"
+gh = "latest"
+gitsign = "latest"
+hk = "latest"
+node = "latest"
+"pipx:reuse" = "latest"
+pkl = "latest"
+ripgrep = "latest"
+ruff = "latest"
+taplo = "latest"
+typos = "latest"
+uv = "latest"
+
+[env]
+GH_REPO="knitli/code-weaver-mcp"

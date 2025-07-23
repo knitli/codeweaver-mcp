@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc. <knitli@knit.li>
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+# SPDX-License-Identifier: MIT OR Apache-2.0
+#
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force most text files to always use LF
+*.astro text eol=lf
+*.css text eol=lf
+*.csv text eol=lf
+*.cts text eol=lf
+*.go text eol=lf
+*.html text eol=lf
+*.ini text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.jsx text eol=lf
+*.md text eol=lf
+*.mdx text eol=lf
+*.mts text eol=lf
+*.pkl text eol=lf
+*.py text eol=lf
+*.rs text eol=lf
+*.sh text eol=lf
+*.svelte text eol=lf
+*.svg text eol=lf
+*.toml text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.txt text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+.git* text eol=LF
+LICENSE text eol=lf
+LICENSE* text eol=lf
+
+# Force batch files to use CRLF (Windows scripts)
+*.bat text eol=crlf
+*.ps* text eol=crlf
+
+# Treat these as binary (no line ending conversion)
+*.aac binary
+*.avif binary
+*.docx binary
+*.eot binary
+*.exe binary
+*.flac binary
+*.ico binary
+*.jpg binary
+*.m4a binary
+*.mp3 binary
+*.mp4 binary
+*.ogg binary
+*.otf binary
+*.pdf binary
+*.png binary
+*.pptx binary
+*.tar* binary
+*.ttf binary
+*.wav binary
+*.webm binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.xlsx binary
+*.zip binary
