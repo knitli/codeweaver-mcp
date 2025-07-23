@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 """
-Test script for Voyage AI Code Embeddings MCP Server
+Test script for Voyage AI Code Embeddings MCP Server.
 
 This script tests the core functionality without requiring MCP client setup.
 Run this to verify your API keys and basic functionality work correctly.
@@ -19,14 +19,18 @@ import asyncio
 import os
 import sys
 import tempfile
+
 from pathlib import Path
+from typing import Literal
+
 
 # Add the server to path
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, Path(__file__).parent.as_posix())
 
-from server import CodeEmbeddingsServer, CodeChunker
+from server import CodeChunker, CodeEmbeddingsServer
 
-async def test_environment():
+
+def test_environment() -> bool:
     """Test environment variables and API connections."""
     print("🧪 Testing Environment Setup...")
 
@@ -48,6 +52,7 @@ async def test_environment():
     # Test Voyage AI connection
     try:
         import voyageai
+
         client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
 
         # Test embedding
@@ -55,7 +60,7 @@ async def test_environment():
             texts=["def hello_world():\n    print('Hello, World!')"],
             model="voyage-code-3",
             input_type="document",
-            output_dimension=1024
+            output_dimension=1024,
         )
 
         if result.embeddings and len(result.embeddings[0]) == 1024:
@@ -72,10 +77,7 @@ async def test_environment():
     try:
         from qdrant_client import QdrantClient
 
-        qdrant = QdrantClient(
-            url=os.getenv("QDRANT_URL"),
-            api_key=os.getenv("QDRANT_API_KEY")
-        )
+        qdrant = QdrantClient(url=os.getenv("QDRANT_URL"), api_key=os.getenv("QDRANT_API_KEY"))
 
         # Test connection
         collections = qdrant.get_collections()
@@ -87,7 +89,8 @@ async def test_environment():
 
     return True
 
-async def test_chunker():
+
+def test_chunker():
     """Test the code chunker with sample files."""
     print("\n🔧 Testing Code Chunker...")
 
@@ -96,7 +99,7 @@ async def test_chunker():
     # Test Python chunking
     python_code = '''
 import os
-from typing import List
+from typing import list
 
 class DatabaseManager:
     """Manages database connections."""
@@ -130,7 +133,7 @@ CONFIG = {
 }
 '''
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
         f.write(python_code)
         temp_path = Path(f.name)
 
@@ -139,10 +142,10 @@ CONFIG = {
 
         print(f"✅ Python chunking: {len(chunks)} chunks created")
         for i, chunk in enumerate(chunks):
-            print(f"   Chunk {i+1}: {chunk.chunk_type} ({chunk.start_line}-{chunk.end_line})")
+            print(f"   Chunk {i + 1}: {chunk.chunk_type} ({chunk.start_line}-{chunk.end_line})")
 
         # Test JavaScript chunking
-        js_code = '''
+        js_code = """
 class UserService {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;
@@ -165,9 +168,9 @@ function validateEmail(email) {
 }
 
 const userService = new UserService('https://api.example.com');
-'''
+"""
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".js", delete=False) as f:
             f.write(js_code)
             js_temp_path = Path(f.name)
 
@@ -181,7 +184,8 @@ const userService = new UserService('https://api.example.com');
 
     return True
 
-async def test_full_workflow(test_path: str = None):
+
+async def test_full_workflow(test_path: str | None = None):
     # sourcery skip: avoid-global-variables, no-long-functions
     """Test the complete indexing and search workflow."""
     print("\n🚀 Testing Full Workflow...")
@@ -286,7 +290,7 @@ def create_user_table(conn: DatabaseConnection):
 ''')
 
         # Create a JavaScript file
-        (test_dir / "utils.js").write_text('''
+        (test_dir / "utils.js").write_text("""
 /**
  * Utility functions for the application
  */
@@ -336,7 +340,7 @@ class ApiClient {
 }
 
 module.exports = { debounce, ApiClient };
-''')
+""")
 
         test_path = str(test_dir)
     else:
@@ -357,7 +361,9 @@ module.exports = { debounce, ApiClient };
     try:
         print("📚 Indexing codebase...")
         result = await server.index_codebase(test_path)
-        print(f"✅ Indexing completed: {result['total_chunks']} chunks from {result['files_processed']} files")
+        print(
+            f"✅ Indexing completed: {result['total_chunks']} chunks from {result['files_processed']} files"
+        )
     except Exception as e:
         print(f"❌ Indexing failed: {e}")
         return False
@@ -368,7 +374,7 @@ module.exports = { debounce, ApiClient };
         "database connection setup",
         "password hashing functions",
         "API client for HTTP requests",
-        "main application entry point"
+        "main application entry point",
     ]
 
     print("\n🔍 Testing search queries...")
@@ -380,8 +386,10 @@ module.exports = { debounce, ApiClient };
             if results:
                 top_result = results[0]
                 print(f"   Best match: {top_result['file_path']} ({top_result['chunk_type']})")
-                if 'rerank_score' in top_result:
-                    print(f"   Scores: similarity={top_result['similarity_score']:.3f}, rerank={top_result['rerank_score']:.3f}")
+                if "rerank_score" in top_result:
+                    print(
+                        f"   Scores: similarity={top_result['similarity_score']:.3f}, rerank={top_result['rerank_score']:.3f}"
+                    )
                 else:
                     print(f"   Similarity: {top_result['similarity_score']:.3f}")
         except Exception as e:
@@ -390,12 +398,14 @@ module.exports = { debounce, ApiClient };
     # Clean up test directory if we created it
     if not sys.argv[1:]:  # Only clean up if we created the test dir
         import shutil
+
         shutil.rmtree(test_dir, ignore_errors=True)
         print(f"🧹 Cleaned up test directory: {test_dir}")
 
     return True
 
-async def main():
+
+async def main() -> Literal[0, 1]:
     """Main test runner."""
     print("🧪 Voyage AI Code Embeddings MCP Server Test Suite")
     print("=" * 60)
@@ -423,6 +433,7 @@ async def main():
     print("3. Start using semantic code search!")
 
     return 0
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

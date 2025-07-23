@@ -8,18 +8,34 @@ authors = [
     { name = "Knitli Inc.", email = "knitli@knit.li" },
     { name = "Adam Poulemanos", email = "adam@knit.li" },
 ]
-name = "code-weaver-mcp"
+name = "codeweaver"
+license = { text = "MIT OR Apache-2.0" }
+keywords = [
+    "code-indexing",
+    "code-search",
+    "ast-grep",
+    "qdrant",
+    "mcp",
+    "voyageai",
+    "code-embeddings",
+    "semantic-search",
+    "tree-sitter"
+]
+
 version = "0.1.0"
 description = "An Ast-Grep and Qdrant powered MCP code indexing and search server"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "ast-grep-py>=0.39.1",
     "fastmcp>=2.10.6",
     "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
     "watchdog>=6.0.0",
-    "tomli>=2.0.0; python_version<'3.11'",
+    "tomli>=2.2.1",
+    "voyageai>=0.3.4",
+    "pydantic>=2.11.7",
+    "rich>=14.0.0",
 ]
 
 [project.scripts]
