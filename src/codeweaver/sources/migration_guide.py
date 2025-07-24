@@ -142,8 +142,8 @@ class MigrationHelper:
 
             logger.info("Migrated configuration from %s to %s", config_path, output_path)
 
-        except Exception as e:
-            logger.exception("Failed to migrate configuration file: %s", e)
+        except Exception:
+            logger.exception("Failed to migrate configuration file: %s")
             raise
 
     @staticmethod

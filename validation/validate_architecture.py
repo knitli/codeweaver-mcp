@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def test_core_architecture() -> bool | None:
+def test_core_architecture() -> bool | None:  # sourcery skip: extract-method
     """Test core architecture components that don't require external dependencies."""
     logger.info("Testing core architecture...")
 
@@ -38,17 +38,19 @@ def test_core_architecture() -> bool | None:
         assert migration_config.migration_mode is True
         logger.info("✅ Migration configuration options correct")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Core architecture test failed: {e}")
+    except Exception:
+        logger.exception("❌ Core architecture test failed: ")
         import traceback
 
         traceback.print_exc()
         return False
 
+    else:
+        return True
+
 
 def test_server_classes() -> bool | None:
+    # sourcery skip: extract-duplicate-method, extract-method
     """Test that server classes can be imported and have correct structure."""
     logger.info("Testing server class structure...")
 
@@ -59,8 +61,7 @@ def test_server_classes() -> bool | None:
 
         # Read server.py and extract class definitions without importing dependencies
         server_file = Path(__file__).parent / "src" / "codeweaver" / "server.py"
-        with open(server_file, "r") as f:
-            content = f.read()
+        content = server_file.read_text()
 
         # Check that both server classes are defined
         assert "class CodeEmbeddingsServer:" in content
@@ -79,14 +80,16 @@ def test_server_classes() -> bool | None:
         assert "async def migrate_config_to_extensible(" in content
         logger.info("✅ Migration utilities are defined")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Server classes test failed: {e}")
+    except Exception:
+        logger.exception("❌ Server classes test failed: ")
         return False
+
+    else:
+        return True
 
 
 def test_configuration_structure() -> bool | None:
+    # sourcery skip: extract-method
     """Test configuration structure and validation."""
     logger.info("Testing configuration structure...")
 
@@ -113,14 +116,15 @@ def test_configuration_structure() -> bool | None:
         assert hasattr(config, "qdrant")
         logger.info("✅ Configuration structure validation successful")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Configuration structure test failed: {e}")
+    except Exception:
+        logger.exception("❌ Configuration structure test failed: ")
         return False
 
+    else:
+        return True
 
-def test_integration_utilities() -> bool | None:
+
+def test_integration_utilities() -> bool | None:  # sourcery skip: extract-method
     """Test integration utilities and compatibility helpers."""
     logger.info("Testing integration utilities...")
 
@@ -151,22 +155,22 @@ def test_integration_utilities() -> bool | None:
         assert len(results["issues"]) > 0
         logger.info("✅ Migration validation catches missing configuration")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Integration utilities test failed: {e}")
+    except Exception:
+        logger.exception("❌ Integration utilities test failed: ")
         return False
 
+    else:
+        return True
 
-def test_main_integration() -> bool | None:
+
+def test_main_integration() -> bool | None:  # sourcery skip: extract-method
     """Test that main.py has the correct integration structure."""
     logger.info("Testing main.py integration...")
 
     try:
         # Read main.py and check for integration changes
         main_file = Path(__file__).parent / "src" / "codeweaver" / "main.py"
-        with open(main_file, "r") as f:
-            content = f.read()
+        content = main_file.read_text()
 
         # Check that the new imports are present
         assert "create_server" in content
@@ -181,22 +185,23 @@ def test_main_integration() -> bool | None:
         assert "detect_configuration_type(config)" in content
         logger.info("✅ Main.py includes configuration type detection")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Main integration test failed: {e}")
+    except Exception:
+        logger.exception("❌ Main integration test failed: ")
         return False
+
+    else:
+        return True
 
 
 def test_backward_compatibility_structure() -> bool | None:
+    # sourcery skip: extract-method
     """Test that backward compatibility structure is correct."""
     logger.info("Testing backward compatibility structure...")
 
     try:
         # Check that the legacy server still exists
         server_file = Path(__file__).parent / "src" / "codeweaver" / "server.py"
-        with open(server_file, "r") as f:
-            content = f.read()
+        content = server_file.read_text()
 
         # Verify legacy server structure is preserved
         assert "class CodeEmbeddingsServer:" in content
@@ -220,14 +225,15 @@ def test_backward_compatibility_structure() -> bool | None:
             assert method in content
         logger.info("✅ Extensible server maintains same interface")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Backward compatibility structure test failed: {e}")
+    except Exception:
+        logger.exception("❌ Backward compatibility structure test failed: ")
         return False
 
+    else:
+        return True
 
-def test_file_syntax() -> bool | None:
+
+def test_file_syntax() -> bool | None:  # sourcery skip: extract-method
     """Test that all Python files have valid syntax."""
     logger.info("Testing file syntax...")
 
@@ -253,14 +259,17 @@ def test_file_syntax() -> bool | None:
             return False
 
         logger.info(f"✅ All {len(python_files)} Python files have valid syntax")
-        return True
 
-    except Exception as e:
-        logger.exception(f"❌ File syntax test failed: {e}")
+    except Exception:
+        logger.exception("❌ File syntax test failed: ")
         return False
 
+    else:
+        logger.info("✅ File syntax test passed")
+        return True
 
-def main() -> int:
+
+def main() -> int:  # sourcery skip: extract-method
     """Run all architecture validation tests."""
     logger.info("Starting architecture validation...")
 
@@ -279,14 +288,14 @@ def main() -> int:
         try:
             result = test()
             results.append(result)
-        except Exception as e:
-            logger.exception(f"❌ Test {test.__name__} failed with exception: {e}")
+        except Exception:
+            logger.exception("❌ Test %s failed with exception: ", test.__name__)
             results.append(False)
 
     passed = sum(results)
     total = len(results)
 
-    logger.info(f"\n📊 Architecture Validation Results: {passed}/{total} tests passed")
+    logger.info("\n📊 Architecture Validation Results: %i/%i tests passed", passed, total)
 
     if passed == total:
         logger.info("🎉 All architecture tests passed! Integration is working correctly.")

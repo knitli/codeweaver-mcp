@@ -318,9 +318,6 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         if capability == ProviderCapability.EMBEDDING:
             if api_available or local_available:
                 return True, None
-            return (
-                False,
-                f"Neither API ({api_reason}) nor local ({local_reason}) mode available",
-            )
+            return (False, f"Neither API ({api_reason}) nor local ({local_reason}) mode available")
 
         return False, f"Capability {capability.value} not supported by HuggingFace"

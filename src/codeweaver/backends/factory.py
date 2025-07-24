@@ -136,7 +136,7 @@ class BackendFactory:
             return backend_class(**backend_args)
 
         except Exception as e:
-            logger.exception("Failed to create %s backend: %s", provider, e)
+            logger.exception("Failed to create %s backend", provider)
             raise ConnectionError(f"Failed to create {provider} backend") from e
 
     @classmethod

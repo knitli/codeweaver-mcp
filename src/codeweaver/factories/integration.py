@@ -93,6 +93,7 @@ class QdrantCompatibilityWrapper:
 
             This class is used to wrap collections for compatibility with Qdrant client interface.
             """
+
             def __init__(self, collections):
                 self.collections = collections
 
@@ -101,6 +102,7 @@ class QdrantCompatibilityWrapper:
 
             This class is used to wrap collection names for compatibility with Qdrant client interface.
             """
+
             def __init__(self, name):
                 self.name = name
 
@@ -145,6 +147,7 @@ class QdrantCompatibilityWrapper:
 
             This class holds the score and associated payload for a search result.
             """
+
             def __init__(self, score, payload):
                 self.score = score
                 self.payload = payload

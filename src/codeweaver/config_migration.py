@@ -38,7 +38,6 @@ class ConfigMigrationError(Exception):
     """Exception raised during configuration migration."""
 
 
-
 class ConfigValidator:
     """Validates configuration combinations and compatibility."""
 

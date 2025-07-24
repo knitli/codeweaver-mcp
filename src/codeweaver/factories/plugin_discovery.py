@@ -249,7 +249,7 @@ class PluginDiscovery:
             await self._discover_module_plugins(module, path)
 
         except Exception:
-            logger.exception("Failed to load plugin module %s: %s", path)
+            logger.exception("Failed to load plugin module %s", path)
             raise
 
     async def _discover_module_plugins(self, module: Any, path: Path) -> None:

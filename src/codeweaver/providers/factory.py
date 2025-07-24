@@ -370,11 +370,13 @@ class ProviderFactory:
             ValueError: If provider is unknown or unavailable
             RuntimeError: If provider cannot be instantiated
         """
+
         def raise_type_error(provider_name: str) -> None:
             """Raise a TypeError for invalid provider."""
             raise TypeError(
-                        "Provider %s does not implement EmbeddingProvider protocol", provider_name
-                    )
+                "Provider %s does not implement EmbeddingProvider protocol", provider_name
+            )
+
         provider_name = config.provider.lower()
         registration = self.registry.get_embedding_provider_registration(provider_name)
 
@@ -413,7 +415,9 @@ class ProviderFactory:
                 raise_type_error(provider_name)
 
         except Exception as e:
-            raise RuntimeError("Failed to create embedding provider %s: %s", provider_name, e) from e
+            raise RuntimeError(
+                "Failed to create embedding provider %s: %s", provider_name, e
+            ) from e
 
         else:
             return provider
@@ -442,11 +446,10 @@ class ProviderFactory:
             ValueError: If provider is unknown or unavailable
             RuntimeError: If provider cannot be instantiated
         """
+
         def raise_type_error(provider_name: str) -> None:
             """Raise a TypeError for invalid provider."""
-            raise TypeError(
-                "Provider %s does not implement RerankProvider protocol", provider_name
-            )
+            raise TypeError("Provider %s does not implement RerankProvider protocol", provider_name)
 
         provider_name = provider_name.lower()
         registration = self.registry.get_reranking_provider_registration(provider_name)

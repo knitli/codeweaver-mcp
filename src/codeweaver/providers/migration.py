@@ -100,7 +100,10 @@ class ProviderMigrationHelper:
             return True
 
         # Check for missing new configuration options
-        return bool(config.embedding.rerank_provider is None and config.embedding.provider in ["voyage", "cohere"])
+        return bool(
+            config.embedding.rerank_provider is None
+            and config.embedding.provider in ["voyage", "cohere"]
+        )
 
     def _get_migration_recommendations(self, config: CodeWeaverConfig) -> list[str]:
         """Get specific migration recommendations for the configuration."""

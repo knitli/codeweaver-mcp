@@ -230,7 +230,7 @@ use_gitignore = true
         _test_toml_implementation(temp_file)
     finally:
         # Clean up
-        os.unlink(temp_file)
+        Path(temp_file).unlink()
 
     print("   ✅ TOML configuration tests passed")
 

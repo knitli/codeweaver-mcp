@@ -25,8 +25,8 @@ from qdrant_client.models import (
     VectorParams,
 )
 
+from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
 from codeweaver.backends.factory import BackendConfig, BackendFactory
-from codeweaver.backends.base import VectorBackend, VectorPoint, DistanceMetric
 from codeweaver.chunker import AST_GREP_AVAILABLE, AstGrepChunker
 from codeweaver.config import _EXTENDED_CONFIGS_AVAILABLE, CodeWeaverConfig, get_config
 from codeweaver.embeddings import VoyageAIReranker, create_embedder
@@ -159,13 +159,13 @@ class CodeEmbeddingsServer:
             enable_hybrid_search=False,  # Default to basic for backward compatibility
             enable_sparse_vectors=False,
         )
-        
+
         try:
             backend = BackendFactory.create_backend(backend_config)
             logger.info("Successfully initialized backend: %s", backend_config.provider)
             return backend
-        except Exception as e:
-            logger.exception("Failed to initialize backend, falling back to legacy mode: %s", e)
+        except Exception:
+            logger.exception("Failed to initialize backend, falling back to legacy mode")
             # For now, we'll still maintain the legacy QdrantClient for fallback
             # but in the future this could raise an error
             return None
@@ -191,7 +191,7 @@ class CodeEmbeddingsServer:
         except Exception:
             logger.exception("Error ensuring collection")
             raise
-    
+
     async def _ensure_collection_async(self):
         """Ensure the vector collection exists using backend abstraction (async)."""
         try:
@@ -205,14 +205,16 @@ class CodeEmbeddingsServer:
                         await self.backend.create_collection(
                             name=self.collection_name,
                             dimension=self.embedder.dimension,
-                            distance_metric=DistanceMetric.COSINE
+                            distance_metric=DistanceMetric.COSINE,
                         )
                     else:
                         logger.info("Collection %s already exists", self.collection_name)
                     return
                 except Exception as e:
-                    logger.warning("Backend collection creation failed, falling back to legacy: %s", e)
-            
+                    logger.warning(
+                        "Backend collection creation failed, falling back to legacy: %s", e
+                    )
+
             # Fallback using legacy collection creation logic
             self._ensure_collection()
         except Exception:
@@ -328,9 +330,7 @@ class CodeEmbeddingsServer:
             points = []
             for vector_point in vector_points:
                 point = PointStruct(
-                    id=vector_point.id,
-                    vector=vector_point.vector,
-                    payload=vector_point.payload,
+                    id=vector_point.id, vector=vector_point.vector, payload=vector_point.payload
                 )
                 points.append(point)
             self.qdrant.upsert(collection_name=self.collection_name, points=points)
@@ -397,8 +397,8 @@ class CodeEmbeddingsServer:
         query_vector = await self.embedder.embed_query(query)
 
         # Build universal search filters
-        from codeweaver.backends.base import SearchFilter, FilterCondition
-        
+        from codeweaver.backends.base import FilterCondition, SearchFilter
+
         filter_conditions = []
 
         if file_filter:
@@ -450,7 +450,9 @@ class CodeEmbeddingsServer:
                     FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter))
                 )
 
-            legacy_filter = Filter(must=legacy_filter_conditions) if legacy_filter_conditions else None
+            legacy_filter = (
+                Filter(must=legacy_filter_conditions) if legacy_filter_conditions else None
+            )
 
             search_result = self.qdrant.search(
                 collection_name=self.collection_name,
@@ -462,7 +464,7 @@ class CodeEmbeddingsServer:
         results = []
         for hit in search_result:
             # Handle both backend abstraction SearchResult and legacy Qdrant hits
-            if hasattr(hit, 'payload') and hit.payload is not None:
+            if hasattr(hit, "payload") and hit.payload is not None:
                 # Backend abstraction SearchResult or legacy Qdrant hit
                 payload = hit.payload
                 score = hit.score
@@ -470,7 +472,7 @@ class CodeEmbeddingsServer:
                 # This shouldn't happen, but handle gracefully
                 logger.warning("Unexpected search result format: %s", type(hit))
                 continue
-                
+
             result = {
                 "content": payload["content"],
                 "file_path": payload["file_path"],
@@ -1305,7 +1307,7 @@ class ServerMigrationManager:
             }
 
         except Exception as e:
-            logger.exception("Migration failed: %s", e)
+            logger.exception("Migration failed")
             self._migration_state = "failed"
 
             # Attempt rollback if backup exists

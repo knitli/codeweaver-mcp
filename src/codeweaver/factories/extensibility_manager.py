@@ -137,8 +137,8 @@ class ExtensibilityManager:
             self._initialized = True
             logger.info("Extensibility system initialization complete")
 
-        except Exception as e:
-            logger.exception("Failed to initialize extensibility system: %s", e)
+        except Exception:
+            logger.exception("Failed to initialize extensibility system: %s", self.config.name)
             raise
 
     async def _initialize_core_components(self) -> None:
@@ -161,8 +161,8 @@ class ExtensibilityManager:
 
             logger.info("Core components initialized")
 
-        except Exception as e:
-            logger.exception("Failed to initialize core components: %s", e)
+        except Exception:
+            logger.exception("Failed to initialize core components: %s", self.config.name)
             raise
 
     async def _create_backend(self) -> VectorBackend:

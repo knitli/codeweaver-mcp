@@ -69,8 +69,8 @@ class DataSourceManager:
                 else:
                     logger.warning("Validation failed for data source: %s", source_type)
 
-            except Exception as e:
-                logger.exception("Failed to initialize data source %s: %s", source_config, e)
+            except Exception:
+                logger.exception("Failed to initialize data source %s.", source_config)
 
         logger.info("Initialized %d data sources", len(self._active_sources))
 
@@ -98,7 +98,9 @@ class DataSourceManager:
                 )
 
             except Exception as e:
-                logger.exception("Error discovering content from source %s: %s", source.source_id, e)
+                logger.exception(
+                    "Error discovering content from source %s: %s", source.source_id, e
+                )
 
         # Apply deduplication if enabled
         if self.config.enable_content_deduplication:
@@ -161,16 +163,16 @@ class DataSourceManager:
         for watcher in self._watchers:
             try:
                 await watcher.stop()
-            except Exception as e:
-                logger.exception("Error stopping watcher: %s", e)
+            except Exception:
+                logger.exception("Error stopping watcher: %s", watcher)
 
         # Clean up sources
         for source in self._active_sources:
             try:
                 if hasattr(source, "cleanup"):
                     await source.cleanup()
-            except Exception as e:
-                logger.exception("Error cleaning up source %s: %s", source.source_id, e)
+            except Exception:
+                logger.exception("Error cleaning up source %s", source.source_id)
 
         self._watchers.clear()
         self._active_sources.clear()

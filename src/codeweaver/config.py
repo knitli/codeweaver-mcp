@@ -1061,7 +1061,7 @@ def validate_environment_variables() -> dict[str, Any]:
     if has_legacy and has_new:
         validation_results["warnings"].append(
             "Mixed legacy and new environment variables detected. "
-             "Consider migrating to new format for consistency."
+            "Consider migrating to new format for consistency."
         )
 
     return validation_results
@@ -1093,9 +1093,9 @@ def get_effective_config_summary() -> dict[str, Any]:
             "data_sources": {
                 "enabled": config.data_sources.enabled,
                 "source_count": len(config.data_sources.sources),
-                "source_types": list(
-                    {source.get("type", "unknown") for source in config.data_sources.sources}
-                ),
+                "source_types": list({
+                    source.get("type", "unknown") for source in config.data_sources.sources
+                }),
             },
         }
     except Exception as e:

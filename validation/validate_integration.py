@@ -27,16 +27,19 @@ def test_imports() -> bool | None:
 
     try:
         with patch("qdrant_client.QdrantClient"):
-
             logger.info("✅ Core imports successful")
 
-        return True
-    except Exception as e:
-        logger.exception(f"❌ Import failed: {e}")
+    except Exception:
+        logger.exception("❌ Import failed: ")
         return False
+
+    else:
+        logger.info("✅ All imports are valid")
+        return True
 
 
 def test_configuration_detection() -> bool | None:
+    # sourcery skip: extract-method
     """Test configuration type detection."""
     logger.info("Testing configuration detection...")
 
@@ -70,12 +73,12 @@ def test_configuration_detection() -> bool | None:
             assert config_type in ["legacy", "extensible"]
             return True
 
-    except Exception as e:
-        logger.exception(f"❌ Configuration detection failed: {e}")
+    except Exception:
+        logger.exception("❌ Configuration detection failed: ")
         return False
 
 
-def test_server_factory() -> bool | None:
+def test_server_factory() -> bool | None:  # sourcery skip: extract-method
     """Test server factory functions."""
     logger.info("Testing server factory...")
 
@@ -126,15 +129,15 @@ def test_server_factory() -> bool | None:
 
             return True
 
-    except Exception as e:
-        logger.exception(f"❌ Server factory test failed: {e}")
+    except Exception:
+        logger.exception("❌ Server factory test failed: ")
         import traceback
 
         traceback.print_exc()
         return False
 
 
-def test_migration_utilities() -> bool | None:
+def test_migration_utilities() -> bool | None:  # sourcery skip: extract-method
     """Test migration utilities."""
     logger.info("Testing migration utilities...")
 
@@ -160,21 +163,21 @@ def test_migration_utilities() -> bool | None:
         assert "ready" in results
         logger.info("✅ Migration readiness validation successful")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Migration utilities test failed: {e}")
+    except Exception:
+        logger.exception("❌ Migration utilities test failed: ")
         return False
 
+    else:
+        logger.info("✅ Migration utilities test passed")
+        return True
 
-def test_compatibility_layer() -> bool | None:
+
+def test_compatibility_layer() -> bool | None:  # sourcery skip: extract-method
     """Test the compatibility layer."""
     logger.info("Testing compatibility layer...")
 
     try:
-        with patch(
-            "codeweaver.factories.extensibility_manager.ExtensibilityManager"
-        ):
+        with patch("codeweaver.factories.extensibility_manager.ExtensibilityManager"):
             from codeweaver.factories.integration import LegacyCompatibilityAdapter
 
             # Mock the manager
@@ -187,14 +190,16 @@ def test_compatibility_layer() -> bool | None:
             assert hasattr(adapter, "get_reranker")
             logger.info("✅ Compatibility adapter created successfully")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Compatibility layer test failed: {e}")
+    except Exception:
+        logger.exception("❌ Compatibility layer test failed: ")
         return False
 
+    else:
+        logger.info("✅ Compatibility layer test passed")
+        return True
 
-def test_main_integration() -> bool | None:
+
+def test_main_integration() -> bool | None:  # sourcery skip: extract-method
     """Test main.py integration."""
     logger.info("Testing main.py integration...")
 
@@ -239,14 +244,16 @@ def test_main_integration() -> bool | None:
             assert server is not None
             logger.info(f"✅ Main integration successful: {type(server).__name__}")
 
-        return True
-
-    except Exception as e:
-        logger.exception(f"❌ Main integration test failed: {e}")
+    except Exception:
+        logger.exception("❌ Main integration test failed: ")
         import traceback
 
         traceback.print_exc()
         return False
+
+    else:
+        logger.info("✅ Main integration test passed")
+        return True
 
 
 def main() -> int:
@@ -267,8 +274,8 @@ def main() -> int:
         try:
             result = test()
             results.append(result)
-        except Exception as e:
-            logger.exception(f"❌ Test {test.__name__} failed with exception: {e}")
+        except Exception:
+            logger.exception("❌ Test {test.__name__} failed with exception: ")
             results.append(False)
 
     passed = sum(results)

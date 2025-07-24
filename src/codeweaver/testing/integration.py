@@ -443,7 +443,9 @@ class IntegrationTestSuite:
 
             vectors = [
                 VectorPoint(id=i, vector=embedding, payload={"content": doc, "index": i})
-                for i, (doc, embedding) in enumerate(zip(self.config.test_documents, embeddings, strict=False))
+                for i, (doc, embedding) in enumerate(
+                    zip(self.config.test_documents, embeddings, strict=False)
+                )
             ]
 
             await self.backend.upsert_vectors(self.test_collection, vectors)
@@ -539,7 +541,9 @@ class IntegrationTestSuite:
                     payload={"content": doc, "index": i},
                     sparse_vector={j: float(j) for j in range(5)},  # Mock sparse vector
                 )
-                for i, (doc, embedding) in enumerate(zip(self.config.test_documents, embeddings, strict=False))
+                for i, (doc, embedding) in enumerate(
+                    zip(self.config.test_documents, embeddings, strict=False)
+                )
             ]
 
             await self.backend.upsert_vectors(self.test_collection, vectors)

@@ -89,14 +89,14 @@ async def test_provider_factory() -> None:
                 print(f"  - Would create provider with model: {config.model}")
                 print(f"  - Would use dimension: {config.dimension}")
 
+            elif registration := factory.registry.get_embedding_provider_registration(
+                provider_name
+            ):
+                print(
+                    f"  ✗ Provider {provider_name} unavailable: {registration.unavailable_reason}"
+                )
             else:
-                registration = factory.registry.get_embedding_provider_registration(provider_name)
-                if registration:
-                    print(
-                        f"  ✗ Provider {provider_name} unavailable: {registration.unavailable_reason}"
-                    )
-                else:
-                    print(f"  ✗ Provider {provider_name} not found")
+                print(f"  ✗ Provider {provider_name} not found")
 
         except Exception as e:
             print(f"  ✗ Error testing {provider_name}: {e}")
@@ -198,7 +198,6 @@ async def test_backward_compatibility() -> None:
     # Test legacy create_embedder function
     print("Testing legacy create_embedder function:")
     try:
-
         # Test with VoyageAI (will show deprecation warning)
         EmbeddingConfig(
             provider="voyage", api_key="test-key", model="voyage-code-3", dimension=1024
@@ -213,7 +212,6 @@ async def test_backward_compatibility() -> None:
     # Test legacy VoyageAIReranker
     print("\nTesting legacy VoyageAIReranker:")
     try:
-
         print("  - Calling VoyageAIReranker constructor (expect deprecation warning)")
         # Note: This will fail without real API key, but demonstrates the interface
 

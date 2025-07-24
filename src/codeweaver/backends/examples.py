@@ -91,8 +91,8 @@ async def example_basic_usage() -> None:
         info = await backend.get_collection_info("example-collection")
         logger.info("Collection info: %d vectors, dimension: %d", info.points_count, info.dimension)
 
-    except Exception as e:
-        logger.exception("Error in basic usage example: %s", e)
+    except Exception:
+        logger.exception("Error in basic usage example: %s", config.collection_name)
         raise
 
 
@@ -162,8 +162,8 @@ async def example_hybrid_search() -> None:
 
         logger.info("Hybrid search found %d results", len(results))
 
-    except Exception as e:
-        logger.exception("Error in hybrid search example: %s", e)
+    except Exception:
+        logger.exception("Error in hybrid search example: %s", config.collection_name)
 
 
 async def example_filtered_search() -> None:
@@ -234,8 +234,8 @@ async def example_filtered_search() -> None:
 
         logger.info("Filtered search found %d results", len(results))
 
-    except Exception as e:
-        logger.exception("Error in filtered search example: %s", e)
+    except Exception:
+        logger.exception("Error in filtered search example: %s", config.collection_name)
 
 
 async def example_migration_from_legacy() -> None:
@@ -350,8 +350,8 @@ async def main() -> None:
             logger.info("Running example: %s", name)
             await example_func()
             logger.info("Completed example: %s", name)
-        except Exception as e:
-            logger.exception("Failed example %s: %s", name, e)
+        except Exception:
+            logger.exception("Failed example %s.", name)
 
         print("-" * 50)
 

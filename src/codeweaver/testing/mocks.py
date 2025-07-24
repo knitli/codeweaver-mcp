@@ -245,7 +245,9 @@ class MockVectorBackend:
             payload = vector_point.payload or {}
             field_value = payload.get(condition.field)
 
-            if (condition.operator == "eq" and field_value != condition.value) or (condition.operator == "ne" and field_value == condition.value):
+            if (condition.operator == "eq" and field_value != condition.value) or (
+                condition.operator == "ne" and field_value == condition.value
+            ):
                 return False
             # Add more operators as needed
 

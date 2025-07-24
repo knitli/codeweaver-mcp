@@ -268,7 +268,7 @@ async def run_comprehensive_validation() -> bool:
             await validation_func()
             passed += 1
         except Exception as e:
-            logger.exception("❌ Validation failed for %s: %s", validation_func.__name__, e)
+            logger.exception("❌ Validation failed for %s", validation_func.__name__)
             failed += 1
 
     logger.info("📊 Validation Results:")

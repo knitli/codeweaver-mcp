@@ -111,8 +111,8 @@ class SourceFactory:
             logger.info("Created %s data source: %s", source_type, source.source_id)
             return source
 
-        except Exception as e:
-            logger.exception("Failed to create %s data source: %s", source_type, e)
+        except Exception:
+            logger.exception("Failed to create %s data source", source_type)
             raise
 
     def create_multiple_sources(self, source_configs: list[dict[str, Any]]) -> list[DataSource]:
@@ -148,8 +148,8 @@ class SourceFactory:
                 source = self.create_source(source_type, source_config)
                 sources.append(source)
 
-            except Exception as e:
-                logger.exception("Failed to create source from config %s: %s", config, e)
+            except Exception:
+                logger.exception("Failed to create source from config %s.", config)
                 continue
 
         logger.info("Created %d data sources", len(sources))
@@ -175,8 +175,8 @@ class SourceFactory:
 
             return is_valid
 
-        except Exception as e:
-            logger.exception("Error validating %s source config: %s", source_type, e)
+        except Exception:
+            logger.exception("Error validating %s source config", source_type)
             return False
 
     def list_available_sources(self) -> dict[str, dict[str, Any]]:
