@@ -25,9 +25,9 @@ from typing import Literal
 
 
 # Add the server to path
-sys.path.insert(0, Path(__file__).parent.as_posix())
+sys.path.insert(0, Path(__file__).parent.parent.as_posix())
 
-from server import CodeChunker, CodeEmbeddingsServer
+from codeweaver.server import CodeChunker, CodeEmbeddingsServer
 
 
 def test_environment() -> bool:
@@ -40,13 +40,7 @@ def test_environment() -> bool:
 
     missing_vars.extend(var for var in required_vars if not os.getenv(var))
     if missing_vars:
-        print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
-        print("\nSet these environment variables:")
-        print("  export VOYAGE_API_KEY='your-voyage-ai-key'")
-        print("  export QDRANT_URL='https://your-cluster.qdrant.tech:6333'")
-        print("  export QDRANT_API_KEY='your-qdrant-key'  # Optional")
-        return False
-
+        return _print_env_missing_vars_message(missing_vars)
     print("✅ Environment variables configured")
 
     # Test Voyage AI connection
@@ -88,6 +82,15 @@ def test_environment() -> bool:
         return False
 
     return True
+
+
+def _print_env_missing_vars_message(missing_vars):
+    print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+    print("\nSet these environment variables:")
+    print("  export VOYAGE_API_KEY='your-voyage-ai-key'")
+    print("  export QDRANT_URL='https://your-cluster.qdrant.tech:6333'")
+    print("  export QDRANT_API_KEY='your-qdrant-key'  # Optional")
+    return False
 
 
 def test_chunker() -> bool:

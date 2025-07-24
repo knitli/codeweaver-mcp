@@ -150,19 +150,19 @@ class AstGrepChunker:
             ("template_declaration", "template"),
         ],
         "markdown": [
-            # Markdown doesn't have AST patterns, will use fallback chunking
+            # Ast-grep doesn't support markdown, will use fallback chunking
         ],
         "rst": [
-            # RestructuredText doesn't have AST patterns, will use fallback chunking
+            # Ast-grep doesn't support markdown, will use fallback chunking
         ],
         "text": [
-            # Plain text doesn't have AST patterns, will use fallback chunking
+            # Ast-grep doesn't support plaintext, will use fallback chunking
         ],
         "toml": [
-            # TOML doesn't have complex AST patterns, will use fallback chunking
+            # Ast-grep doesn't support toml, will use fallback chunking
         ],
         "xml": [
-            # Basic XML structure can be handled by fallback
+            # Ast-grep doesn't support xml, will use fallback chunking
         ],
     }
 
@@ -177,7 +177,7 @@ class AstGrepChunker:
         self.min_chunk_size = min_chunk_size
 
         if not AST_GREP_AVAILABLE:
-            logger.warning("ast-grep not available, install with: pip install ast-grep-py")
+            logger.warning("ast-grep not available, install with: [uv] pip install ast-grep-py")
 
     def chunk_file(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Chunk a file into semantic pieces using ast-grep."""

@@ -139,7 +139,9 @@ class FileFilter:
 
         logger.info(
             "File filtering: %s included, %s excluded (gitignore: %s)",
-            filtered_count, excluded_count, 'enabled' if self.use_gitignore else 'disabled'
+            filtered_count,
+            excluded_count,
+            "enabled" if self.use_gitignore else "disabled",
         )
 
         return filtered_files

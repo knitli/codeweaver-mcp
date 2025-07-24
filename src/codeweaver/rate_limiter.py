@@ -146,7 +146,10 @@ class RateLimiter:
 
             logger.warning(
                 "Rate limiter: failure #%d for %s, backing off for %.2fs. Error: %s",
-                state.consecutive_failures, operation, backoff_time, error
+                state.consecutive_failures,
+                operation,
+                backoff_time,
+                error,
             )
 
     def get_stats(self) -> dict[str, Any]:
@@ -181,6 +184,7 @@ def rate_limited(operation: str, tokens_func: Callable | None = None) -> Callabl
 
     def decorator(func: Callable) -> Callable:
         """Decorator to apply rate limiting and retry logic to async functions."""
+
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wraps an async function to apply rate limiting and retry logic.

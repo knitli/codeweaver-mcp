@@ -35,7 +35,7 @@ from fastmcp import Context, FastMCP
 
 from codeweaver.chunker import AST_GREP_AVAILABLE
 from codeweaver.config import get_config_manager
-from codeweaver.server import CodeEmbeddingsServer
+from codeweaver.server import create_server, detect_configuration_type
 
 
 logger = logging.getLogger(__name__)
@@ -48,14 +48,22 @@ server_instance = None
 config_manager = None
 
 
-def get_server_instance() -> CodeEmbeddingsServer:
-    """Get or create the server instance with proper configuration."""
+def get_server_instance():
+    """Get or create the server instance with automatic type detection."""
     global server_instance, config_manager
     if server_instance is None:
         if config_manager is None:
             config_manager = get_config_manager()
         config = config_manager.load_config()
-        server_instance = CodeEmbeddingsServer(config)
+
+        # Use factory function with automatic server type detection
+        server_instance = create_server(config, server_type="auto")
+
+        # Log which server type was created
+        server_type = type(server_instance).__name__
+        config_type = detect_configuration_type(config)
+        logger.info("Created %s based on %s configuration", server_type, config_type)
+
     return server_instance
 
 
@@ -203,6 +211,11 @@ async def main() -> None:
         logger.info("Server version: %s", config.server.server_version)
         logger.info("Embedding provider: %s", config.embedding.provider)
         logger.info("Collection name: %s", config.qdrant.collection_name)
+        logger.info("Configuration type: %s", detect_configuration_type(config))
+
+        # Pre-initialize server to show which type will be used
+        server = get_server_instance()
+        logger.info("Server type: %s", type(server).__name__)
 
         # Check ast-grep availability
         if AST_GREP_AVAILABLE:

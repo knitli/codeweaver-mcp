@@ -1,0 +1,84 @@
+# CodeWeaver Production Cloud Configuration
+# Optimized for production deployment with full features
+
+_config_version = "2.0"
+
+[backend]
+provider = "qdrant"
+url = "https://your-cluster.qdrant.io"
+api_key = "your-qdrant-api-key"
+collection_name = "code-embeddings"
+enable_hybrid_search = true
+enable_sparse_vectors = true
+batch_size = 100
+connection_timeout = 30.0
+request_timeout = 60.0
+max_connections = 20
+
+[provider]
+embedding_provider = "voyage"
+embedding_api_key = "your-voyage-api-key"
+embedding_model = "voyage-code-3"
+embedding_dimension = 1024
+rerank_provider = "voyage"
+rerank_model = "voyage-rerank-2"
+enable_caching = true
+cache_ttl_seconds = 3600
+
+[data_sources]
+enabled = true
+max_concurrent_sources = 10
+enable_content_deduplication = true
+enable_metadata_extraction = true
+
+[[data_sources.sources]]
+type = "filesystem"
+enabled = true
+priority = 1
+source_id = "main_codebase"
+
+[data_sources.sources.config]
+root_path = "/app/code"
+use_gitignore = true
+additional_ignore_patterns = [
+    "node_modules", ".git", ".venv", "__pycache__",
+    "target", "build", "dist", "coverage", "logs"
+]
+batch_size = 16
+patterns = [
+    "**/*.py", "**/*.js", "**/*.ts", "**/*.tsx", "**/*.jsx",
+    "**/*.go", "**/*.rs", "**/*.java", "**/*.cpp", "**/*.c"
+]
+
+[chunking]
+max_chunk_size = 1500
+min_chunk_size = 50
+max_file_size_mb = 2
+
+[indexing]
+batch_size = 16
+max_concurrent_files = 20
+
+[rate_limiting]
+voyage_requests_per_minute = 500
+voyage_tokens_per_minute = 5000000
+qdrant_requests_per_second = 200
+max_retries = 3
+
+[server]
+log_level = "INFO"
+enable_request_logging = false
+max_search_results = 100
+
+# Legacy compatibility
+[embedding]
+provider = "voyage"
+api_key = "your-voyage-api-key"
+model = "voyage-code-3"
+rerank_provider = "voyage"
+
+[qdrant]
+url = "https://your-cluster.qdrant.io"
+api_key = "your-qdrant-api-key"
+collection_name = "code-embeddings"
+enable_sparse_vectors = true

@@ -1,0 +1,169 @@
+# CodeWeaver Enterprise Multi-Source Configuration
+# Optimized for enterprise environments with multiple data sources
+
+_config_version = "2.0"
+
+[backend]
+provider = "qdrant"
+url = "https://enterprise-cluster.qdrant.io"
+api_key = "enterprise-qdrant-api-key"
+collection_name = "enterprise-code-embeddings"
+enable_hybrid_search = true
+enable_sparse_vectors = true
+enable_failover = true
+replica_urls = [
+    "https://replica1.qdrant.io",
+    "https://replica2.qdrant.io"
+]
+batch_size = 200
+max_connections = 50
+
+[provider]
+embedding_provider = "voyage"
+embedding_api_key = "voyage-enterprise-api-key"
+embedding_model = "voyage-code-3"
+rerank_provider = "voyage"
+rerank_model = "voyage-rerank-2"
+enable_caching = true
+cache_ttl_seconds = 7200
+
+[data_sources]
+enabled = true
+max_concurrent_sources = 15
+enable_content_deduplication = true
+enable_metadata_extraction = true
+content_cache_ttl_hours = 48
+
+# Main enterprise codebase
+[[data_sources.sources]]
+type = "filesystem"
+enabled = true
+priority = 1
+source_id = "main_enterprise_codebase"
+
+[data_sources.sources.config]
+root_path = "/enterprise/main-code"
+use_gitignore = true
+additional_ignore_patterns = [
+    "node_modules", ".git", ".venv", "__pycache__", "vendor",
+    "target", "build", "dist", "out", "bin", "obj",
+    "coverage", "logs", "tmp", "temp", ".cache"
+]
+patterns = [
+    "**/*.py", "**/*.js", "**/*.ts", "**/*.tsx", "**/*.jsx",
+    "**/*.go", "**/*.rs", "**/*.java", "**/*.cpp", "**/*.c",
+    "**/*.h", "**/*.hpp", "**/*.cs", "**/*.php", "**/*.rb",
+    "**/*.swift", "**/*.kt", "**/*.scala", "**/*.clj"
+]
+batch_size = 20
+
+# Shared libraries repository
+[[data_sources.sources]]
+type = "git"
+enabled = true
+priority = 2
+source_id = "shared_libraries"
+
+[data_sources.sources.config]
+repository_url = "https://github.com/enterprise/shared-libraries.git"
+branch = "main"
+local_clone_path = "/tmp/codeweaver/shared-libraries"
+auto_pull = true
+pull_interval_minutes = 30
+track_file_history = false
+include_branches = ["main", "release"]
+
+# Documentation repository
+[[data_sources.sources]]
+type = "git"
+enabled = true
+priority = 3
+source_id = "documentation"
+
+[data_sources.sources.config]
+repository_url = "https://github.com/enterprise/documentation.git"
+branch = "main"
+local_clone_path = "/tmp/codeweaver/documentation"
+auto_pull = true
+pull_interval_minutes = 60
+patterns = ["**/*.md", "**/*.rst", "**/*.txt"]
+
+# API documentation source
+[[data_sources.sources]]
+type = "api"
+enabled = true
+priority = 4
+source_id = "api_documentation"
+
+[data_sources.sources.config]
+api_type = "rest"
+base_url = "https://api.enterprise.com"
+endpoints = [
+    "/docs/openapi.json",
+    "/docs/swagger.json",
+    "/schema/graphql"
+]
+auth_type = "bearer"
+bearer_token = "enterprise-api-documentation-token"
+schema_discovery = true
+include_documentation = true
+
+# Legacy system source
+[[data_sources.sources]]
+type = "filesystem"
+enabled = true
+priority = 5
+source_id = "legacy_systems"
+
+[data_sources.sources.config]
+root_path = "/enterprise/legacy"
+use_gitignore = false
+patterns = [
+    "**/*.java", "**/*.jsp", "**/*.xml", "**/*.properties",
+    "**/*.sql", "**/*.pl", "**/*.sh", "**/*.bat"
+]
+batch_size = 10
+
+[chunking]
+max_chunk_size = 2000
+min_chunk_size = 100
+max_file_size_mb = 5
+
+[chunking.language_settings.java]
+max_chunk_size = 2500
+extract_javadoc = true
+
+[chunking.language_settings.python]
+max_chunk_size = 2200
+extract_docstrings = true
+
+[indexing]
+batch_size = 32
+max_concurrent_files = 50
+
+[rate_limiting]
+voyage_requests_per_minute = 1000
+voyage_tokens_per_minute = 10000000
+qdrant_requests_per_second = 500
+initial_backoff_seconds = 0.5
+max_retries = 5
+
+[server]
+log_level = "INFO"
+enable_request_logging = true
+max_search_results = 200
+enable_metrics = true
+metrics_port = 8080
+
+# Legacy compatibility
+[embedding]
+provider = "voyage"
+api_key = "voyage-enterprise-api-key"
+model = "voyage-code-3"
+rerank_provider = "voyage"
+
+[qdrant]
+url = "https://enterprise-cluster.qdrant.io"
+api_key = "enterprise-qdrant-api-key"
+collection_name = "enterprise-code-embeddings"
+enable_sparse_vectors = true

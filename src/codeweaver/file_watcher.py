@@ -220,7 +220,7 @@ class FileWatcher:
             if deleted:
                 change_summary.append(f"{len(deleted)} deleted")
 
-            logger.info("Auto-reindexing triggered by: %s", ', '.join(change_summary))
+            logger.info("Auto-reindexing triggered by: %s", ", ".join(change_summary))
 
             # Determine if we need full or partial reindex
             significant_changes = len(created) + len(deleted)

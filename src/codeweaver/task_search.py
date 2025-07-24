@@ -123,6 +123,7 @@ class TaskSearchCoordinator:
 
     def _analyze_query_indicators(self, query: str) -> tuple:
         """Analyze query for complexity indicators."""
+
         class QueryIndicators(typing.NamedTuple):
             has_broad_scope: bool
             has_complex_pattern: bool
@@ -139,6 +140,7 @@ class TaskSearchCoordinator:
         self, file_filter: str | None, language_filter: str | None
     ) -> tuple:
         """Analyze filter specificity."""
+
         class FilterSpecificity(typing.NamedTuple):
             has_specific_filters: bool
             is_path_specific: bool
@@ -352,7 +354,9 @@ Focus on providing a learning path through the code."""
 
 
 def enhance_search_with_task_delegation(
-    original_search_func: Callable, task_coordinator: TaskSearchCoordinator, task_tool_func: Callable | None = None
+    original_search_func: Callable,
+    task_coordinator: TaskSearchCoordinator,
+    task_tool_func: Callable | None = None,
 ) -> Callable:
     """Decorator to enhance search functions with Task tool delegation."""
 

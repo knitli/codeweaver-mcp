@@ -140,13 +140,24 @@ The system supports 20+ programming languages with proper AST-aware chunking:
 - Auto-fixes enabled in ruff configuration
 - Type hints required for public functions (encouraged for all)
 - Use modern Python typing (>=3.11): `typing.Self`, `typing.Literal`, piped unions (`int | str`), constructors-as-types (`list[str]`), etc.
-- **strong typing**: Use `typing.TypedDict` for structured data, `typing.Protocol` for interfaces, `typing.NamedTuple` for immutable data structures, and `enum.Enum` types for fixed sets of values.
+- **strong typing**: Use `typing.TypedDict` for structured data, `typing.Protocol` for interfaces, `typing.NamedTuple` for immutable data structures, `enum.Enum` types for fixed sets of values, `typing.TypeGuard` for type validation.
   - Avoid generic types like dict[str, Any] if your know the structure -- use TypedDict or NamedTuple instead.
+  - If something is actually generic, define a generic type, or a protocol, or a type guard.
+- No positional boolean arguments (use keyword arguments for clarity), like `def foo(bar: str, *, baz: bool = True)`, where `*` forces keyword-only arguments after it.
 
 ### Dependencies
 - **Production**: `ast-grep-py`, `fastmcp`, `qdrant-client`, `rignore`, `watchdog`
 - **Development**: `pytest` (for future testing)
 - **Build**: Uses `uv_build` backend
+
+### Design Principles
+
+- **Simplicity**: Keep the codebase clean and maintainable
+- **Configurability**: If there's a setting, it should be configurable via environment variables or config files
+- **Extensibility**: Design for future features and integrations, plugin architecture
+- **Performance**: Optimize for large codebases with efficient chunking and search
+- **Robustness**: Handle errors gracefully, especially with external dependencies like ast-grep
+- **Security**: Validate all inputs, especially from external sources
 
 ### Key Design Decisions
 - **Semantic chunking**: Uses ast-grep for intelligent code segmentation
