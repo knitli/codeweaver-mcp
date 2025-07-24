@@ -99,7 +99,7 @@ class DataSourceManager:
 
             except Exception as e:
                 logger.exception(
-                    "Error discovering content from source %s: %s", source.source_id, e
+                    "Error discovering content from source %s", source.source_id
                 )
 
         # Apply deduplication if enabled
@@ -154,7 +154,7 @@ class DataSourceManager:
                 logger.debug("Change watching not supported by source: %s", source.source_id)
             except Exception as e:
                 logger.exception(
-                    "Failed to setup change watching for source %s: %s", source.source_id, e
+                    "Failed to setup change watching for source %s", source.source_id
                 )
 
     async def cleanup(self) -> None:
