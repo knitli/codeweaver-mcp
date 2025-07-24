@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-async def validate_core_protocols() -> None:
+def validate_core_protocols() -> None:
     """Validate that core protocols and data structures work correctly."""
     logger.info("🧪 Testing core protocols and data structures...")
 
@@ -86,7 +86,7 @@ async def validate_file_system_source() -> None:
     logger.info("✅ File system source validation passed")
 
 
-async def validate_source_factory() -> None:
+def validate_source_factory() -> None:
     """Validate that the source factory works correctly."""
     logger.info("🧪 Testing source factory and registry...")
 
@@ -109,7 +109,7 @@ async def validate_source_factory() -> None:
     logger.info("✅ Source factory validation passed")
 
 
-async def validate_configuration_system() -> None:
+def validate_configuration_system() -> None:
     """Validate that the configuration system works correctly."""
     logger.info("🧪 Testing configuration system...")
 
@@ -182,7 +182,7 @@ async def validate_data_source_manager() -> None:
     logger.info("✅ Data source manager validation passed")
 
 
-async def validate_backward_compatibility() -> None:
+def validate_backward_compatibility() -> None:
     """Validate that backward compatibility works correctly."""
     logger.info("🧪 Testing backward compatibility...")
 
@@ -265,9 +265,13 @@ async def run_comprehensive_validation() -> bool:
 
     for validation_func in validation_functions:
         try:
-            await validation_func()
+            import inspect
+            if inspect.iscoroutinefunction(validation_func):
+                await validation_func()
+            else:
+                validation_func()
             passed += 1
-        except Exception as e:
+        except Exception:
             logger.exception("❌ Validation failed for %s", validation_func.__name__)
             failed += 1
 

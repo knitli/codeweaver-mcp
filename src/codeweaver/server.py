@@ -29,7 +29,7 @@ from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.chunker import AST_GREP_AVAILABLE, AstGrepChunker
 from codeweaver.config import _EXTENDED_CONFIGS_AVAILABLE, CodeWeaverConfig, get_config
-from codeweaver.embeddings import VoyageAIReranker, create_embedder
+from codeweaver.embeddings import EmbedderBase, VoyageAIReranker, create_embedder
 from codeweaver.factories.extensibility_manager import ExtensibilityConfig, ExtensibilityManager
 from codeweaver.factories.integration import (
     LegacyCompatibilityAdapter,
@@ -163,12 +163,13 @@ class CodeEmbeddingsServer:
         try:
             backend = BackendFactory.create_backend(backend_config)
             logger.info("Successfully initialized backend: %s", backend_config.provider)
-            return backend
         except Exception:
             logger.exception("Failed to initialize backend, falling back to legacy mode")
             # For now, we'll still maintain the legacy QdrantClient for fallback
             # but in the future this could raise an error
             return None
+        else:
+            return backend
 
     def _ensure_collection(self):
         """Ensure the vector collection exists using legacy client (sync)."""
@@ -209,11 +210,12 @@ class CodeEmbeddingsServer:
                         )
                     else:
                         logger.info("Collection %s already exists", self.collection_name)
-                    return
                 except Exception as e:
                     logger.warning(
                         "Backend collection creation failed, falling back to legacy: %s", e
                     )
+                else:
+                    return
 
             # Fallback using legacy collection creation logic
             self._ensure_collection()
@@ -318,12 +320,14 @@ class CodeEmbeddingsServer:
             vector_points.append(vector_point)
 
         # Upload using backend abstraction with fallback to legacy
+        def _raise_backend_error():
+            raise RuntimeError("Backend not available, using fallback")
+        
         try:
-            if self.backend is not None:
-                await self.backend.upsert_vectors(self.collection_name, vector_points)
-                logger.debug("Uploaded %d vectors using backend", len(vector_points))
-            else:
-                raise Exception("Backend not available, using fallback")
+            if self.backend is None:
+                _raise_backend_error()
+            await self.backend.upsert_vectors(self.collection_name, vector_points)
+            logger.debug("Uploaded %d vectors using backend", len(vector_points))
         except Exception as e:
             logger.warning("Backend upload failed, using legacy Qdrant client: %s", e)
             # Fallback to legacy Qdrant client
@@ -419,17 +423,19 @@ class CodeEmbeddingsServer:
         universal_filter = SearchFilter(conditions=filter_conditions) if filter_conditions else None
 
         # Search using backend abstraction with fallback to legacy
+        def _raise_search_backend_error():
+            raise RuntimeError("Backend not available, using fallback")
+        
         try:
-            if self.backend is not None:
-                search_result = await self.backend.search_vectors(
-                    collection_name=self.collection_name,
-                    query_vector=query_vector,
-                    search_filter=universal_filter,
-                    limit=limit * 2 if rerank else limit,  # Get more for reranking
-                )
-                logger.debug("Search using backend returned %d results", len(search_result))
-            else:
-                raise Exception("Backend not available, using fallback")
+            if self.backend is None:
+                _raise_search_backend_error()
+            search_result = await self.backend.search_vectors(
+                collection_name=self.collection_name,
+                query_vector=query_vector,
+                search_filter=universal_filter,
+                limit=limit * 2 if rerank else limit,  # Get more for reranking
+            )
+            logger.debug("Search using backend returned %d results", len(search_result))
         except Exception as e:
             logger.warning("Backend search failed, using legacy Qdrant client: %s", e)
             # Fallback to legacy Qdrant search
@@ -688,25 +694,25 @@ class ExtensibleCodeEmbeddingsServer:
 
     # Provide compatibility properties for existing methods
     @property
-    async def qdrant(self):
+    async def qdrant(self) -> QdrantClient:
         """Get Qdrant client for backward compatibility."""
         await self._ensure_initialized()
         return self._components["qdrant"]
 
     @property
-    async def embedder(self):
+    async def embedder(self) -> EmbedderBase:
         """Get embedder for backward compatibility."""
         await self._ensure_initialized()
         return self._components["embedder"]
 
     @property
-    async def reranker(self):
+    async def reranker(self) -> VoyageAIReranker:
         """Get reranker for backward compatibility."""
         await self._ensure_initialized()
         return self._components["reranker"]
 
     @property
-    async def rate_limiter(self):
+    async def rate_limiter(self) -> RateLimiter:
         """Get rate limiter for backward compatibility."""
         await self._ensure_initialized()
         return self._components["rate_limiter"]
@@ -924,8 +930,7 @@ class ExtensibleCodeEmbeddingsServer:
         # Rerank if requested
         if rerank and len(results) > 1:
             try:
-                reranker = self._components["reranker"]
-                if reranker:
+                if reranker := self._components["reranker"]:
                     documents = [r["content"] for r in results]
                     rerank_results = await reranker.rerank(query, documents, top_k=limit)
 
@@ -1001,15 +1006,13 @@ class ExtensibleCodeEmbeddingsServer:
 
         # Add extensibility information
         component_info = self.extensibility_manager.get_component_info()
-        base_info.update({
-            "extensibility": {
-                "server_type": "extensible",
-                "available_backends": component_info.get("backends", {}),
-                "available_providers": component_info.get("providers", {}),
-                "available_sources": component_info.get("sources", {}),
-                "plugin_support": component_info.get("plugin_discovery", {}).get("enabled", False),
-            }
-        })
+        base_info["extensibility"] = {
+            "server_type": "extensible",
+            "available_backends": component_info.get("backends", {}),
+            "available_providers": component_info.get("providers", {}),
+            "available_sources": component_info.get("sources", {}),
+            "plugin_support": component_info.get("plugin_discovery", {}).get("enabled", False),
+        }
 
         return base_info
 
@@ -1068,14 +1071,14 @@ def detect_configuration_type(config: CodeWeaverConfig) -> str:
     # Check for new extensibility features
     if _EXTENDED_CONFIGS_AVAILABLE:
         # Check if backend config exists and is not just legacy qdrant
-        if hasattr(config, "backend") and config.backend:
-            if hasattr(config.backend, "provider") and config.backend.provider != "qdrant_legacy":
-                return "extensible"
+        if (hasattr(config, "backend") and config.backend and 
+            hasattr(config.backend, "provider") and config.backend.provider != "qdrant_legacy"):
+            return "extensible"
 
         # Check for new provider configuration format
-        if hasattr(config, "embedding") and config.embedding:
-            if hasattr(config.embedding, "provider_config"):
-                return "extensible"
+        if (hasattr(config, "embedding") and config.embedding and 
+            hasattr(config.embedding, "provider_config")):
+            return "extensible"
 
         # Check for data sources configuration
         if hasattr(config, "data_sources") and config.data_sources:
@@ -1145,8 +1148,8 @@ def create_extensible_server(
     return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
 
 
-async def migrate_config_to_extensible(
-    legacy_config: CodeWeaverConfig, enable_plugins: bool = False
+def migrate_config_to_extensible(
+    legacy_config: CodeWeaverConfig, *, enable_plugins: bool = False
 ) -> tuple[CodeWeaverConfig, ExtensibilityConfig]:
     """Migrate a legacy configuration to extensible format.
 
@@ -1267,6 +1270,7 @@ class ServerMigrationManager:
     async def perform_migration(
         self,
         extensibility_config: ExtensibilityConfig | None = None,
+        *,
         backup_components: bool = True,
     ) -> dict[str, Any]:
         """Perform the actual migration to extensible architecture.

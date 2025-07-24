@@ -302,7 +302,7 @@ async def example_multi_backend_setup() -> None:
     logger.info("Multi-backend setup completed")
 
 
-async def example_environment_based_config() -> None:
+def example_environment_based_config() -> None:
     """
     Example using environment-based configuration.
 

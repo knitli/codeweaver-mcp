@@ -14,7 +14,8 @@ import logging
 
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, AsyncContextManager
+from typing import Any
+from contextlib import AbstractAsyncContextManager
 
 from codeweaver.backends.base import VectorBackend
 from codeweaver.config import CodeWeaverConfig
@@ -332,7 +333,7 @@ class ExtensibilityManager:
             return {"error": "Extensibility system not initialized"}
 
         # Convert config to dict for validation
-        config_dict = {
+        config_data = {
             "backend": self.config.backend.__dict__
             if hasattr(self.config.backend, "__dict__")
             else {},
@@ -343,12 +344,12 @@ class ExtensibilityManager:
 
         # Add data sources if available
         if hasattr(self.config, "data_sources") and self.config.data_sources:
-            config_dict["data_sources"] = self.config.data_sources.__dict__
+            config_data["data_sources"] = self.config.data_sources.__dict__
 
-        return self._unified_factory.validate_configuration(config_dict)
+        return self._unified_factory.validate_configuration(config_data)
 
     @asynccontextmanager
-    async def managed_lifecycle(self) -> AsyncContextManager["ExtensibilityManager"]:
+    async def managed_lifecycle(self) -> AbstractAsyncContextManager["ExtensibilityManager"]:
         """Context manager for automatic lifecycle management.
 
         Yields:
