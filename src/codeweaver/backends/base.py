@@ -11,197 +11,17 @@ Provides comprehensive abstractions for 15+ vector databases with hybrid search
 support, designed for runtime flexibility and extensibility.
 """
 
-import enum
-import operator
-import re
-import types
 
-from dataclasses import dataclass
 from typing import Any, Literal, Protocol, runtime_checkable
 
-
-class DistanceMetric(enum.Enum):
-    """Supported distance metrics across vector databases."""
-
-    COSINE = "cosine"
-    EUCLIDEAN = "euclidean"  # L2
-    DOT_PRODUCT = "dot"
-    MANHATTAN = "manhattan"  # L1
-
-
-class HybridStrategy(enum.Enum):
-    """Hybrid search fusion strategies."""
-
-    RRF = "rrf"  # Reciprocal Rank Fusion
-    DBSF = "dbsf"  # Distribution-Based Score Fusion
-    LINEAR = "linear"  # Linear combination
-    CONVEX = "convex"  # Convex combination
-
-    @classmethod
-    def from_string(cls, strategy: str) -> "HybridStrategy":
-        """
-        Create a HybridStrategy from a string.
-
-        Args:
-            strategy: Strategy name (e.g., "rrf", "dbsf", "linear", "convex")
-
-        Returns:
-            Corresponding HybridStrategy enum member
-
-        Raises:
-            ValueError: If strategy is not recognized
-        """
-        try:
-            return cls[strategy.upper().replace("-", "_").replace(" ", "_")]
-        except KeyError as e:
-            raise ValueError(f"Unsupported hybrid strategy: {strategy}") from e
-
-
-@dataclass
-class VectorPoint:
-    """Universal vector point structure compatible with all backends."""
-
-    iden: str | int
-    vector: list[float]
-    payload: dict[str, Any] | None = None
-    sparse_vector: dict[int, float] | None = None  # For hybrid search
-
-
-@dataclass
-class SearchResult:
-    """Unified search result format across all vector databases."""
-
-    iden: str | int
-    score: float
-    payload: dict[str, Any] | None = None
-    vector: list[float] | None = None  # Optional, depends on backend
-
-    # Additional metadata for debugging/optimization
-    backend_metadata: dict[str, Any] | None = None
-
-
-@dataclass
-class CollectionInfo:
-    """Collection metadata structure for introspection."""
-
-    name: str
-    dimension: int
-    points_count: int
-    distance_metric: DistanceMetric
-    indexed: bool
-
-    # Backend-specific capabilities
-    supports_sparse_vectors: bool = False
-    supports_hybrid_search: bool = False
-    supports_filtering: bool = True
-    supports_updates: bool = True
-
-    # Storage and performance info
-    storage_type: str | None = None  # "memory", "disk", "hybrid"
-    index_type: str | None = None  # "hnsw", "ivf", "flat", etc.
-    backend_info: dict[str, Any] | None = None
-
-
-class FilterOperator(enum.Enum):
-    """Supported filter operators for vector search."""
-
-    EQ = "eq"  # Equal
-    NE = "ne"  # Not equal
-    GT = "gt"  # Greater than
-    GE = "ge"  # Greater than or equal
-    LT = "lt"  # Less than
-    LE = "le"  # Less than or equal
-    IN = "in"  # In list
-    NIN = "nin"  # Not in list
-    CONTAINS = "contains"  # Contains substring
-    REGEX = "regex"  # Regular expression match
-
-    @property
-    def is_comparison(self) -> bool:
-        """Check if operator is a comparison (eq, ne, gt, ge, lt, le)."""
-        return self in {self.EQ, self.NE, self.GT, self.GE, self.LT, self.LE}
-
-    @property
-    def is_set_operation(self) -> bool:
-        """Check if operator is a set operation (in, nin)."""
-        return self in {self.IN, self.NIN}
-
-    @property
-    def is_text_operation(self) -> bool:
-        """Check if operator is a text operation (contains, regex)."""
-        return self in {self.CONTAINS, self.REGEX}
-
-    @property
-    def operator(self) -> types.FunctionType:
-        """Get the Python operator object."""
-        return {
-            self.EQ: operator.eq,
-            self.NE: operator.ne,
-            self.GT: operator.gt,
-            self.GE: operator.ge,
-            self.LT: operator.lt,
-            self.LE: operator.le,
-            self.IN: lambda a, b: a in b,
-            self.NIN: lambda a, b: a not in b,
-            self.CONTAINS: lambda a, b: operator.contains(a, b),
-            self.REGEX: lambda a, b: bool(re.search(b, a)) if isinstance(a, str) else False,
-        }[self]
-
-    @property
-    def operator_symbols(self) -> tuple[str, ...]:
-        """Get the operator symbols for this filter operator."""
-        return {
-            self.EQ: ("==",),
-            self.NE: ("!=",),
-            self.GT: (">",),
-            self.GE: (">=",),
-            self.LT: ("<",),
-            self.LE: ("<=",),
-            self.IN: ("in",),
-            self.NIN: ("not in", "nin", "notin", "!in"),
-            self.CONTAINS: ("contains", "has"),
-            self.REGEX: ("regex", "match", "matches", "regexp", "re", "reg", "r", "s/"),
-        }[self]
-
-    @classmethod
-    def from_symbol(cls, symbol: str) -> "FilterOperator":
-        """
-        Create a FilterOperator from a symbol.
-
-        Args:
-            symbol: Operator symbol (e.g., "==", "!=", "in", "contains")
-
-        Returns:
-            Corresponding FilterOperator enum member
-
-        Raises:
-            ValueError: If symbol is not recognized
-        """
-        normalized_symbol = symbol.strip().lower()
-        if member := next(
-            op for op in cls if normalized_symbol in op.operator_symbols
-        ):
-            return member
-        raise ValueError(f"Unsupported filter operator symbol: {symbol}")
-
-
-@dataclass
-class FilterCondition:
-    """Universal filter condition for vector search."""
-
-    field: str
-    operator: FilterOperator
-    value: Any
-
-
-@dataclass
-class SearchFilter:
-    """Composite filter for vector search operations."""
-
-    conditions: list[FilterCondition] | None = None
-    must: list["SearchFilter"] | None = None  # AND logic
-    should: list["SearchFilter"] | None = None  # OR logic
-    must_not: list["SearchFilter"] | None = None  # NOT logic
+from codeweaver._types.backends import (
+    CollectionInfo,
+    DistanceMetric,
+    SearchFilter,
+    SearchResult,
+    VectorPoint,
+)
+from codeweaver._types.enums import HybridStrategy
 
 
 @runtime_checkable
@@ -265,7 +85,7 @@ class VectorBackend(Protocol):
         self,
         collection_name: str,
         query_vector: list[float],
-        limit: int = 10,
+        limit: int = 10,  # TODO: NEEDS to be configurable
         search_filter: SearchFilter | None = None,
         score_threshold: float | None = None,
         **kwargs: Any,
@@ -443,7 +263,7 @@ class StreamingBackend(Protocol):
         self,
         collection_name: str,
         vector_stream: Any,  # AsyncIterator[VectorPoint]
-        batch_size: int = 100,
+        batch_size: int = 100,  # TODO: NEEDS to be configurable
     ) -> None:
         """Stream vector upserts for large datasets."""
         ...
@@ -452,7 +272,7 @@ class StreamingBackend(Protocol):
         self,
         collection_name: str,
         query_stream: Any,  # AsyncIterator[list[float]]
-        limit: int = 10,
+        limit: int = 10,  # TODO: NEEDS to be configurable
     ) -> Any:  # AsyncIterator[list[SearchResult]]
         """Stream search for multiple queries."""
         ...

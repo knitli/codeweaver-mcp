@@ -1,3 +1,4 @@
+# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -23,7 +24,7 @@ from codeweaver.providers.base import (
 
 
 try:
-    import cohere
+    import cohere  # type: ignore
 
     COHERE_AVAILABLE = True
 except ImportError:
@@ -148,11 +149,11 @@ class CohereProvider(CombinedProvider):
             response = self.client.embed(
                 texts=texts, model=self._embedding_model, input_type="search_document"
             )
-            return response.embeddings
-
         except Exception:
             logger.exception("Error generating Cohere embeddings")
             raise
+        else:
+            return response.embeddings
 
     async def embed_query(self, text: str) -> list[float]:
         """Generate embedding for search query."""
@@ -182,13 +183,17 @@ class CohereProvider(CombinedProvider):
         self, query: str, documents: list[str], top_k: int | None = None
     ) -> list[RerankResult]:
         """Rerank documents using Cohere."""
+
+        def _raise_value_error(msg: str) -> None:
+            raise ValueError(msg)
+
         try:
             # Validate input limits
             if len(documents) > (self.max_documents or float("inf")):
-                raise ValueError(f"Too many documents: {len(documents)} > {self.max_documents}")
+                _raise_value_error(f"Too many documents: {len(documents)} > {self.max_documents}")
 
             if len(query) > (self.max_query_length or float("inf")):
-                raise ValueError(f"Query too long: {len(query)} > {self.max_query_length}")
+                _raise_value_error(f"Query too long: {len(query)} > {self.max_query_length}")
 
             response = self.client.rerank(
                 query=query, documents=documents, model=self._rerank_model, top_k=top_k
@@ -196,20 +201,21 @@ class CohereProvider(CombinedProvider):
 
             # Convert to our format
             rerank_results = []
-            for item in response.results:
-                rerank_results.append(
-                    RerankResult(
-                        index=item.index,
-                        relevance_score=item.relevance_score,
-                        document=getattr(item, "document", None),
-                    )
+            rerank_results.extend(
+                RerankResult(
+                    index=item.index,
+                    relevance_score=item.relevance_score,
+                    document=getattr(item, "document", None),
                 )
-
-            return rerank_results
+                for item in response.results
+            )
 
         except Exception:
             logger.exception("Error reranking with Cohere")
             raise
+
+        else:
+            return rerank_results
 
     # Provider info methods
 

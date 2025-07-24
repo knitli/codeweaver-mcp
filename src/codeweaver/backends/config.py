@@ -14,6 +14,7 @@ import os
 
 from dataclasses import dataclass, field
 from typing import Any, Literal
+from uuid import uuid4
 
 from codeweaver.backends.factory import BackendConfig
 
@@ -28,7 +29,7 @@ class BackendConfigExtended(BackendConfig):
     """
 
     # Collection management
-    collection_name: str = "code-embeddings"
+    collection_name: str = f"codeweaver-{uuid4()}"
     auto_create_collection: bool = True
     collection_dimension: int = 1024
 
@@ -58,6 +59,10 @@ class BackendConfigExtended(BackendConfig):
     # Security and compliance
     enable_tls: bool = True
     verify_ssl: bool = True
+    require_encryption: bool = True
+    enable_grpc: bool = False
+    prefer_http: bool = False
+    prefer_grpc: bool = True
     client_cert_path: str | None = None
     client_key_path: str | None = None
 
@@ -67,11 +72,27 @@ class BackendConfigExtended(BackendConfig):
     enable_tracing: bool = False
     trace_sample_rate: float = 0.1
 
+    def __post_init__(self):
+        """
+        Post-initialization to ensure compatibility with base BackendConfig.
+
+        This method ensures that the extended configuration can be used
+        seamlessly with existing backend systems.
+        """
+        super().__post_init__()
+
+        # Ensure collection name is always set
+        if not self.enable_grpc:
+            self.prefer_grpc = False
+        if self.url:
+            self.prefer_http = True
+
 
 def create_backend_config_from_legacy(
     qdrant_url: str | None = None,
     qdrant_api_key: str | None = None,
     collection_name: str = "code-embeddings",
+    *,
     enable_sparse_vectors: bool = False,
     **kwargs: Any,
 ) -> BackendConfigExtended:
@@ -252,6 +273,10 @@ health_check_interval = {config.health_check_interval}
 [backend.security]
 enable_tls = {str(config.enable_tls).lower()}
 verify_ssl = {str(config.verify_ssl).lower()}
+require_encryption = {str(config.require_encryption).lower()}
+enable_grpc = {str(config.enable_grpc).lower()}
+prefer_http = {str(config.prefer_http).lower()}
+prefer_grpc = {str(config.prefer_grpc).lower()}
 # client_cert_path = "path/to/cert.pem"
 # client_key_path = "path/to/key.pem"
 

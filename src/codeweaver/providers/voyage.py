@@ -1,3 +1,4 @@
+# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -152,10 +153,13 @@ class VoyageAIProvider(CombinedProvider):
                 input_type="document",
                 output_dimension=self._dimension,
             )
-            return result.embeddings
         except Exception:
             logger.exception("Error generating VoyageAI embeddings")
             raise
+
+        else:
+            return result.embeddings
+
 
     @rate_limited("voyage_embed_query", lambda self, text, **kwargs: max(1, len(text) // 4))
     async def embed_query(self, text: str) -> list[float]:
@@ -189,13 +193,15 @@ class VoyageAIProvider(CombinedProvider):
         self, query: str, documents: list[str], top_k: int | None = None
     ) -> list[RerankResult]:
         """Rerank documents using VoyageAI with rate limiting."""
+        def _raise_value_error(msg: str) -> None:
+            raise ValueError(msg)
         try:
             # Validate input limits
             if len(documents) > (self.max_documents or float("inf")):
-                raise ValueError(f"Too many documents: {len(documents)} > {self.max_documents}")
+                _raise_value_error(f"Too many documents: {len(documents)} > {self.max_documents}")
 
             if len(query) > (self.max_query_length or float("inf")):
-                raise ValueError(f"Query too long: {len(query)} > {self.max_query_length}")
+                _raise_value_error(f"Query too long: {len(query)} > {self.max_query_length}")
 
             result = self.client.rerank(
                 query=query, documents=documents, model=self._rerank_model, top_k=top_k
@@ -204,7 +210,7 @@ class VoyageAIProvider(CombinedProvider):
             # Convert to our format
             rerank_results = []
             for item in result.results:
-                rerank_results.append(
+                rerank_results.append(  # noqa: PERF401
                     RerankResult(
                         index=item.index,
                         relevance_score=item.relevance_score,
@@ -212,11 +218,13 @@ class VoyageAIProvider(CombinedProvider):
                     )
                 )
 
-            return rerank_results
-
         except Exception:
             logger.exception("Error reranking with VoyageAI")
             raise
+
+        else:
+            return rerank_results
+
 
     # Provider info methods
 

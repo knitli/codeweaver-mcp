@@ -194,35 +194,40 @@ class DependencyContainer:
         context.resolving.add(key)
 
         try:
-            # Resolve dependencies
-            resolved_deps = {}
-            for dep_name, dep_key in registration.dependencies.items():
-                dep_type, dep_component = dep_key.split(":", 1)
-                resolved_deps[dep_name] = self._resolve_with_context(
-                    dep_type, dep_component, context, {}
-                )
-
-            # Merge resolved dependencies with override parameters
-            factory_params = {**resolved_deps, **override_params}
-
-            # Create instance
-            instance = registration.factory(**factory_params)
-
-            # Cache based on lifecycle
-            if registration.lifecycle == Lifecycle.SINGLETON:
-                self._singletons[key] = instance
-                self._register_cleanup(instance)
-
-            elif registration.lifecycle == Lifecycle.SCOPED and context.scope_id:
-                self._scoped_instances[context.scope_id][key] = instance
-
-            # Store in context
-            context.resolved[key] = instance
-
-            return instance
-
+            return self._resolve_dependencies(
+                registration, context, override_params, key
+            )
         finally:
             context.resolving.remove(key)
+
+    def _resolve_dependencies(self, registration, context, override_params, key):
+        """Resolve provided dependencies."""
+        # Resolve dependencies
+        resolved_deps = {}
+        for dep_name, dep_key in registration.dependencies.items():
+            dep_type, dep_component = dep_key.split(":", 1)
+            resolved_deps[dep_name] = self._resolve_with_context(
+                dep_type, dep_component, context, {}
+            )
+
+            # Merge resolved dependencies with override parameters
+        factory_params = resolved_deps | override_params
+
+        # Create instance
+        instance = registration.factory(**factory_params)
+
+        # Cache based on lifecycle
+        if registration.lifecycle == Lifecycle.SINGLETON:
+            self._singletons[key] = instance
+            self._register_cleanup(instance)
+
+        elif registration.lifecycle == Lifecycle.SCOPED and context.scope_id:
+            self._scoped_instances[context.scope_id][key] = instance
+
+        # Store in context
+        context.resolved[key] = instance
+
+        return instance
 
     def resolve_dependencies(self, component_type: str, component_name: str) -> dict[str, Any]:
         """Resolve all dependencies for a component without creating it.

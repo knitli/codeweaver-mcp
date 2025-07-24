@@ -1,3 +1,4 @@
+# sourcery skip: name-type-suffix
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -40,6 +41,7 @@ class DataSourcesConfig:
         self,
         source_type: str,
         config: dict[str, Any],
+        *,
         enabled: bool = True,
         priority: int = 1,
         source_id: str | None = None,
@@ -146,9 +148,7 @@ class DataSourcesConfig:
                 errors.append(f"Source {i}: missing 'config' field")
                 continue
 
-            # Check for duplicate source IDs
-            source_id = source.get("source_id")
-            if source_id:
+            if source_id := source.get("source_id"):
                 if source_id in source_ids:
                     errors.append(f"Source {i}: duplicate source_id '{source_id}'")
                 source_ids.add(source_id)
@@ -184,58 +184,61 @@ class DataSourcesConfig:
 
         return config
 
+    def _add_data_sources_field(self, config_obj: type) -> None:
+        """Add data_sources field to the config class if not already present."""
+        if hasattr(config_obj, "data_sources"):
+            return
 
-def extend_config_with_data_sources(config_class: type) -> type:
-    """Extend a configuration class with data sources support.
+        original_init = config_obj.__init__
 
-    This function extends the existing CodeWeaverConfig class to include
-    data source configuration while maintaining backward compatibility.
-
-    Args:
-        config_class: The configuration class to extend
-
-    Returns:
-        Extended configuration class with data sources support
-    """
-    # Add data_sources field to the config class
-    if not hasattr(config_class, "data_sources"):
-        # Dynamically add the field (this is a bit hacky but maintains compatibility)
-        original_init = config_class.__init__
-
-        def new_init(self, *args, **kwargs):
+        def new_init(self, *args: Any, **kwargs: dict[str, Any]) -> DataSourcesConfig:
+            """Initiate a new `DataSourcesConfig`."""
             original_init(self, *args, **kwargs)
             if not hasattr(self, "data_sources"):
                 self.data_sources = DataSourcesConfig()
 
-        config_class.__init__ = new_init
-        config_class.data_sources = field(default_factory=DataSourcesConfig)
+        config_obj.__init__ = new_init
+        config_obj.data_sources = field(default_factory=DataSourcesConfig)
 
-    # Extend the merge_from_dict method
-    original_merge = getattr(config_class, "merge_from_dict", None)
+    def _handle_data_sources_merge(self, config_data: dict[str, Any]) -> dict[str, Any]:
+        """Handle data_sources section during merge."""
+        if "data_sources" not in config_data:
+            return config_data
 
-    def enhanced_merge_from_dict(self, config_dict: dict[str, Any]) -> None:
-        # Handle data_sources section specially
-        if "data_sources" in config_dict:
-            data_sources_dict = config_dict["data_sources"]
-            if isinstance(data_sources_dict, dict):
-                self.data_sources = DataSourcesConfig.from_dict(data_sources_dict)
-            config_dict = {k: v for k, v in config_dict.items() if k != "data_sources"}
+        data_sources_data = config_data["data_sources"]
+        if isinstance(data_sources_data, dict):
+            self.data_sources = DataSourcesConfig.from_dict(data_sources_data)
 
-        # Call original merge method for other sections
+        return {k: v for k, v in config_data.items() if k != "data_sources"}
+
+    def _fallback_merge_config(self, config_data: dict[str, Any]) -> None:
+        """Fallback merge implementation when no original method exists."""
+        for section_name, section_data in config_data.items():
+            if not hasattr(self, section_name) or not isinstance(section_data, dict):
+                continue
+            section = getattr(self, section_name)
+            for key, value in section_data.items():
+                if hasattr(section, key):
+                    setattr(section, key, value)
+
+
+def _create_enhanced_merge_method(self, original_merge) -> callable:
+    """Create the enhanced merge_from_dict method."""
+
+    def enhanced_merge_from_dict(self, config_data: dict[str, Any]) -> None:
+        config_data = self._handle_data_sources_merge(self, config_data)
+
         if original_merge:
-            original_merge(self, config_dict)
+            original_merge(self, config_data)
         else:
-            # Fallback if no original method exists
-            for section_name, section_data in config_dict.items():
-                if hasattr(self, section_name) and isinstance(section_data, dict):
-                    section = getattr(self, section_name)
-                    for key, value in section_data.items():
-                        if hasattr(section, key):
-                            setattr(section, key, value)
+            self._fallback_merge_config(self, config_data)
 
-    config_class.merge_from_dict = enhanced_merge_from_dict
+    return enhanced_merge_from_dict
 
-    # Add convenience methods
+
+def _add_convenience_methods(config_obj: type) -> None:
+    """Add convenience methods to the config class."""
+
     def get_data_sources_config(self) -> DataSourcesConfig:
         """Get the data sources configuration."""
         if not hasattr(self, "data_sources"):
@@ -247,14 +250,33 @@ def extend_config_with_data_sources(config_class: type) -> type:
         if not hasattr(self, "data_sources"):
             self.data_sources = DataSourcesConfig()
 
-        # Migrate from legacy configuration if no sources configured
         if not self.data_sources.sources:
             self.data_sources.migrate_from_legacy_config(self)
 
-    config_class.get_data_sources_config = get_data_sources_config
-    config_class.ensure_data_sources_initialized = ensure_data_sources_initialized
+    config_obj.get_data_sources_config = get_data_sources_config
+    config_obj.ensure_data_sources_initialized = ensure_data_sources_initialized
 
-    return config_class
+
+def extend_config_with_data_sources(self, config_obj: type) -> type:
+    """Extend a configuration class with data sources support.
+
+    This function extends the existing CodeWeaverConfig class to include
+    data source configuration while maintaining backward compatibility.
+
+    Args:
+        config_obj: The configuration class to extend
+
+    Returns:
+        Extended configuration class with data sources support
+    """
+    self._add_data_sources_field(config_obj)
+
+    original_merge = getattr(config_obj, "merge_from_dict", None)
+    config_obj.merge_from_dict = self._create_enhanced_merge_method(original_merge)
+
+    self._add_convenience_methods(config_obj)
+
+    return config_obj
 
 
 def get_example_data_sources_config() -> str:

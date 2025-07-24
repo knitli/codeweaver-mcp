@@ -18,7 +18,7 @@ from codeweaver.providers.base import LocalEmbeddingProvider, ProviderCapability
 
 
 try:
-    from sentence_transformers import SentenceTransformer
+    from sentence_transformers import SentenceTransformer  # type: ignore
 
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:

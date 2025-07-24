@@ -343,6 +343,7 @@ class QdrantHybridBackend(QdrantBackend):
     """
 
     def __init__(self, *args: Any, **kwargs: Any):
+        """Initialize the qdrant backend."""
         # Force enable sparse vectors for hybrid search
         kwargs["enable_sparse_vectors"] = True
         super().__init__(*args, **kwargs)
@@ -420,11 +421,7 @@ class QdrantHybridBackend(QdrantBackend):
             fusion_mapping = {HybridStrategy.RRF: Fusion.RRF, HybridStrategy.DBSF: Fusion.DBSF}
             fusion = fusion_mapping.get(hybrid_strategy, Fusion.RRF)
 
-            # Apply filters if specified
-            qdrant_filter = None
-            if search_filter:
-                qdrant_filter = self._convert_filter(search_filter)
-
+            qdrant_filter = self._convert_filter(search_filter) if search_filter else None
             # Execute hybrid search
             result = self.client.query_points(
                 collection_name=collection_name,

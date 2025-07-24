@@ -105,21 +105,20 @@ class GitRepositorySource(AbstractDataSource):
         if not config.get("enabled", True):
             return []
 
-        repository_url = config.get("repository_url")
-        if not repository_url:
-            raise ValueError("repository_url is required for git source")
+        if repository_url := config.get("repository_url"):  # noqa: F841
+            # TODO: Implement git repository discovery
+            # This would involve:
+            # 1. Cloning or pulling the repository
+            # 2. Checking out the specified branch/commit
+            # 3. Discovering files in the repository
+            # 4. Creating ContentItems with git metadata
 
-        # TODO: Implement git repository discovery
-        # This would involve:
-        # 1. Cloning or pulling the repository
-        # 2. Checking out the specified branch/commit
-        # 3. Discovering files in the repository
-        # 4. Creating ContentItems with git metadata
+            raise NotImplementedError(
+                "Git repository source is not yet implemented. "
+                "Future implementation will require GitPython or pygit2 dependency."
+            )
 
-        raise NotImplementedError(
-            "Git repository source is not yet implemented. "
-            "Future implementation will require GitPython or pygit2 dependency."
-        )
+        raise ValueError("repository_url is required for git source")
 
     async def read_content(self, item: ContentItem) -> str:
         """Read content from a git repository file.

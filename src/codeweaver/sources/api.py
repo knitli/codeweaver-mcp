@@ -119,22 +119,20 @@ class APISource(AbstractDataSource):
         if not api_type:
             raise ValueError("api_type is required for API source")
 
-        base_url = config.get("base_url")
-        if not base_url:
-            raise ValueError("base_url is required for API source")
+        if base_url := config.get("base_url"):  # noqa: F841
+            # TODO: Implement API content discovery
+            # This would involve:
+            # 1. Discovering API schemas (OpenAPI, GraphQL)
+            # 2. Extracting endpoint definitions
+            # 3. Making sample requests to endpoints
+            # 4. Parsing API documentation
+            # 5. Creating ContentItems for each API artifact
 
-        # TODO: Implement API content discovery
-        # This would involve:
-        # 1. Discovering API schemas (OpenAPI, GraphQL)
-        # 2. Extracting endpoint definitions
-        # 3. Making sample requests to endpoints
-        # 4. Parsing API documentation
-        # 5. Creating ContentItems for each API artifact
-
-        raise NotImplementedError(
-            f"API source for {api_type} is not yet implemented. "
-            "Future implementation will require HTTP client dependencies."
-        )
+            raise NotImplementedError(
+                f"API source for {api_type} is not yet implemented. "
+                "Future implementation will require HTTP client dependencies."
+            )
+        raise ValueError("base_url is required for API source")
 
     async def read_content(self, item: ContentItem) -> str:
         """Read content from an API resource.
@@ -219,11 +217,13 @@ class APISource(AbstractDataSource):
             # the API is accessible and authentication works
 
             logger.warning("API connectivity validation not fully implemented")
-            return True
 
         except Exception:
             logger.exception("Error validating API source configuration")
             return False
+
+        else:
+            return True
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for API content.

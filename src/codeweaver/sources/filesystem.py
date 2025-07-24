@@ -141,25 +141,21 @@ class FileSystemSourceWatcher(SourceWatcher):
     async def _detect_changes(self) -> list[ContentItem]:
         """Detect files that have changed since last scan."""
         changed_items = []
-        current_time = datetime.now()
+        current_time = datetime.now(datetime.UTC)
 
         try:
             # Find files modified since last scan
             for file_path in self.root_path.rglob("*"):
                 if not file_path.is_file():
                     continue
-
                 try:
                     stat = file_path.stat()
                     modified_time = datetime.fromtimestamp(stat.st_mtime)
 
-                    if modified_time > self._last_scan_time:
-                        # File was modified since last scan
-                        item = self._path_to_content_item(file_path, stat)
-                        if item:
-                            changed_items.append(item)
+                    if modified_time > self._last_scan_time and (item := self._path_to_content_item(file_path, stat)):
+                        changed_items.append(item)
 
-                except (OSError, PermissionError):
+                except OSError:
                     # Skip files that can't be accessed
                     continue
 
@@ -248,8 +244,8 @@ class FileSystemSource(AbstractDataSource):
         if not config.get("enabled", True):
             return []
 
-        root_path_str = config.get("root_path", ".")
-        root_path = Path(root_path_str).resolve()
+        root = config.get("root_path", ".")
+        root_path = Path(root).resolve()
 
         if not root_path.exists():
             raise ValueError(f"Root path does not exist: {root_path}")
@@ -322,8 +318,8 @@ class FileSystemSource(AbstractDataSource):
         if not config.get("enable_change_watching", False):
             raise NotImplementedError("Change watching is disabled in configuration")
 
-        root_path_str = config.get("root_path", ".")
-        root_path = Path(root_path_str).resolve()
+        root = config.get("root_path", ".")
+        root_path = Path(root).resolve()
 
         watcher = FileSystemSourceWatcher(
             source_id=self.source_id, callback=callback, root_path=root_path, config=config
@@ -347,12 +343,12 @@ class FileSystemSource(AbstractDataSource):
                 return False
 
             # Check root path
-            root_path_str = config.get("root_path")
-            if not root_path_str:
+            root = config.get("root_path")
+            if not root:
                 logger.warning("Missing root_path in file system source configuration")
                 return False
 
-            root_path = Path(root_path_str)
+            root_path = Path(root)
             if not root_path.exists():
                 logger.warning("Root path does not exist: %s", root_path)
                 return False
@@ -402,11 +398,8 @@ class FileSystemSource(AbstractDataSource):
                     "absolute_path": str(file_path.resolve()),
                 })
 
-                # Add language detection
-                if not item.language:
-                    language = self._detect_language(file_path)
-                    if language:
-                        metadata["detected_language"] = language
+                if (language := self._detect_language(file_path)) and not item.language:
+                    metadata["detected_language"] = language
 
         except Exception:
             logger.debug("Failed to get extended metadata for %s", item.path)

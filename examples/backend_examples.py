@@ -13,8 +13,8 @@ to the new extensible backend system supporting 15+ vector databases.
 import asyncio
 import logging
 
+from codeweaver._types.backends import DistanceMetric, FilterCondition, SearchFilter, VectorPoint
 from codeweaver.backends.factory import BackendFactory
-from codeweaver.base import DistanceMetric, FilterCondition, SearchFilter, VectorPoint
 from codeweaver.config import (
     BackendConfigExtended,
     create_backend_config_from_env,

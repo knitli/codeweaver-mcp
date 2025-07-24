@@ -117,22 +117,20 @@ class WebCrawlerSource(AbstractDataSource):
         if not config.get("enabled", True):
             return []
 
-        start_urls = config.get("start_urls", [])
-        if not start_urls:
-            raise ValueError("start_urls is required for web crawler source")
+        if start_urls := config.get("start_urls", []):  # noqa: F841
+            # TODO: Implement web crawling
+            # This would involve:
+            # 1. Respecting robots.txt and politeness policies
+            # 2. Crawling websites starting from start_urls
+            # 3. Following links within allowed domains
+            # 4. Extracting text content from HTML pages
+            # 5. Creating ContentItems for each discovered page
 
-        # TODO: Implement web crawling
-        # This would involve:
-        # 1. Respecting robots.txt and politeness policies
-        # 2. Crawling websites starting from start_urls
-        # 3. Following links within allowed domains
-        # 4. Extracting text content from HTML pages
-        # 5. Creating ContentItems for each discovered page
-
-        raise NotImplementedError(
-            "Web crawler source is not yet implemented. "
-            "Future implementation will require web scraping dependencies."
-        )
+            raise NotImplementedError(
+                "Web crawler source is not yet implemented. "
+                "Future implementation will require web scraping dependencies."
+            )
+        raise ValueError("start_urls is required for web crawler source")
 
     async def read_content(self, item: ContentItem) -> str:
         """Read content from a web page.
@@ -224,7 +222,6 @@ class WebCrawlerSource(AbstractDataSource):
             return False
 
         return True
-
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for web content.

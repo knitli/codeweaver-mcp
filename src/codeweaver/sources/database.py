@@ -119,22 +119,21 @@ class DatabaseSource(AbstractDataSource):
         if not database_type:
             raise ValueError("database_type is required for database source")
 
-        connection_string = config.get("connection_string")
-        if not connection_string:
-            raise ValueError("connection_string is required for database source")
+        if connection_string := config.get("connection_string"):  # noqa: F841
+            # TODO: Implement database content discovery
+            # This would involve:
+            # 1. Connecting to the database
+            # 2. Discovering schemas, tables, views, procedures
+            # 3. Extracting schema definitions as content
+            # 4. Sampling data records if configured
+            # 5. Creating ContentItems for each database object
 
-        # TODO: Implement database content discovery
-        # This would involve:
-        # 1. Connecting to the database
-        # 2. Discovering schemas, tables, views, procedures
-        # 3. Extracting schema definitions as content
-        # 4. Sampling data records if configured
-        # 5. Creating ContentItems for each database object
+            raise NotImplementedError(
+                f"Database source for {database_type} is not yet implemented. "
+                "Future implementation will require database-specific dependencies."
+            )
 
-        raise NotImplementedError(
-            f"Database source for {database_type} is not yet implemented. "
-            "Future implementation will require database-specific dependencies."
-        )
+        raise ValueError("connection_string is required for database source")
 
     async def read_content(self, item: ContentItem) -> str:
         """Read content from a database object.
@@ -217,11 +216,14 @@ class DatabaseSource(AbstractDataSource):
             # the configuration is correct and accessible
 
             logger.warning("Database connectivity validation not fully implemented")
-            return True
 
         except Exception:
             logger.exception("Error validating database source configuration")
             return False
+
+        else:
+            return True
+
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for database content.

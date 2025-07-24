@@ -14,7 +14,7 @@ import logging
 
 from typing import Any
 
-from codeweaver.sources.base import DataSource, SourceConfig, get_source_registry
+from codeweaver.sources.base import DataSource, SourceConfig, SourceRegistry, get_source_registry
 
 
 logger = logging.getLogger(__name__)
@@ -109,11 +109,14 @@ class SourceFactory:
             source = source_class(source_id=source_id) if source_id else source_class()
 
             logger.info("Created %s data source: %s", source_type, source.source_id)
-            return source
 
         except Exception:
             logger.exception("Failed to create %s data source", source_type)
             raise
+
+        else:
+            return source
+
 
     def create_multiple_sources(self, source_configs: list[dict[str, Any]]) -> list[DataSource]:
         """Create multiple data source instances from configurations.
@@ -231,7 +234,7 @@ class SourceFactory:
 
         return descriptions.get(source_type, f"Data source of type {source_type}")
 
-    def get_source_registry(self):
+    def get_source_registry(self) -> SourceRegistry:
         """Get the underlying source registry.
 
         Returns:

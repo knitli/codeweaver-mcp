@@ -98,9 +98,7 @@ class DataSourceManager:
                 )
 
             except Exception:
-                logger.exception(
-                    "Error discovering content from source %s", source.source_id
-                )
+                logger.exception("Error discovering content from source %s", source.source_id)
 
         # Apply deduplication if enabled
         if self.config.enable_content_deduplication:
@@ -121,12 +119,9 @@ class DataSourceManager:
         Raises:
             ValueError: If no source can handle the content item
         """
-        # Find the source that can handle this content item
-        source = self._find_source_for_item(item)
-        if not source:
-            raise ValueError(f"No source available for content item: {item}")
-
-        return await source.read_content(item)
+        if source := self._find_source_for_item(item):
+            return await source.read_content(item)
+        raise ValueError(f"No source available for content item: {item}")
 
     async def setup_change_watching(self, callback: Callable[[list[ContentItem]], None]) -> None:
         """Set up change watching for all sources that support it.
@@ -153,9 +148,7 @@ class DataSourceManager:
             except NotImplementedError:
                 logger.debug("Change watching not supported by source: %s", source.source_id)
             except Exception:
-                logger.exception(
-                    "Failed to setup change watching for source %s", source.source_id
-                )
+                logger.exception("Failed to setup change watching for source %s", source.source_id)
 
     async def cleanup(self) -> None:
         """Clean up all sources and watchers."""
@@ -179,17 +172,20 @@ class DataSourceManager:
 
     def _get_source_config(self, source_id: str) -> dict[str, Any] | None:
         """Get configuration for a specific source ID."""
-        for source_config in self.config.sources:
-            if source_config.get("source_id") == source_id:
-                return source_config
-        return None
+        return next(
+            (
+                source_config
+                for source_config in self.config.sources
+                if source_config.get("source_id") == source_id
+            ),
+            None,
+        )
 
     def _find_source_for_item(self, item: ContentItem) -> DataSource | None:
         """Find the source that can handle a specific content item."""
-        for source in self._active_sources:
-            if source.source_id == item.source_id:
-                return source
-        return None
+        return next(
+            (source for source in self._active_sources if source.source_id == item.source_id), None
+        )
 
     def _deduplicate_content(self, content_items: list[ContentItem]) -> list[ContentItem]:
         """Remove duplicate content items based on path and checksum."""
@@ -303,7 +299,8 @@ class BackwardCompatibilityAdapter:
             "total_chunks": len(all_chunks),
             "languages_found": list(processed_languages),
             "data_sources_used": [
-                source.source_id for source in self.data_source_manager._active_sources  # noqa: SLF001
+                source.source_id
+                for source in self.data_source_manager._active_sources  # noqa: SLF001
             ],
             "source_statistics": self._get_source_statistics(content_items),
         }
@@ -371,7 +368,7 @@ def create_backward_compatible_server_integration(server_class: type) -> type:
     original_init = server_class.__init__
     original_index_codebase = getattr(server_class, "index_codebase", None)
 
-    def enhanced_init(self, config=None):
+    def enhanced_init(self, config: DataSourcesConfig | None = None) -> None:
         """Enhanced initialization with optional data source support."""
         # Call original initialization
         original_init(self, config)
@@ -383,7 +380,9 @@ def create_backward_compatible_server_integration(server_class: type) -> type:
             self.config.data_sources, "enabled", False
         )
 
-    async def enhanced_index_codebase(self, root_path: str, patterns: list[str] | None = None):
+    async def enhanced_index_codebase(
+        self, root_path: str, patterns: list[str] | None = None
+    ) -> Any:
         """Enhanced index_codebase with optional data source support."""
         # Check if we should use the new data source system
         if self._use_data_sources and hasattr(self.config, "create_data_source_manager"):

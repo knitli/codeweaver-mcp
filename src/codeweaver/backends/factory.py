@@ -14,16 +14,22 @@ with automatic capability detection and fallback mechanisms.
 import logging
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Literal, TypedDict, TypeVar
+from typing import Any, ClassVar, Literal, TypeVar
 
 from codeweaver.backends.base import (
     BackendConnectionError,
-    BackendResourceProvider,
     CustomBackendCapabilities,
     HybridSearchBackend,
     VectorBackend,
 )
 from codeweaver.backends.qdrant import QdrantHybridBackend
+from codeweaver.providers.base import (
+    CombinedProvider,
+    EmbeddingProvider,
+    LocalEmbeddingProvider,
+    ProviderKind,
+    RerankProvider,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +43,8 @@ class BackendConfig:
     """Configuration for vector database backends."""
 
     # Core connection settings
-    provider: BackendResourceProvider | str
+    provider: type[CombinedProvider] | type[EmbeddingProvider] | type[LocalEmbeddingProvider] | type[RerankProvider] | str
+    kind: ProviderKind
     name: str | None = None  # For custom backends
     url: str | None = None
     api_key: str | None = None
@@ -64,55 +71,6 @@ class BackendConfig:
     # Provider-specific settings
     provider_options: dict[str, Any] | None = None
     """Additional options specific to the backend provider. Can be used to pass arbitrary settings for a provider implementation. Providers should validate these options themselves."""
-
-    def __post_init__(self):
-        """Post-initialization validation and normalization."""
-        if isinstance(self.provider, str):
-            if self.provider.lower() in BackendResourceProvider.__members__:
-                self.provider = BackendResourceProvider[self.provider.lower()]
-            else:
-                self.provider = BackendResourceProvider.CUSTOM
-        if self.provider == BackendResourceProvider.CUSTOM and not all(
-            item for item in {self.name, self.capabilities} if item and self.name.strip()
-        ):
-            raise ValueError(
-                "Custom backend requires a name and `CustomBackendCapabilities` configuration dictionary."
-            )
-        if self.provider == BackendResourceProvider.CUSTOM and not isinstance(
-            self.capabilities, CustomBackendCapabilities
-        ):
-            raise TypeError(
-                "Custom backend capabilities must be an instance of `CustomBackendCapabilities`."
-            )
-        if self.provider == BackendResourceProvider.CUSTOM:
-            self.provider.supports_hybrid_search = self.capabilities.get(
-                "supports_hybrid_search", False
-            )
-            self.provider.supports_streaming = self.capabilities.get("supports_streaming", False)
-            self.provider.supports_transactions = self.capabilities.get(
-                "supports_transactions", False
-            )
-            self.provider.value = f"custom({self.name})"
-            self.provider.backend = self.backend
-            self.provider.to_available_backend = AvailableBackend(
-                provider=self.provider,
-                backend=self.backend,
-                available=True,
-                supports_hybrid_search=self.capabilities.get("supports_hybrid_search", False),
-                supports_streaming=self.capabilities.get("supports_streaming", False),
-                supports_transactions=self.capabilities.get("supports_transactions", False),
-            )
-
-
-class AvailableBackend(TypedDict, total=False):
-    """Typed dictionary for available backends and their capabilities."""
-
-    provider: BackendResourceProvider | str
-    backend: type[VectorBackend]
-    available: bool
-    supports_hybrid_search: bool
-    supports_streaming: bool
-    supports_transactions: bool
 
 
 class BackendFactory:
@@ -144,9 +102,9 @@ class BackendFactory:
                 "weaviate",  # noqa: PYI051
             ]
             | str,
-            AvailableBackend,
+            ProviderKind,
         ]
-    ] = {v: k.to_available_backend() for k, v in BackendResourceProvider.__members__.items()}
+    ] = {}
 
     @classmethod
     def create_backend(cls, config: BackendConfig) -> VectorBackend:
@@ -266,7 +224,7 @@ class BackendFactory:
 
     @classmethod
     def register_backend(
-        cls, provider: str, backend_class: type[VectorBackend], supports_hybrid: bool = False
+        cls, provider: str, backend_class: type[VectorBackend], *, supports_hybrid: bool = False
     ) -> None:
         """
         Register a new backend provider.

@@ -364,7 +364,7 @@ class AbstractDataSource(ABC):
         metadata = {
             "source_type": self.source_type,
             "source_id": self.source_id,
-            "discovered_at": datetime.now().isoformat(),
+            "discovered_at": datetime.now(datetime.UTC).isoformat(),
         }
 
         # Add any existing metadata from the item
@@ -396,9 +396,7 @@ class AbstractDataSource(ABC):
                 continue
 
             # Check include patterns (if specified)
-            if include_patterns and all(
-                pattern not in item.path for pattern in include_patterns
-            ):
+            if include_patterns and all(pattern not in item.path for pattern in include_patterns):
                 logger.debug("Not included by pattern: %s", item.path)
                 continue
 
