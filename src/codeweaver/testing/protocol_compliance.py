@@ -94,7 +94,7 @@ class ComplianceResult:
 class ProtocolComplianceValidator:
     """Comprehensive protocol compliance validator."""
 
-    def __init__(self, strict_mode: bool = True, performance_benchmarks: bool = True):
+    def __init__(self, *, strict_mode: bool = True, performance_benchmarks: bool = True):
         """Initialize the compliance validator.
 
         Args:

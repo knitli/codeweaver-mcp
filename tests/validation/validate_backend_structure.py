@@ -220,7 +220,7 @@ def main() -> bool:
         except Exception:
             logger.exception("❌ %s: ERROR - ", test_name)
 
-    logger.info(f"\n🎯 Test Results: {passed}/{total} tests passed")
+    logger.info("\n🎯 Test Results: {passed}/%s tests passed", total)
 
     if passed == total:
         logger.info("🎉 All structure tests passed! Backend refactoring is properly implemented.")

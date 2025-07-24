@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -11,6 +12,9 @@ support, designed for runtime flexibility and extensibility.
 """
 
 import enum
+import operator
+import re
+import types
 
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol, runtime_checkable
@@ -33,12 +37,31 @@ class HybridStrategy(enum.Enum):
     LINEAR = "linear"  # Linear combination
     CONVEX = "convex"  # Convex combination
 
+    @classmethod
+    def from_string(cls, strategy: str) -> "HybridStrategy":
+        """
+        Create a HybridStrategy from a string.
+
+        Args:
+            strategy: Strategy name (e.g., "rrf", "dbsf", "linear", "convex")
+
+        Returns:
+            Corresponding HybridStrategy enum member
+
+        Raises:
+            ValueError: If strategy is not recognized
+        """
+        try:
+            return cls[strategy.upper().replace("-", "_").replace(" ", "_")]
+        except KeyError as e:
+            raise ValueError(f"Unsupported hybrid strategy: {strategy}") from e
+
 
 @dataclass
 class VectorPoint:
     """Universal vector point structure compatible with all backends."""
 
-    id: str | int
+    iden: str | int
     vector: list[float]
     payload: dict[str, Any] | None = None
     sparse_vector: dict[int, float] | None = None  # For hybrid search
@@ -48,7 +71,7 @@ class VectorPoint:
 class SearchResult:
     """Unified search result format across all vector databases."""
 
-    id: str | int
+    iden: str | int
     score: float
     payload: dict[str, Any] | None = None
     vector: list[float] | None = None  # Optional, depends on backend
@@ -79,12 +102,95 @@ class CollectionInfo:
     backend_info: dict[str, Any] | None = None
 
 
+class FilterOperator(enum.Enum):
+    """Supported filter operators for vector search."""
+
+    EQ = "eq"  # Equal
+    NE = "ne"  # Not equal
+    GT = "gt"  # Greater than
+    GE = "ge"  # Greater than or equal
+    LT = "lt"  # Less than
+    LE = "le"  # Less than or equal
+    IN = "in"  # In list
+    NIN = "nin"  # Not in list
+    CONTAINS = "contains"  # Contains substring
+    REGEX = "regex"  # Regular expression match
+
+    @property
+    def is_comparison(self) -> bool:
+        """Check if operator is a comparison (eq, ne, gt, ge, lt, le)."""
+        return self in {self.EQ, self.NE, self.GT, self.GE, self.LT, self.LE}
+
+    @property
+    def is_set_operation(self) -> bool:
+        """Check if operator is a set operation (in, nin)."""
+        return self in {self.IN, self.NIN}
+
+    @property
+    def is_text_operation(self) -> bool:
+        """Check if operator is a text operation (contains, regex)."""
+        return self in {self.CONTAINS, self.REGEX}
+
+    @property
+    def operator(self) -> types.FunctionType:
+        """Get the Python operator object."""
+        return {
+            self.EQ: operator.eq,
+            self.NE: operator.ne,
+            self.GT: operator.gt,
+            self.GE: operator.ge,
+            self.LT: operator.lt,
+            self.LE: operator.le,
+            self.IN: lambda a, b: a in b,
+            self.NIN: lambda a, b: a not in b,
+            self.CONTAINS: lambda a, b: operator.contains(a, b),
+            self.REGEX: lambda a, b: bool(re.search(b, a)) if isinstance(a, str) else False,
+        }[self]
+
+    @property
+    def operator_symbols(self) -> tuple[str, ...]:
+        """Get the operator symbols for this filter operator."""
+        return {
+            self.EQ: ("==",),
+            self.NE: ("!=",),
+            self.GT: (">",),
+            self.GE: (">=",),
+            self.LT: ("<",),
+            self.LE: ("<=",),
+            self.IN: ("in",),
+            self.NIN: ("not in", "nin", "notin", "!in"),
+            self.CONTAINS: ("contains", "has"),
+            self.REGEX: ("regex", "match", "matches", "regexp", "re", "reg", "r", "s/"),
+        }[self]
+
+    @classmethod
+    def from_symbol(cls, symbol: str) -> "FilterOperator":
+        """
+        Create a FilterOperator from a symbol.
+
+        Args:
+            symbol: Operator symbol (e.g., "==", "!=", "in", "contains")
+
+        Returns:
+            Corresponding FilterOperator enum member
+
+        Raises:
+            ValueError: If symbol is not recognized
+        """
+        normalized_symbol = symbol.strip().lower()
+        if member := next(
+            op for op in cls if normalized_symbol in op.operator_symbols
+        ):
+            return member
+        raise ValueError(f"Unsupported filter operator symbol: {symbol}")
+
+
 @dataclass
 class FilterCondition:
     """Universal filter condition for vector search."""
 
     field: str
-    operator: Literal["eq", "ne", "gt", "gte", "lt", "lte", "in", "nin", "contains", "regex"]
+    operator: FilterOperator
     value: Any
 
 
@@ -147,7 +253,7 @@ class VectorBackend(Protocol):
 
         Backend Compatibility:
         - Qdrant: Converts to PointStruct format
-        - Pinecone: Uses upsert API with (id, vector, metadata) tuples
+        - Pinecone: Uses upsert API with (iden, vector, metadata) tuples
         - Chroma: Adds documents with embeddings and metadata
         - Weaviate: Creates objects with vector and properties
         - pgvector: Inserts/updates rows with vector data
@@ -284,9 +390,9 @@ class HybridSearchBackend(VectorBackend, Protocol):
         collection_name: str,
         dense_vector: list[float],
         sparse_query: dict[str, float] | str,
-        limit: int = 10,
+        limit: int = 10,  # TODO: NEEDS to be configurable
         hybrid_strategy: HybridStrategy = HybridStrategy.RRF,
-        alpha: float = 0.5,  # Balance between dense and sparse (0=sparse, 1=dense)
+        alpha: float = 0.5,  # TODO: NEEDS to be configurable
         search_filter: SearchFilter | None = None,
         **kwargs: Any,
     ) -> list[SearchResult]:
@@ -377,26 +483,27 @@ class BackendError(Exception):
     """Base exception for backend operations."""
 
     def __init__(self, message: str, backend_type: str, original_error: Exception | None = None):
+        """Initialize backend error with message and type."""
         super().__init__(message)
         self.backend_type = backend_type
         self.original_error = original_error
 
 
-class ConnectionError(BackendError):
+class BackendConnectionError(BackendError):
     """Backend connection failed."""
 
 
-class AuthenticationError(BackendError):
+class BackendAuthError(BackendError):
     """Backend authentication failed."""
 
 
-class CollectionNotFoundError(BackendError):
+class BackendCollectionNotFoundError(BackendError):
     """Collection does not exist."""
 
 
-class DimensionMismatchError(BackendError):
+class BackendVectorDimensionMismatchError(BackendError):
     """Vector dimension mismatch."""
 
 
-class UnsupportedOperationError(BackendError):
+class BackendUnsupportedOperationError(BackendError):
     """Operation not supported by backend."""

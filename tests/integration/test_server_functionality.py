@@ -25,7 +25,7 @@ from typing import Literal
 
 
 # Add the server to path
-sys.path.insert(0, Path(__file__).parent.parent.as_posix())
+sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 
 from codeweaver.server import CodeChunker, CodeEmbeddingsServer
 

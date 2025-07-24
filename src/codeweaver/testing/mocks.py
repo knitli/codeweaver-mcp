@@ -1,3 +1,4 @@
+# sourcery skip: avoid-single-character-names-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -12,6 +13,7 @@ external dependencies like API keys, databases, or network services.
 
 import asyncio
 import logging
+import operator
 import random
 import time
 
@@ -230,10 +232,7 @@ class MockVectorBackend:
         norm1 = sum(a * a for a in vec1) ** 0.5
         norm2 = sum(a * a for a in vec2) ** 0.5
 
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-
-        return dot_product / (norm1 * norm2)
+        return 0.0 if norm1 == 0 or norm2 == 0 else dot_product / (norm1 * norm2)
 
     def _matches_filter(self, vector_point: VectorPoint, search_filter: SearchFilter) -> bool:
         """Basic filter matching implementation."""
@@ -385,17 +384,17 @@ class MockHybridSearchBackend(MockVectorBackend):
 
         # Add scores from dense results
         for rank, result in enumerate(dense_results):
-            scores[result.id] = scores.get(result.id, 0) + 1 / (k + rank + 1)
+            scores[result.iden] = scores.get(result.iden, 0) + 1 / (k + rank + 1)
 
         # Add scores from sparse results
         for rank, result in enumerate(sparse_results):
-            scores[result.id] = scores.get(result.id, 0) + 1 / (k + rank + 1)
+            scores[result.iden] = scores.get(result.iden, 0) + 1 / (k + rank + 1)
 
         # Create combined results
-        all_results = {r.id: r for r in dense_results + sparse_results}
+        all_results = {r.iden: r for r in dense_results + sparse_results}
         combined = []
 
-        for result_id, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
+        for result_id, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
             if result_id in all_results:
                 result = all_results[result_id]
                 result.score = score
@@ -411,21 +410,21 @@ class MockHybridSearchBackend(MockVectorBackend):
         scores = {}
 
         # Normalize and combine scores
-        dense_dict = {r.id: r.score for r in dense_results}
-        sparse_dict = {r.id: r.score for r in sparse_results}
+        dense_vecs = {r.iden: r.score for r in dense_results}
+        sparse_vecs = {r.iden: r.score for r in sparse_results}
 
-        all_ids = set(dense_dict.keys()) | set(sparse_dict.keys())
+        all_ids = set(dense_vecs.keys()) | set(sparse_vecs.keys())
 
         for result_id in all_ids:
-            dense_score = dense_dict.get(result_id, 0.0)
-            sparse_score = sparse_dict.get(result_id, 0.0)
+            dense_score = dense_vecs.get(result_id, 0.0)
+            sparse_score = sparse_vecs.get(result_id, 0.0)
             scores[result_id] = alpha * dense_score + (1 - alpha) * sparse_score
 
         # Create combined results
-        all_results = {r.id: r for r in dense_results + sparse_results}
+        all_results = {r.iden: r for r in dense_results + sparse_results}
         combined = []
 
-        for result_id, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
+        for result_id, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
             if result_id in all_results:
                 result = all_results[result_id]
                 result.score = score
@@ -769,10 +768,10 @@ class MockDataSource(AbstractDataSource):
 
         watcher = SourceWatcher(self.source_id, callback)
         self._watchers.append(watcher)
-
         # Simulate some changes after a delay
-        asyncio.create_task(self._simulate_changes(watcher))
-
+        task = asyncio.create_task(self._simulate_changes(watcher))
+        tasks = {task}
+        task.add_done_callback(tasks.discard)
         logger.debug("Started change watching for mock source")
         return watcher
 

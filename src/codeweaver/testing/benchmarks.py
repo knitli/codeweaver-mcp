@@ -247,7 +247,7 @@ class BenchmarkSuite:
 
                 query_vectors = [v.vector for v in test_vectors[:10]]
 
-                async def batch_search_func(b):
+                async def batch_search_func(b: VectorBackend) -> list[VectorPoint]:
                     tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in query_vectors]
                     return await asyncio.gather(*tasks)
 
@@ -365,7 +365,7 @@ class BenchmarkSuite:
                 # Test reading first few items
                 items_to_read = content_items[: min(5, len(content_items))]
 
-                async def read_multiple_func(s):
+                async def read_multiple_func(s: DataSource) -> list[Any]:
                     tasks = [s.read_content(item) for item in items_to_read]
                     return await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -387,7 +387,7 @@ class BenchmarkSuite:
         implementation: Any,
         operation_func: Callable,
         batch_size: int = 1,
-    ) -> BenchmarkResult:
+    ) -> BenchmarkResult:  # sourcery skip: low-code-quality
         """Benchmark a specific operation."""
         implementation_name = type(implementation).__name__
         durations = []
@@ -395,11 +395,8 @@ class BenchmarkSuite:
 
         # Warmup iterations
         for _ in range(self.warmup_iterations):
-            try:
+            with contextlib.suppress(Exception):
                 await asyncio.wait_for(operation_func(implementation), timeout=self.timeout_seconds)
-            except Exception:
-                pass  # Ignore warmup errors
-
         # Start resource monitoring
         memory_before = self._get_memory_usage() if self.measure_resources else None
 
@@ -691,10 +688,10 @@ def save_benchmark_results(results: dict[str, list[BenchmarkResult]], filename: 
     """Save benchmark results to JSON file."""
     import json
 
-    serializable_results = {}
-    for component_type, component_results in results.items():
-        serializable_results[component_type] = [result.to_dict() for result in component_results]
-
+    serializable_results = {
+        component_type: [result.to_dict() for result in component_results]
+        for component_type, component_results in results.items()
+    }
     with open(filename, "w") as f:
         json.dump(serializable_results, f, indent=2)
 

@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -13,10 +14,16 @@ with automatic capability detection and fallback mechanisms.
 import logging
 
 from dataclasses import dataclass
-from typing import Any, Literal, TypeVar
+from typing import Any, ClassVar, Literal, TypedDict, TypeVar
 
-from codeweaver.backends.base import HybridSearchBackend, VectorBackend
-from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
+from codeweaver.backends.base import (
+    BackendConnectionError,
+    BackendResourceProvider,
+    CustomBackendCapabilities,
+    HybridSearchBackend,
+    VectorBackend,
+)
+from codeweaver.backends.qdrant import QdrantHybridBackend
 
 
 logger = logging.getLogger(__name__)
@@ -30,25 +37,13 @@ class BackendConfig:
     """Configuration for vector database backends."""
 
     # Core connection settings
-    provider: Literal[
-        "qdrant",
-        "pinecone",
-        "chroma",
-        "weaviate",
-        "pgvector",
-        "redis",
-        "elasticsearch",
-        "opensearch",
-        "milvus",
-        "vespa",
-        "faiss",
-        "annoy",
-        "scann",
-        "lancedb",
-        "marqo",
-    ]
+    provider: BackendResourceProvider | str
+    name: str | None = None  # For custom backends
     url: str | None = None
     api_key: str | None = None
+    capabilities: CustomBackendCapabilities | None = None
+    """Capabilities of the backend, used for custom backends to define their features.
+    Required for custom backends to specify their capabilities."""
 
     # Advanced capabilities
     enable_hybrid_search: bool = False
@@ -68,6 +63,56 @@ class BackendConfig:
 
     # Provider-specific settings
     provider_options: dict[str, Any] | None = None
+    """Additional options specific to the backend provider. Can be used to pass arbitrary settings for a provider implementation. Providers should validate these options themselves."""
+
+    def __post_init__(self):
+        """Post-initialization validation and normalization."""
+        if isinstance(self.provider, str):
+            if self.provider.lower() in BackendResourceProvider.__members__:
+                self.provider = BackendResourceProvider[self.provider.lower()]
+            else:
+                self.provider = BackendResourceProvider.CUSTOM
+        if self.provider == BackendResourceProvider.CUSTOM and not all(
+            item for item in {self.name, self.capabilities} if item and self.name.strip()
+        ):
+            raise ValueError(
+                "Custom backend requires a name and `CustomBackendCapabilities` configuration dictionary."
+            )
+        if self.provider == BackendResourceProvider.CUSTOM and not isinstance(
+            self.capabilities, CustomBackendCapabilities
+        ):
+            raise TypeError(
+                "Custom backend capabilities must be an instance of `CustomBackendCapabilities`."
+            )
+        if self.provider == BackendResourceProvider.CUSTOM:
+            self.provider.supports_hybrid_search = self.capabilities.get(
+                "supports_hybrid_search", False
+            )
+            self.provider.supports_streaming = self.capabilities.get("supports_streaming", False)
+            self.provider.supports_transactions = self.capabilities.get(
+                "supports_transactions", False
+            )
+            self.provider.value = f"custom({self.name})"
+            self.provider.backend = self.backend
+            self.provider.to_available_backend = AvailableBackend(
+                provider=self.provider,
+                backend=self.backend,
+                available=True,
+                supports_hybrid_search=self.capabilities.get("supports_hybrid_search", False),
+                supports_streaming=self.capabilities.get("supports_streaming", False),
+                supports_transactions=self.capabilities.get("supports_transactions", False),
+            )
+
+
+class AvailableBackend(TypedDict, total=False):
+    """Typed dictionary for available backends and their capabilities."""
+
+    provider: BackendResourceProvider | str
+    backend: type[VectorBackend]
+    available: bool
+    supports_hybrid_search: bool
+    supports_streaming: bool
+    supports_transactions: bool
 
 
 class BackendFactory:
@@ -79,25 +124,29 @@ class BackendFactory:
     """
 
     # Registry of available backends
-    _backends: dict[str, tuple[type[VectorBackend], bool]] = {
-        # (backend_class, supports_hybrid)
-        "qdrant": (QdrantBackend, True)
-        # Future backends will be registered here
-        # "pinecone": (PineconeBackend, False),
-        # "chroma": (ChromaBackend, False),
-        # "weaviate": (WeaviateBackend, True),
-        # "pgvector": (PgVectorBackend, False),
-        # "redis": (RedisBackend, False),
-        # "elasticsearch": (ElasticsearchBackend, True),
-        # "opensearch": (OpenSearchBackend, True),
-        # "milvus": (MilvusBackend, False),
-        # "vespa": (VespaBackend, True),
-        # "faiss": (FAISSBackend, False),
-        # "annoy": (AnnoyBackend, False),
-        # "scann": (ScaNNBackend, False),
-        # "lancedb": (LanceDBBackend, False),
-        # "marqo": (MarqoBackend, True),
-    }
+    _backends: ClassVar[
+        dict[
+            Literal[  # We're being explicit about the expected keys
+                "annoy",  # noqa: PYI051
+                "chroma",  # noqa: PYI051
+                "custom",  # noqa: PYI051
+                "faiss",  # noqa: PYI051
+                "lancedb",  # noqa: PYI051
+                "marqo",  # noqa: PYI051
+                "milvus",  # noqa: PYI051
+                "opensearch",  # noqa: PYI051
+                "pgvector",  # noqa: PYI051
+                "pinecone",  # noqa: PYI051
+                "qdrant",  # noqa: PYI051
+                "redis",  # noqa: PYI051
+                "scann",  # noqa: PYI051
+                "vespa",  # noqa: PYI051
+                "weaviate",  # noqa: PYI051
+            ]
+            | str,
+            AvailableBackend,
+        ]
+    ] = {v: k.to_available_backend() for k, v in BackendResourceProvider.__members__.items()}
 
     @classmethod
     def create_backend(cls, config: BackendConfig) -> VectorBackend:
@@ -112,7 +161,7 @@ class BackendFactory:
 
         Raises:
             ValueError: If provider is not supported
-            ConnectionError: If backend connection fails
+            BackendConnectionError: If backend connection fails
         """
         provider = config.provider.lower()
 
@@ -137,7 +186,7 @@ class BackendFactory:
 
         except Exception as e:
             logger.exception("Failed to create %s backend", provider)
-            raise ConnectionError(f"Failed to create {provider} backend") from e
+            raise BackendConnectionError(f"Failed to create {provider} backend") from e
 
     @classmethod
     def _get_hybrid_backend_class(cls, provider: str) -> type[HybridSearchBackend]:
@@ -161,16 +210,16 @@ class BackendFactory:
 
         # Add provider-specific settings
         if config.provider == "qdrant":
-            args.update({
+            args |= {
                 "enable_sparse_vectors": config.enable_sparse_vectors,
                 "sparse_on_disk": config.prefer_disk,
                 "timeout": config.request_timeout,
-            })
+            }
         # Add other provider-specific configurations here
 
         # Add any custom provider options
         if config.provider_options:
-            args.update(config.provider_options)
+            args |= config.provider_options
 
         # Remove None values
         return {k: v for k, v in args.items() if v is not None}
@@ -183,15 +232,17 @@ class BackendFactory:
         Returns:
             Dictionary mapping provider names to their capabilities
         """
-        providers = {}
-        for provider, (backend_class, supports_hybrid) in cls._backends.items():
-            providers[provider] = {
+        providers = {
+            provider: {
                 "available": True,
                 "supports_hybrid_search": supports_hybrid,
                 "supports_streaming": hasattr(backend_class, "stream_upsert"),
-                "supports_transactions": hasattr(backend_class, "begin_transaction"),
+                "supports_transactions": hasattr(
+                    backend_class, "begin_transaction"
+                ),
             }
-
+            for provider, (backend_class, supports_hybrid) in cls._backends.items()
+        }
         # Add planned providers (not yet implemented)
         planned_providers = {
             "pinecone": {"available": False, "supports_hybrid_search": False},
@@ -210,7 +261,7 @@ class BackendFactory:
             "marqo": {"available": False, "supports_hybrid_search": True},
         }
 
-        providers.update(planned_providers)
+        providers |= planned_providers
         return providers
 
     @classmethod

@@ -23,7 +23,98 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from codeweaver.config import CodeWeaverConfig, EmbeddingConfig
 from codeweaver.providers import ProviderRegistry, get_provider_factory
-from codeweaver.providers.migration import ProviderMigrationHelper, validate_provider_availability
+
+
+# Migration helpers moved to examples/migration/providers_migration.py
+# We'll implement simple validation functions here instead
+
+
+class ProviderMigrationHelper:
+    """Simple migration helper for testing."""
+
+    def __init__(self):
+        self.registry = ProviderRegistry()
+
+    def validate_current_config(self, config):
+        """Validate configuration."""
+        result = {
+            "status": "valid",
+            "warnings": [],
+            "recommendations": [],
+            "migration_needed": False,
+        }
+
+        # Check for old model names
+        if config.embedding.model == "voyage-code-3" and config.embedding.provider == "openai":
+            result["migration_needed"] = True
+            result["recommendations"].append(
+                "Consider updating model from 'voyage-code-3' to 'text-embedding-3-small'"
+            )
+
+        return result
+
+    def create_migration_config(self, config):
+        """Create migrated configuration."""
+        from dataclasses import asdict
+        migrated = asdict(config)
+
+        # Update model names
+        if (migrated["embedding"]["model"] == "voyage-code-3" and
+            migrated["embedding"]["provider"] == "openai"):
+            migrated["embedding"]["model"] = "text-embedding-3-small"
+
+        return migrated
+
+    def generate_example_configs(self):
+        """Generate example configurations."""
+        return {
+            "high_quality_code": {
+                "description": "Best quality for code search",
+                "config": {
+                    "embedding": {
+                        "provider": "voyage",
+                        "model": "voyage-code-3",
+                        "dimension": 1024,
+                    }
+                },
+                "notes": ["Requires VOYAGE_API_KEY"]
+            }
+        }
+
+
+def validate_provider_availability():
+    """Validate provider availability."""
+    registry = ProviderRegistry()
+
+    all_embedding = registry.get_all_embedding_providers()
+    all_reranking = registry.get_all_reranking_providers()
+
+    result = {
+        "embedding_providers": {},
+        "reranking_providers": {},
+        "summary": {
+            "total_embedding": len(all_embedding),
+            "available_embedding": len([p for p in all_embedding.values() if p.is_available]),
+            "total_reranking": len(all_reranking),
+            "available_reranking": len([p for p in all_reranking.values() if p.is_available]),
+        },
+    }
+
+    # Embedding provider status
+    for name, registration in all_embedding.items():
+        result["embedding_providers"][name] = {
+            "available": registration.is_available,
+            "reason": registration.unavailable_reason,
+        }
+
+    # Reranking provider status
+    for name, registration in all_reranking.items():
+        result["reranking_providers"][name] = {
+            "available": registration.is_available,
+            "reason": registration.unavailable_reason,
+        }
+
+    return result
 
 
 # Configure logging

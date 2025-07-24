@@ -85,7 +85,8 @@ async def demo_protocol_compliance() -> None:
                 print(f"    - {warning}")
 
     # Summary
-    compliant_count = sum(1 for result in results.values() if result.is_compliant)
+    compliant_count = sum(bool(result.is_compliant)
+                      for result in results.values())
     total_count = len(results)
 
     print(f"\n📊 COMPLIANCE SUMMARY: {compliant_count}/{total_count} protocols compliant")
@@ -97,6 +98,7 @@ async def demo_protocol_compliance() -> None:
 
 
 async def demo_mock_implementations() -> None:
+    # sourcery skip: avoid-global-variables, no-long-functions
     """Demonstrate mock implementations."""
     print("\n" + "=" * 80)
     print("MOCK IMPLEMENTATIONS DEMO")
@@ -252,6 +254,7 @@ async def demo_integration_testing() -> None:
 
 
 async def demo_performance_benchmarking() -> None:
+    # sourcery skip: no-long-functions
     """Demonstrate performance benchmarking."""
     print("\n" + "=" * 80)
     print("PERFORMANCE BENCHMARKING DEMO")
@@ -387,6 +390,7 @@ async def demo_factory_validation() -> None:
 
 
 async def demo_comprehensive_testing() -> None:
+    # sourcery skip: no-long-functions
     """Demonstrate comprehensive testing scenario."""
     print("\n" + "=" * 80)
     print("COMPREHENSIVE TESTING SCENARIO")
@@ -418,9 +422,9 @@ async def demo_comprehensive_testing() -> None:
     print(f"   Average performance: {avg_ops_per_sec:.2f} ops/sec")
 
     # Performance threshold check
-    PERFORMANCE_THRESHOLD = 50.0  # ops/sec
-    perf_status = "✅ PASS" if avg_ops_per_sec >= PERFORMANCE_THRESHOLD else "❌ FAIL"
-    print(f"   Performance threshold ({PERFORMANCE_THRESHOLD} ops/sec): {perf_status}")
+    performance_threshold = 50.0  # ops/sec
+    perf_status = "✅ PASS" if avg_ops_per_sec >= performance_threshold else "❌ FAIL"
+    print(f"   Performance threshold ({performance_threshold} ops/sec): {perf_status}")
 
     # 3. Integration Testing
     print("\n3️⃣ Step 3: Integration Testing")
@@ -436,9 +440,8 @@ async def demo_comprehensive_testing() -> None:
     print(f"   Integration test: {'✅ PASS' if integration_result.success else '❌ FAIL'}")
     print(f"   Duration: {integration_result.duration_seconds:.2f}s")
 
-    workflow_pass_count = sum(
-        1 for success in integration_result.workflow_results.values() if success
-    )
+    workflow_pass_count = sum(bool(success)
+                          for success in integration_result.workflow_results.values())
     workflow_total = len(integration_result.workflow_results)
     print(f"   Workflow tests: {workflow_pass_count}/{workflow_total} passed")
 
@@ -456,7 +459,7 @@ async def demo_comprehensive_testing() -> None:
 
     all_tests_passed = all([
         compliance_result.is_compliant,
-        avg_ops_per_sec >= PERFORMANCE_THRESHOLD,
+        avg_ops_per_sec >= performance_threshold,
         integration_result.success,
         factory_result.is_valid,
     ])
@@ -473,7 +476,7 @@ async def demo_comprehensive_testing() -> None:
     print("\n📋 Test Summary:")
     print(f"   - Protocol Compliance: {'✅' if compliance_result.is_compliant else '❌'}")
     print(
-        f"   - Performance Benchmark: {'✅' if avg_ops_per_sec >= PERFORMANCE_THRESHOLD else '❌'}"
+        f"   - Performance Benchmark: {'✅' if avg_ops_per_sec >= performance_threshold else '❌'}"
     )
     print(f"   - Integration Testing: {'✅' if integration_result.success else '❌'}")
     print(f"   - Factory Validation: {'✅' if factory_result.is_valid else '❌'}")

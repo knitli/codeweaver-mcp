@@ -68,7 +68,7 @@ def test_configuration_detection() -> bool | None:
 
             # Test detection
             config_type = detect_configuration_type(config)
-            logger.info(f"✅ Configuration type detected: {config_type}")
+            logger.info("✅ Configuration type detected: %s", config_type)
 
             assert config_type in ["legacy", "extensible"]
             return True
@@ -116,16 +116,16 @@ def test_server_factory() -> bool | None:  # sourcery skip: extract-method
 
             # Test legacy server creation
             legacy_server = create_legacy_server(config)
-            logger.info(f"✅ Legacy server created: {type(legacy_server).__name__}")
+            logger.info("✅ Legacy server created: %s", type(legacy_server).__name__)
 
             # Test extensible server creation
             with patch("codeweaver.factories.extensibility_manager.ExtensibilityManager"):
                 extensible_server = create_extensible_server(config)
-                logger.info(f"✅ Extensible server created: {type(extensible_server).__name__}")
+                logger.info("✅ Extensible server created: %s", type(extensible_server).__name__)
 
             # Test auto server creation
             auto_server = create_server(config, server_type="auto")
-            logger.info(f"✅ Auto server created: {type(auto_server).__name__}")
+            logger.info("✅ Auto server created: %s", type(auto_server).__name__)
 
             return True
 
@@ -242,7 +242,7 @@ def test_main_integration() -> bool | None:  # sourcery skip: extract-method
             # Test server instance creation
             server = get_server_instance()
             assert server is not None
-            logger.info(f"✅ Main integration successful: {type(server).__name__}")
+            logger.info("✅ Main integration successful: %s", type(server).__name__)
 
     except Exception:
         logger.exception("❌ Main integration test failed: ")
@@ -275,18 +275,18 @@ def main() -> int:
             result = test()
             results.append(result)
         except Exception:
-            logger.exception("❌ Test {test.__name__} failed with exception: ")
+            logger.exception("❌ Test %s failed with exception: ", {test.__name__})
             results.append(False)
 
     passed = sum(results)
     total = len(results)
 
-    logger.info(f"\n📊 Integration Validation Results: {passed}/{total} tests passed")
+    logger.info("\n📊 Integration Validation Results: {passed}/%s tests passed", total)
 
     if passed == total:
         logger.info("🎉 All integration tests passed! Backward compatibility is working correctly.")
         return 0
-    logger.error(f"❌ {total - passed} tests failed. Please check the issues above.")
+    logger.error("❌ %s tests failed. Please check the issues above.", total - passed)
     return 1
 
 

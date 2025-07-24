@@ -365,9 +365,10 @@ class TestErrorHandling:
         try:
             server = create_server(invalid_config)
             assert server is not None
-        except Exception as e:
+        except Exception:
             # If it fails, it should fail gracefully
-            assert isinstance(e, ValueError | AttributeError | TypeError)
+            with pytest.raises((ValueError, AttributeError, TypeError)):
+                raise
 
     @pytest.mark.asyncio
     async def test_migration_failure_handling(self, mock_config) -> None:

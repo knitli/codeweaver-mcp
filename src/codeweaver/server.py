@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-"""
-Main MCP server implementation for code embeddings and search.
+"""Main MCP server implementation for code embeddings and search.
 
 Orchestrates semantic search, chunking, and indexing functionality
 using configurable embedding providers and vector database backends.
@@ -48,6 +47,20 @@ from codeweaver.task_search import TaskSearchCoordinator
 logger = logging.getLogger(__name__)
 
 
+class BackendNotAvailableError(Exception):
+    """Custom exception for when the backend is not available."""
+
+    def __init__(self, message: str):
+        """Initialize with a custom message."""
+        super().__init__(message)
+        self.message = "Backend not available: %s", message
+
+
+def raise_if_backend_none() -> None:
+    """Raise an error if the backend is not available."""
+    raise BackendNotAvailableError("Backend not available, using fallback")
+
+
 class _RerankProviderAdapter:
     """Adapter to make new reranking providers compatible with legacy interface."""
 
@@ -56,7 +69,7 @@ class _RerankProviderAdapter:
         self.provider = provider
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int | None = None
+        self, query: str, documents: list[str], top_k: int | None = None,
     ) -> list[dict[str, Any]]:
         """Rerank documents and convert to legacy format."""
         results = await self.provider.rerank(query, documents, top_k)
@@ -94,7 +107,7 @@ class CodeEmbeddingsServer:
 
             # Create embedding provider
             embedding_provider = provider_factory.create_embedding_provider(
-                config=self.config.embedding, rate_limiter=self.rate_limiter
+                config=self.config.embedding, rate_limiter=self.rate_limiter,
             )
 
             # Wrap in legacy interface for backward compatibility
@@ -115,17 +128,17 @@ class CodeEmbeddingsServer:
             else:
                 logger.warning("No reranking provider available, using legacy VoyageAIReranker")
                 self.reranker = VoyageAIReranker(
-                    api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter
+                    api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter,
                 )
 
         except Exception as e:
             logger.warning("Failed to initialize new provider system, using legacy: %s", e)
             # Fallback to legacy system
             self.embedder = create_embedder(
-                config=self.config.embedding, rate_limiter=self.rate_limiter
+                config=self.config.embedding, rate_limiter=self.rate_limiter,
             )
             self.reranker = VoyageAIReranker(
-                api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter
+                api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter,
             )
         self.chunker = AstGrepChunker(
             max_chunk_size=self.config.chunking.max_chunk_size,
@@ -184,7 +197,7 @@ class CodeEmbeddingsServer:
                 self.qdrant.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=self.embedder.dimension, distance=Distance.COSINE
+                        size=self.embedder.dimension, distance=Distance.COSINE,
                     ),
                 )
             else:
@@ -212,7 +225,7 @@ class CodeEmbeddingsServer:
                         logger.info("Collection %s already exists", self.collection_name)
                 except Exception as e:
                     logger.warning(
-                        "Backend collection creation failed, falling back to legacy: %s", e
+                        "Backend collection creation failed, falling back to legacy: %s", e,
                     )
                 else:
                     return
@@ -224,7 +237,7 @@ class CodeEmbeddingsServer:
             raise
 
     async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None
+        self, root_path: str, patterns: list[str] | None = None,
     ) -> dict[str, Any]:
         """Index a codebase for semantic search using ast-grep."""
         root = Path(root_path)
@@ -275,7 +288,7 @@ class CodeEmbeddingsServer:
         watcher_started = False
         if self.config.indexing.enable_auto_reindex:
             watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes
+                root_path=root, reindex_callback=self._handle_file_changes,
             )
 
         return {
@@ -322,7 +335,7 @@ class CodeEmbeddingsServer:
         # Upload using backend abstraction with fallback to legacy
         def _raise_backend_error():
             raise RuntimeError("Backend not available, using fallback")
-        
+
         try:
             if self.backend is None:
                 _raise_backend_error()
@@ -334,7 +347,7 @@ class CodeEmbeddingsServer:
             points = []
             for vector_point in vector_points:
                 point = PointStruct(
-                    id=vector_point.id, vector=vector_point.vector, payload=vector_point.payload
+                    id=vector_point.id, vector=vector_point.vector, payload=vector_point.payload,
                 )
                 points.append(point)
             self.qdrant.upsert(collection_name=self.collection_name, points=points)
@@ -355,7 +368,43 @@ class CodeEmbeddingsServer:
         Automatically assesses query complexity and suggests Task tool delegation
         for comprehensive or uncertain-scope searches.
         """
-        # Assess search complexity
+        # Check if task delegation should be used
+        task_recommendation = await self._assess_search_complexity(
+            query, file_filter, language_filter, use_task_delegation, limit,
+            chunk_type_filter, rerank,
+        )
+        if task_recommendation:
+            return task_recommendation
+
+        # Generate query embedding
+        query_vector = await self.embedder.embed_query(query)
+
+        # Perform search with backend/legacy fallback
+        search_results = await self._perform_vector_search(
+            query_vector, file_filter, language_filter, chunk_type_filter,
+            limit, rerank,
+        )
+
+        # Process search results
+        results = self._process_search_results(search_results)
+
+        # Apply reranking if requested
+        if rerank and len(results) > 1:
+            results = await self._apply_reranking(query, results, limit)
+
+        return results[:limit]
+
+    async def _assess_search_complexity(
+        self,
+        query: str,
+        file_filter: str | None,
+        language_filter: str | None,
+        use_task_delegation: bool | None,
+        limit: int,
+        chunk_type_filter: str | None,
+        rerank: bool,
+    ) -> list[dict[str, Any]] | None:
+        """Assess search complexity and return task recommendation if needed."""
         estimated_files = self._estimate_file_count(file_filter, language_filter)
         assessment = self.task_coordinator.assess_search_complexity(
             query=query,
@@ -372,9 +421,8 @@ class CodeEmbeddingsServer:
             assessment.estimated_scope,
         )
 
-        # Return assessment info along with results
+        # Return assessment info if task delegation should be used
         if assessment.should_use_task and use_task_delegation is not False:
-            # Include recommendation in results
             return [
                 {
                     "type": "search_recommendation",
@@ -394,30 +442,35 @@ class CodeEmbeddingsServer:
                             rerank=rerank,
                         ),
                     },
-                }
+                },
             ]
+        return None
 
-        # Generate query embedding
-        query_vector = await self.embedder.embed_query(query)
-
+    async def _perform_vector_search(
+        self,
+        query_vector: list[float],
+        file_filter: str | None,
+        language_filter: str | None,
+        chunk_type_filter: str | None,
+        limit: int,
+        rerank: bool,
+    ) -> list:
+        """Perform vector search using backend abstraction with fallback to legacy."""
         # Build universal search filters
         from codeweaver.backends.base import FilterCondition, SearchFilter
 
         filter_conditions = []
-
         if file_filter:
             filter_conditions.append(
-                FilterCondition(field="file_path", operator="eq", value=file_filter)
+                FilterCondition(field="file_path", operator="eq", value=file_filter),
             )
-
         if language_filter:
             filter_conditions.append(
-                FilterCondition(field="language", operator="eq", value=language_filter)
+                FilterCondition(field="language", operator="eq", value=language_filter),
             )
-
         if chunk_type_filter:
             filter_conditions.append(
-                FilterCondition(field="chunk_type", operator="eq", value=chunk_type_filter)
+                FilterCondition(field="chunk_type", operator="eq", value=chunk_type_filter),
             )
 
         universal_filter = SearchFilter(conditions=filter_conditions) if filter_conditions else None
@@ -425,7 +478,7 @@ class CodeEmbeddingsServer:
         # Search using backend abstraction with fallback to legacy
         def _raise_search_backend_error():
             raise RuntimeError("Backend not available, using fallback")
-        
+
         try:
             if self.backend is None:
                 _raise_search_backend_error()
@@ -438,35 +491,48 @@ class CodeEmbeddingsServer:
             logger.debug("Search using backend returned %d results", len(search_result))
         except Exception as e:
             logger.warning("Backend search failed, using legacy Qdrant client: %s", e)
-            # Fallback to legacy Qdrant search
-            legacy_filter_conditions = []
-
-            if file_filter:
-                legacy_filter_conditions.append(
-                    FieldCondition(key="file_path", match=MatchValue(value=file_filter))
-                )
-
-            if language_filter:
-                legacy_filter_conditions.append(
-                    FieldCondition(key="language", match=MatchValue(value=language_filter))
-                )
-
-            if chunk_type_filter:
-                legacy_filter_conditions.append(
-                    FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter))
-                )
-
-            legacy_filter = (
-                Filter(must=legacy_filter_conditions) if legacy_filter_conditions else None
+            return await self._fallback_legacy_search(
+                query_vector, file_filter, language_filter, chunk_type_filter, limit, rerank,
             )
 
-            search_result = self.qdrant.search(
-                collection_name=self.collection_name,
-                query_vector=query_vector,
-                query_filter=legacy_filter,
-                limit=limit * 2 if rerank else limit,  # Get more for reranking
+    async def _fallback_legacy_search(
+        self,
+        query_vector: list[float],
+        file_filter: str | None,
+        language_filter: str | None,
+        chunk_type_filter: str | None,
+        limit: int,
+        rerank: bool,
+    ) -> list:
+        """Fallback to legacy Qdrant search when backend fails."""
+        legacy_filter_conditions = []
+
+        if file_filter:
+            legacy_filter_conditions.append(
+                FieldCondition(key="file_path", match=MatchValue(value=file_filter)),
+            )
+        if language_filter:
+            legacy_filter_conditions.append(
+                FieldCondition(key="language", match=MatchValue(value=language_filter)),
+            )
+        if chunk_type_filter:
+            legacy_filter_conditions.append(
+                FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter)),
             )
 
+        legacy_filter = (
+            Filter(must=legacy_filter_conditions) if legacy_filter_conditions else None
+        )
+
+        return self.qdrant.search(
+            collection_name=self.collection_name,
+            query_vector=query_vector,
+            query_filter=legacy_filter,
+            limit=limit * 2 if rerank else limit,  # Get more for reranking
+        )
+
+    def _process_search_results(self, search_result: list) -> list[dict[str, Any]]:
+        """Process search results from backend or legacy client."""
         results = []
         for hit in search_result:
             # Handle both backend abstraction SearchResult and legacy Qdrant hits
@@ -490,25 +556,27 @@ class CodeEmbeddingsServer:
                 "similarity_score": score,
             }
             results.append(result)
+        return results
 
-        # Rerank if requested
-        if rerank and len(results) > 1:
-            try:
-                documents = [r["content"] for r in results]
-                rerank_results = await self.reranker.rerank(query, documents, top_k=limit)
+    async def _apply_reranking(
+        self, query: str, results: list[dict[str, Any]], limit: int,
+    ) -> list[dict[str, Any]]:
+        """Apply reranking to search results."""
+        try:
+            documents = [r["content"] for r in results]
+            rerank_results = await self.reranker.rerank(query, documents, top_k=limit)
 
-                # Reorder results based on reranking
-                reranked = []
-                for rerank_item in rerank_results:
-                    original_result = results[rerank_item["index"]]
-                    original_result["rerank_score"] = rerank_item["relevance_score"]
-                    reranked.append(original_result)
+            # Reorder results based on reranking
+            reranked = []
+            for rerank_item in rerank_results:
+                original_result = results[rerank_item["index"]]
+                original_result["rerank_score"] = rerank_item["relevance_score"]
+                reranked.append(original_result)
 
-                results = reranked
-            except Exception as e:
-                logger.warning("Reranking failed, using similarity search only: %s", e)
-
-        return results[:limit]
+            return reranked
+        except Exception as e:
+            logger.warning("Reranking failed, using similarity search only: %s", e)
+            return results
 
     async def ast_grep_search(
         self,
@@ -543,14 +611,14 @@ class CodeEmbeddingsServer:
                         "pattern_complexity": "complex" if is_complex_pattern else "simple",
                         "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
                         "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit
+                            pattern=pattern, language=language, root_path=root_path, limit=limit,
                         ),
                     },
-                }
+                },
             ]
 
         results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path
+            pattern=pattern, language=language, root_path=root_path,
         )
 
         return results[:limit]
@@ -569,7 +637,7 @@ class CodeEmbeddingsServer:
         }
 
     def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None
+        self, file_filter: str | None = None, language_filter: str | None = None,
     ) -> int:
         """Estimate number of files that would be searched."""
         try:
@@ -596,8 +664,7 @@ class CodeEmbeddingsServer:
 
 
 class ExtensibleCodeEmbeddingsServer:
-    """
-    Next-generation MCP server using the extensible factory architecture.
+    """Next-generation MCP server using the extensible factory architecture.
 
     Features:
     - Factory-based component creation with dependency injection
@@ -623,7 +690,7 @@ class ExtensibleCodeEmbeddingsServer:
 
         # Create extensibility manager
         self.extensibility_manager = ExtensibilityManager(
-            config=self.config, extensibility_config=extensibility_config
+            config=self.config, extensibility_config=extensibility_config,
         )
 
         # Component instances (populated lazily)
@@ -721,7 +788,7 @@ class ExtensibleCodeEmbeddingsServer:
     # This ensures 100% compatibility while using the new architecture under the hood
 
     async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None
+        self, root_path: str, patterns: list[str] | None = None,
     ) -> dict[str, Any]:
         """Index a codebase for semantic search using ast-grep."""
         await self._ensure_initialized()
@@ -774,7 +841,7 @@ class ExtensibleCodeEmbeddingsServer:
         watcher_started = False
         if self.config.indexing.enable_auto_reindex:
             watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes
+                root_path=root, reindex_callback=self._handle_file_changes,
             )
 
         return {
@@ -877,7 +944,7 @@ class ExtensibleCodeEmbeddingsServer:
                             rerank=rerank,
                         ),
                     },
-                }
+                },
             ]
 
         # Generate query embedding
@@ -889,17 +956,17 @@ class ExtensibleCodeEmbeddingsServer:
 
         if file_filter:
             filter_conditions.append(
-                FieldCondition(key="file_path", match=MatchValue(value=file_filter))
+                FieldCondition(key="file_path", match=MatchValue(value=file_filter)),
             )
 
         if language_filter:
             filter_conditions.append(
-                FieldCondition(key="language", match=MatchValue(value=language_filter))
+                FieldCondition(key="language", match=MatchValue(value=language_filter)),
             )
 
         if chunk_type_filter:
             filter_conditions.append(
-                FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter))
+                FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter)),
             )
 
         search_filter = Filter(must=filter_conditions) if filter_conditions else None
@@ -976,14 +1043,14 @@ class ExtensibleCodeEmbeddingsServer:
                         "pattern_complexity": "complex" if is_complex_pattern else "simple",
                         "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
                         "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit
+                            pattern=pattern, language=language, root_path=root_path, limit=limit,
                         ),
                     },
-                }
+                },
             ]
 
         results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path
+            pattern=pattern, language=language, root_path=root_path,
         )
 
         return results[:limit]
@@ -1017,7 +1084,7 @@ class ExtensibleCodeEmbeddingsServer:
         return base_info
 
     async def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None
+        self, file_filter: str | None = None, language_filter: str | None = None,
     ) -> int:
         """Estimate number of files that would be searched."""
         try:
@@ -1071,12 +1138,12 @@ def detect_configuration_type(config: CodeWeaverConfig) -> str:
     # Check for new extensibility features
     if _EXTENDED_CONFIGS_AVAILABLE:
         # Check if backend config exists and is not just legacy qdrant
-        if (hasattr(config, "backend") and config.backend and 
+        if (hasattr(config, "backend") and config.backend and
             hasattr(config.backend, "provider") and config.backend.provider != "qdrant_legacy"):
             return "extensible"
 
         # Check for new provider configuration format
-        if (hasattr(config, "embedding") and config.embedding and 
+        if (hasattr(config, "embedding") and config.embedding and
             hasattr(config.embedding, "provider_config")):
             return "extensible"
 
@@ -1134,7 +1201,7 @@ def create_legacy_server(config: CodeWeaverConfig | None = None) -> CodeEmbeddin
 
 
 def create_extensible_server(
-    config: CodeWeaverConfig | None = None, extensibility_config: ExtensibilityConfig | None = None
+    config: CodeWeaverConfig | None = None, extensibility_config: ExtensibilityConfig | None = None,
 ) -> ExtensibleCodeEmbeddingsServer:
     """Create an ExtensibleCodeEmbeddingsServer instance.
 
@@ -1164,7 +1231,7 @@ def migrate_config_to_extensible(
 
     # Create extensibility config for migration
     extensibility_config = create_migration_config(
-        enable_plugins=enable_plugins, enable_legacy_fallback=True, lazy_init=True
+        enable_plugins=enable_plugins, enable_legacy_fallback=True, lazy_init=True,
     )
 
     # For now, return the original config with extensibility config
@@ -1197,8 +1264,7 @@ def migrate_config_to_extensible(
 
 
 class ServerMigrationManager:
-    """
-    Manages the migration of existing server instances to the new architecture.
+    """Manages the migration of existing server instances to the new architecture.
 
     Provides utilities for:
     - Analyzing configuration readiness
@@ -1255,7 +1321,7 @@ class ServerMigrationManager:
         # Add recommendations
         if overall_ready:
             results["recommendations"].append(
-                "Server is ready for migration. Use perform_migration() to proceed."
+                "Server is ready for migration. Use perform_migration() to proceed.",
             )
         else:
             if not config_validation["ready"]:

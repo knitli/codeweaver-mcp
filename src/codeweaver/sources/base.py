@@ -129,9 +129,11 @@ class ContentItem:
         )
 
     def __str__(self) -> str:
+        """String representation of the content item."""
         return f"ContentItem(id={self.id}, type={self.content_type}, path={self.path})"
 
     def __repr__(self) -> str:
+        """Detailed representation of the content item."""
         return (
             f"ContentItem(path={self.path!r}, content_type={self.content_type!r}, "
             f"size={self.size}, language={self.language!r})"
@@ -242,7 +244,7 @@ class DataSource(Protocol):
 
         Raises:
             ValueError: If configuration is invalid
-            ConnectionError: If source is unreachable
+            BackendConnectionError: If source is unreachable
         """
         ...
 
@@ -352,10 +354,10 @@ class AbstractDataSource(ABC):
                 if field not in config:
                     logger.warning("Missing required field '%s' in source config", field)
                     return False
-            return True
         except Exception:
             logger.exception("Error validating source configuration")
             return False
+        return True
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Default metadata extraction implementation."""
@@ -366,7 +368,7 @@ class AbstractDataSource(ABC):
         }
 
         # Add any existing metadata from the item
-        metadata.update(item.metadata)
+        metadata |= item.metadata
         return metadata
 
     def _apply_content_filters(
@@ -394,7 +396,9 @@ class AbstractDataSource(ABC):
                 continue
 
             # Check include patterns (if specified)
-            if include_patterns and not any(pattern in item.path for pattern in include_patterns):
+            if include_patterns and all(
+                pattern not in item.path for pattern in include_patterns
+            ):
                 logger.debug("Not included by pattern: %s", item.path)
                 continue
 
@@ -430,7 +434,7 @@ class SourceRegistry:
             source_class: Data source implementation class
         """
         if not issubclass(source_class, DataSource):
-            raise ValueError(f"Source class must implement DataSource protocol: {source_class}")
+            raise TypeError(f"Source class must implement DataSource protocol: {source_class}")
 
         self._sources[source_type] = source_class
         logger.info("Registered data source: %s -> %s", source_type, source_class.__name__)
@@ -463,8 +467,7 @@ class SourceRegistry:
         Returns:
             Set of capabilities if source is registered, None otherwise
         """
-        source_class = self._sources.get(source_type)
-        if source_class:
+        if source_class := self._sources.get(source_type):
             # Create a temporary instance to get capabilities
             try:
                 instance = source_class()

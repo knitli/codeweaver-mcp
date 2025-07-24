@@ -218,11 +218,13 @@ class WebCrawlerSource(AbstractDataSource):
             # the URLs are accessible and responsive
 
             logger.warning("Web URL accessibility validation not fully implemented")
-            return True
 
         except Exception:
             logger.exception("Error validating web crawler source configuration")
             return False
+
+        return True
+
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for web content.

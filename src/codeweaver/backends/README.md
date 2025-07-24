@@ -44,7 +44,7 @@ results = await backend.search_vectors("my-collection", query_vector)
 if isinstance(backend, HybridSearchBackend):
     await backend.create_sparse_index("my-collection", ["content"])
     results = await backend.hybrid_search(
-        "my-collection", 
+        "my-collection",
         dense_vector=dense_vector,
         sparse_query={"keyword": 1.0},
         hybrid_strategy="rrf"
@@ -240,7 +240,7 @@ await backend.create_collection("code-embeddings", dimension=1024)
    ```python
    # Replace direct QdrantConfig usage
    from codeweaver.backends.config import create_backend_config_from_legacy
-   
+
    backend_config = create_backend_config_from_legacy(
        qdrant_url=existing_config.qdrant.url,
        qdrant_api_key=existing_config.qdrant.api_key,
@@ -252,7 +252,7 @@ await backend.create_collection("code-embeddings", dimension=1024)
    ```python
    # OLD: server.py line 77
    self.qdrant = QdrantClient(url=..., api_key=...)
-   
+
    # NEW: Using factory pattern
    self.backend = BackendFactory.create_backend(backend_config)
    ```
@@ -261,7 +261,7 @@ await backend.create_collection("code-embeddings", dimension=1024)
    ```python
    # OLD: Direct Qdrant operations
    self.qdrant.upsert(collection_name=name, points=points)
-   
+
    # NEW: Universal backend operations
    await self.backend.upsert_vectors(collection_name=name, vectors=vector_points)
    ```
@@ -312,22 +312,22 @@ Comprehensive error handling with backend-specific context:
 ```python
 from codeweaver.backends import (
     BackendError,
-    ConnectionError,
-    AuthenticationError,
-    CollectionNotFoundError,
-    DimensionMismatchError,
-    UnsupportedOperationError
+    BackendConnectionError,
+    BackendAuthError,
+    BackendCollectionNotFoundError,
+    BackendVectorDimensionMismatchError,
+    BackendUnsupportedOperationError
 )
 
 try:
     await backend.search_vectors(collection_name, query_vector)
-except ConnectionError as e:
+except BackendConnectionError as e:
     logger.error("Backend connection failed: %s", e)
     # Handle connection issues
-except CollectionNotFoundError as e:
+except BackendCollectionNotFoundError as e:
     logger.error("Collection not found: %s", e)
     # Handle missing collection
-except UnsupportedOperationError as e:
+except BackendUnsupportedOperationError as e:
     logger.error("Operation not supported: %s", e)
     # Fallback to alternative approach
 ```
@@ -339,19 +339,19 @@ except UnsupportedOperationError as e:
 1. **Implement the Protocol**
    ```python
    from codeweaver.backends.base import VectorBackend
-   
+
    class CustomBackend:
        async def create_collection(self, name: str, dimension: int, **kwargs):
            # Implementation specific to your backend
            pass
-       
+
        # Implement other required methods...
    ```
 
 2. **Register with Factory**
    ```python
    from codeweaver.backends import BackendFactory
-   
+
    BackendFactory.register_backend(
        provider="custom",
        backend_class=CustomBackend,

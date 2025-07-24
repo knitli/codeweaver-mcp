@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -10,6 +11,7 @@ Comprehensive integration testing that validates end-to-end workflows,
 backend + provider + source combinations, and configuration scenarios.
 """
 
+import contextlib
 import logging
 import tempfile
 import time
@@ -265,11 +267,8 @@ class IntegrationTestSuite:
         try:
             # Cleanup backend
             if self.backend:
-                try:
+                with contextlib.suppress(Exception):
                     await self.backend.delete_collection(self.test_collection)
-                except Exception:
-                    pass  # Collection might not exist
-
             # Cleanup data source
             if self.data_source and hasattr(self.data_source, "cleanup"):
                 await self.data_source.cleanup()
@@ -420,11 +419,13 @@ class IntegrationTestSuite:
 
             # Test provider info
             provider_info = self.embedding_provider.get_provider_info()
-            return provider_info.name
 
         except Exception:
             logger.exception("Embedding workflow test failed")
             return False
+
+        else:
+            return provider_info.name
 
     async def _test_search_workflow(self) -> bool:
         """Test vector backend search workflow."""
@@ -612,7 +613,7 @@ class IntegrationTestSuite:
                     if result.payload and "path" in result.payload:
                         # Find corresponding content item
                         for item in content_items:
-                            if item.id == result.id:
+                            if item.iden == result.iden:
                                 content = await self.data_source.read_content(item)
                                 result_docs.append(content)
                                 break
@@ -646,8 +647,8 @@ class IntegrationTestSuite:
                 return False
 
             # Test configuration serialization/deserialization
-            config_dict = config.to_dict()
-            return isinstance(config_dict, dict)
+            config_obj = config.to_dict()
+            return isinstance(config_obj, dict)
 
         except Exception:
             logger.exception("Configuration integration test failed")

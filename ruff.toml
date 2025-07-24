@@ -159,7 +159,7 @@ convention = "google"
 
 [lint.per-file-ignores]
 # Ignore specific rules for certain files
-"validation/**/*.py" = [
+"**/validation/**/*.py" = [
     "S110", # try-except-pass
     "TRY301", # abstract raise to an inner function
     "S101", # allow assert
@@ -199,6 +199,7 @@ convention = "google"
     "SIM",
     "SLF001", # Private member accessed
 ]
+
 
 [lint.isort]
 force-single-line = false

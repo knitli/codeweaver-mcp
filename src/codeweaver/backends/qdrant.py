@@ -30,10 +30,10 @@ from qdrant_client.models import (
 )
 
 from codeweaver.backends.base import (
+    BackendCollectionNotFoundError,
+    BackendConnectionError,
     BackendError,
     CollectionInfo,
-    CollectionNotFoundError,
-    ConnectionError,
     DistanceMetric,
     FilterCondition,
     HybridStrategy,
@@ -58,6 +58,7 @@ class QdrantBackend:
         self,
         url: str,
         api_key: str | None = None,
+        *,
         enable_sparse_vectors: bool = False,
         sparse_on_disk: bool = False,
         **kwargs: Any,
@@ -82,7 +83,7 @@ class QdrantBackend:
             logger.info("Connected to Qdrant at %s", url)
 
         except Exception as e:
-            raise ConnectionError(
+            raise BackendConnectionError(
                 f"Failed to connect to Qdrant at {url}", backend_type="qdrant", original_error=e
             ) from e
 
@@ -111,17 +112,13 @@ class QdrantBackend:
         must_not = []
 
         if search_filter.must:
-            for sub_filter in search_filter.must:
-                must.append(self._convert_filter(sub_filter))
-
+            must.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.must)
         if search_filter.should:
-            for sub_filter in search_filter.should:
-                should.append(self._convert_filter(sub_filter))
-
+            should.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.should)
         if search_filter.must_not:
-            for sub_filter in search_filter.must_not:
-                must_not.append(self._convert_filter(sub_filter))
-
+            must_not.extend(
+                self._convert_filter(sub_filter) for sub_filter in search_filter.must_not
+            )
         return Filter(must=conditions + must, should=should or None, must_not=must_not or None)
 
     def _convert_filter_condition(self, condition: FilterCondition) -> FieldCondition:
@@ -131,7 +128,7 @@ class QdrantBackend:
         if condition.operator == "in":
             return FieldCondition(key=condition.field, match=MatchValue(any=condition.value))
         # Add more operators as needed
-        raise ValueError(f"Unsupported filter operator: {condition.operator}")
+        raise ValueError("Unsupported filter operator: %s", condition.operator)
 
     def _convert_search_result(self, hit: Any) -> SearchResult:
         """Convert Qdrant search hit to universal SearchResult."""
@@ -220,10 +217,7 @@ class QdrantBackend:
     ) -> list[SearchResult]:
         """Search for similar vectors using dense embeddings."""
         try:
-            qdrant_filter = None
-            if search_filter:
-                qdrant_filter = self._convert_filter(search_filter)
-
+            qdrant_filter = self._convert_filter(search_filter) if search_filter else None
             search_params = {
                 "collection_name": collection_name,
                 "query_vector": ("dense", query_vector),
@@ -294,7 +288,7 @@ class QdrantBackend:
 
         except Exception as e:
             if "not found" in str(e).lower():
-                raise CollectionNotFoundError(
+                raise BackendCollectionNotFoundError(
                     f"Collection {name} not found", backend_type="qdrant", original_error=e
                 ) from e
             raise BackendError(

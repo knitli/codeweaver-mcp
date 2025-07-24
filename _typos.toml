@@ -21,6 +21,7 @@ extend-ignore-identifiers-re = [
   "Inferrable",
   "typ",
   "nin",
+  "NIN"
 ]
 
 [files]

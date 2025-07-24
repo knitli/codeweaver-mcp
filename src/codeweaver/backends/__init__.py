@@ -11,12 +11,14 @@ with support for hybrid search, streaming operations, and transactions.
 """
 
 from codeweaver.backends.base import (
-    AuthenticationError,
+    BackendAuthError,
+    BackendCollectionNotFoundError,
+    BackendConnectionError,
     BackendError,
+    BackendResourceProvider,
+    BackendUnsupportedOperationError,
+    BackendVectorDimensionMismatchError,
     CollectionInfo,
-    CollectionNotFoundError,
-    ConnectionError,
-    DimensionMismatchError,
     DistanceMetric,
     FilterCondition,
     HybridSearchBackend,
@@ -25,7 +27,6 @@ from codeweaver.backends.base import (
     SearchResult,
     StreamingBackend,
     TransactionalBackend,
-    UnsupportedOperationError,
     VectorBackend,
     VectorPoint,
 )
@@ -44,19 +45,21 @@ from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
 
 __all__ = [
     "EXAMPLE_CONFIGS",
-    "AuthenticationError",
+    "BackendAuthError",
+    "BackendCollectionNotFoundError",
     # Configuration
     "BackendConfig",
     "BackendConfigExtended",
+    "BackendConnectionError",
     # Exceptions
     "BackendError",
     # Factory
     "BackendFactory",
-    "CollectionInfo",
-    "CollectionNotFoundError",
-    "ConnectionError",
-    "DimensionMismatchError",
     # Enums
+    "BackendResourceProvider",
+    "BackendUnsupportedOperationError",
+    "BackendVectorDimensionMismatchError",
+    "CollectionInfo",
     "DistanceMetric",
     "FilterCondition",
     "HybridSearchBackend",
@@ -68,7 +71,6 @@ __all__ = [
     "SearchResult",
     "StreamingBackend",
     "TransactionalBackend",
-    "UnsupportedOperationError",
     # Core protocols
     "VectorBackend",
     # Data structures

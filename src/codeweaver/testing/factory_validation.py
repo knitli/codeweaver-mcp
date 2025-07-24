@@ -10,6 +10,8 @@ Validates that factory patterns work correctly with configuration loading,
 component instantiation, and error handling across all protocols.
 """
 
+
+import contextlib
 import logging
 
 from dataclasses import dataclass, field
@@ -112,10 +114,7 @@ class FactoryPatternValidator:
 
     async def validate_all_factories(self) -> dict[str, FactoryValidationResult]:
         """Validate all factory patterns."""
-        results = {}
-
-        # Validate backend factory
-        results["backend_factory"] = await self.validate_backend_factory()
+        results = {"backend_factory": await self.validate_backend_factory()}
 
         # Validate provider factories
         results["embedding_provider_factory"] = await self.validate_embedding_provider_factory()
@@ -185,14 +184,10 @@ class FactoryPatternValidator:
                 result.warnings.append("Mock provider not found in supported providers")
 
             # Test invalid provider
-            try:
+            with contextlib.suppress(Exception):
                 invalid_config = BackendConfig(provider="nonexistent", url="test://localhost")
                 await create_backend(invalid_config)
                 result.validation_errors.append("Should have failed with invalid provider")
-            except Exception:
-                # This is expected
-                pass
-
         except Exception as e:
             result.validation_errors.append(f"Factory method test failed: {e}")
 
@@ -461,7 +456,7 @@ class FactoryPatternValidator:
         try:
             # Test backend registration
             class TestBackend:
-                pass
+                """ A mock backend class for testing registration. """
 
             BackendFactory.register_backend("test", TestBackend, supports_hybrid=True)
             providers = BackendFactory.list_supported_providers()
@@ -475,12 +470,12 @@ class FactoryPatternValidator:
 
             # Test provider registration
             class TestProvider:
-                pass
+                """ A mock provider class for testing registration. """
 
             ProviderFactory.register_provider("test_provider", TestProvider)
-            provider_list = ProviderFactory.list_available_providers()
+            providers = ProviderFactory.list_available_providers()
 
-            if "test_provider" in provider_list:
+            if "test_provider" in providers:
                 result.created_instances += 1
                 result.test_details["provider_registration"] = "success"
             else:
@@ -489,12 +484,12 @@ class FactoryPatternValidator:
 
             # Test source registration
             class TestSource:
-                pass
+                """ A mock data source class for testing registration. """
 
             SourceFactory.register_source("test_source", TestSource)
-            source_list = SourceFactory.list_available_sources()
+            sources = SourceFactory.list_available_sources()
 
-            if "test_source" in source_list:
+            if "test_source" in sources:
                 result.created_instances += 1
                 result.test_details["source_registration"] = "success"
             else:
@@ -564,7 +559,8 @@ def print_factory_validation_results(results: dict[str, FactoryValidationResult]
                 print(f"    - {warning}")
 
     # Summary
-    total_valid = sum(1 for result in results.values() if result.is_valid)
+    total_valid = sum(bool(result.is_valid)
+                  for result in results.values())
     total_factories = len(results)
 
     print(f"\nSUMMARY: {total_valid}/{total_factories} factory patterns valid")
@@ -581,9 +577,8 @@ def save_factory_validation_results(
     """Save factory validation results to JSON file."""
     import json
 
-    serializable_results = {}
-    for factory_name, result in results.items():
-        serializable_results[factory_name] = {
+    serializable_results = {
+        factory_name: {
             "factory_name": result.factory_name,
             "is_valid": result.is_valid,
             "created_instances": result.created_instances,
@@ -592,7 +587,8 @@ def save_factory_validation_results(
             "warnings": result.warnings,
             "test_details": result.test_details,
         }
-
+        for factory_name, result in results.items()
+    }
     with open(filename, "w") as f:
         json.dump(serializable_results, f, indent=2)
 

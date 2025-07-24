@@ -1,3 +1,4 @@
+# sourcery skip: avoid-single-character-names-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -63,7 +64,7 @@ class DependencyContainer:
     and flexible lifecycle management for extensible components.
     """
 
-    def __init__(self, singleton_backends: bool = True, singleton_providers: bool = True):
+    def __init__(self, *, singleton_backends: bool = True, singleton_providers: bool = True):
         """Initialize the dependency container.
 
         Args:
@@ -299,7 +300,9 @@ class DependencyContainer:
                         # Handle async cleanup in sync context
                         loop = asyncio.get_event_loop()
                         if loop.is_running():
-                            asyncio.create_task(handler())
+                            task = (asyncio.create_task(handler()))
+                            tasks = {task}
+                            task.add_done_callback(tasks.discard)
                         else:
                             loop.run_until_complete(handler())
                     else:

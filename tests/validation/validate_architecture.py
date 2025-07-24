@@ -253,12 +253,12 @@ def test_file_syntax() -> bool | None:  # sourcery skip: extract-method
                 syntax_errors.append((py_file, str(e)))
 
         if syntax_errors:
-            logger.error(f"❌ Syntax errors found in {len(syntax_errors)} files:")
+            logger.error("❌ Syntax errors found in %s files:", len(syntax_errors))
             for file_path, error in syntax_errors:
-                logger.error(f"  {file_path}: {error}")
+                logger.error("  %s: %s", file_path, error)
             return False
 
-        logger.info(f"✅ All {len(python_files)} Python files have valid syntax")
+        logger.info("✅ All %s Python files have valid syntax", len(python_files))
 
     except Exception:
         logger.exception("❌ File syntax test failed: ")
@@ -308,7 +308,7 @@ def main() -> int:  # sourcery skip: extract-method
         logger.info("  • Integration testing framework created")
         logger.info("\n🚀 The extensible architecture is ready for deployment!")
         return 0
-    logger.error(f"❌ {total - passed} tests failed. Please check the issues above.")
+    logger.error("❌ %s tests failed. Please check the issues above.", total - passed)
     return 1
 
 

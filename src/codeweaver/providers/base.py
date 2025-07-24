@@ -14,7 +14,42 @@ import enum
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, runtime_checkable
+
+
+if TYPE_CHECKING:
+    from codeweaver.backends.base import VectorBackend
+    from codeweaver.backends.factory import AvailableBackend
+
+
+class CustomBackendCapabilities(TypedDict):
+    """Typed dictionary for custom backend capabilities.
+
+    This is used to define arbitrary capabilities for custom backends.
+    """
+
+    only_traditional_search: bool
+    """Only set this to True if the backend ONLY supports traditional keyword search"""
+    is_reranker: bool
+    is_embedder: bool
+    is_only_traditional_search: bool
+
+    supported_algorithms:
+    supports_hybrid_search: bool
+    supports_streaming: bool
+    supports_transactions: bool
+    supports_batch_processing: bool
+    supports_sparse_vectors: bool
+    supports_vector_indexing: bool
+    supports_vector_search: bool
+    supports_vector_upsert: bool
+    supports_vector_deletion: bool
+    supports_vector_metadata: bool
+    supports_vector_similarity_search: bool
+    supports_vector_filtering: bool
+
+    in_memory_only: bool
+    persistent_storage: bool
 
 
 @dataclass
@@ -26,6 +61,127 @@ class RerankResult:
     document: str | None = None  # Optional: the original document text
 
 
+class BackendResourceProvider(enum.Enum):
+    """Enumeration of supported vector database providers."""
+
+    QDRANT = "qdrant"
+
+    # Planned providers
+    # These are not yet implemented but will be added in the future
+    ANNOY = "annoy"
+    CHROMA = "chroma"
+    CUSTOM = "custom"  # User-defined provider
+    ELASTICSEARCH = "elasticsearch"
+    FAISS = "faiss"
+    LANCEDB = "lancedb"
+    MARQO = "marqo"
+    MILVUS = "milvus"
+    OPENSEARCH = "opensearch"
+    PGVECTOR = "pgvector"
+    PINECONE = "pinecone"
+    REDIS = "redis"
+    SCANN = "scann"
+    VESPA = "vespa"
+    WEAVIATE = "weaviate"
+
+    @classmethod
+    def from_string(cls, value: str) -> "BackendResourceProvider":
+        """Create a BackendResourceProvider from a string value."""
+        normalized_value = value.strip().lower().replace(" ", "_").replace("-", "_")
+        if normalized_value in cls._value2member_map_:
+            return cls._value2member_map_[normalized_value]
+        # TODO: I don't think this will work... we need a formal way to define custom providers
+        # Check if the value matches a custom provider defined in globals()
+        if globals().get(value) or globals().get(normalized_value):
+            return cls.CUSTOM
+        return None
+
+    @property
+    def supports_hybrid_search(self) -> bool:
+        """Check if the provider supports hybrid search."""
+        match self:
+            case (
+                BackendResourceProvider.ELASTICSEARCH
+                | BackendResourceProvider.MARQO
+                | BackendResourceProvider.OPENSEARCH
+                | BackendResourceProvider.QDRANT
+                | BackendResourceProvider.VESPA
+                | BackendResourceProvider.WEAVIATE
+            ):
+                return True
+            case (
+                BackendResourceProvider.ANNOY
+                | BackendResourceProvider.CHROMA
+                | BackendResourceProvider.FAISS
+                | BackendResourceProvider.LANCEDB
+                | BackendResourceProvider.MILVUS
+                | BackendResourceProvider.PGVECTOR
+                | BackendResourceProvider.PINECONE
+                | BackendResourceProvider.REDIS
+                | BackendResourceProvider.SCANN
+            ):
+                return False
+            case BackendResourceProvider.CUSTOM:
+                if backend := getattr(self, "backend", None):
+                    # Check if the custom backend supports hybrid search
+                    # This assumes the backend class has a hybrid_search method
+                    # and is a subclass of HybridSearchBackend
+                    return all(
+                        hasattr(backend, method)
+                        for method in [
+                            "hybrid_search",
+                            "create_sparse_index",
+                            "update_sparse_vectors",
+                        ]
+                    )
+                return None
+            case _:
+                raise NotImplementedError(
+                    f"Hybrid search not implemented for provider: {self.value}"
+                )
+
+    @property
+    def supports_streaming(self) -> bool:
+        """Check if the provider supports streaming operations."""
+        return all(hasattr(self.backend, "stream_upsert"))
+
+    @property
+    def supports_transactions(self) -> bool:
+        """Check if the provider supports transactions."""
+        # This checks if the backend has a method for starting transactions
+        return hasattr(self.backend, "begin_transaction")
+
+    @property
+    def normalized_name(self) -> str:
+        """Get the normalized name of the provider."""
+        return self.value.lower()
+
+    @property
+    def backend(self) -> type["VectorBackend"]:
+        """Get the backend class for this provider."""
+        try:
+            provider = getattr(
+                __import__("codeweaver.backends", fromlist=[self.value]),
+                f"{self.value.capitalize()}Backend",
+            )
+        except ImportError as e:
+            raise NotImplementedError(f"Backend not implemented for provider: {self.value}") from e
+        else:
+            return provider
+
+    def to_available_backend(self) -> "AvailableBackend":
+        """Convert to an AvailableBackend dictionary."""
+        return {
+            "provider": self,
+            "backend": self.backend,
+            "available": self
+            in [BackendResourceProvider.QDRANT, BackendResourceProvider.CUSTOM],
+            "supports_hybrid_search": self.supports_hybrid_search,
+            "supports_streaming": self.supports_streaming,
+            "supports_transactions": self.supports_transactions,
+        }
+
+
 @dataclass
 class ProviderInfo:
     """Information about a provider's capabilities and configuration."""
@@ -34,8 +190,8 @@ class ProviderInfo:
     display_name: str
     description: str
     supported_capabilities: list["ProviderCapability"]
-    default_models: dict[str, str]  # capability -> default model
-    supported_models: dict[str, list[str]]  # capability -> list of models
+    default_models: dict[str, str] | None  # capability -> default model
+    supported_models: dict[str, list[str]] | None  # capability -> list of models
     rate_limits: dict[str, int] | None = None  # operation -> limit per minute
     requires_api_key: bool = True
     supports_batch_processing: bool = True

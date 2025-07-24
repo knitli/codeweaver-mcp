@@ -28,14 +28,8 @@ content_items = await source.discover_content(config)
 
 ## Migration Support
 
-```python
-from codeweaver.sources.migration_guide import MigrationHelper
-
-# Extend existing configuration with data source support
-ExtendedConfig = MigrationHelper.extend_existing_config()
-config = ExtendedConfig()
-config.ensure_data_sources_initialized()
-```
+Migration examples have been moved to `examples/migration/sources_migration.py`.
+See the examples directory for complete migration demonstrations.
 """
 
 from codeweaver.sources.api import APISource

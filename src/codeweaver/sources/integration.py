@@ -97,7 +97,7 @@ class DataSourceManager:
                     "Discovered %d content items from source: %s", len(content), source.source_id
                 )
 
-            except Exception as e:
+            except Exception:
                 logger.exception(
                     "Error discovering content from source %s", source.source_id
                 )
@@ -152,7 +152,7 @@ class DataSourceManager:
 
             except NotImplementedError:
                 logger.debug("Change watching not supported by source: %s", source.source_id)
-            except Exception as e:
+            except Exception:
                 logger.exception(
                     "Failed to setup change watching for source %s", source.source_id
                 )
@@ -303,7 +303,7 @@ class BackwardCompatibilityAdapter:
             "total_chunks": len(all_chunks),
             "languages_found": list(processed_languages),
             "data_sources_used": [
-                source.source_id for source in self.data_source_manager._active_sources
+                source.source_id for source in self.data_source_manager._active_sources  # noqa: SLF001
             ],
             "source_statistics": self._get_source_statistics(content_items),
         }

@@ -33,7 +33,7 @@ async def test_backend_factory() -> bool | None:
         )
 
         backend = BackendFactory.create_backend(config)
-        logger.info(f"✅ Successfully created backend: {type(backend).__name__}")
+        logger.info("✅ Successfully created backend: %s", type(backend).__name__)
 
         # Test hybrid backend creation
         hybrid_config = BackendConfig(
@@ -45,7 +45,7 @@ async def test_backend_factory() -> bool | None:
         )
 
         hybrid_backend = BackendFactory.create_backend(hybrid_config)
-        logger.info(f"✅ Successfully created hybrid backend: {type(hybrid_backend).__name__}")
+        logger.info("✅ Successfully created hybrid backend: %s", type(hybrid_backend).__name__)
 
     except Exception:
         logger.exception("❌ Backend factory test failed: ")
@@ -170,7 +170,7 @@ async def main() -> bool:
         except Exception:
             logger.exception("❌ %s: ERROR - ", test_name)
 
-    logger.info(f"\n🎯 Test Results: {passed}/{total} tests passed")
+    logger.info("\n🎯 Test Results: {passed}/%s tests passed", total)
 
     if passed == total:
         logger.info("🎉 All tests passed! Backend refactoring is working correctly.")

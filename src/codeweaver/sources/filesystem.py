@@ -78,7 +78,7 @@ class FileSystemSourceWatcher(SourceWatcher):
         self.root_path = root_path
         self.config = config
         self._watch_task: asyncio.Task | None = None
-        self._last_scan_time = datetime.now()
+        self._last_scan_time = datetime.now(datetime.UTC)
 
     async def start(self) -> bool:
         """Start watching for file system changes."""
@@ -89,11 +89,12 @@ class FileSystemSourceWatcher(SourceWatcher):
             self.is_active = True
             self._watch_task = asyncio.create_task(self._watch_loop())
             logger.info("Started file system watching: %s", self.root_path)
-            return True
         except Exception:
             logger.exception("Failed to start file system watching")
             self.is_active = False
             return False
+        else:
+            return True
 
     async def stop(self) -> bool:
         """Stop watching for file system changes."""
@@ -109,10 +110,11 @@ class FileSystemSourceWatcher(SourceWatcher):
                 self._watch_task = None
 
             logger.info("Stopped file system watching: %s", self.root_path)
-            return True
         except Exception:
             logger.exception("Error stopping file system watching")
             return False
+        else:
+            return True
 
     async def _watch_loop(self) -> None:
         """Main watching loop for detecting file changes."""
@@ -300,10 +302,10 @@ class FileSystemSource(AbstractDataSource):
         try:
             # Read with UTF-8 encoding and error handling
             return file_path.read_text(encoding="utf-8", errors="ignore")
-        except PermissionError:
-            raise PermissionError(f"Permission denied reading file: {file_path}")
+        except PermissionError as e:
+            raise PermissionError(f"Permission denied reading file: {file_path}") from e
         except Exception as e:
-            raise ValueError(f"Error reading file {file_path}: {e}")
+            raise ValueError(f"Error reading file {file_path}: {e}") from e
 
     async def watch_changes(
         self, config: FileSystemSourceConfig, callback: Callable[[list[ContentItem]], None]
@@ -366,11 +368,13 @@ class FileSystemSource(AbstractDataSource):
                 logger.warning("Permission denied accessing root path: %s", root_path)
                 return False
 
-            return True
-
         except Exception:
             logger.exception("Error validating file system source configuration")
             return False
+
+        else:
+            logger.info("File system source configuration is valid: %s", root_path)
+            return True
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for a file.

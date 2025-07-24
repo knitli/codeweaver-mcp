@@ -1,3 +1,4 @@
+# sourcery skip: no-complex-if-expressions
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -452,43 +453,39 @@ class FactoryValidator:
         if not config.embedding:
             return None
 
-        # Check if dimension is specified
-        dimension = config.embedding.dimension
-        if not dimension:
-            return CompatibilityResult(
-                level=CompatibilityLevel.COMPATIBLE,
-                component_a="embedding",
-                component_b="backend",
-                message="Using default embedding dimension",
-                recommendations=["Consider specifying dimension explicitly"],
+        if dimension := config.embedding.dimension:
+                # Check dimension limits for backends
+            return (
+                CompatibilityResult(
+                    level=CompatibilityLevel.PARTIAL,
+                    component_a="embedding",
+                    component_b="backend",
+                    message=f"Large embedding dimension ({dimension}) may impact performance",
+                    recommendations=[
+                        "Consider using dimensionality reduction",
+                        "Ensure backend supports large dimensions",
+                    ],
+                )
+                if dimension > 4096
+                else None
             )
-
-        # Check dimension limits for backends
-        if dimension > 4096:
-            return CompatibilityResult(
-                level=CompatibilityLevel.PARTIAL,
-                component_a="embedding",
-                component_b="backend",
-                message=f"Large embedding dimension ({dimension}) may impact performance",
-                recommendations=[
-                    "Consider using dimensionality reduction",
-                    "Ensure backend supports large dimensions",
-                ],
-            )
-
-        return None
+        return CompatibilityResult(
+            level=CompatibilityLevel.COMPATIBLE,
+            component_a="embedding",
+            component_b="backend",
+            message="Using default embedding dimension",
+            recommendations=["Consider specifying dimension explicitly"],
+        )
 
     def _check_api_key_requirements(self, config: CodeWeaverConfig) -> CompatibilityResult | None:
         """Check API key requirements."""
         missing_keys = []
 
-        if config.embedding and config.embedding.provider != "sentence-transformers":
-            if not config.embedding.api_key:
-                missing_keys.append("embedding")
+        if config.embedding and config.embedding.provider != "sentence-transformers" and not config.embedding.api_key:
+            missing_keys.append("embedding")
 
-        if hasattr(config.backend, "api_key") and not config.backend.api_key:
-            if config.backend.provider in ["pinecone", "weaviate"]:
-                missing_keys.append("backend")
+        if hasattr(config.backend, "api_key") and not config.backend.api_key and config.backend.provider in ["pinecone", "weaviate"]:
+            missing_keys.append("backend")
 
         if missing_keys:
             return CompatibilityResult(
@@ -517,8 +514,8 @@ class FactoryValidator:
         compatibility_results = await self.check_compatibility(config)
 
         # Determine overall health
-        error_count = sum(1 for r in validation_results if r.severity == "error")
-        warning_count = sum(1 for r in validation_results if r.severity == "warning")
+        error_count = sum(r.severity == "error" for r in validation_results)
+        warning_count = sum(r.severity == "warning" for r in validation_results)
 
         if error_count > 0:
             overall_health = "critical"
@@ -545,5 +542,5 @@ class FactoryValidator:
             validation_results=validation_results,
             compatibility_results=compatibility_results,
             recommendations=recommendations,
-            timestamp=datetime.datetime.now().isoformat(),
+            timestamp=datetime.datetime.now(datetime.UTC).isoformat(),
         )

@@ -194,11 +194,13 @@ class GitRepositorySource(AbstractDataSource):
             # and is accessible with the provided credentials
 
             logger.warning("Git repository validation not fully implemented")
-            return True
 
         except Exception:
             logger.exception("Error validating git repository source configuration")
             return False
+
+        else:
+            return True
 
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for a git repository file.
