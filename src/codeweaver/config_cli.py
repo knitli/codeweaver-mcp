@@ -7,7 +7,7 @@
 """
 Command-line interface for CodeWeaver configuration management.
 
-Provides tools for validating, migrating, and generating configuration files.
+Provides tools for validating and generating configuration files.
 """
 
 import argparse
@@ -17,12 +17,14 @@ import sys
 from pathlib import Path
 from typing import NoReturn
 
-from codeweaver.config_migration import (
-    ConfigMigrationError,
+from codeweaver.config import (
+    CodeWeaverConfig,
+    ConfigManager,
+    ConfigurationError,
     ConfigValidator,
-    check_backend_compatibility,
-    generate_deployment_configs,
-    validate_configuration_file,
+    setup_development_config,
+    setup_production_config,
+    setup_testing_config,
 )
 
 
@@ -36,7 +38,7 @@ def cmd_validate(args: argparse.Namespace) -> None:
     """Validate a configuration file."""
     try:
         _validate_cmd(args)
-    except ConfigMigrationError as e:
+    except ConfigurationError as e:
         print(f"❌ Validation failed: {e}", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
@@ -46,49 +48,87 @@ def cmd_validate(args: argparse.Namespace) -> None:
 
 def _validate_cmd(args: argparse.Namespace) -> None:
     """Internal command to validate a configuration file."""
-    config, warnings = validate_configuration_file(args.config_file)
+    # Load configuration using new system
+    config_manager = ConfigManager()
+    config = config_manager.load_config(args.config_file)
+
+    # Validate configuration
+    validator = ConfigValidator()
+    result = validator.validate_configuration(config)
 
     print(f"✅ Configuration file: {args.config_file}")
-    print(f"📋 Format: {'Legacy' if config.is_legacy_config() else 'New'}")
-    print(f"🏗️  Backend: {config.get_effective_backend_provider()}")
-    print(f"🤖 Provider: {config.get_effective_CW_EMBEDDING_PROVIDER()}")
+    print(f"📋 Format: New (v{config.config_version})")
+    print(f"🏗️  Backend: {config.backend.provider}")
+    print(f"🤖 Provider: {config.providers.provider}")
 
-    if warnings:
-        print(f"\n⚠️  Validation Warnings ({len(warnings)}):")
-        for i, warning in enumerate(warnings, 1):
+    if result.errors:
+        print(f"\n❌ Validation Errors ({len(result.errors)}):")
+        for i, error in enumerate(result.errors, 1):
+            print(f"  {i}. {error}")
+
+    if result.warnings:
+        print(f"\n⚠️  Validation Warnings ({len(result.warnings)}):")
+        for i, warning in enumerate(result.warnings, 1):
             print(f"  {i}. {warning}")
     else:
         print("\n✅ No validation warnings found")
 
     if args.show_effective_config:
         print("\n📄 Effective Configuration:")
-        effective_config = config.to_new_format_dict()
         import json
 
-        print(json.dumps(effective_config, indent=2))
+        config_dict = config.model_dump(exclude_unset=True)
+        print(json.dumps(config_dict, indent=2))
 
 
 def cmd_generate(args: argparse.Namespace) -> None:
     """Generate example configurations."""
-    configs = generate_deployment_configs()
+    from codeweaver.config import ConfigSchema
+
+    # Available scenarios
+    scenarios = {
+        "development": lambda: setup_development_config(),
+        "production": lambda: setup_production_config(
+            backend_url="http://localhost:6333",
+            embedding_api_key="your-api-key",
+            source_paths=["./src"],
+        ),
+        "testing": lambda: setup_testing_config(),
+        "example": lambda: ConfigSchema.generate_example_config("toml"),
+    }
 
     if args.scenario == "all":
         print("📚 Available deployment scenarios:")
-        for name in configs:
+        for name in scenarios:
             print(f"  • {name}")
 
         if args.output_dir:
             output_dir = Path(args.output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            for name, content in configs.items():
+            for name, config_generator in scenarios.items():
                 output_file = output_dir / f"{name}.toml"
+
+                if name == "example":
+                    content = config_generator()
+                else:
+                    config = config_generator()
+                    manager = ConfigManager(config)
+                    content = manager.export_config("toml", include_defaults=True)
+
                 with output_file.open("w") as f:
                     f.write(content)
                 print(f"📁 Generated: {output_file}")
 
-    elif args.scenario in configs:
-        content = configs[args.scenario]
+    elif args.scenario in scenarios:
+        config_generator = scenarios[args.scenario]
+
+        if args.scenario == "example":
+            content = config_generator()
+        else:
+            config = config_generator()
+            manager = ConfigManager(config)
+            content = manager.export_config("toml", include_defaults=True)
 
         if args.output:
             output_path = Path(args.output)
@@ -102,71 +142,68 @@ def cmd_generate(args: argparse.Namespace) -> None:
 
     else:
         print(f"❌ Unknown scenario: {args.scenario}")
-        print(f"Available scenarios: {', '.join(configs.keys())}")
+        print(f"Available scenarios: {', '.join(scenarios.keys())}")
         sys.exit(1)
 
 
 def cmd_check_compatibility(args: argparse.Namespace) -> None:
     """Check backend and provider compatibility."""
-    compatible = check_backend_compatibility(args.backend, args.provider)
-    warnings = ConfigValidator.validate_backend_provider_combination(args.backend, args.provider)
+    from codeweaver.config import BackendConfigBuilder, ConfigValidator, ProviderConfigBuilder
+
+    # Create test configurations
+    backend_config = BackendConfigBuilder(args.backend).build()
+    provider_config = ProviderConfigBuilder(args.provider).build()
+
+    # Create a test configuration for validation
+    test_config = CodeWeaverConfig(backend=backend_config, providers=provider_config)
+
+    # Validate
+    validator = ConfigValidator()
+    result = validator.validate_configuration(test_config)
 
     print("🔍 Compatibility Check:")
     print(f"  Backend: {args.backend}")
     print(f"  Provider: {args.provider}")
 
-    if compatible:
+    if result.is_valid:
         print("✅ Compatible combination")
     else:
-        print("⚠️  Potential compatibility issues:")
-        for warning in warnings:
-            print(f"  • {warning}")
+        print("⚠️  Compatibility issues found:")
+        for error in result.errors:
+            print(f"  • {error}")
 
-    # Additional checks
-    if args.enable_hybrid:
-        if hybrid_warnings := ConfigValidator.validate_hybrid_search_config(
-            args.backend, True, True
-        ):
-            print("\n🔀 Hybrid Search Warnings:")
-            for warning in hybrid_warnings:
-                print(f"  • {warning}")
-        else:
-            print("\n✅ Hybrid search is supported")
+    if result.warnings:
+        print("⚠️  Warnings:")
+        for warning in result.warnings:
+            print(f"  • {warning}")
 
 
 def cmd_info(args: argparse.Namespace) -> None:
     """Show configuration system information."""
-    _print_args(
-        "📊 CodeWeaver Configuration System",
-        "==================================",
-        "🏗️  Supported Backends:",
-    )
-    validator = ConfigValidator()
-    for backend in validator.backend_embedding_compatibility:
-        hybrid_support = "✅" if backend in validator.hybrid_search_backends else "❌"
-        print(f"  • {backend:15} (Hybrid: {hybrid_support})")
+    print("📊 CodeWeaver Configuration System")
+    print("==================================")
+    print("🏗️  Supported Backends:")
+
+    # Hardcode the supported backends from our new system
+    backends = ["qdrant", "pinecone", "weaviate"]
+    for backend in backends:
+        print(f"  • {backend}")
     print()
 
     # Supported providers
     print("🤖 Supported Embedding Providers:")
-    all_providers = set()
-    for providers in validator.backend_embedding_compatibility.values():
-        all_providers.update(providers)
-
-    for provider in sorted(all_providers):
-        local_support = "✅" if provider in ConfigValidator.LOCAL_PROVIDERS else "❌"
-        rerank_support = "✅" if provider in ConfigValidator.RERANKING_PROVIDERS else "❌"
-        print(f"  • {provider:20} (Local: {local_support}, Rerank: {rerank_support})")
+    providers = ["voyage-ai", "openai", "cohere", "huggingface", "sentence-transformers"]
+    for provider in providers:
+        print(f"  • {provider}")
     print()
 
     # Configuration locations
     print("📁 Configuration File Locations (precedence order):")
-    print("  1. .local.code-weaver.toml (workspace local)")
-    _print_args(
-        "  2. .code-weaver.toml (repository)",
-        "  3. ~/.config/code-weaver/config.toml (user)",
-        "🌍 Key Environment Variables:",
-    )
+    print("  1. .local.codeweaver.toml (workspace local)")
+    print("  2. .codeweaver.toml (repository)")
+    print("  3. ~/.config/codeweaver/config.toml (user)")
+    print()
+    print("🌍 Key Environment Variables:")
     env_vars = [
         ("CW_VECTOR_BACKEND_PROVIDER", "Backend provider (qdrant, pinecone, etc.)"),
         ("CW_VECTOR_BACKEND_URL", "Backend URL"),
@@ -184,16 +221,6 @@ def cmd_info(args: argparse.Namespace) -> None:
         print(f"  • {var:25} - {description}")
 
 
-# TODO Rename this here and in `cmd_info`
-def _print_args(arg0, arg1, arg2):
-    print(arg0)
-    print(arg1)
-    print()
-
-    # Supported backends
-    print(arg2)
-
-
 def main() -> NoReturn:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -204,11 +231,8 @@ Examples:
   # Validate a configuration file
   python -m codeweaver.config_cli validate config.toml
 
-  # Migrate legacy configuration to new format
-  python -m codeweaver.config_cli migrate legacy-config.toml -o new-config.toml
-
   # Generate production configuration example
-  python -m codeweaver.config_cli generate production_cloud -o production.toml
+  python -m codeweaver.config_cli generate production -o production.toml
 
   # Check backend/provider compatibility
   python -m codeweaver.config_cli check-compatibility qdrant voyage --enable-hybrid
@@ -231,28 +255,11 @@ Examples:
         help="Show the effective configuration after merging",
     )
 
-    # Migrate command
-    migrate_parser = subparsers.add_parser(
-        "migrate", help="Migrate configuration from legacy to new format"
-    )
-    migrate_parser.add_argument("config_file", help="Path to legacy configuration file")
-    migrate_parser.add_argument("-o", "--output", help="Output path for migrated configuration")
-    migrate_parser.add_argument(
-        "--show-diff", action="store_true", help="Show the migrated configuration content"
-    )
-
     # Generate command
     generate_parser = subparsers.add_parser("generate", help="Generate example configurations")
     generate_parser.add_argument(
         "scenario",
-        choices=[
-            "all",
-            "local_development",
-            "production_cloud",
-            "enterprise_multi_source",
-            "pinecone_setup",
-            "weaviate_hybrid",
-        ],
+        choices=["all", "development", "production", "testing", "example"],
         help="Configuration scenario to generate",
     )
     generate_parser.add_argument("-o", "--output", help="Output file path (for single scenario)")

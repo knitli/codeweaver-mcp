@@ -17,14 +17,14 @@ import typing
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, ClassVar
 
+from codeweaver._types.base_enum import BaseEnum
 
 logger = logging.getLogger(__name__)
 
 
-class SearchComplexity(Enum):
+class SearchComplexity(BaseEnum):
     """Categorize search complexity levels."""
 
     SIMPLE = "simple"

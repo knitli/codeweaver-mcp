@@ -16,9 +16,10 @@ import logging
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import auto
 from typing import Any
 
+from codeweaver._types.base_enum import BaseEnum
 from codeweaver.config import BackendConfig, CodeWeaverConfig
 from codeweaver.factories.plugin_discovery import PluginDiscovery
 from codeweaver.factories.unified_factory import UnifiedFactory
@@ -27,7 +28,7 @@ from codeweaver.factories.unified_factory import UnifiedFactory
 logger = logging.getLogger(__name__)
 
 
-class ValidationLevel(Enum):
+class ValidationLevel(BaseEnum):
     """Validation levels for different scenarios."""
 
     MINIMAL = auto()  # Basic validation only
@@ -35,7 +36,7 @@ class ValidationLevel(Enum):
     COMPREHENSIVE = auto()  # Full validation including performance tests
 
 
-class CompatibilityLevel(Enum):
+class CompatibilityLevel(BaseEnum):
     """Compatibility levels between components."""
 
     INCOMPATIBLE = auto()  # Components cannot work together

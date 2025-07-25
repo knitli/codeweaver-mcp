@@ -21,7 +21,7 @@ from codeweaver._types.backends import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver._types.enums import HybridStrategy
+from codeweaver._types.provider_enums import HybridStrategy
 
 
 @runtime_checkable

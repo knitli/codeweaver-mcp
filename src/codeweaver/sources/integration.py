@@ -15,9 +15,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+from codeweaver.config.factory import SourceConfig
 from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.sources.base import ContentItem, DataSource
-from codeweaver.sources.config import DataSourcesConfig, SourceConfig
 
 
 logger = logging.getLogger(__name__)
@@ -31,13 +31,13 @@ class DataSourceManager:
     based indexing approach.
     """
 
-    def __init__(self, config: DataSourcesConfig):
+    def __init__(self, sources: list[SourceConfig]):
         """Initialize the data source manager.
 
         Args:
-            config: Data sources configuration
+            sources: List of data source configurations
         """
-        self.config = config
+        self.sources = sources
         self.source_registry = SourceRegistry()
         self._active_sources: list[DataSource] = []
         self._watchers: list[Any] = []

@@ -15,7 +15,7 @@ import logging
 
 from typing import Any
 
-from codeweaver._types.enums import RerankResult
+from codeweaver._types.provider_enums import RerankResult
 from codeweaver._types.provider_enums import ProviderCapability, ProviderType
 from codeweaver._types.provider_registry import (
     EmbeddingProviderInfo,

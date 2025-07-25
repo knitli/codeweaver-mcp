@@ -36,7 +36,7 @@ from codeweaver._types.backends import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver._types.enums import DistanceMetric, HybridStrategy
+from codeweaver._types.provider_enums import DistanceMetric, HybridStrategy
 from codeweaver.backends.base import (
     BackendCollectionNotFoundError,
     BackendConnectionError,

@@ -239,9 +239,9 @@ async def main() -> None:
         print("You can configure Code Weaver using:")
         print("1. Environment variables (CW_EMBEDDING_API_KEY, CW_VECTOR_BACKEND_URL, etc.)")
         print("2. TOML config files in these locations:")
-        print("   - .local.code-weaver.toml (workspace local)")
-        print("   - .code-weaver.toml (repository)")
-        print("   - ~/.config/code-weaver/config.toml (user)")
+        print("   - .local.codeweaver.toml (workspace local)")
+        print("   - .codeweaver.toml (repository)")
+        print("   - ~/.config/codeweaver/config.toml (user)")
         print("\n🔧 Example config:")
         print(config_manager.get_example_config() if config_manager else "")
         return

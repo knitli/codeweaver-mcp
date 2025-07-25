@@ -10,51 +10,46 @@ Provides centralized creation and management of backends, providers, and data so
 with plugin discovery, dependency injection, and lifecycle management.
 """
 
-from codeweaver.factories.dependency_injection import DependencyContainer, Lifecycle, ServiceLocator
+from codeweaver.factories.backend_registry import BackendRegistry
+from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
+from codeweaver.factories.error_handling import ComponentError, FactoryError
+from codeweaver.factories.error_handling import ValidationError as FactoryValidationError
 from codeweaver.factories.extensibility_manager import ExtensibilityConfig, ExtensibilityManager
-from codeweaver.factories.integration import (
-    ServerMigrationHelper,
-    create_extensibility_context,
-    create_migration_config,
-    validate_migration_readiness,
-)
-from codeweaver.factories.plugin_discovery import (
+from codeweaver.factories.initialization import FactoryInitializer
+from codeweaver.factories.integration import create_extensibility_context
+from codeweaver.factories.plugin_protocols import (
     BackendPlugin,
-    PluginDiscovery,
+    ComponentRegistry,
     ProviderPlugin,
     SourcePlugin,
 )
-from codeweaver.factories.unified_factory import BackendFactory, UnifiedFactory
-from codeweaver.factories.unified_factory import ProviderFactory as UnifiedProviderFactory
-from codeweaver.factories.unified_factory import SourceFactory as UnifiedSourceFactory
+from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.factories.validation import CompatibilityLevel, FactoryValidator, ValidationLevel
 
 
 __all__ = [
-    # Core factories
-    "BackendFactory",
+    # Plugin protocols
     "BackendPlugin",
-    "CompatibilityLevel",
-    # Dependency injection
-    "DependencyContainer",
-    "ExtensibilityConfig",
-    # Extensibility management
-    "ExtensibilityManager",
+    "BackendRegistry",
+    # Core factories
+    "CodeWeaverFactory",
     # Validation
+    "CompatibilityLevel",
+    "ComponentError",
+    "ComponentRegistry",
+    # Extensibility management
+    "ExtensibilityConfig",
+    "ExtensibilityManager",
+    # Error handling
+    "FactoryError",
+    # Initialization
+    "FactoryInitializer",
+    "FactoryValidationError",
     "FactoryValidator",
-    # Integration utilities
-    "Lifecycle",
-    # Plugin discovery
-    "PluginDiscovery",
     "ProviderPlugin",
-    "ServerMigrationHelper",
-    "ServiceLocator",
     "SourcePlugin",
-    "UnifiedFactory",
-    "UnifiedProviderFactory",
-    "UnifiedSourceFactory",
+    "SourceRegistry",
     "ValidationLevel",
+    # Integration utilities
     "create_extensibility_context",
-    "create_migration_config",
-    "validate_migration_readiness",
 ]

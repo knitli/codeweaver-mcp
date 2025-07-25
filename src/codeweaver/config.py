@@ -8,9 +8,9 @@
 Configuration management for Code Weaver MCP server.
 
 Provides comprehensive TOML-based configuration with multiple location support:
-- Workspace local: .local.code-weaver.toml
-- Repository: .code-weaver.toml
-- User: ~/.config/code-weaver/config.toml
+- Workspace local: .local.codeweaver.toml
+- Repository: .codeweaver/.codeweaver.toml or .codeweaver.toml
+- User: ~/.config/codeweaver/config.toml or %LOCALAPPDATA%/codeweaver/config.toml
 """
 
 import logging
@@ -234,7 +234,7 @@ class ServerConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    server_name: str = Field(default="code-weaver-mcp", description="MCP server name")
+    server_name: str = Field(default="codeweaver-mcp", description="MCP server name")
     server_version: str = Field(default="2.0.0", description="MCP server version")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO", description="Logging level"
@@ -678,8 +678,7 @@ class CodeWeaverConfig(BaseModel):
             # Fallback to legacy provider format
             result["provider"] = {
                 "embedding_provider": self.get_effective_embedding_provider(),
-                "embedding_api_key": self.provider.CW_EMBEDDING_API_KEY
-                or self.embedding.api_key,
+                "embedding_api_key": self.provider.CW_EMBEDDING_API_KEY or self.embedding.api_key,
                 "embedding_model": self.provider.embedding_model or self.embedding.model,
                 "embedding_dimension": self.provider.embedding_dimension
                 or self.embedding.dimension,
@@ -786,9 +785,9 @@ class ConfigManager:
     """Manages configuration loading and merging from multiple sources."""
 
     CONFIG_LOCATIONS: ClassVar[list[str | Path]] = [
-        ".local.code-weaver.toml",  # Workspace local
-        ".code-weaver.toml",  # Repository
-        Path.home() / ".config" / "code-weaver" / "config.toml",  # User
+        ".local.codeweaver.toml",  # Workspace local
+        ".codeweaver.toml",  # Repository
+        Path.home() / ".config" / "codeweaver" / "config.toml",  # User
     ]
 
     def __init__(self, config_path: str | Path | None = None):
@@ -806,9 +805,9 @@ class ConfigManager:
 
         Hierarchical loading order (lowest to highest precedence):
         1. Default values (built into Pydantic models)
-        2. User config file (~/.config/code-weaver/config.toml)
-        3. Repository config file (.code-weaver.toml)
-        4. Local workspace config file (.local.code-weaver.toml)
+        2. User config file (~/.config/codeweaver/config.toml)
+        3. Repository config file (.codeweaver.toml)
+        4. Local workspace config file (.local.codeweaver.toml)
         5. Explicit config file (if provided to constructor)
         6. Environment variables
         7. Runtime parameters (handled elsewhere)
@@ -919,13 +918,13 @@ class ConfigManager:
         # Validate backend provider
         backend_provider = config.get_effective_backend_provider()
         supported_backends = [
-            "qdrant",
-           # "pinecone",
-           # "chroma",
-           # "weaviate",
-           # "pgvector",
-           # "milvus",
-           # "elasticsearch",
+            "qdrant"
+            # "pinecone",
+            # "chroma",
+            # "weaviate",
+            # "pgvector",
+            # "milvus",
+            # "elasticsearch",
         ]
         if backend_provider not in supported_backends:
             logger.warning(
@@ -994,7 +993,7 @@ class ConfigManager:
         """
         if config_path is None:
             # Use the user config location as default for saving
-            save_path = Path.home() / ".config" / "code-weaver" / "config.toml"
+            save_path = Path.home() / ".config" / "codeweaver" / "config.toml"
         else:
             save_path = Path(config_path)
         save_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1110,9 +1109,9 @@ class ConfigManager:
         """Get example configuration in new format."""
         return """# Code Weaver MCP Server Configuration (v2.0)
 # Place this file in one of these locations (highest precedence first):
-# 1. .local.code-weaver.toml (workspace local)
-# 2. .code-weaver.toml (repository)
-# 3. ~/.config/code-weaver/config.toml (user)
+# 1. .local.codeweaver.toml (workspace local)
+# 2. .codeweaver.toml (repository)
+# 3. ~/.config/codeweaver/config.toml (user)
 
 # Vector Database Backend Configuration
 [backend]
@@ -1296,7 +1295,7 @@ backoff_multiplier = 2.0
 max_retries = 5
 
 [server]
-server_name = "code-weaver-mcp"
+server_name = "codeweaver-mcp"
 server_version = "2.0.0"
 log_level = "INFO"
 enable_request_logging = false
@@ -1349,7 +1348,7 @@ backoff_multiplier = 2.0
 max_retries = 5
 
 [server]
-server_name = "code-weaver-mcp"
+server_name = "codeweaver-mcp"
 server_version = "2.0.0"
 log_level = "INFO"
 enable_request_logging = false

@@ -537,7 +537,7 @@ class CodeEmbeddingsServer:
         """Estimate number of files that would be searched."""
         try:
             # Use backend abstraction for collection info
-            collection_info = await self.backend.get_collection_info(self.collection_name)
+            collection_info = self.backend.get_collection_info(self.collection_name)
             total_points = collection_info.points_count
 
             # Rough estimate based on average chunks per file

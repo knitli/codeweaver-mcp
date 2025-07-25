@@ -11,7 +11,7 @@ with support for hybrid search, streaming operations, and transactions.
 """
 
 from codeweaver._types.backends import CollectionInfo, FilterCondition, SearchResult, VectorPoint
-from codeweaver._types.enums import DistanceMetric
+from codeweaver._types.provider_enums import DistanceMetric
 from codeweaver.backends.base import (
     BackendAuthError,
     BackendCollectionNotFoundError,
