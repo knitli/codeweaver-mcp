@@ -15,9 +15,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from codeweaver.config.factory import SourceConfig
+from codeweaver._types import ContentItem
 from codeweaver.factories.source_registry import SourceRegistry
-from codeweaver.sources.base import ContentItem, DataSource
+from codeweaver.sources.base import DataSource, SourceConfig
 
 
 logger = logging.getLogger(__name__)

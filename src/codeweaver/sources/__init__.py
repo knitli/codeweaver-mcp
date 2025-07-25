@@ -32,18 +32,18 @@ Migration examples have been moved to `examples/migration/sources_migration.py`.
 See the examples directory for complete migration demonstrations.
 """
 
-from codeweaver._types.source_capabilities import SourceCapabilities
-
 # Import new types
-from codeweaver._types.source_enums import (
+from codeweaver._types import (
+    SOURCE_PROVIDERS,
     APIType,
     AuthType,
     ContentType,
     DatabaseType,
+    SourceCapabilities,
     SourceCapability,
     SourceProvider,
+    SourceProviderInfo,
 )
-from codeweaver._types.source_providers import SOURCE_PROVIDERS, SourceProviderInfo
 from codeweaver.sources.base import (
     AbstractDataSource,
     ContentItem,

@@ -21,9 +21,8 @@ from typing import Any
 
 from pydantic import ConfigDict, Field, field_validator
 
-from codeweaver._types.source_capabilities import SourceCapabilities
-from codeweaver._types.source_enums import ContentType, SourceProvider
-from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceConfig, SourceWatcher
+from codeweaver._types import ContentItem, ContentType, SourceCapabilities, SourceProvider
+from codeweaver.sources.base import AbstractDataSource, SourceConfig, SourceWatcher
 
 
 logger = logging.getLogger(__name__)

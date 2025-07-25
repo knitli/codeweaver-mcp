@@ -17,9 +17,10 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from codeweaver.config import RateLimitConfig
+if TYPE_CHECKING:
+    from codeweaver.config import RateLimitConfig
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class RateLimitState:
 class RateLimiter:
     """Manages rate limiting and exponential backoff for API calls."""
 
-    def __init__(self, config: RateLimitConfig):
+    def __init__(self, config: "RateLimitConfig"):
         """Initialize the rate limiter with configuration settings.
 
         Args:

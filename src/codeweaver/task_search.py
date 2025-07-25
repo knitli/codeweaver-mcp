@@ -19,18 +19,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, ClassVar
 
-from codeweaver._types.base_enum import BaseEnum
+from codeweaver._types import SearchComplexity
 
 logger = logging.getLogger(__name__)
 
 
-class SearchComplexity(BaseEnum):
-    """Categorize search complexity levels."""
-
-    SIMPLE = "simple"
-    MODERATE = "moderate"
-    COMPLEX = "complex"
-    UNCERTAIN = "uncertain"
 
 
 @dataclass

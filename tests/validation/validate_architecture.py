@@ -25,7 +25,7 @@ def test_core_architecture() -> bool | None:  # sourcery skip: extract-method
 
     try:
         # Test factory system components
-        from codeweaver.factories.extensibility_manager import ExtensibilityConfig
+        from codeweaver._types import ExtensibilityConfig
         from codeweaver.factories.integration import create_migration_config
 
         # Test configuration creation

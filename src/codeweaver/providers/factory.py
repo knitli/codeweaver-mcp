@@ -15,8 +15,7 @@ import logging
 from dataclasses import dataclass
 from typing import ClassVar
 
-from codeweaver._types.provider_enums import ProviderCapability, ProviderType
-from codeweaver._types.provider_registry import EmbeddingProviderInfo
+from codeweaver._types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
@@ -44,12 +43,12 @@ class ProviderRegistration:
 class ProviderRegistry:
     """Registry for managing available embedding and reranking providers."""
 
-    _CW_EMBEDDING_PROVIDERs: ClassVar[dict[str, ProviderRegistration]] = {}
+    _embedding_providers: ClassVar[dict[str, ProviderRegistration]] = {}
     _reranking_providers: ClassVar[dict[str, ProviderRegistration]] = {}
     _initialized: ClassVar[bool] = False
 
     @classmethod
-    def register_CW_EMBEDDING_PROVIDER(
+    def register_embedding_provider(
         cls,
         name: str,
         provider_class: type[EmbeddingProviderBase | CombinedProvider],
@@ -81,7 +80,7 @@ class ProviderRegistry:
             unavailable_reason=unavailable_reason,
         )
 
-        cls._CW_EMBEDDING_PROVIDERs[name] = registration
+        cls._embedding_providers[name] = registration
 
         if is_available:
             logger.info("Registered embedding provider: %s", name)
@@ -178,7 +177,7 @@ class ProviderRegistry:
             is_available=is_available,
             unavailable_reason=unavailable_reason,
         )
-        cls._CW_EMBEDDING_PROVIDERs[name] = embed_registration
+        cls._embedding_providers[name] = embed_registration
 
         # Register for reranking
         rerank_registration = ProviderRegistration(
@@ -231,7 +230,7 @@ class ProviderRegistry:
         """Get all available providers for a specific capability."""
         cls._ensure_initialized()
         if capability == ProviderCapability.EMBEDDING:
-            return cls.get_available_CW_EMBEDDING_PROVIDERs()
+            return cls.get_available_embedding_providers()
         if capability == ProviderCapability.RERANKING:
             return cls.get_available_reranking_providers()
         return {}
@@ -244,9 +243,9 @@ class ProviderRegistry:
         provider_name = provider_type.value
 
         # Check embedding providers first
-        CW_EMBEDDING_PROVIDERs = cls.get_available_CW_EMBEDDING_PROVIDERs()
-        if provider_name in CW_EMBEDDING_PROVIDERs:
-            return CW_EMBEDDING_PROVIDERs[provider_name]
+        embedding_providers = cls.get_available_embedding_providers()
+        if provider_name in embedding_providers:
+            return embedding_providers[provider_name]
 
         # Check reranking providers
         reranking_providers = cls.get_available_reranking_providers()
@@ -256,12 +255,12 @@ class ProviderRegistry:
         return None
 
     @classmethod
-    def get_available_CW_EMBEDDING_PROVIDERs(cls) -> dict[str, EmbeddingProviderInfo]:
+    def get_available_embedding_providers(cls) -> dict[str, EmbeddingProviderInfo]:
         """Get all available embedding providers."""
         cls._ensure_initialized()
         return {
             name: reg.provider_info
-            for name, reg in cls._CW_EMBEDDING_PROVIDERs.items()
+            for name, reg in cls._embedding_providers.items()
             if reg.is_available
         }
 
@@ -276,10 +275,10 @@ class ProviderRegistry:
         }
 
     @classmethod
-    def get_all_CW_EMBEDDING_PROVIDERs(cls) -> dict[str, ProviderRegistration]:
+    def get_all_embedding_providers(cls) -> dict[str, ProviderRegistration]:
         """Get all embedding providers (including unavailable ones)."""
         cls._ensure_initialized()
-        return cls._CW_EMBEDDING_PROVIDERs.copy()
+        return cls._embedding_providers.copy()
 
     @classmethod
     def get_all_reranking_providers(cls) -> dict[str, ProviderRegistration]:
@@ -288,10 +287,10 @@ class ProviderRegistry:
         return cls._reranking_providers.copy()
 
     @classmethod
-    def is_CW_EMBEDDING_PROVIDER_available(cls, name: str) -> bool:
+    def is_embedding_provider_available(cls, name: str) -> bool:
         """Check if an embedding provider is available."""
         cls._ensure_initialized()
-        registration = cls._CW_EMBEDDING_PROVIDERs.get(name)
+        registration = cls._embedding_providers.get(name)
         return registration is not None and registration.is_available
 
     @classmethod
@@ -302,10 +301,10 @@ class ProviderRegistry:
         return registration is not None and registration.is_available
 
     @classmethod
-    def get_CW_EMBEDDING_PROVIDER_registration(cls, name: str) -> ProviderRegistration | None:
+    def get_embedding_provider_registration(cls, name: str) -> ProviderRegistration | None:
         """Get embedding provider registration by name."""
         cls._ensure_initialized()
-        return cls._CW_EMBEDDING_PROVIDERs.get(name)
+        return cls._embedding_providers.get(name)
 
     @classmethod
     def get_reranking_provider_registration(cls, name: str) -> ProviderRegistration | None:
@@ -338,12 +337,12 @@ class ProviderRegistry:
             from codeweaver.providers.openai import OpenAICompatibleProvider, OpenAIProvider
 
             # Register legacy OpenAI provider
-            cls.register_CW_EMBEDDING_PROVIDER(
+            cls.register_embedding_provider(
                 "openai", OpenAIProvider, OpenAIProvider.get_static_provider_info()
             )
 
             # Register flexible OpenAI-compatible provider
-            cls.register_CW_EMBEDDING_PROVIDER(
+            cls.register_embedding_provider(
                 "openai-compatible",
                 OpenAICompatibleProvider,
                 OpenAICompatibleProvider.get_static_provider_info(),
@@ -363,7 +362,7 @@ class ProviderRegistry:
         try:
             from codeweaver.providers.sentence_transformers import SentenceTransformersProvider
 
-            cls.register_CW_EMBEDDING_PROVIDER(
+            cls.register_embedding_provider(
                 "sentence-transformers",
                 SentenceTransformersProvider,
                 SentenceTransformersProvider.get_static_provider_info(),
@@ -374,7 +373,7 @@ class ProviderRegistry:
         try:
             from codeweaver.providers.huggingface import HuggingFaceProvider
 
-            cls.register_CW_EMBEDDING_PROVIDER(
+            cls.register_embedding_provider(
                 "huggingface", HuggingFaceProvider, HuggingFaceProvider.get_static_provider_info()
             )
         except ImportError:
@@ -392,7 +391,7 @@ class ProviderFactory:
         """
         self.registry = registry or ProviderRegistry
 
-    def create_CW_EMBEDDING_PROVIDER(self, config: EmbeddingProviderConfig) -> EmbeddingProvider:
+    def create_embedding_provider(self, config: EmbeddingProviderConfig) -> EmbeddingProvider:
         """Create an embedding provider based on configuration.
 
         Args:
@@ -413,10 +412,10 @@ class ProviderFactory:
             )
 
         provider_name = config.provider_type.value.lower()
-        registration = self.registry.get_CW_EMBEDDING_PROVIDER_registration(provider_name)
+        registration = self.registry.get_embedding_provider_registration(provider_name)
 
         if registration is None:
-            available = list(self.registry.get_available_CW_EMBEDDING_PROVIDERs().keys())
+            available = list(self.registry.get_available_embedding_providers().keys())
             raise ValueError(
                 f"Unknown embedding provider: {provider_name}. "
                 f"Available providers: {', '.join(available)}"
@@ -491,24 +490,24 @@ class ProviderFactory:
             return provider
 
     def get_default_reranking_provider(
-        self, CW_EMBEDDING_PROVIDER_name: str, config: RerankingProviderConfig
+        self, embedding_provider_name: str, config: RerankingProviderConfig
     ) -> RerankProvider | None:
         """Get the default reranking provider for an embedding provider.
 
         Args:
-            CW_EMBEDDING_PROVIDER_name: Name of the embedding provider
+            embedding_provider_name: Name of the embedding provider
             config: Reranking provider configuration
 
         Returns:
             Default reranking provider or None if none available
         """
         # If the embedding provider also supports reranking, use it
-        if self.registry.is_reranking_provider_available(CW_EMBEDDING_PROVIDER_name):
+        if self.registry.is_reranking_provider_available(embedding_provider_name):
             try:
                 return self.create_reranking_provider(config)
             except Exception:
                 logger.warning(
-                    "Failed to create reranking provider for %s", CW_EMBEDDING_PROVIDER_name
+                    "Failed to create reranking provider for %s", embedding_provider_name
                 )
 
         # Fallback to VoyageAI if available (best reranking quality)

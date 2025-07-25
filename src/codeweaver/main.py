@@ -35,15 +35,11 @@ from fastmcp import Context, FastMCP
 
 from codeweaver.chunker import AST_GREP_AVAILABLE
 from codeweaver.config import get_config_manager
-from codeweaver.server import (
-    CodeEmbeddingsServer,
-    ExtensibleCodeEmbeddingsServer,
-    create_server,
-    detect_configuration_type,
-)
+from codeweaver.server import CodeEmbeddingsServer, ExtensibleCodeEmbeddingsServer, create_server
 
 
 logger = logging.getLogger(__name__)
+
 
 # FastMCP Server Setup
 mcp = FastMCP("Code Weaver")
@@ -66,8 +62,7 @@ def get_server_instance() -> CodeEmbeddingsServer | ExtensibleCodeEmbeddingsServ
 
         # Log which server type was created
         server_type = type(server_instance).__name__
-        config_type = detect_configuration_type(config)
-        logger.info("Created %s based on %s configuration", server_type, config_type)
+        logger.info("Created %s based on %s configuration", server_type)
 
     return server_instance
 
@@ -216,7 +211,6 @@ async def main() -> None:
         logger.info("Server version: %s", config.server.server_version)
         logger.info("Embedding provider: %s", config.embedding.provider)
         logger.info("Collection name: %s", config.qdrant.collection_name)
-        logger.info("Configuration type: %s", detect_configuration_type(config))
 
         # Pre-initialize server to show which type will be used
         server = get_server_instance()

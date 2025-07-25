@@ -142,7 +142,7 @@ def test_migration_utilities() -> bool | None:  # sourcery skip: extract-method
     logger.info("Testing migration utilities...")
 
     try:
-        from codeweaver.factories.extensibility_manager import ExtensibilityConfig
+        from codeweaver._types import ExtensibilityConfig
         from codeweaver.factories.integration import (
             create_migration_config,
             validate_migration_readiness,

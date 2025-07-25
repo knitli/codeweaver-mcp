@@ -29,15 +29,16 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from codeweaver._types.backends import (
+from codeweaver._types import (
     CollectionInfo,
+    DistanceMetric,
     FilterCondition,
+    HybridStrategy,
     SearchFilter,
     SearchResult,
     VectorPoint,
 )
-from codeweaver._types.provider_enums import DistanceMetric, HybridStrategy
-from codeweaver.backends.base import (
+from codeweaver._types.exceptions import (
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,

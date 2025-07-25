@@ -29,7 +29,8 @@ from codeweaver.backends.base import (
     VectorPoint,
 )
 from codeweaver.providers.base import EmbeddingProvider, ProviderInfo, RerankProvider, RerankResult
-from codeweaver.sources.base import ContentItem, DataSource, SourceCapability, SourceConfig
+from codeweaver._types import ContentItem
+from codeweaver.sources.base import DataSource, SourceCapability, SourceConfig
 
 
 logger = logging.getLogger(__name__)

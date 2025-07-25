@@ -10,15 +10,22 @@ This module provides comprehensive abstractions for 15+ vector databases
 with support for hybrid search, streaming operations, and transactions.
 """
 
-from codeweaver._types.backends import CollectionInfo, FilterCondition, SearchResult, VectorPoint
-from codeweaver._types.provider_enums import DistanceMetric
-from codeweaver.backends.base import (
+from codeweaver._types import (
+    CollectionInfo,
+    DistanceMetric,
+    FilterCondition,
+    SearchResult,
+    VectorPoint,
+)
+from codeweaver._types.exceptions import (
     BackendAuthError,
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,
     BackendUnsupportedOperationError,
     BackendVectorDimensionMismatchError,
+)
+from codeweaver.backends.base import (
     HybridSearchBackend,
     StreamingBackend,
     TransactionalBackend,

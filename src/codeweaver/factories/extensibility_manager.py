@@ -14,51 +14,21 @@ import asyncio
 import logging
 
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from codeweaver._types import ComponentInstances, ExtensibilityConfig
 from codeweaver.backends.base import VectorBackend
-from codeweaver.config import CodeWeaverConfig
-from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.rate_limiter import RateLimiter
-from codeweaver.sources.base import DataSource
+
+
+if TYPE_CHECKING:
+    from codeweaver.config import CodeWeaverConfig
+    from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
+    from codeweaver.rate_limiter import RateLimiter
+    from codeweaver.sources.base import DataSource
 
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ExtensibilityConfig:
-    """Configuration for extensibility features."""
-
-    # Plugin discovery settings
-    enable_plugin_discovery: bool = True
-    plugin_directories: list[str] | None = None
-    auto_discover_plugins: bool = True
-
-    # Factory settings
-    enable_dependency_injection: bool = True
-    validate_configurations: bool = True
-
-    # Lifecycle management
-    enable_graceful_shutdown: bool = True
-    shutdown_timeout: float = 30.0
-
-    # Performance settings
-    lazy_initialization: bool = True
-    component_caching: bool = True
-
-
-@dataclass
-class ComponentInstances:
-    """Container for instantiated components."""
-
-    backend: VectorBackend | None = None
-    CW_EMBEDDING_PROVIDER: EmbeddingProvider | None = None
-    reranking_provider: RerankProvider | None = None
-    data_sources: list[DataSource] | None = None
-    rate_limiter: RateLimiter | None = None
 
 
 class ExtensibilityManager:
@@ -70,7 +40,7 @@ class ExtensibilityManager:
     """
 
     def __init__(
-        self, config: CodeWeaverConfig, extensibility_config: ExtensibilityConfig | None = None
+        self, config: "CodeWeaverConfig", extensibility_config: ExtensibilityConfig | None = None
     ):
         """Initialize the extensibility manager.
 
@@ -98,7 +68,9 @@ class ExtensibilityManager:
         logger.info("Initializing extensibility system")
 
         try:
-            # Initialize new unified factory
+            # Initialize new unified factory - import at runtime to avoid circular import
+            from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
+
             self._factory = CodeWeaverFactory(
                 config=self.config,
                 enable_plugins=self.extensibility_config.enable_plugin_discovery,
@@ -138,7 +110,7 @@ class ExtensibilityManager:
             self._components.backend = await self._create_backend()
 
             # Initialize embedding provider
-            self._components.CW_EMBEDDING_PROVIDER = await self._create_CW_EMBEDDING_PROVIDER()
+            self._components.embedding_provider = await self._create_embedding_provider()
 
             # Initialize reranking provider
             self._components.reranking_provider = await self._create_reranking_provider()
@@ -165,7 +137,7 @@ class ExtensibilityManager:
 
         return backend
 
-    async def _create_CW_EMBEDDING_PROVIDER(self) -> EmbeddingProvider:
+    async def _create_embedding_provider(self) -> EmbeddingProvider:
         """Create and configure the embedding provider."""
         if not self._factory:
             raise RuntimeError("Factory not initialized")
@@ -214,15 +186,15 @@ class ExtensibilityManager:
 
         return self._components.backend
 
-    async def get_CW_EMBEDDING_PROVIDER(self) -> EmbeddingProvider:
+    async def get_embedding_provider(self) -> EmbeddingProvider:
         """Get the embedding provider instance, creating it if necessary."""
         if not self._initialized:
             await self.initialize()
 
-        if self._components.CW_EMBEDDING_PROVIDER is None:
-            self._components.CW_EMBEDDING_PROVIDER = await self._create_CW_EMBEDDING_PROVIDER()
+        if self._components.embedding_provider is None:
+            self._components.embedding_provider = await self._create_embedding_provider()
 
-        return self._components.CW_EMBEDDING_PROVIDER
+        return self._components.embedding_provider
 
     async def get_reranking_provider(self) -> RerankProvider | None:
         """Get the reranking provider instance, creating it if necessary."""
@@ -251,7 +223,7 @@ class ExtensibilityManager:
 
         return self._components.rate_limiter
 
-    def get_factory(self) -> CodeWeaverFactory:
+    def get_factory(self) -> "CodeWeaverFactory":
         """Get the factory instance.
 
         Returns:
@@ -287,7 +259,7 @@ class ExtensibilityManager:
             },
             "components_instantiated": {
                 "backend": self._components.backend is not None,
-                "CW_EMBEDDING_PROVIDER": self._components.CW_EMBEDDING_PROVIDER is not None,
+                "embedding_provider": self._components.embedding_provider is not None,
                 "reranking_provider": self._components.reranking_provider is not None,
                 "data_sources": self._components.data_sources is not None,
                 "rate_limiter": self._components.rate_limiter is not None,

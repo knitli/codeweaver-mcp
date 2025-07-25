@@ -277,6 +277,65 @@ The system supports 20+ programming languages with proper AST-aware chunking:
   - Examples in `examples/` at project root
   - Documentation in project root and inline
 
+### Type Organization Guidelines
+
+The codebase follows a strict type organization system to maintain consistency and avoid circular dependencies:
+
+#### **Types That BELONG in `src/codeweaver/_types/`** (Centralized, Reusable)
+
+1. **Pure Data Types**: TypedDict, NamedTuple, dataclass, Pydantic models representing data structures
+   - Examples: `ContentItem`, `PluginInfo`, `ComponentLifecycle`
+2. **Enums**: All enum types representing standardized sets of values
+   - Examples: `ComponentState`, `SearchComplexity`, `ErrorSeverity`
+3. **Type Aliases**: NewType definitions, generic type aliases
+   - Examples: `DimensionSize`, type variables like `T`
+4. **Universal Protocols**: Protocols used across multiple modules
+   - Examples: Base capability protocols, component interfaces
+5. **Core Configuration Types**: Base configuration models used by multiple components
+   - Examples: `BaseComponentConfig`, `ValidationLevel`
+6. **Registry Data Structures**: Information models for component registration
+   - Examples: Registry entries, component metadata
+7. **Cross-Domain Exception Types**: Exception types that multiple modules need to catch or raise
+   - Examples: `BackendError`, `CodeWeaverFactoryError`, `ComponentNotFoundError`
+
+#### **Types That STAY in Their Module** (Module-Specific, Tightly Coupled)
+
+1. **Business Logic Classes**: Concrete implementations of functionality
+   - Examples: `QdrantBackend`, `VoyageEmbedder`, actual service classes
+2. **Module-Specific Protocols**: Protocols only used within one module
+   - Examples: Provider-specific interfaces, backend-specific protocols
+3. **Implementation-Specific Config**: Configuration that extends base types for specific implementations
+   - Examples: `VoyageConfig`, `QdrantConfig`, provider-specific settings
+4. **Factory Classes**: Classes that create/manage other classes within the module
+   - Examples: Module-specific factories, registries that manage local resources
+5. **Module-Specific Exceptions**: Error types specific to one module's operation (that others don't need to catch)
+   - Examples: Provider connection errors, backend-specific validation errors
+
+#### **Import Guidelines**
+
+- **For centralized types**: `from codeweaver._types import TypeName, AnotherType`
+- **For module-specific types**: Import from the specific module where they're defined
+- **Avoid circular imports**: Types in `_types/` should not import from other modules except for essential dependencies
+
+#### **Current `_types/` Module Structure**
+
+```
+src/codeweaver/_types/
+├── __init__.py          # Single import point for all types
+├── backends.py          # Backend data structures (VectorPoint, SearchResult, etc.)
+├── base_enum.py         # Base enum class for consistent enum behavior
+├── capabilities.py      # Capability query interfaces and models
+├── config.py           # Core configuration types and enums
+├── core.py             # Universal protocols and core interfaces
+├── data_structures.py  # Cross-module data structures (PluginInfo, ContentItem, etc.)
+├── enums.py            # Cross-module enums (ComponentState, SearchComplexity, etc.)
+├── exceptions.py       # Cross-module exception types
+├── provider_*.py       # Provider-related types and registries
+└── source_*.py         # Source-related types and registries
+```
+
+This organization ensures clean separation of concerns, prevents circular dependencies, and makes the codebase more maintainable by centralizing reusable types while keeping implementation-specific types close to their usage.
+
 ### Key Design Decisions
 - **Semantic chunking**: Uses ast-grep for intelligent code segmentation
 - **Hybrid search**: Combines semantic embeddings with structural patterns

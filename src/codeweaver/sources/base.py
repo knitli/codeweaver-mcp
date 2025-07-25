@@ -10,7 +10,6 @@ Defines the core interfaces that all data sources must implement to provide
 universal content discovery, reading, and change watching capabilities.
 """
 
-import hashlib
 import logging
 
 from abc import ABC, abstractmethod
@@ -18,56 +17,12 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Annotated, Any, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types.source_capabilities import SourceCapabilities
-from codeweaver._types.source_enums import ContentType, SourceCapability, SourceProvider
+from codeweaver._types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
 
 
 logger = logging.getLogger(__name__)
-
-
-# SourceCapability is now imported from _types.source_enums
-
-
-class ContentItem(BaseModel):
-    """Universal content item with Pydantic validation."""
-
-    model_config = ConfigDict(
-        extra="allow",  # Allow source-specific metadata
-        validate_assignment=True,
-        use_enum_values=True
-    )
-
-    path: Annotated[str, Field(description="Universal identifier for content")]
-    content_type: Annotated[ContentType, Field(description="Type of content")]
-    metadata: Annotated[dict[str, Any], Field(default_factory=dict, description="Source-specific metadata")]
-    last_modified: Annotated[datetime | None, Field(None, description="Last modification timestamp")]
-    size: Annotated[int | None, Field(None, ge=0, description="Content size in bytes")]
-    language: Annotated[str | None, Field(None, description="Detected programming language")]
-    source_id: Annotated[str | None, Field(None, description="Source identifier")]
-    version: Annotated[str | None, Field(None, description="Version identifier")]
-    checksum: Annotated[str | None, Field(None, description="Content checksum")]
-
-    @computed_field
-    @property
-    def id(self) -> str:
-        """Generate unique identifier."""
-        parts = [self.path, self.content_type.value]
-        if self.source_id:
-            parts.append(self.source_id)
-        return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
-
-    def __str__(self) -> str:
-        """String representation of the content item."""
-        return f"ContentItem(id={self.id}, type={self.content_type.value}, path={self.path})"
-
-    def __repr__(self) -> str:
-        """Detailed representation of the content item."""
-        return (
-            f"ContentItem(path={self.path!r}, content_type={self.content_type.value!r}, "
-            f"size={self.size}, language={self.language!r})"
-        )
 
 
 class SourceWatcher:

@@ -14,14 +14,14 @@ support, designed for runtime flexibility and extensibility.
 
 from typing import Any, Literal, Protocol, runtime_checkable
 
-from codeweaver._types.backends import (
+from codeweaver._types import (
     CollectionInfo,
     DistanceMetric,
+    HybridStrategy,
     SearchFilter,
     SearchResult,
     VectorPoint,
 )
-from codeweaver._types.provider_enums import HybridStrategy
 
 
 @runtime_checkable
@@ -299,31 +299,3 @@ class TransactionalBackend(Protocol):
         ...
 
 
-class BackendError(Exception):
-    """Base exception for backend operations."""
-
-    def __init__(self, message: str, backend_type: str, original_error: Exception | None = None):
-        """Initialize backend error with message and type."""
-        super().__init__(message)
-        self.backend_type = backend_type
-        self.original_error = original_error
-
-
-class BackendConnectionError(BackendError):
-    """Backend connection failed."""
-
-
-class BackendAuthError(BackendError):
-    """Backend authentication failed."""
-
-
-class BackendCollectionNotFoundError(BackendError):
-    """Collection does not exist."""
-
-
-class BackendVectorDimensionMismatchError(BackendError):
-    """Vector dimension mismatch."""
-
-
-class BackendUnsupportedOperationError(BackendError):
-    """Operation not supported by backend."""

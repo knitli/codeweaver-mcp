@@ -28,7 +28,10 @@ except ImportError:
     WATCHDOG_AVAILABLE = False
     logger.warning("watchdog not available, auto-reindexing disabled")
 
-from codeweaver.config import CodeWeaverConfig
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from codeweaver.config import CodeWeaverConfig
 from codeweaver.file_filter import FileFilter
 
 
@@ -61,7 +64,7 @@ class FileWatcher:
 
     def __init__(
         self,
-        config: CodeWeaverConfig,
+        config: "CodeWeaverConfig",
         root_path: Path,
         reindex_callback: Callable[[Path, str], None],
     ):
@@ -260,7 +263,7 @@ class FileWatcher:
 class FileWatcherManager:
     """Manages file watchers for multiple root paths."""
 
-    def __init__(self, config: CodeWeaverConfig):
+    def __init__(self, config: "CodeWeaverConfig"):
         """Initialize the file watcher manager.
 
         Args:

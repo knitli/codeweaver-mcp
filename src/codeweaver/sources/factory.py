@@ -14,8 +14,7 @@ import logging
 
 from typing import Any
 
-from codeweaver._types.source_enums import SourceProvider
-from codeweaver._types.source_providers import SOURCE_PROVIDERS, SourceProviderInfo
+from codeweaver._types import SOURCE_PROVIDERS, SourceProvider, SourceProviderInfo
 from codeweaver.sources.base import DataSource, SourceConfig, SourceRegistry, get_source_registry
 
 

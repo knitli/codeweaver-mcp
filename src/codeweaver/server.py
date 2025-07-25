@@ -12,13 +12,16 @@ using configurable embedding providers and vector database backends.
 import logging
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.chunker import AST_GREP_AVAILABLE, AstGrepChunker
-from codeweaver.config import CodeWeaverConfig, get_config
-from codeweaver.factories.extensibility_manager import ExtensibilityConfig, ExtensibilityManager
+
+if TYPE_CHECKING:
+    from codeweaver.config import CodeWeaverConfig
+from codeweaver._types import ExtensibilityConfig
+from codeweaver.factories.extensibility_manager import ExtensibilityManager
 from codeweaver.file_filter import FileFilter
 from codeweaver.file_watcher import FileWatcherManager
 from codeweaver.models import CodeChunk
@@ -72,13 +75,15 @@ class _RerankProviderAdapter:
 class CodeEmbeddingsServer:
     """Main MCP server for code embeddings with ast-grep integration."""
 
-    def __init__(self, config: CodeWeaverConfig | None = None):
+    def __init__(self, config: "CodeWeaverConfig | None" = None):
         """Initialize the code embeddings server.
 
         Args:
             config: Optional configuration object. If None, loads from default sources.
         """
-        # Load configuration
+        # Load configuration - import at runtime to avoid circular import
+        from codeweaver.config import get_config
+        
         self.config = config or get_config()
 
         # Initialize rate limiter
@@ -570,7 +575,7 @@ class ExtensibleCodeEmbeddingsServer:
 
     def __init__(
         self,
-        config: CodeWeaverConfig | None = None,
+        config: "CodeWeaverConfig | None" = None,
         extensibility_config: ExtensibilityConfig | None = None,
     ):
         """Initialize the extensible code embeddings server.
@@ -579,7 +584,9 @@ class ExtensibleCodeEmbeddingsServer:
             config: Optional configuration object. If None, loads from default sources.
             extensibility_config: Optional extensibility-specific configuration.
         """
-        # Load configuration
+        # Load configuration - import at runtime to avoid circular import
+        from codeweaver.config import get_config
+        
         self.config = config or get_config()
 
         # Create extensibility manager
@@ -915,7 +922,7 @@ class ExtensibleCodeEmbeddingsServer:
 
 
 def create_server(
-    config: CodeWeaverConfig | None = None,
+    config: "CodeWeaverConfig | None" = None,
     server_type: str = "auto",
     extensibility_config: ExtensibilityConfig | None = None,
 ) -> CodeEmbeddingsServer | ExtensibleCodeEmbeddingsServer:
@@ -931,6 +938,9 @@ def create_server(
     """
     # Load config if not provided
     if config is None:
+        # Import at runtime to avoid circular import
+        from codeweaver.config import get_config
+        
         config = get_config()
 
     # Create appropriate server instance
@@ -939,7 +949,7 @@ def create_server(
 
 
 def create_extensible_server(
-    config: CodeWeaverConfig | None = None, extensibility_config: ExtensibilityConfig | None = None
+    config: "CodeWeaverConfig | None" = None, extensibility_config: ExtensibilityConfig | None = None
 ) -> ExtensibleCodeEmbeddingsServer:
     """Create an ExtensibleCodeEmbeddingsServer instance.
 

@@ -25,13 +25,16 @@ except ImportError:
     RIGNORE_AVAILABLE = False
     logger.warning("rignore not available, falling back to simple filtering")
 
-from codeweaver.config import CodeWeaverConfig
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from codeweaver.config import CodeWeaverConfig
 
 
 class FileFilter:
     """Handles file filtering with gitignore awareness and custom patterns."""
 
-    def __init__(self, config: CodeWeaverConfig, root_path: Path):
+    def __init__(self, config: "CodeWeaverConfig", root_path: Path):
         """Initialize file filter with configuration and root path.
 
         Args:

@@ -16,8 +16,12 @@ import logging
 
 from typing import Any
 
-from codeweaver._types.provider_enums import ProviderCapability, ProviderType
-from codeweaver._types.provider_registry import EmbeddingProviderInfo, register_provider_class
+from codeweaver._types import (
+    EmbeddingProviderInfo,
+    ProviderCapability,
+    ProviderType,
+    register_provider_class,
+)
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import OpenAICompatibleConfig, OpenAIConfig
 from codeweaver.rate_limiter import calculate_embedding_tokens, rate_limited
