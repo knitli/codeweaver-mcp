@@ -224,7 +224,6 @@ class DatabaseSource(AbstractDataSource):
         else:
             return True
 
-
     async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
         """Get detailed metadata for database content.
 

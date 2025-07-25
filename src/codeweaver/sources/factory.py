@@ -14,6 +14,8 @@ import logging
 
 from typing import Any
 
+from codeweaver._types.source_enums import SourceProvider
+from codeweaver._types.source_providers import SOURCE_PROVIDERS, SourceProviderInfo
 from codeweaver.sources.base import DataSource, SourceConfig, SourceRegistry, get_source_registry
 
 
@@ -47,27 +49,17 @@ class SourceFactory:
             # File system source (always available)
             from codeweaver.sources.filesystem import FileSystemSource
 
-            self._registry.register("filesystem", FileSystemSource)
+            # Register with provider registry
+            SOURCE_PROVIDERS[SourceProvider.FILESYSTEM] = SourceProviderInfo(
+                source_class=FileSystemSource,
+                capabilities=FileSystemSource.CAPABILITIES,
+                provider_type=SourceProvider.FILESYSTEM,
+                display_name="File System",
+                description="Local file system with gitignore support",
+                implemented=True
+            )
 
-            # Git repository source (placeholder)
-            from codeweaver.sources.git import GitRepositorySource
-
-            self._registry.register("git", GitRepositorySource)
-
-            # Database source (placeholder)
-            from codeweaver.sources.database import DatabaseSource
-
-            self._registry.register("database", DatabaseSource)
-
-            # API source (placeholder)
-            from codeweaver.sources.api import APISource
-
-            self._registry.register("api", APISource)
-
-            # Web crawler source (placeholder)
-            from codeweaver.sources.web import WebCrawlerSource
-
-            self._registry.register("web", WebCrawlerSource)
+            self._registry.register(SourceProvider.FILESYSTEM, FileSystemSource)
 
             logger.info(
                 "Registered %d built-in data sources", len(self._registry.list_available_sources())
@@ -76,7 +68,7 @@ class SourceFactory:
         except ImportError as e:
             logger.warning("Failed to import some data sources: %s", e)
 
-    def create_source(self, source_type: str, config: SourceConfig) -> DataSource:
+    def create_source(self, source_type: SourceProvider, config: SourceConfig | dict[str, Any]) -> DataSource:
         """Create a data source instance of the specified type.
 
         Args:
@@ -95,28 +87,27 @@ class SourceFactory:
         # Get source class from registry
         source_class = self._registry.get_source_class(source_type)
         if not source_class:
-            available_types = self._registry.list_available_sources()
+            available_types = [p.value for p in self._registry.list_available_sources()]
             raise ValueError(
-                f"Unsupported source type: {source_type}. "
+                f"Unsupported source type: {source_type.value}. "
                 f"Available types: {', '.join(available_types)}"
             )
 
         # Extract source_id from config if provided
-        source_id = config.get("source_id")
+        source_id = config.get("source_id") if isinstance(config, dict) else config.source_id
 
         try:
             # Create source instance
             source = source_class(source_id=source_id) if source_id else source_class()
 
-            logger.info("Created %s data source: %s", source_type, source.source_id)
+            logger.info("Created %s data source: %s", source_type.value, source.source_id)
 
         except Exception:
-            logger.exception("Failed to create %s data source", source_type)
+            logger.exception("Failed to create %s data source", source_type.value)
             raise
 
         else:
             return source
-
 
     def create_multiple_sources(self, source_configs: list[dict[str, Any]]) -> list[DataSource]:
         """Create multiple data source instances from configurations.
@@ -131,9 +122,16 @@ class SourceFactory:
 
         for config in source_configs:
             try:
-                source_type = config.get("type")
-                if not source_type:
+                raw_source_type = config.get("type")
+                if not raw_source_type:
                     logger.warning("Skipping source config without type: %s", config)
+                    continue
+
+                # Convert string to enum
+                try:
+                    source_type = SourceProvider(raw_source_type)
+                except ValueError:
+                    logger.warning("Unknown source type: %s", raw_source_type)
                     continue
 
                 # Extract the actual config (usually nested under 'config' key)
@@ -144,8 +142,9 @@ class SourceFactory:
                     if field in config:
                         source_config[field] = config[field]
 
+                # Check if source is enabled using dict access since this is raw config data
                 if not source_config.get("enabled", True):
-                    logger.info("Skipping disabled source: %s", source_type)
+                    logger.info("Skipping disabled source: %s", source_type.value)
                     continue
 
                 source = self.create_source(source_type, source_config)
@@ -158,7 +157,7 @@ class SourceFactory:
         logger.info("Created %d data sources", len(sources))
         return sources
 
-    async def validate_source_config(self, source_type: str, config: SourceConfig) -> bool:
+    async def validate_source_config(self, source_type: SourceProvider, config: SourceConfig) -> bool:
         """Validate a source configuration without creating the source.
 
         Args:
@@ -176,11 +175,12 @@ class SourceFactory:
             if hasattr(source, "cleanup"):
                 await source.cleanup()
 
-            return is_valid
-
         except Exception:
-            logger.exception("Error validating %s source config", source_type)
+            logger.exception("Error validating %s source config", source_type.value)
             return False
+
+        else:
+            return is_valid
 
     def list_available_sources(self) -> dict[str, dict[str, Any]]:
         """Get information about all available data source types.
@@ -194,45 +194,18 @@ class SourceFactory:
 
         for source_type in self._registry.list_available_sources():
             capabilities = self._registry.get_source_capabilities(source_type)
+            provider_info = SOURCE_PROVIDERS.get(source_type)
 
-            source_info[source_type] = {
-                "capabilities": [cap.value for cap in capabilities] if capabilities else [],
-                "implemented": self._is_source_implemented(source_type),
-                "description": self._get_source_description(source_type),
+            source_info[source_type.value] = {
+                "capabilities": capabilities.model_dump() if capabilities else {},
+                "implemented": provider_info.implemented if provider_info else False,
+                "description": provider_info.description if provider_info else f"Data source of type {source_type.value}",
+                "display_name": provider_info.display_name if provider_info else source_type.value.title(),
             }
 
         return source_info
 
-    def _is_source_implemented(self, source_type: str) -> bool:
-        """Check if a source type is fully implemented or a placeholder.
-
-        Args:
-            source_type: Type of data source
-
-        Returns:
-            True if fully implemented, False if placeholder
-        """
-        # File system is the only fully implemented source currently
-        return source_type == "filesystem"
-
-    def _get_source_description(self, source_type: str) -> str:
-        """Get a description for a source type.
-
-        Args:
-            source_type: Type of data source
-
-        Returns:
-            Human-readable description of the source
-        """
-        descriptions = {
-            "filesystem": "Local file system with gitignore support and change watching",
-            "git": "Git repositories with branch/commit support (placeholder)",
-            "database": "SQL and NoSQL databases for schema and data indexing (placeholder)",
-            "api": "REST and GraphQL APIs for documentation and schema indexing (placeholder)",
-            "web": "Web crawler for documentation sites and technical content (placeholder)",
-        }
-
-        return descriptions.get(source_type, f"Data source of type {source_type}")
+    # Legacy implementation checking methods removed - use provider registry instead
 
     def get_source_registry(self) -> SourceRegistry:
         """Get the underlying source registry.

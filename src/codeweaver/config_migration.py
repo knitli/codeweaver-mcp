@@ -1,3 +1,4 @@
+# sourcery skip: avoid-global-variables, do-not-use-staticmethod
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -14,7 +15,8 @@ import logging
 import os
 
 from pathlib import Path
-from typing import Any, Literal
+from textwrap import dedent
+from typing import Any, ClassVar, Literal
 
 
 try:
@@ -38,11 +40,16 @@ class ConfigMigrationError(Exception):
     """Exception raised during configuration migration."""
 
 
+BackendType = Literal["qdrant", "pinecone", "huggingface", "chroma", "weaviate", "pgvector", "mulvus", "elasticsearch"]
+
+EmbeddingProvider = Literal["voyage", "openai", "cohere", "sentence-transformers", "huggingface"]
+
+
 class ConfigValidator:
     """Validates configuration combinations and compatibility."""
 
     # Supported combinations matrix
-    BACKEND_EMBEDDING_COMPATIBILITY = {
+    BACKEND_EMBEDDING_COMPATIBILITY: ClassVar[dict[BackendType, list[EmbeddingProvider]]] = {
         "qdrant": ["voyage", "openai", "cohere", "sentence-transformers", "huggingface"],
         "pinecone": ["voyage", "openai", "cohere", "sentence-transformers", "huggingface"],
         "chroma": ["voyage", "openai", "cohere", "sentence-transformers", "huggingface"],
@@ -52,9 +59,9 @@ class ConfigValidator:
         "elasticsearch": ["voyage", "openai", "cohere", "sentence-transformers", "huggingface"],
     }
 
-    HYBRID_SEARCH_BACKENDS = ["qdrant", "weaviate", "milvus"]
-    RERANKING_PROVIDERS = ["voyage", "cohere"]
-    LOCAL_PROVIDERS = ["sentence-transformers", "huggingface"]
+    HYBRID_SEARCH_BACKENDS: ClassVar[list[BackendType]] = ["qdrant", "weaviate", "milvus"]
+    RERANKING_PROVIDERS: ClassVar[list[EmbeddingProvider]] = ["voyage", "cohere"]
+    LOCAL_PROVIDERS: ClassVar[list[EmbeddingProvider]] = ["sentence-transformers", "huggingface"]
 
     @classmethod
     def validate_backend_provider_combination(cls, backend: str, provider: str) -> list[str]:
@@ -81,7 +88,7 @@ class ConfigValidator:
 
     @classmethod
     def validate_hybrid_search_config(
-        cls, backend: str, enable_hybrid: bool, enable_sparse: bool
+        cls, backend: str, *, enable_hybrid: bool, enable_sparse: bool
     ) -> list[str]:
         """Validate hybrid search configuration.
 
@@ -144,7 +151,7 @@ class ConfigValidator:
 
     @classmethod
     def validate_local_provider_config(
-        cls, provider: str, use_local: bool, api_key: str | None
+        cls, provider: str, *, use_local: bool, api_key: str | None
     ) -> list[str]:
         """Validate local provider configuration.
 
@@ -220,25 +227,23 @@ class ConfigMigrator:
     """Handles migration between configuration formats."""
 
     @staticmethod
-    def detect_config_format(config_dict: dict[str, Any]) -> Literal["legacy", "new", "mixed"]:
+    def detect_config_format(config_data: dict[str, Any]) -> Literal["legacy", "new", "mixed"]:
         """Detect the format of a configuration dictionary.
 
         Args:
-            config_dict: Configuration dictionary
+            config_data: Configuration dictionary
 
         Returns:
             Configuration format type
         """
-        has_legacy = any(key in config_dict for key in ["embedding", "qdrant"])
-        has_new = any(key in config_dict for key in ["backend", "provider", "data_sources"])
+        has_legacy = any(key in config_data for key in ["embedding", "qdrant"])
+        has_new = any(key in config_data for key in ["backend", "provider", "data_sources"])
 
         if has_legacy and has_new:
             return "mixed"
         if has_legacy:
             return "legacy"
-        if has_new:
-            return "new"
-        return "legacy"  # Default to legacy for empty configs
+        return "new" if has_new else "legacy"
 
     @staticmethod
     def migrate_legacy_to_new(legacy_dict: dict[str, Any]) -> dict[str, Any]:
@@ -250,13 +255,13 @@ class ConfigMigrator:
         Returns:
             New format configuration dictionary
         """
-        new_dict = {}
+        new_data = {}
 
         # Migrate embedding configuration to provider configuration
         if "embedding" in legacy_dict:
             embedding_config = legacy_dict["embedding"]
             if isinstance(embedding_config, dict):
-                new_dict["provider"] = {
+                new_data["provider"] = {
                     "embedding_provider": embedding_config.get("provider", "voyage"),
                     "embedding_api_key": embedding_config.get("api_key"),
                     "embedding_model": embedding_config.get("model", "voyage-code-3"),
@@ -275,7 +280,7 @@ class ConfigMigrator:
         if "qdrant" in legacy_dict:
             qdrant_config = legacy_dict["qdrant"]
             if isinstance(qdrant_config, dict):
-                new_dict["backend"] = {
+                new_data["backend"] = {
                     "provider": "qdrant",
                     "url": qdrant_config.get("url"),
                     "api_key": qdrant_config.get("api_key"),
@@ -286,7 +291,7 @@ class ConfigMigrator:
 
         # Create default data sources configuration
         if "data_sources" not in legacy_dict:
-            new_dict["data_sources"] = {
+            new_data["data_sources"] = {
                 "enabled": True,
                 "default_source_type": "filesystem",
                 "sources": [
@@ -313,26 +318,26 @@ class ConfigMigrator:
 
         # Copy other sections as-is
         for key, value in legacy_dict.items():
-            if key not in ["embedding", "qdrant"] and key not in new_dict:
-                new_dict[key] = value
+            if key not in ["embedding", "qdrant"] and key not in new_data:
+                new_data[key] = value
 
         # Add configuration version
-        new_dict["_config_version"] = "2.0"
+        new_data["_config_version"] = "2.0"
 
-        return new_dict
+        return new_data
 
     @staticmethod
     def create_migration_script(
         input_path: str | Path,
         output_path: str | Path | None = None,
-        format: Literal["toml", "dict"] = "toml",
+        fmt: Literal["toml", "dict"] = "toml",
     ) -> str:
         """Create a migration script from legacy to new configuration.
 
         Args:
             input_path: Path to legacy configuration file
             output_path: Path for new configuration file (optional)
-            format: Output format (toml or dict)
+            fmt: Output fmt (toml or dict)
 
         Returns:
             Migration script content or new configuration
@@ -349,7 +354,7 @@ class ConfigMigrator:
             with input_path.open("rb") as f:
                 legacy_config = tomllib.load(f)
         except Exception as e:
-            raise ConfigMigrationError(f"Failed to load configuration file: {e}")
+            raise ConfigMigrationError("Failed to load configuration file") from e
 
         config_format = ConfigMigrator.detect_config_format(legacy_config)
 
@@ -360,7 +365,7 @@ class ConfigMigrator:
         # Migrate to new format
         new_config = ConfigMigrator.migrate_legacy_to_new(legacy_config)
 
-        if format == "dict":
+        if fmt == "dict":
             return str(new_config)
 
         # Generate TOML output
@@ -373,12 +378,13 @@ class ConfigMigrator:
             toml_content = tomlkit.dumps(new_config)
 
             # Add migration header
-            migration_header = f"""# Code Weaver Configuration (Migrated from {input_path})
-# Migration Date: {os.environ.get("USER", "system")}@{os.uname().nodename if hasattr(os, "uname") else "unknown"}
-# Original Format: {config_format}
-# New Format: v2.0
+            migration_header = dedent(f"""\
+            # Code Weaver Configuration (Migrated from {input_path})
+            # Migration Date: {os.environ.get("USER", "system")}@{os.uname().nodename if hasattr(os, "uname") else "unknown"}
+            # Original Format: {config_format}
+            # New Format: v2.0
 
-"""
+            """)
 
             full_content = migration_header + toml_content
 
@@ -386,14 +392,14 @@ class ConfigMigrator:
             if output_path:
                 output_path = Path(output_path)
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                with output_path.open("w") as f:
-                    f.write(full_content)
+                output_path.write_text(full_content)
                 logger.info("Migrated configuration written to: %s", output_path)
 
-            return full_content
-
         except Exception as e:
-            raise ConfigMigrationError(f"Failed to generate TOML output: {e}")
+            raise ConfigMigrationError("Failed to generate TOML output") from e
+
+        else:
+            return full_content
 
 
 def validate_configuration_file(config_path: str | Path) -> tuple[CodeWeaverConfig, list[str]]:
@@ -415,13 +421,13 @@ def validate_configuration_file(config_path: str | Path) -> tuple[CodeWeaverConf
 
     try:
         with config_path.open("rb") as f:
-            config_dict = tomllib.load(f)
+            config_data = tomllib.load(f)
     except Exception as e:
-        raise ConfigMigrationError(f"Failed to load configuration file: {e}")
+        raise ConfigMigrationError("Failed to load configuration file.") from e
 
     # Create configuration object
     config = CodeWeaverConfig()
-    config.merge_from_dict(config_dict)
+    config.merge_from_dict(config_data)
     config.merge_from_env()
 
     # Validate configuration
@@ -571,7 +577,7 @@ rerank_model = "rerank-english-v3.0"
 # Convenience functions for common operations
 def migrate_config_file(input_path: str | Path, output_path: str | Path | None = None) -> str:
     """Migrate a configuration file from legacy to new format."""
-    return ConfigMigrator.create_migration_script(input_path, output_path, format="toml")
+    return ConfigMigrator.create_migration_script(input_path, output_path, fmt="toml")
 
 
 def validate_config_file(config_path: str | Path) -> list[str]:

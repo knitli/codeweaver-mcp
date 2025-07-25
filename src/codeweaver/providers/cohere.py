@@ -13,14 +13,17 @@ Supports both embedding generation and document reranking with batch processing.
 
 import logging
 
-from typing import Any, ClassVar
+from typing import Any
 
-from codeweaver.providers.base import (
-    CombinedProvider,
-    ProviderCapability,
-    ProviderInfo,
-    RerankResult,
+from codeweaver._types.enums import RerankResult
+from codeweaver._types.provider_enums import ProviderCapability, ProviderType
+from codeweaver._types.provider_registry import (
+    EmbeddingProviderInfo,
+    get_provider_registry_entry,
+    register_provider_class,
 )
+from codeweaver.providers.base import CombinedProvider
+from codeweaver.providers.config import CohereConfig
 
 
 try:
@@ -38,45 +41,11 @@ logger = logging.getLogger(__name__)
 class CohereProvider(CombinedProvider):
     """Cohere provider supporting both embeddings and reranking."""
 
-    # Provider metadata
-    PROVIDER_NAME: ClassVar[str] = "cohere"
-    DISPLAY_NAME: ClassVar[str] = "Cohere"
-    DESCRIPTION: ClassVar[str] = (
-        "Multilingual embeddings and reranking with strong semantic understanding"
-    )
-
-    # Supported models
-    EMBEDDING_MODELS: ClassVar[dict[str, int]] = {
-        "embed-english-v3.0": 1024,
-        "embed-multilingual-v3.0": 1024,
-        "embed-english-light-v3.0": 384,
-        "embed-multilingual-light-v3.0": 384,
-    }
-
-    RERANKING_MODELS: ClassVar[list[str]] = [
-        "rerank-english-v3.0",
-        "rerank-multilingual-v3.0",
-        "rerank-english-v2.0",
-        "rerank-multilingual-v2.0",
-    ]
-
-    # Rate limits (requests per minute)
-    RATE_LIMITS: ClassVar[dict[str, int]] = {
-        "embed_requests": 1000,
-        "embed_tokens": 1000000,
-        "rerank_requests": 1000,
-        "rerank_tokens": 100000,
-    }
-
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: CohereConfig | dict[str, Any]):
         """Initialize Cohere provider.
 
         Args:
-            config: Configuration dictionary with keys:
-                - api_key: Cohere API key
-                - model: Embedding model name (default: embed-english-v3.0)
-                - rerank_model: Reranking model name (default: rerank-english-v3.0)
-                - rate_limiter: RateLimiter instance (optional)
+            config: CohereConfig instance or configuration dictionary
         """
         super().__init__(config)
 
@@ -86,26 +55,30 @@ class CohereProvider(CombinedProvider):
         self.client = cohere.Client(api_key=self.config["api_key"])
         self.rate_limiter = self.config.get("rate_limiter")
 
+        # Get provider registry info
+        self._registry_entry = get_provider_registry_entry(ProviderType.COHERE)
+        self._capabilities = self._registry_entry.capabilities
+
         # Model configuration
-        self._embedding_model = self.config.get("model", "embed-english-v3.0")
-        self._rerank_model = self.config.get("rerank_model", "rerank-english-v3.0")
-        self._dimension = self.EMBEDDING_MODELS.get(self._embedding_model, 1024)
+        self._embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
+        self._rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
+        self._dimension = self._capabilities.native_dimensions.get(self._embedding_model, 1024)
 
     def _validate_config(self) -> None:
         """Validate Cohere configuration."""
         if not self.config.get("api_key"):
             raise ValueError("Cohere API key is required")
 
-        embedding_model = self.config.get("model", "embed-english-v3.0")
-        if embedding_model not in self.EMBEDDING_MODELS:
-            available = ", ".join(self.EMBEDDING_MODELS.keys())
+        embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
+        if embedding_model not in self._capabilities.supported_embedding_models:
+            available = ", ".join(self._capabilities.supported_embedding_models)
             raise ValueError(
                 f"Unknown Cohere embedding model: {embedding_model}. Available: {available}"
             )
 
-        rerank_model = self.config.get("rerank_model", "rerank-english-v3.0")
-        if rerank_model not in self.RERANKING_MODELS:
-            available = ", ".join(self.RERANKING_MODELS)
+        rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
+        if rerank_model not in self._capabilities.supported_reranking_models:
+            available = ", ".join(self._capabilities.supported_reranking_models)
             raise ValueError(
                 f"Unknown Cohere reranking model: {rerank_model}. Available: {available}"
             )
@@ -115,7 +88,7 @@ class CohereProvider(CombinedProvider):
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
-        return self.PROVIDER_NAME
+        return ProviderType.COHERE.value
 
     @property
     def model_name(self) -> str:
@@ -219,33 +192,71 @@ class CohereProvider(CombinedProvider):
 
     # Provider info methods
 
-    def get_provider_info(self) -> ProviderInfo:
-        """Get information about Cohere capabilities."""
-        return self.get_static_provider_info()
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about Cohere capabilities from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.COHERE)
+        capabilities = registry_entry.capabilities
 
-    @classmethod
-    def get_static_provider_info(cls) -> ProviderInfo:
-        """Get static provider information without instantiation."""
-        return ProviderInfo(
-            name=cls.PROVIDER_NAME,
-            display_name=cls.DISPLAY_NAME,
-            description=cls.DESCRIPTION,
+        return EmbeddingProviderInfo(
+            name=ProviderType.COHERE.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDING,
+                ProviderCapability.EMBEDDINGS,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
             ],
-            default_models={"embedding": "embed-english-v3.0", "reranking": "rerank-english-v3.0"},
-            supported_models={
-                "embedding": list(cls.EMBEDDING_MODELS.keys()),
-                "reranking": cls.RERANKING_MODELS,
+            capabilities=capabilities,
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
             },
-            rate_limits=cls.RATE_LIMITS,
-            requires_api_key=True,
-            supports_batch_processing=True,
-            max_batch_size=96,
-            max_input_length=500000,
-            native_dimensions=cls.EMBEDDING_MODELS,
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
+            },
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
+        )
+
+    @classmethod
+    def get_static_provider_info(cls) -> EmbeddingProviderInfo:
+        """Get static provider information from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.COHERE)
+        capabilities = registry_entry.capabilities
+
+        return EmbeddingProviderInfo(
+            name=ProviderType.COHERE.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
+            supported_capabilities=[
+                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.RERANKING,
+                ProviderCapability.BATCH_PROCESSING,
+            ],
+            capabilities=capabilities,
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
+            },
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
+            },
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
         )
 
     @classmethod
@@ -255,7 +266,11 @@ class CohereProvider(CombinedProvider):
             return False, "cohere package not installed (install with: uv add cohere)"
 
         # Both embedding and reranking are supported
-        if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
+        if capability in [ProviderCapability.EMBEDDINGS, ProviderCapability.RERANKING]:
             return True, None
 
         return False, f"Capability {capability.value} not supported by Cohere"
+
+
+# Register the Cohere provider in the registry
+register_provider_class(ProviderType.COHERE, CohereProvider)

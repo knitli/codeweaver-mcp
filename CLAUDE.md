@@ -52,7 +52,6 @@ Tests are organized by type and purpose:
 
 - **`tests/integration/`**: Integration tests for system components
   - `test_integration.py`: General integration tests
-  - `test_integration_backward_compatibility.py`: Backward compatibility tests
   - `test_benchmarks.py`: Performance benchmarks
   - `test_server_functionality.py`: Server functionality tests
 
@@ -108,7 +107,7 @@ uv run python src/codeweaver/main.py
 uv run codeweaver
 
 # Run with environment variables
-VOYAGE_API_KEY=your_key QDRANT_URL=your_url uv run codeweaver
+EMBEDDING_API_KEY=your_key VECTOR_BACKEND_URL=your_url uv run codeweaver
 ```
 
 ### Code Quality & Linting
@@ -185,10 +184,10 @@ The server exposes four main tools:
 
 ## Environment Variables Required
 
-- **`VOYAGE_API_KEY`**: Your Voyage AI API key (required)
-- **`QDRANT_URL`**: Your Qdrant Cloud URL (required)
-- **`QDRANT_API_KEY`**: Your Qdrant API key (optional if no auth)
-- **`COLLECTION_NAME`**: Vector collection name (defaults to "code-embeddings")
+- **`EMBEDDING_API_KEY`**: Your embedding provider API key (required)
+- **`VECTOR_BACKEND_URL`**: Your vector database URL (required)
+- **`VECTOR_BACKEND_API_KEY`**: Your vector database API key (optional if no auth)
+- **`VECTOR_BACKEND_COLLECTION`**: Vector collection name (defaults to "codeweaver-UUID4")
 
 ## Language Support
 
@@ -234,7 +233,7 @@ The system supports 20+ programming languages with proper AST-aware chunking:
 
 - Try blocks:
   - **Avoid bare excepts**: Always specify the exception type (e.g., `except ValueError:`)
-  - **Avoid returns in `try` blocks**: Use `else` for return statements after `try` to ensure clarity
+  - **Avoid returns at end of `try` blocks**: Use `else` for return statements after `try` to ensure clarity (early returns in the block are fine).
   - **Don't raise exceptions inside `try` blocks**: Use an inside function outside the `try` block to raise exceptions.
 
 - Except blocks:
@@ -249,6 +248,7 @@ The system supports 20+ programming languages with proper AST-aware chunking:
     def my_function(arg1: str, *, flag: bool = False) -> None:
         pass
     ```
+- Generally follow the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html) for code style and conventions.
 
 ### Dependencies
 - **Production**: `ast-grep-py`, `fastmcp`, `qdrant-client`, `rignore`, `watchdog`
@@ -268,7 +268,7 @@ The system supports 20+ programming languages with proper AST-aware chunking:
 
 - **Clear Separation**: Tests, examples, and utilities are kept in separate directories
   - Tests live in `tests/` organized by type (unit, integration, validation)
-  - Examples live in `examples/` including migration guides
+  - Examples live in `examples/` including migration guides (though this is a new tool and has nothing to migrate from yet)
   - Test utilities live in `src/codeweaver/testing/` (not actual tests)
 - **No Mixed Concerns**: Production code should not contain examples or test code
 - **Idiomatic Structure**: Follow Python packaging best practices
@@ -276,10 +276,6 @@ The system supports 20+ programming languages with proper AST-aware chunking:
   - Tests in `tests/` at project root
   - Examples in `examples/` at project root
   - Documentation in project root and inline
-- **Migration Path**: When refactoring or extending:
-  - Move examples to `examples/` directory
-  - Extract migration guides to `examples/migration/`
-  - Keep only production code in `src/`
 
 ### Key Design Decisions
 - **Semantic chunking**: Uses ast-grep for intelligent code segmentation
@@ -305,9 +301,9 @@ Add to `claude_desktop_config.json`:
       "command": "uv",
       "args": ["run", "codeweaver"],
       "env": {
-        "VOYAGE_API_KEY": "your-key",
-        "QDRANT_URL": "your-url",
-        "QDRANT_API_KEY": "your-api-key"
+        "EMBEDDING_API_KEY": "your-key",
+        "VECTOR_BACKEND_URL": "your-url",
+        "VECTOR_BACKEND_API_KEY": "your-api-key"
       }
     }
   }
@@ -337,8 +333,20 @@ When working with this codebase, navigate to these directories:
 - **Examples**: `examples/` for usage examples, `examples/migration/` for migration guides
 - **Test Utilities**: `src/codeweaver/testing/` (helper functions, not actual tests)
 
-# Important Instruction Reminders
+## Important Instruction Reminders
 Do what has been asked; nothing more, nothing less.
 - Only create files if they're absolutely necessary for achieving your goal. Keep code modular and focused, but don't files that aren't needed.
 - Prefer editing an existing file to creating a new one.
 - You can add README.md files to directories that don't have them, but no other documentation files within the code structure. Docs belong in the `docs/` directory.
+
+## Always Think About Your Context
+
+Codebases like CodeWeaver are, from a token perspective, very large. You become less effective if you try to process many files at once. Take care to only load the files or parts of files that you need to work with, and use narrow searches to get the context you need.
+
+### Avoid these common pitfalls:
+
+- Creating tests, scripts, or using commands that will dump large amounts of data to the console or terminal, unless you design it *not* to return to you. Instead, have it produce a report or summary, or write the output to a file.
+  - If you write the output to a file -- *never read it directly*. Instead, use targeted searches to find the information you need.
+- Using tools that provide output and don't have a way to limit the output. Always apply filters to reduce the output to only what you need.
+
+Another management strategy is to delegate. If you need to do something with a lot of context -- delegate it to other assistants or tools with detailed instructions on what information you need, how to find it, and how to summarize it for you. This way, you can focus on the high-level tasks and let the tools do the heavy lifting. You need to use the tools effectively to manage your context and avoid overwhelming yourself with too much information at once.

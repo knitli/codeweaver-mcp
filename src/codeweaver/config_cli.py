@@ -204,8 +204,10 @@ def cmd_info(args: argparse.Namespace) -> None:
         ("EMBEDDING_API_KEY", "Embedding API key"),
         ("VOYAGE_API_KEY", "Voyage AI API key"),
         ("OPENAI_API_KEY", "OpenAI API key"),
-        ("QDRANT_URL", "Qdrant URL (legacy)"),
-        ("QDRANT_API_KEY", "Qdrant API key (legacy)"),
+        ("VECTOR_BACKEND_URL", "Vector database URL"),
+        ("VECTOR_BACKEND_API_KEY", "Vector database API key"),
+        ("VECTOR_BACKEND_PROVIDER", "Vector database provider"),
+        ("VECTOR_BACKEND_COLLECTION", "Vector database collection name"),
         ("ENABLE_HYBRID_SEARCH", "Enable hybrid search (true/false)"),
         ("USE_LOCAL_MODELS", "Use local models (true/false)"),
     ]

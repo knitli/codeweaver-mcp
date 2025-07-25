@@ -12,9 +12,16 @@ Supports both cloud inference and local model loading with GPU acceleration.
 
 import logging
 
-from typing import Any, ClassVar
+from typing import Any
 
-from codeweaver.providers.base import EmbeddingProviderBase, ProviderCapability, ProviderInfo
+from codeweaver._types.provider_enums import ProviderCapability, ProviderType
+from codeweaver._types.provider_registry import (
+    EmbeddingProviderInfo,
+    get_provider_registry_entry,
+    register_provider_class,
+)
+from codeweaver.providers.base import EmbeddingProviderBase
+from codeweaver.providers.config import HuggingFaceConfig
 
 
 try:
@@ -42,45 +49,44 @@ logger = logging.getLogger(__name__)
 class HuggingFaceProvider(EmbeddingProviderBase):
     """HuggingFace provider for embeddings with support for API and local models."""
 
-    # Provider metadata
-    PROVIDER_NAME: ClassVar[str] = "huggingface"
-    DISPLAY_NAME: ClassVar[str] = "HuggingFace"
-    DESCRIPTION: ClassVar[str] = "HuggingFace embeddings via Inference API or local transformers"
-
-    # Popular embedding models on HuggingFace Hub
-    POPULAR_MODELS: ClassVar[dict[str, int]] = {
-        "sentence-transformers/all-MiniLM-L6-v2": 384,
-        "sentence-transformers/all-mpnet-base-v2": 768,
-        "sentence-transformers/multi-qa-MiniLM-L6-cos-v1": 384,
-        "microsoft/codebert-base": 768,
-        "microsoft/graphcodebert-base": 768,
-        "huggingface/CodeBERTa-small-v1": 768,
-    }
-
-    # Rate limits for Inference API (requests per hour)
-    RATE_LIMITS: ClassVar[dict[str, int]] = {
-        "embed_requests": 1000  # Depends on HuggingFace tier
-    }
-
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any] | HuggingFaceConfig):
         """Initialize HuggingFace provider.
 
         Args:
-            config: Configuration dictionary with keys:
-                - model: Model name (default: sentence-transformers/all-MiniLM-L6-v2)
+            config: Configuration dictionary or HuggingFaceConfig instance with settings for:
+                - model: Model name
                 - api_key: HuggingFace API key (optional for public models)
-                - use_local: Whether to use local model loading (default: False)
-                - device: Device for local models ('cpu', 'cuda', 'auto') (default: auto)
-                - batch_size: Batch size for local processing (default: 16)
+                - use_local: Whether to use local model loading
+                - device: Device for local models ('cpu', 'cuda', 'auto')
+                - batch_size: Batch size for local processing
         """
         super().__init__(config)
 
+        # Get registry entry for validation and defaults
+        self._registry_entry = get_provider_registry_entry(ProviderType.HUGGINGFACE)
+
+        # Convert to Pydantic config if needed
+        if isinstance(config, dict):
+            # Set model default from registry if not provided
+            if "model" not in config:
+                config["model"] = self._registry_entry.capabilities.default_embedding_model
+            self._config = HuggingFaceConfig(**config)
+        else:
+            self._config = config
+
+        # Validate model is supported
+        if self._config.model not in self._registry_entry.capabilities.supported_embedding_models:
+            logger.warning(
+                "Model %s not in known supported models. May work but not guaranteed.",
+                self._config.model
+            )
+
         # Configuration
-        self._model_name = self.config.get("model", "sentence-transformers/all-MiniLM-L6-v2")
-        self._api_key = self.config.get("api_key")
-        self._use_local = self.config.get("use_local", False)
-        self._device = self.config.get("device", "auto")
-        self._batch_size = self.config.get("batch_size", 16)
+        self._model_name = self._config.model
+        self._api_key = self._config.api_key
+        self._use_local = getattr(self._config, "use_local", False)
+        self._device = getattr(self._config, "device", "auto")
+        self._batch_size = self._config.batch_size
 
         # Initialize based on mode
         if self._use_local:
@@ -88,8 +94,8 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         else:
             self._init_api_client()
 
-        # Get dimension (estimate if unknown)
-        self._dimension = self.POPULAR_MODELS.get(self._model_name, 768)
+        # Get dimension from registry or estimate
+        self._dimension = self._registry_entry.capabilities.native_dimensions.get(self._model_name, 768)
 
     def _validate_config(self) -> None:
         """Validate HuggingFace configuration."""
@@ -106,7 +112,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "No HuggingFace API key provided. Rate limits will apply for public inference."
             )
 
-    def _init_local_model(self) -> None:
+    def _init_local_model(self) -> None:  # sourcery skip: avoid-global-variables, extract-method
         """Initialize local transformers model."""
         if not TRANSFORMERS_AVAILABLE:
             raise ImportError("transformers and torch required for local models")
@@ -147,7 +153,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
-        return self.PROVIDER_NAME
+        return ProviderType.HUGGINGFACE.value
 
     @property
     def model_name(self) -> str:
@@ -162,9 +168,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
     @property
     def max_batch_size(self) -> int | None:
         """Batch size depends on mode."""
-        if self._use_local:
-            return self._batch_size
-        return 1  # API processes one at a time typically
+        return self._batch_size if self._use_local else 1
 
     @property
     def max_input_length(self) -> int | None:
@@ -263,36 +267,62 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 # Single embedding vector
                 embeddings.append(embedding)
             else:
-                raise RuntimeError(f"Unexpected API response format: {type(embedding)}")
+                raise TypeError(f"Unexpected API response format: {type(embedding)}")
 
         return embeddings
 
     # Provider info methods
 
-    def get_provider_info(self) -> ProviderInfo:
-        """Get information about HuggingFace capabilities."""
-        return self.get_static_provider_info()
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about HuggingFace capabilities from centralized registry."""
+        capabilities = self._registry_entry.capabilities
 
-    @classmethod
-    def get_static_provider_info(cls) -> ProviderInfo:
-        """Get static provider information without instantiation."""
-        return ProviderInfo(
-            name=cls.PROVIDER_NAME,
-            display_name=cls.DISPLAY_NAME,
-            description=cls.DESCRIPTION,
+        return EmbeddingProviderInfo(
+            name=ProviderType.HUGGINGFACE.value,
+            display_name=self._registry_entry.display_name,
+            description=self._registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDING,
+                ProviderCapability.EMBEDDINGS,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
-            default_models={"embedding": "sentence-transformers/all-MiniLM-L6-v2"},
-            supported_models={"embedding": list(cls.POPULAR_MODELS.keys())},
-            rate_limits=cls.RATE_LIMITS,
-            requires_api_key=False,  # Optional for public models
-            supports_batch_processing=True,
-            max_batch_size=16,
-            max_input_length=8000,
-            native_dimensions=cls.POPULAR_MODELS,
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model},
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+            },
+            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
+        )
+
+    @classmethod
+    def get_static_provider_info(cls) -> EmbeddingProviderInfo:
+        """Get static provider information from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.HUGGINGFACE)
+        capabilities = registry_entry.capabilities
+
+        return EmbeddingProviderInfo(
+            name=ProviderType.HUGGINGFACE.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
+            supported_capabilities=[
+                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.LOCAL_INFERENCE,
+                ProviderCapability.BATCH_PROCESSING,
+            ],
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model},
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+            },
+            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
         )
 
     @classmethod
@@ -314,10 +344,25 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             local_available = True
             local_reason = None
 
-        # Only embedding is supported
-        if capability == ProviderCapability.EMBEDDING:
+        # Handle different capabilities
+        if capability == ProviderCapability.EMBEDDINGS:
+            if api_available or local_available:
+                return True, None
+            return (False, f"Neither API ({api_reason}) nor local ({local_reason}) mode available")
+
+        if capability == ProviderCapability.LOCAL_INFERENCE:
+            if local_available:
+                return True, None
+            return False, local_reason
+
+        if capability == ProviderCapability.BATCH_PROCESSING:
+            # Batch processing is always available if embedding is available
             if api_available or local_available:
                 return True, None
             return (False, f"Neither API ({api_reason}) nor local ({local_reason}) mode available")
 
         return False, f"Capability {capability.value} not supported by HuggingFace"
+
+
+# Register the HuggingFace provider in the registry
+register_provider_class(ProviderType.HUGGINGFACE, HuggingFaceProvider)

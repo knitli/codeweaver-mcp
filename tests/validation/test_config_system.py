@@ -133,7 +133,7 @@ def test_environment_variables() -> None:
 
     # Save original environment
     original_env = {
-        key: os.environ.get(key) for key in ["VOYAGE_API_KEY", "QDRANT_URL", "EMBEDDING_PROVIDER"]
+        key: os.environ.get(key) for key in ["EMBEDDING_API_KEY", "VECTOR_BACKEND_URL", "EMBEDDING_PROVIDER"]
     }
 
     try:
@@ -154,7 +154,7 @@ def test_env_configuration() -> None:
     """Test configuration with environment variables."""
     # Set test environment variables
     os.environ["VOYAGE_API_KEY"] = "test-key"
-    os.environ["QDRANT_URL"] = "http://localhost:6333"
+    os.environ["VECTOR_BACKEND_URL"] = "http://localhost:6333"
     os.environ["EMBEDDING_PROVIDER"] = "voyage"
 
     # Test configuration with environment variables

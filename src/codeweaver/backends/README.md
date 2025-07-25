@@ -164,10 +164,7 @@ export VECTOR_BACKEND_PROVIDER=qdrant
 export VECTOR_BACKEND_URL=https://your-cluster.qdrant.io
 export VECTOR_BACKEND_API_KEY=your-api-key
 
-# Legacy compatibility (will be mapped to backend config)
-export QDRANT_URL=https://your-cluster.qdrant.io
-export QDRANT_API_KEY=your-api-key
-export COLLECTION_NAME=code-embeddings
+export VECTOR_BACKEND_COLLECTION=code-embeddings
 
 # Feature flags
 export ENABLE_HYBRID_SEARCH=true
@@ -234,37 +231,30 @@ backend = BackendFactory.create_backend(config)
 await backend.create_collection("code-embeddings", dimension=1024)
 ```
 
-### Migration Steps
+### Backend Setup
 
-1. **Phase 1: Update Configuration**
-   ```python
-   # Replace direct QdrantConfig usage
-   from codeweaver.backends.config import create_backend_config_from_legacy
+The backend system uses a unified factory pattern for all vector databases:
 
-   backend_config = create_backend_config_from_legacy(
-       qdrant_url=existing_config.qdrant.url,
-       qdrant_api_key=existing_config.qdrant.api_key,
-       collection_name=existing_config.qdrant.collection_name
-   )
-   ```
+```python
+from codeweaver.backends.factory import BackendConfig, BackendFactory
+from codeweaver.providers.base import ProviderKind
 
-2. **Phase 2: Replace Backend Initialization**
-   ```python
-   # OLD: server.py line 77
-   self.qdrant = QdrantClient(url=..., api_key=...)
+# Create backend configuration
+config = BackendConfig(
+    provider="qdrant",
+    kind=ProviderKind.COMBINED,
+    url="https://your-cluster.qdrant.io",
+    api_key="your-api-key",
+    collection_name="code-embeddings"
+)
 
-   # NEW: Using factory pattern
-   self.backend = BackendFactory.create_backend(backend_config)
-   ```
+# Create backend instance
+backend = BackendFactory.create_backend(config)
 
-3. **Phase 3: Update Operations**
-   ```python
-   # OLD: Direct Qdrant operations
-   self.qdrant.upsert(collection_name=name, points=points)
-
-   # NEW: Universal backend operations
-   await self.backend.upsert_vectors(collection_name=name, vectors=vector_points)
-   ```
+# Use universal backend operations
+await backend.create_collection("code-embeddings", dimension=1024)
+await backend.upsert_vectors(collection_name="code-embeddings", vectors=vector_points)
+```
 
 ## Hybrid Search
 

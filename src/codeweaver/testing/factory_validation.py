@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.factory import BackendConfig, BackendFactory, create_backend
+from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.config import CodeWeaverConfig
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.providers.factory import (
@@ -151,7 +151,7 @@ class FactoryPatternValidator:
         for test_case in test_cases:
             try:
                 # Test backend creation
-                backend = await create_backend(test_case["config"])
+                backend = await BackendFactory.create_backend(test_case["config"])
 
                 # Validate instance type
                 if not isinstance(backend, test_case["expected_type"]):
@@ -186,7 +186,7 @@ class FactoryPatternValidator:
             # Test invalid provider
             with contextlib.suppress(Exception):
                 invalid_config = BackendConfig(provider="nonexistent", url="test://localhost")
-                await create_backend(invalid_config)
+                await BackendFactory.create_backend(invalid_config)
                 result.validation_errors.append("Should have failed with invalid provider")
         except Exception as e:
             result.validation_errors.append(f"Factory method test failed: {e}")
@@ -400,7 +400,7 @@ class FactoryPatternValidator:
             config.backend.provider = "mock"
             config.backend.url = "test://localhost"
 
-            backend = await create_backend(config.backend)
+            backend = await BackendFactory.create_backend(config.backend)
             if isinstance(backend, VectorBackend):
                 result.created_instances += 1
                 result.test_details["backend_from_config"] = "success"

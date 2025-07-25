@@ -399,6 +399,7 @@ class CodeEmbeddingsServer:
         query: str,
         file_filter: str | None,
         language_filter: str | None,
+        *,
         use_task_delegation: bool | None,
         limit: int,
         chunk_type_filter: str | None,
@@ -453,6 +454,7 @@ class CodeEmbeddingsServer:
         language_filter: str | None,
         chunk_type_filter: str | None,
         limit: int,
+        *,
         rerank: bool,
     ) -> list:
         """Perform vector search using backend abstraction with fallback to legacy."""
@@ -502,6 +504,7 @@ class CodeEmbeddingsServer:
         language_filter: str | None,
         chunk_type_filter: str | None,
         limit: int,
+        *,
         rerank: bool,
     ) -> list:
         """Fallback to legacy Qdrant search when backend fails."""
@@ -573,10 +576,11 @@ class CodeEmbeddingsServer:
                 original_result["rerank_score"] = rerank_item["relevance_score"]
                 reranked.append(original_result)
 
-            return reranked
         except Exception as e:
             logger.warning("Reranking failed, using similarity search only: %s", e)
             return results
+        else:
+            return reranked
 
     async def ast_grep_search(
         self,
@@ -1242,16 +1246,7 @@ def migrate_config_to_extensible(
     if _EXTENDED_CONFIGS_AVAILABLE:
         try:
             # Import the extended configuration classes
-            from codeweaver.backends.config import create_backend_config_from_legacy
             from codeweaver.sources.config import extend_config_with_data_sources
-
-            # Create backend config from legacy qdrant config
-            if hasattr(legacy_config, "qdrant") and legacy_config.qdrant:
-                backend_config = create_backend_config_from_legacy(legacy_config.qdrant)
-
-                # Update the config (in a real implementation, you'd create a new config object)
-                migrated_config.backend = backend_config
-                logger.info("Migrated Qdrant config to backend config")
 
             # Extend with data sources if needed
             migrated_config = extend_config_with_data_sources(migrated_config)

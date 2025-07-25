@@ -116,8 +116,8 @@ class VoyageAIEmbedder(EmbedderBase):
             }
             self._provider = VoyageAIProvider(provider_config)
             self.dimension = self._provider.dimension
-        except ImportError:
-            raise ImportError("Voyage AI library not available. Install with: uv add voyageai")
+        except ImportError as e:
+            raise ImportError("Voyage AI library not available. Install with: uv add voyageai") from e
 
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for documents (code chunks) with rate limiting."""
@@ -168,8 +168,8 @@ class OpenAIEmbedder(EmbedderBase):
 
             self._provider = OpenAIProvider(provider_config)
             self.dimension = self._provider.dimension
-        except ImportError:
-            raise ImportError("OpenAI library not available. Install with: uv add openai")
+        except ImportError as e:
+            raise ImportError("OpenAI library not available. Install with: uv add openai") from e
 
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings for documents (code chunks) with rate limiting."""
@@ -213,13 +213,13 @@ def create_embedder(
         # Wrap in adapter for backward compatibility
         return _ProviderAdapter(provider, config)
 
-    except Exception:
+    except Exception as e:
         # Fallback to legacy implementations for compatibility
         if config.provider.lower() == "voyage":
             return VoyageAIEmbedder(config, rate_limiter)
         if config.provider.lower() == "openai":
             return OpenAIEmbedder(config, rate_limiter)
-        raise ValueError(f"Unknown embedding provider: {config.provider}")
+        raise ValueError(f"Unknown embedding provider: {config.provider}") from e
 
 
 class VoyageAIReranker:
@@ -256,8 +256,8 @@ class VoyageAIReranker:
                 "rate_limiter": rate_limiter,
             }
             self._provider = VoyageAIProvider(provider_config)
-        except ImportError:
-            raise ImportError("Voyage AI library not available. Install with: uv add voyageai")
+        except ImportError as e:
+            raise ImportError("Voyage AI library not available. Install with: uv add voyageai") from e
 
     async def rerank(
         self, query: str, documents: list[str], top_k: int | None = None

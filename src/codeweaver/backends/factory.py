@@ -13,15 +13,11 @@ with automatic capability detection and fallback mechanisms.
 
 import logging
 
-from dataclasses import dataclass
-from typing import Any, ClassVar, Literal, TypeVar
+from typing import Annotated, Any, ClassVar, Literal, TypeVar
 
-from codeweaver.backends.base import (
-    BackendConnectionError,
-    CustomBackendCapabilities,
-    HybridSearchBackend,
-    VectorBackend,
-)
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from codeweaver.backends.base import BackendConnectionError, HybridSearchBackend, VectorBackend
 from codeweaver.backends.qdrant import QdrantHybridBackend
 from codeweaver.providers.base import (
     CombinedProvider,
@@ -37,40 +33,139 @@ logger = logging.getLogger(__name__)
 # Type variables for factory returns
 BackendT = TypeVar("BackendT", bound=VectorBackend)
 
+# Custom backend capabilities type
+CustomBackendCapabilities = dict[str, Any]
 
-@dataclass
-class BackendConfig:
+
+class BackendConfig(BaseModel):
     """Configuration for vector database backends."""
 
+    model_config = ConfigDict(
+        extra="allow",
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+    )
+
     # Core connection settings
-    provider: type[CombinedProvider] | type[EmbeddingProvider] | type[LocalEmbeddingProvider] | type[RerankProvider] | str
-    kind: ProviderKind
-    name: str | None = None  # For custom backends
-    url: str | None = None
-    api_key: str | None = None
-    capabilities: CustomBackendCapabilities | None = None
-    """Capabilities of the backend, used for custom backends to define their features.
-    Required for custom backends to specify their capabilities."""
+    provider: Annotated[
+        type[CombinedProvider] | type[EmbeddingProvider] | type[LocalEmbeddingProvider] | type[RerankProvider] | str,
+        Field(description="Backend provider type or string identifier")
+    ]
+    kind: Annotated[ProviderKind, Field(description="Provider kind classification")]
+    name: Annotated[
+        str | None,
+        Field(default=None, description="Custom name for the backend instance")
+    ]
+    url: Annotated[
+        str | None,
+        Field(default=None, description="Backend connection URL")
+    ]
+    api_key: Annotated[
+        str | None,
+        Field(default=None, description="API key for authentication")
+    ]
+    capabilities: Annotated[
+        CustomBackendCapabilities | None,
+        Field(
+            default=None,
+            description="Capabilities of the backend, required for custom backends to define their features"
+        )
+    ]
 
     # Advanced capabilities
-    enable_hybrid_search: bool = False
-    enable_sparse_vectors: bool = False
-    enable_streaming: bool = False
-    enable_transactions: bool = False
+    enable_hybrid_search: Annotated[
+        bool,
+        Field(default=False, description="Enable hybrid dense/sparse search")
+    ]
+    enable_sparse_vectors: Annotated[
+        bool,
+        Field(default=False, description="Enable sparse vector support")
+    ]
+    enable_streaming: Annotated[
+        bool,
+        Field(default=False, description="Enable streaming operations")
+    ]
+    enable_transactions: Annotated[
+        bool,
+        Field(default=False, description="Enable transaction support")
+    ]
 
     # Performance settings
-    connection_timeout: float = 30.0
-    request_timeout: float = 60.0
-    max_connections: int = 10
-    retry_count: int = 3
+    connection_timeout: Annotated[
+        float,
+        Field(
+            default=30.0,
+            ge=0.1,
+            le=300.0,
+            description="Connection timeout in seconds (0.1-300)"
+        )
+    ]
+    request_timeout: Annotated[
+        float,
+        Field(
+            default=60.0,
+            ge=0.1,
+            le=300.0,
+            description="Request timeout in seconds (0.1-300)"
+        )
+    ]
+    max_connections: Annotated[
+        int,
+        Field(
+            default=10,
+            ge=1,
+            le=1000,
+            description="Maximum number of connections (1-1000)"
+        )
+    ]
+    retry_count: Annotated[
+        int,
+        Field(
+            default=3,
+            ge=0,
+            le=10,
+            description="Number of retry attempts (0-10)"
+        )
+    ]
 
     # Storage preferences
-    prefer_memory: bool = False
-    prefer_disk: bool = False
+    prefer_memory: Annotated[
+        bool,
+        Field(default=False, description="Prefer memory-based storage")
+    ]
+    prefer_disk: Annotated[
+        bool,
+        Field(default=False, description="Prefer disk-based storage")
+    ]
 
     # Provider-specific settings
-    provider_options: dict[str, Any] | None = None
-    """Additional options specific to the backend provider. Can be used to pass arbitrary settings for a provider implementation. Providers should validate these options themselves."""
+    provider_options: Annotated[
+        dict[str, Any] | None,
+        Field(
+            default=None,
+            description="Additional options specific to the backend provider. Providers should validate these options themselves."
+        )
+    ]
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def validate_api_key(cls, api_key: str | None) -> str | None:
+        """Validate API key format."""
+        return None if api_key is not None and len(api_key.strip()) == 0 else api_key
+
+    @field_validator("url", mode="before")
+    @classmethod
+    def validate_url(cls, url: str | None) -> str | None:
+        """Validate URL format."""
+        if url is not None:
+            url = url.strip()
+            if len(url) == 0:
+                return None
+            # Basic URL validation - must start with http/https for web services
+            if not (url.startswith(("http://", "https://", "postgresql://", "postgres://", "mongodb://"))):
+                raise ValueError(f"URL must be a valid connection string, got: {url}")
+        return url
 
 
 class BackendFactory:
@@ -121,7 +216,11 @@ class BackendFactory:
             ValueError: If provider is not supported
             BackendConnectionError: If backend connection fails
         """
-        provider = config.provider.lower()
+        # Handle both string and enum provider values
+        if hasattr(config.provider, 'value'):
+            provider = config.provider.value.lower()
+        else:
+            provider = str(config.provider).lower()
 
         if provider not in cls._backends:
             available = ", ".join(cls._backends.keys())
@@ -144,7 +243,7 @@ class BackendFactory:
 
         except Exception as e:
             logger.exception("Failed to create %s backend", provider)
-            raise BackendConnectionError(f"Failed to create {provider} backend") from e
+            raise BackendConnectionError(f"Failed to create {provider} backend", backend_type=provider) from e
 
     @classmethod
     def _get_hybrid_backend_class(cls, provider: str) -> type[HybridSearchBackend]:
@@ -166,8 +265,14 @@ class BackendFactory:
         """Build backend-specific arguments from configuration."""
         args = {"url": config.url, "api_key": config.api_key}
 
+        # Handle both string and enum provider values
+        if hasattr(config.provider, 'value'):
+            provider = config.provider.value.lower()
+        else:
+            provider = str(config.provider).lower()
+
         # Add provider-specific settings
-        if config.provider == "qdrant":
+        if provider == "qdrant":
             args |= {
                 "enable_sparse_vectors": config.enable_sparse_vectors,
                 "sparse_on_disk": config.prefer_disk,
@@ -266,12 +371,28 @@ class BackendFactory:
         else:
             raise ValueError(f"Unsupported URL scheme: {url}")
 
-        config = BackendConfig(provider=provider, url=base_url, **kwargs)
+        # Ensure we have a valid ProviderKind for the config
+        from codeweaver.providers.base import ProviderKind
+        kind = kwargs.pop('kind', ProviderKind.COMBINED)
+
+        config = BackendConfig(provider=provider, kind=kind, url=base_url, **kwargs)
 
         return cls.create_backend(config)
 
 
-# Convenience function for backward compatibility
-def create_backend(config: BackendConfig) -> VectorBackend:
-    """Create a vector database backend from configuration."""
-    return BackendFactory.create_backend(config)
+# Register default backends
+def _register_default_backends() -> None:
+    """Register the default backend implementations."""
+    try:
+        from codeweaver.backends.qdrant import QdrantHybridBackend
+
+        # Register Qdrant as both basic and hybrid backend
+        BackendFactory.register_backend("qdrant", QdrantHybridBackend, supports_hybrid=True)
+        logger.info("Registered Qdrant backend")
+
+    except ImportError as e:
+        logger.warning("Failed to register Qdrant backend: %s", e)
+
+
+# Auto-register backends on module import
+_register_default_backends()

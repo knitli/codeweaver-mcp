@@ -13,11 +13,11 @@ with the existing server implementation, enabling gradual migration.
 import logging
 
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
 
+from codeweaver._types.source_enums import SourceProvider
 from codeweaver.sources.base import ContentItem, DataSource
-from codeweaver.sources.config import DataSourcesConfig, extend_config_with_data_sources
+from codeweaver.sources.config import DataSourcesConfig
 from codeweaver.sources.factory import get_source_factory
 
 
@@ -57,17 +57,26 @@ class DataSourceManager:
 
         for source_config in enabled_configs:
             try:
-                source_type = source_config["type"]
+                raw_source_type = source_config["type"]
                 config = source_config["config"]
+
+                # Convert string to enum
+                try:
+                    source_type = SourceProvider(raw_source_type)
+                except ValueError:
+                    logger.warning("Unknown source type: %s", raw_source_type)
+                    continue
 
                 # Create and validate the source
                 source = self.source_factory.create_source(source_type, config)
 
                 if await source.validate_source(config):
                     self._active_sources.append(source)
-                    logger.info("Initialized data source: %s (%s)", source.source_id, source_type)
+                    logger.info(
+                        "Initialized data source: %s (%s)", source.source_id, source_type.value
+                    )
                 else:
-                    logger.warning("Validation failed for data source: %s", source_type)
+                    logger.warning("Validation failed for data source: %s", source_type.value)
 
             except Exception:
                 logger.exception("Failed to initialize data source %s.", source_config)
@@ -218,194 +227,3 @@ class DataSourceManager:
             logger.info("Removed %d duplicate content items", removed_count)
 
         return deduplicated
-
-
-class BackwardCompatibilityAdapter:
-    """Adapter for backward compatibility with existing server implementation.
-
-    This adapter allows the existing server code to use the new data source
-    system while maintaining the same interface and behavior.
-    """
-
-    def __init__(self, data_source_manager: DataSourceManager, chunker):
-        """Initialize the compatibility adapter.
-
-        Args:
-            data_source_manager: Data source manager instance
-            chunker: Existing chunker instance for processing content
-        """
-        self.data_source_manager = data_source_manager
-        self.chunker = chunker
-
-    async def index_codebase_with_sources(
-        self, root_path: str | None = None, patterns: list[str] | None = None
-    ) -> dict[str, Any]:
-        """Index codebase using the new data source system.
-
-        This method provides the same interface as the original index_codebase
-        method but uses the new data source system underneath.
-
-        Args:
-            root_path: Root path (for backward compatibility, may be ignored)
-            patterns: File patterns (for backward compatibility, may be ignored)
-
-        Returns:
-            Dictionary with indexing results in the same format as original
-        """
-        # Discover content from all sources
-        content_items = await self.data_source_manager.discover_all_content()
-
-        # Convert content items to code chunks
-        all_chunks = []
-        processed_languages = set()
-
-        for item in content_items:
-            try:
-                # Read content from the item
-                content = await self.data_source_manager.read_content_item(item)
-
-                # Convert to Path for chunker compatibility
-                if item.content_type == "file":
-                    file_path = Path(item.path)
-                else:
-                    # For non-file content, create a virtual path
-                    file_path = Path(f"{item.content_type}_{item.id}.txt")
-
-                # Chunk the content
-                chunks = self.chunker.chunk_file(file_path, content)
-
-                # Enhance chunks with source metadata
-                for chunk in chunks:
-                    chunk.metadata = chunk.metadata or {}
-                    chunk.metadata.update({
-                        "source_id": item.source_id,
-                        "content_type": item.content_type,
-                        "original_path": item.path,
-                    })
-
-                all_chunks.extend(chunks)
-
-                if chunks and item.language:
-                    processed_languages.add(item.language)
-
-            except Exception as e:
-                logger.warning("Error processing content item %s: %s", item.path, e)
-                continue
-
-        # Return results in the same format as original method
-        return {
-            "status": "success",
-            "files_processed": len(content_items),
-            "total_chunks": len(all_chunks),
-            "languages_found": list(processed_languages),
-            "data_sources_used": [
-                source.source_id
-                for source in self.data_source_manager._active_sources  # noqa: SLF001
-            ],
-            "source_statistics": self._get_source_statistics(content_items),
-        }
-
-    def _get_source_statistics(self, content_items: list[ContentItem]) -> dict[str, Any]:
-        """Get statistics about content discovery by source."""
-        stats = {}
-
-        for item in content_items:
-            source_id = item.source_id or "unknown"
-            content_type = item.content_type
-
-            if source_id not in stats:
-                stats[source_id] = {"total_items": 0, "content_types": {}}
-
-            stats[source_id]["total_items"] += 1
-
-            if content_type not in stats[source_id]["content_types"]:
-                stats[source_id]["content_types"][content_type] = 0
-
-            stats[source_id]["content_types"][content_type] += 1
-
-        return stats
-
-
-def integrate_data_sources_with_config(config_class: type) -> type:
-    """Integrate data source system with existing configuration.
-
-    This function extends the existing configuration system to support
-    data sources while maintaining backward compatibility.
-
-    Args:
-        config_class: Existing configuration class to extend
-
-    Returns:
-        Extended configuration class with data source support
-    """
-    # Extend the config class with data sources support
-    extended_class = extend_config_with_data_sources(config_class)
-
-    # Add initialization method for data source manager
-    def create_data_source_manager(self) -> DataSourceManager:
-        """Create a data source manager from this configuration."""
-        self.ensure_data_sources_initialized()
-        return DataSourceManager(self.get_data_sources_config())
-
-    extended_class.create_data_source_manager = create_data_source_manager
-
-    return extended_class
-
-
-def create_backward_compatible_server_integration(server_class: type) -> type:
-    """Create backward compatible integration for existing server class.
-
-    This function extends the existing server class to optionally use
-    the new data source system while maintaining full backward compatibility.
-
-    Args:
-        server_class: Existing server class to extend
-
-    Returns:
-        Extended server class with optional data source support
-    """
-    # Store original methods
-    original_init = server_class.__init__
-    original_index_codebase = getattr(server_class, "index_codebase", None)
-
-    def enhanced_init(self, config: DataSourcesConfig | None = None) -> None:
-        """Enhanced initialization with optional data source support."""
-        # Call original initialization
-        original_init(self, config)
-
-        # Add data source manager (optional)
-        self._data_source_manager = None
-        self._backward_compatibility_adapter = None
-        self._use_data_sources = getattr(self.config, "data_sources", None) is not None and getattr(
-            self.config.data_sources, "enabled", False
-        )
-
-    async def enhanced_index_codebase(
-        self, root_path: str, patterns: list[str] | None = None
-    ) -> Any:
-        """Enhanced index_codebase with optional data source support."""
-        # Check if we should use the new data source system
-        if self._use_data_sources and hasattr(self.config, "create_data_source_manager"):
-            # Use new data source system
-            if not self._data_source_manager:
-                self._data_source_manager = self.config.create_data_source_manager()
-                await self._data_source_manager.initialize_sources()
-
-                self._backward_compatibility_adapter = BackwardCompatibilityAdapter(
-                    self._data_source_manager, self.chunker
-                )
-
-            return await self._backward_compatibility_adapter.index_codebase_with_sources(
-                root_path, patterns
-            )
-        # Use original implementation
-        if original_index_codebase:
-            return await original_index_codebase(self, root_path, patterns)
-        raise NotImplementedError("Original index_codebase method not found")
-
-    # Replace methods
-    server_class.__init__ = enhanced_init
-    if original_index_codebase:
-        server_class.index_codebase = enhanced_index_codebase
-
-    return server_class

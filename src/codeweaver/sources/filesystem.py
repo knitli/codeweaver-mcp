@@ -17,43 +17,42 @@ import logging
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
-from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceCapability, SourceWatcher
+from pydantic import ConfigDict, Field, field_validator
+
+from codeweaver._types.source_capabilities import SourceCapabilities
+from codeweaver._types.source_enums import ContentType, SourceProvider
+from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceConfig, SourceWatcher
 
 
 logger = logging.getLogger(__name__)
 
 
-class FileSystemSourceConfig(TypedDict, total=False):
+class FileSystemSourceConfig(SourceConfig):
     """Configuration specific to file system data sources."""
 
-    # Inherited from BaseSourceConfig
-    enabled: bool
-    priority: int
-    source_id: str
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    max_file_size_mb: int
-    batch_size: int
-    max_concurrent_requests: int
-    request_timeout_seconds: int
-    enable_change_watching: bool
-    change_check_interval_seconds: int
-    enable_content_deduplication: bool
-    enable_metadata_extraction: bool
-    supported_languages: list[str]
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     # File system specific settings
-    root_path: str
-    follow_symlinks: bool
-    use_gitignore: bool
-    additional_ignore_patterns: list[str]
-    recursive_discovery: bool
-    file_extensions: list[str]
+    root_path: str = Field(".", description="Root directory path")
+    follow_symlinks: bool = Field(False, description="Follow symbolic links")
+    use_gitignore: bool = Field(True, description="Respect .gitignore files")
+    additional_ignore_patterns: list[str] = Field(default_factory=list, description="Additional ignore patterns")
+    recursive_discovery: bool = Field(True, description="Recursive directory discovery")
+    file_extensions: list[str] = Field(default_factory=list, description="Specific file extensions to include")
 
-    # Legacy compatibility
-    patterns: list[str]  # For backward compatibility with existing code
+    @field_validator('root_path')
+    @classmethod
+    def validate_root_path(cls, v: str) -> str:
+        """Validate that root path exists and is a directory."""
+        from pathlib import Path
+        path = Path(v)
+        if not path.exists():
+            raise ValueError(f"Root path does not exist: {v}")
+        if not path.is_dir():
+            raise ValueError(f"Root path is not a directory: {v}")
+        return str(path.resolve())
 
 
 class FileSystemSourceWatcher(SourceWatcher):
@@ -180,7 +179,7 @@ class FileSystemSourceWatcher(SourceWatcher):
 
             return ContentItem(
                 path=str(file_path),
-                content_type="file",
+                content_type=ContentType.FILE,
                 metadata={
                     "file_extension": file_path.suffix,
                     "relative_path": str(file_path.relative_to(self.root_path)),
@@ -219,18 +218,25 @@ class FileSystemSource(AbstractDataSource):
         Args:
             source_id: Unique identifier for this source instance
         """
-        super().__init__("filesystem", source_id)
+        super().__init__(SourceProvider.FILESYSTEM, source_id)
 
-    def get_capabilities(self) -> set[SourceCapability]:
-        """Get capabilities supported by file system source."""
-        return {
-            SourceCapability.CONTENT_DISCOVERY,
-            SourceCapability.CONTENT_READING,
-            SourceCapability.CHANGE_WATCHING,
-            SourceCapability.METADATA_EXTRACTION,
-            SourceCapability.BATCH_PROCESSING,
-            SourceCapability.CONTENT_DEDUPLICATION,
-        }
+    # Define capabilities as class attribute
+    CAPABILITIES = SourceCapabilities(
+        supports_content_discovery=True,
+        supports_content_reading=True,
+        supports_change_watching=True,
+        supports_metadata_extraction=True,
+        supports_batch_processing=True,
+        supports_content_deduplication=True,
+        max_content_size_mb=100,
+        max_concurrent_requests=8,
+        required_dependencies=[],
+        optional_dependencies=["watchdog"]
+    )
+
+    def get_capabilities(self) -> SourceCapabilities:
+        """Get capabilities - no hardcoding needed."""
+        return self.CAPABILITIES
 
     async def discover_content(self, config: FileSystemSourceConfig) -> list[ContentItem]:
         """Discover files from the file system.
@@ -285,7 +291,7 @@ class FileSystemSource(AbstractDataSource):
         Returns:
             Text content of the file
         """
-        if item.content_type != "file":
+        if item.content_type != ContentType.FILE:
             raise ValueError(
                 f"Unsupported content type for file system source: {item.content_type}"
             )
@@ -470,7 +476,7 @@ class FileSystemSource(AbstractDataSource):
 
             return ContentItem(
                 path=str(file_path),
-                content_type="file",
+                content_type=ContentType.FILE,
                 metadata={
                     "file_extension": file_path.suffix,
                     "relative_path": str(relative_path),

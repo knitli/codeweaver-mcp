@@ -27,6 +27,7 @@ async def test_backend_factory() -> bool | None:
         # Test basic Qdrant backend creation
         config = BackendConfig(
             provider="qdrant",
+            kind="combined",
             url="http://localhost:6333",  # Default local Qdrant
             api_key=None,
             enable_hybrid_search=False,
@@ -38,6 +39,7 @@ async def test_backend_factory() -> bool | None:
         # Test hybrid backend creation
         hybrid_config = BackendConfig(
             provider="qdrant",
+            kind="combined",
             url="http://localhost:6333",
             api_key=None,
             enable_hybrid_search=True,
@@ -65,7 +67,7 @@ async def test_backend_protocol() -> bool | None:
 
     try:
         # Create a basic backend for protocol testing
-        config = BackendConfig(provider="qdrant", url="http://localhost:6333", api_key=None)
+        config = BackendConfig(provider="qdrant", kind="combined", url="http://localhost:6333", api_key=None)
 
         backend = BackendFactory.create_backend(config)
 
@@ -106,7 +108,7 @@ def test_configuration_integration() -> bool | None:
 
         # Test backend config creation from legacy config
         if hasattr(config, "qdrant"):
-            BackendConfig(provider="qdrant", url=config.qdrant.url, api_key=config.qdrant.api_key)
+            BackendConfig(provider="qdrant", kind="combined", url=config.qdrant.url, api_key=config.qdrant.api_key)
             logger.info("✅ Backend config created from legacy config")
 
     except Exception:

@@ -10,41 +10,12 @@ Defines universal interfaces that all provider implementations must follow,
 enabling seamless integration of different embedding and reranking services.
 """
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
-from codeweaver._types.enums import BaseEnum, RerankResult
-from codeweaver._types.providers import (
-    EmbeddingProviderBase,
-    ProviderCapability,
-    ProviderInfo,
-    RerankProviderBase,
-)
-
-
-class ProviderKind(BaseEnum):
-    """Enum for different provider kinds."""
-
-    EMBEDDING = "embedding"
-    RERANKING = "reranking"
-    COMBINED = "combined"  # Supports both embedding and reranking
-    LOCAL_EMBEDDING = "local_embedding"  # Local embedding provider without API key
-    CUSTOM = "custom"  # Custom provider with arbitrary capabilities
-
-    @property
-    def kind(self) -> type[type]:
-        """Get the string representation of the provider kind."""
-        match self:
-            case ProviderKind.EMBEDDING:
-                return EmbeddingProvider
-            case ProviderKind.RERANKING:
-                return RerankProvider
-            case ProviderKind.COMBINED:
-                return CombinedProvider
-            case ProviderKind.LOCAL_EMBEDDING:
-                return LocalEmbeddingProvider
-            case ProviderKind.CUSTOM:
-                raise NotImplementedError("We have not implemented a custom provider yet.")
+from codeweaver._types.enums import RerankResult
+from codeweaver._types.provider_enums import ProviderKind
+from codeweaver._types.provider_registry import EmbeddingProviderInfo
 
 
 @runtime_checkable
@@ -110,7 +81,7 @@ class EmbeddingProvider(Protocol):
         """
         ...
 
-    def get_provider_info(self) -> ProviderInfo:
+    def get_provider_info(self) -> EmbeddingProviderInfo:
         """Get information about this provider's capabilities."""
         ...
 
@@ -162,7 +133,128 @@ class RerankProvider(Protocol):
         """
         ...
 
-    def get_provider_info(self) -> ProviderInfo:
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about this provider's capabilities."""
+        ...
+
+
+class EmbeddingProviderBase(ABC):
+    """Abstract base class for embedding providers with common functionality."""
+
+    def __init__(self, config: Any):
+        """Initialize the provider with configuration.
+
+        Args:
+            config: Configuration object (Pydantic model or dict)
+        """
+        self.config = config
+        self._validate_config()
+
+    @abstractmethod
+    def _validate_config(self) -> None:
+        """Validate the provider configuration.
+
+        Raises:
+            ValueError: If configuration is invalid or missing required values
+        """
+        ...
+
+    @abstractmethod
+    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        """Generate embeddings for multiple documents."""
+        ...
+
+    @abstractmethod
+    async def embed_query(self, text: str) -> list[float]:
+        """Generate embedding for a single query."""
+        ...
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        """Get the provider name."""
+        ...
+
+    @property
+    @abstractmethod
+    def model_name(self) -> str:
+        """Get the current model name."""
+        ...
+
+    @property
+    @abstractmethod
+    def dimension(self) -> int:
+        """Get the embedding dimension."""
+        ...
+
+    @property
+    def max_batch_size(self) -> int | None:
+        """Get the maximum batch size (default: None = unlimited)."""
+        return None
+
+    @property
+    def max_input_length(self) -> int | None:
+        """Get the maximum input length (default: None = unlimited)."""
+        return None
+
+    @abstractmethod
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about this provider's capabilities."""
+        ...
+
+
+class RerankProviderBase(ABC):
+    """Abstract base class for reranking providers with common functionality."""
+
+    def __init__(self, config: Any):
+        """Initialize the provider with configuration.
+
+        Args:
+            config: Configuration object (Pydantic model or dict)
+        """
+        self.config = config
+        self._validate_config()
+
+    @abstractmethod
+    def _validate_config(self) -> None:
+        """Validate the provider configuration.
+
+        Raises:
+            ValueError: If configuration is invalid or missing required values
+        """
+        ...
+
+    @abstractmethod
+    async def rerank(
+        self, query: str, documents: list[str], top_k: int | None = None
+    ) -> list[RerankResult]:
+        """Rerank documents based on relevance to the query."""
+        ...
+
+    @property
+    @abstractmethod
+    def provider_name(self) -> str:
+        """Get the provider name."""
+        ...
+
+    @property
+    @abstractmethod
+    def model_name(self) -> str:
+        """Get the current reranking model name."""
+        ...
+
+    @property
+    def max_documents(self) -> int | None:
+        """Get the maximum number of documents (default: None = unlimited)."""
+        return None
+
+    @property
+    def max_query_length(self) -> int | None:
+        """Get the maximum query length (default: None = unlimited)."""
+        return None
+
+    @abstractmethod
+    def get_provider_info(self) -> EmbeddingProviderInfo:
         """Get information about this provider's capabilities."""
         ...
 
@@ -170,40 +262,19 @@ class RerankProvider(Protocol):
 class LocalEmbeddingProvider(EmbeddingProviderBase):
     """Base class for local embedding providers that don't require API keys."""
 
-    def __init__(self, config: dict[str, Any]):
-        """Initialize local provider.
-
-        Args:
-            config: Configuration dictionary (API key not required)
-        """
-        # Override to not require API key validation
-        self.config = config
-        # Skip base class __init__ to avoid API key validation
-        self._validate_local_config()
-
-    @abstractmethod
-    def _validate_local_config(self) -> None:
-        """Validate local provider configuration (no API key required)."""
-        ...
-
     def _validate_config(self) -> None:
-        """Implement abstract method but delegate to local validation."""
-        self._validate_local_config()
-
-    @property
-    def requires_api_key(self) -> bool:
-        """Local providers don't require API keys."""
-        return False
+        """Local providers typically have minimal validation requirements."""
+        # Override in subclasses for specific validation
 
 
 class CombinedProvider(EmbeddingProviderBase, RerankProviderBase):
     """Base class for providers that support both embedding and reranking."""
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: Any):
         """Initialize combined provider.
 
         Args:
-            config: Configuration dictionary containing settings for both capabilities
+            config: Configuration object containing settings for both capabilities
         """
         self.config = config
         self._validate_config()
@@ -212,47 +283,3 @@ class CombinedProvider(EmbeddingProviderBase, RerankProviderBase):
     def _validate_config(self) -> None:
         """Validate configuration for both embedding and reranking."""
         ...
-
-    def get_embedding_info(self) -> ProviderInfo:
-        """Get provider info for embedding capability."""
-        info = self.get_provider_info()
-        # Filter to only embedding capabilities
-        embedding_capabilities = [
-            cap for cap in info.supported_capabilities if cap == ProviderCapability.EMBEDDING
-        ]
-        return ProviderInfo(
-            name=info.name,
-            display_name=f"{info.display_name} (Embedding)",
-            description=f"{info.description} - Embedding only",
-            supported_capabilities=embedding_capabilities,
-            default_models={k: v for k, v in info.default_models.items() if k == "embedding"},
-            supported_models={k: v for k, v in info.supported_models.items() if k == "embedding"},
-            rate_limits=info.rate_limits,
-            requires_api_key=info.requires_api_key,
-            supports_batch_processing=info.supports_batch_processing,
-            max_batch_size=info.max_batch_size,
-            max_input_length=info.max_input_length,
-            native_dimensions=info.native_dimensions,
-        )
-
-    def get_reranking_info(self) -> ProviderInfo:
-        """Get provider info for reranking capability."""
-        info = self.get_provider_info()
-        # Filter to only reranking capabilities
-        reranking_capabilities = [
-            cap for cap in info.supported_capabilities if cap == ProviderCapability.RERANKING
-        ]
-        return ProviderInfo(
-            name=info.name,
-            display_name=f"{info.display_name} (Reranking)",
-            description=f"{info.description} - Reranking only",
-            supported_capabilities=reranking_capabilities,
-            default_models={k: v for k, v in info.default_models.items() if k == "reranking"},
-            supported_models={k: v for k, v in info.supported_models.items() if k == "reranking"},
-            rate_limits=info.rate_limits,
-            requires_api_key=info.requires_api_key,
-            supports_batch_processing=info.supports_batch_processing,
-            max_batch_size=info.max_batch_size,
-            max_input_length=info.max_input_length,
-            native_dimensions=info.native_dimensions,
-        )

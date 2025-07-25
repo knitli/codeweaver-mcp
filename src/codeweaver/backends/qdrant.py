@@ -29,17 +29,18 @@ from qdrant_client.models import (
     VectorParams,
 )
 
+from codeweaver._types.backends import (
+    CollectionInfo,
+    FilterCondition,
+    SearchFilter,
+    SearchResult,
+    VectorPoint,
+)
+from codeweaver._types.enums import DistanceMetric, HybridStrategy
 from codeweaver.backends.base import (
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,
-    CollectionInfo,
-    DistanceMetric,
-    FilterCondition,
-    HybridStrategy,
-    SearchFilter,
-    SearchResult,
-    VectorPoint,
 )
 
 
@@ -357,24 +358,26 @@ class QdrantHybridBackend(QdrantBackend):
         Note: In Qdrant, sparse vectors are configured at collection creation time.
         This method validates that sparse vectors are enabled.
         """
+
+        def _raise_backend_error(msg: str, e: BackendError | Any = None) -> None:
+            if e and not isinstance(e, BackendError):
+                raise BackendError(msg, backend_type="qdrant", original_error=e) from e
+            if e:
+                return
+            raise BackendError(msg)
+
         try:
             collection_info = await self.get_collection_info(collection_name)
             if not collection_info.supports_sparse_vectors:
-                raise BackendError(
+                _raise_backend_error(
                     f"Collection {collection_name} does not support sparse vectors. "
-                    "Recreate with enable_sparse_vectors=True",
-                    backend_type="qdrant",
+                    "Recreate with enable_sparse_vectors=True"
                 )
 
             logger.info("Sparse index already configured for collection %s", collection_name)
 
         except Exception as e:
-            if not isinstance(e, BackendError):
-                raise BackendError(
-                    f"Failed to validate sparse index for {collection_name}",
-                    backend_type="qdrant",
-                    original_error=e,
-                ) from e
+            _raise_backend_error(f"Failed to validate sparse index for {collection_name}", e)
             raise
 
     async def hybrid_search(

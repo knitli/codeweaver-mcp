@@ -12,9 +12,16 @@ Supports GPU acceleration and model caching for improved performance.
 
 import logging
 
-from typing import Any, ClassVar
+from typing import Any
 
-from codeweaver.providers.base import LocalEmbeddingProvider, ProviderCapability, ProviderInfo
+from codeweaver._types.provider_enums import ProviderCapability, ProviderType
+from codeweaver._types.provider_registry import (
+    EmbeddingProviderInfo,
+    get_provider_registry_entry,
+    register_provider_class,
+)
+from codeweaver.providers.base import LocalEmbeddingProvider
+from codeweaver.providers.config import SentenceTransformersConfig
 
 
 try:
@@ -32,34 +39,15 @@ logger = logging.getLogger(__name__)
 class SentenceTransformersProvider(LocalEmbeddingProvider):
     """SentenceTransformers provider for local embeddings."""
 
-    # Provider metadata
-    PROVIDER_NAME: ClassVar[str] = "sentence-transformers"
-    DISPLAY_NAME: ClassVar[str] = "SentenceTransformers"
-    DESCRIPTION: ClassVar[str] = (
-        "Local embedding models with no API key required, supports GPU acceleration"
-    )
-
-    # Popular code/text embedding models
-    SUPPORTED_MODELS: ClassVar[dict[str, int]] = {
-        "all-MiniLM-L6-v2": 384,
-        "all-mpnet-base-v2": 768,
-        "multi-qa-MiniLM-L6-cos-v1": 384,
-        "multi-qa-mpnet-base-dot-v1": 768,
-        "all-distilroberta-v1": 768,
-        "msmarco-distilbert-base-tas-b": 768,
-        "paraphrase-MiniLM-L6-v2": 384,
-        "paraphrase-mpnet-base-v2": 768,
-    }
-
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any] | SentenceTransformersConfig):
         """Initialize SentenceTransformers provider.
 
         Args:
-            config: Configuration dictionary with keys:
-                - model: Model name (default: all-MiniLM-L6-v2)
-                - device: Device to use ('cpu', 'cuda', 'auto') (default: auto)
-                - normalize_embeddings: Whether to normalize embeddings (default: True)
-                - batch_size: Batch size for processing (default: 32)
+            config: Configuration dictionary or SentenceTransformersConfig instance with settings for:
+                - model: Model name
+                - device: Device to use ('cpu', 'cuda', 'auto')
+                - normalize_embeddings: Whether to normalize embeddings
+                - batch_size: Batch size for processing
         """
         super().__init__(config)
 
@@ -69,11 +57,31 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 "Install with: uv add sentence-transformers"
             )
 
+        # Get registry entry for validation and defaults
+        self._registry_entry = get_provider_registry_entry(ProviderType.SENTENCE_TRANSFORMERS)
+
+        # Convert to Pydantic config if needed
+        if isinstance(config, dict):
+            # Set model default from registry if not provided
+            if "model" not in config:
+                config["model"] = self._registry_entry.capabilities.default_embedding_model
+            self._config = SentenceTransformersConfig(**config)
+        else:
+            self._config = config
+
+        # Validate model is supported (allow any model, just warn about popular ones)
+        if self._config.model not in self._registry_entry.capabilities.supported_embedding_models:
+            logger.info(
+                "Using custom SentenceTransformers model: %s. Popular models: %s",
+                self._config.model,
+                ", ".join(list(self._registry_entry.capabilities.supported_embedding_models)[:5]),
+            )
+
         # Model configuration
-        self._model_name = self.config.get("model", "all-MiniLM-L6-v2")
-        self._device = self.config.get("device", "auto")
-        self._normalize_embeddings = self.config.get("normalize_embeddings", True)
-        self._batch_size = self.config.get("batch_size", 32)
+        self._model_name = self._config.model
+        self._device = getattr(self._config, "device", "cpu")
+        self._normalize_embeddings = self._config.normalize_embeddings
+        self._batch_size = self._config.batch_size
 
         # Load model
         self._model = SentenceTransformer(self._model_name, device=self._device)
@@ -83,25 +91,14 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
 
     def _validate_local_config(self) -> None:
         """Validate SentenceTransformers configuration."""
-        model = self.config.get("model", "all-MiniLM-L6-v2")
-        if model not in self.SUPPORTED_MODELS:
-            # Allow any model name, just warn about popular ones
-            logger.info(
-                "Using custom SentenceTransformers model: %s. Popular code models: %s",
-                model,
-                ", ".join(list(self.SUPPORTED_MODELS.keys())[:5]),
-            )
-
-        batch_size = self.config.get("batch_size", 32)
-        if not isinstance(batch_size, int) or batch_size < 1:
-            raise ValueError("batch_size must be a positive integer")
+        # Validation is now handled by Pydantic config
 
     # EmbeddingProvider implementation
 
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
-        return self.PROVIDER_NAME
+        return ProviderType.SENTENCE_TRANSFORMERS.value
 
     @property
     def model_name(self) -> str:
@@ -160,30 +157,50 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
 
     # Provider info methods
 
-    def get_provider_info(self) -> ProviderInfo:
-        """Get information about SentenceTransformers capabilities."""
-        return self.get_static_provider_info()
-
-    @classmethod
-    def get_static_provider_info(cls) -> ProviderInfo:
-        """Get static provider information without instantiation."""
-        return ProviderInfo(
-            name=cls.PROVIDER_NAME,
-            display_name=cls.DISPLAY_NAME,
-            description=cls.DESCRIPTION,
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about SentenceTransformers capabilities from centralized registry."""
+        capabilities = self._registry_entry.capabilities
+        return EmbeddingProviderInfo(
+            name=ProviderType.SENTENCE_TRANSFORMERS.value,
+            display_name=self._registry_entry.display_name,
+            description=self._registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDING,
+                ProviderCapability.EMBEDDINGS,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
-            default_models={"embedding": "all-MiniLM-L6-v2"},
-            supported_models={"embedding": list(cls.SUPPORTED_MODELS.keys())},
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model},
+            supported_models={"embedding": capabilities.supported_embedding_models},
             rate_limits=None,  # No rate limits for local models
             requires_api_key=False,
-            supports_batch_processing=True,
-            max_batch_size=32,
-            max_input_length=2000,
-            native_dimensions=cls.SUPPORTED_MODELS,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
+        )
+
+    @classmethod
+    def get_static_provider_info(cls) -> EmbeddingProviderInfo:
+        """Get static provider information from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.SENTENCE_TRANSFORMERS)
+        capabilities = registry_entry.capabilities
+        return EmbeddingProviderInfo(
+            name=ProviderType.SENTENCE_TRANSFORMERS.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
+            supported_capabilities=[
+                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.LOCAL_INFERENCE,
+                ProviderCapability.BATCH_PROCESSING,
+            ],
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model},
+            supported_models={"embedding": capabilities.supported_embedding_models},
+            rate_limits=None,  # No rate limits for local models
+            requires_api_key=False,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
         )
 
     @classmethod
@@ -195,8 +212,18 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 "sentence-transformers package not installed (install with: uv add sentence-transformers)",
             )
 
-        # Only embedding is supported
-        if capability == ProviderCapability.EMBEDDING:
+        # Check supported capabilities
+        supported_capabilities = {
+            ProviderCapability.EMBEDDINGS,
+            ProviderCapability.LOCAL_INFERENCE,
+            ProviderCapability.BATCH_PROCESSING,
+        }
+
+        if capability in supported_capabilities:
             return True, None
 
         return False, f"Capability {capability.value} not supported by SentenceTransformers"
+
+
+# Register the SentenceTransformers provider in the registry
+register_provider_class(ProviderType.SENTENCE_TRANSFORMERS, SentenceTransformersProvider)

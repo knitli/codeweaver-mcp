@@ -10,34 +10,27 @@ This module provides comprehensive abstractions for 15+ vector databases
 with support for hybrid search, streaming operations, and transactions.
 """
 
+from codeweaver._types.backends import CollectionInfo, FilterCondition, SearchResult, VectorPoint
+from codeweaver._types.enums import DistanceMetric
 from codeweaver.backends.base import (
     BackendAuthError,
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,
-    BackendResourceProvider,
     BackendUnsupportedOperationError,
     BackendVectorDimensionMismatchError,
-    CollectionInfo,
-    DistanceMetric,
-    FilterCondition,
     HybridSearchBackend,
-    SearchResult,
     StreamingBackend,
     TransactionalBackend,
     VectorBackend,
-    VectorPoint,
 )
 from codeweaver.backends.config import (
     EXAMPLE_CONFIGS,
-    BackendConfig,
     BackendConfigExtended,
     create_backend_config_from_env,
-    create_backend_config_from_legacy,
     get_provider_specific_config,
-    migrate_config_to_toml,
 )
-from codeweaver.backends.factory import BackendFactory, create_backend
+from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
 
 
@@ -54,7 +47,6 @@ __all__ = [
     # Factory
     "BackendFactory",
     # Enums
-    "BackendResourceProvider",
     "BackendUnsupportedOperationError",
     "BackendVectorDimensionMismatchError",
     "CollectionInfo",
@@ -71,9 +63,6 @@ __all__ = [
     "VectorBackend",
     # Data structures
     "VectorPoint",
-    "create_backend",
     "create_backend_config_from_env",
-    "create_backend_config_from_legacy",
     "get_provider_specific_config",
-    "migrate_config_to_toml",
 ]

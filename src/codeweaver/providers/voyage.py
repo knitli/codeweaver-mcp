@@ -13,14 +13,17 @@ Supports both embedding generation and document reranking with rate limiting.
 
 import logging
 
-from typing import Any, ClassVar
+from typing import Any
 
-from codeweaver.providers.base import (
-    CombinedProvider,
-    ProviderCapability,
-    ProviderInfo,
-    RerankResult,
+from codeweaver._types.enums import RerankResult
+from codeweaver._types.provider_enums import ProviderCapability, ProviderType
+from codeweaver._types.provider_registry import (
+    EmbeddingProviderInfo,
+    get_provider_registry_entry,
+    register_provider_class,
 )
+from codeweaver.providers.base import CombinedProvider
+from codeweaver.providers.config import VoyageConfig
 from codeweaver.rate_limiter import (
     calculate_embedding_tokens,
     calculate_rerank_tokens,
@@ -43,42 +46,11 @@ logger = logging.getLogger(__name__)
 class VoyageAIProvider(CombinedProvider):
     """VoyageAI provider supporting both embeddings and reranking."""
 
-    # Provider metadata
-    PROVIDER_NAME: ClassVar[str] = "voyage"
-    DISPLAY_NAME: ClassVar[str] = "Voyage AI"
-    DESCRIPTION: ClassVar[str] = (
-        "Best-in-class code embeddings and reranking with specialized models"
-    )
-
-    # Supported models
-    EMBEDDING_MODELS: ClassVar[dict[str, int]] = {
-        "voyage-code-3": 1024,
-        "voyage-3": 1024,
-        "voyage-3-lite": 512,
-        "voyage-large-2": 1536,
-        "voyage-2": 1024,
-    }
-
-    RERANKING_MODELS: ClassVar[list[str]] = ["voyage-rerank-2", "voyage-rerank-lite-1"]
-
-    # Rate limits (requests per minute)
-    RATE_LIMITS: ClassVar[dict[str, int]] = {
-        "embed_requests": 100,
-        "embed_tokens": 1000000,
-        "rerank_requests": 100,
-        "rerank_tokens": 100000,
-    }
-
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: VoyageConfig | dict[str, Any]):
         """Initialize VoyageAI provider.
 
         Args:
-            config: Configuration dictionary with keys:
-                - api_key: VoyageAI API key
-                - model: Embedding model name (default: voyage-code-3)
-                - rerank_model: Reranking model name (default: voyage-rerank-2)
-                - dimension: Custom dimension (optional)
-                - rate_limiter: RateLimiter instance (optional)
+            config: VoyageConfig instance or configuration dictionary
         """
         super().__init__(config)
 
@@ -88,30 +60,34 @@ class VoyageAIProvider(CombinedProvider):
         self.client = voyageai.Client(api_key=self.config["api_key"])
         self.rate_limiter = self.config.get("rate_limiter")
 
+        # Get provider registry info
+        self._registry_entry = get_provider_registry_entry(ProviderType.VOYAGE_AI)
+        self._capabilities = self._registry_entry.capabilities
+
         # Embedding configuration
-        self._embedding_model = self.config.get("model", "voyage-code-3")
+        self._embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         self._dimension = self.config.get("dimension")
         if self._dimension is None:
-            self._dimension = self.EMBEDDING_MODELS.get(self._embedding_model, 1024)
+            self._dimension = self._capabilities.native_dimensions.get(self._embedding_model, 1024)
 
         # Reranking configuration
-        self._rerank_model = self.config.get("rerank_model", "voyage-rerank-2")
+        self._rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
 
     def _validate_config(self) -> None:
         """Validate VoyageAI configuration."""
         if not self.config.get("api_key"):
             raise ValueError("VoyageAI API key is required")
 
-        embedding_model = self.config.get("model", "voyage-code-3")
-        if embedding_model not in self.EMBEDDING_MODELS:
-            available = ", ".join(self.EMBEDDING_MODELS.keys())
+        embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
+        if embedding_model not in self._capabilities.supported_embedding_models:
+            available = ", ".join(self._capabilities.supported_embedding_models)
             raise ValueError(
                 f"Unknown VoyageAI embedding model: {embedding_model}. Available: {available}"
             )
 
-        rerank_model = self.config.get("rerank_model", "voyage-rerank-2")
-        if rerank_model not in self.RERANKING_MODELS:
-            available = ", ".join(self.RERANKING_MODELS)
+        rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
+        if rerank_model not in self._capabilities.supported_reranking_models:
+            available = ", ".join(self._capabilities.supported_reranking_models)
             raise ValueError(
                 f"Unknown VoyageAI reranking model: {rerank_model}. Available: {available}"
             )
@@ -121,7 +97,7 @@ class VoyageAIProvider(CombinedProvider):
     @property
     def provider_name(self) -> str:
         """Get the provider name."""
-        return self.PROVIDER_NAME
+        return ProviderType.VOYAGE_AI.value
 
     @property
     def model_name(self) -> str:
@@ -159,7 +135,6 @@ class VoyageAIProvider(CombinedProvider):
 
         else:
             return result.embeddings
-
 
     @rate_limited("voyage_embed_query", lambda self, text, **kwargs: max(1, len(text) // 4))
     async def embed_query(self, text: str) -> list[float]:
@@ -225,58 +200,61 @@ class VoyageAIProvider(CombinedProvider):
         else:
             return rerank_results
 
+    def get_provider_info(self) -> EmbeddingProviderInfo:
+        """Get information about VoyageAI capabilities from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.VOYAGE_AI)
+        capabilities = registry_entry.capabilities
 
-    # Provider info methods
-
-    def get_provider_info(self) -> ProviderInfo:
-        """Get information about VoyageAI capabilities."""
-        return ProviderInfo(
-            name=self.PROVIDER_NAME,
-            display_name=self.DISPLAY_NAME,
-            description=self.DESCRIPTION,
+        return EmbeddingProviderInfo(
+            name=ProviderType.VOYAGE_AI.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDING,
+                ProviderCapability.EMBEDDINGS,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
                 ProviderCapability.CUSTOM_DIMENSIONS,
             ],
-            default_models={"embedding": "voyage-code-3", "reranking": "voyage-rerank-2"},
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model, "reranking": capabilities.default_reranking_model},
             supported_models={
-                "embedding": list(self.EMBEDDING_MODELS.keys()),
-                "reranking": self.RERANKING_MODELS,
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
             },
-            rate_limits=self.RATE_LIMITS,
-            requires_api_key=True,
-            supports_batch_processing=True,
-            max_batch_size=self.max_batch_size,
-            max_input_length=self.max_input_length,
-            native_dimensions=self.EMBEDDING_MODELS,
+            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
         )
 
     @classmethod
-    def get_static_provider_info(cls) -> ProviderInfo:
-        """Get static provider information without instantiation."""
-        return ProviderInfo(
-            name=cls.PROVIDER_NAME,
-            display_name=cls.DISPLAY_NAME,
-            description=cls.DESCRIPTION,
+    def get_static_provider_info(cls) -> EmbeddingProviderInfo:
+        """Get static provider information from centralized registry."""
+        registry_entry = get_provider_registry_entry(ProviderType.VOYAGE_AI)
+        capabilities = registry_entry.capabilities
+
+        return EmbeddingProviderInfo(
+            name=ProviderType.VOYAGE_AI.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDING,
+                ProviderCapability.EMBEDDINGS,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
                 ProviderCapability.CUSTOM_DIMENSIONS,
             ],
-            default_models={"embedding": "voyage-code-3", "reranking": "voyage-rerank-2"},
+            capabilities=capabilities,
+            default_models={"embedding": capabilities.default_embedding_model, "reranking": capabilities.default_reranking_model},
             supported_models={
-                "embedding": list(cls.EMBEDDING_MODELS.keys()),
-                "reranking": cls.RERANKING_MODELS,
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
             },
-            rate_limits=cls.RATE_LIMITS,
-            requires_api_key=True,
-            supports_batch_processing=True,
-            max_batch_size=128,
-            max_input_length=32000,
-            native_dimensions=cls.EMBEDDING_MODELS,
+            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
         )
 
     @classmethod
@@ -286,7 +264,11 @@ class VoyageAIProvider(CombinedProvider):
             return False, "voyageai package not installed (install with: uv add voyageai)"
 
         # Both embedding and reranking are supported
-        if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
+        if capability in [ProviderCapability.EMBEDDINGS, ProviderCapability.RERANKING]:
             return True, None
 
         return False, f"Capability {capability.value} not supported by VoyageAI"
+
+
+# Register the VoyageAI provider in the registry
+register_provider_class(ProviderType.VOYAGE_AI, VoyageAIProvider)

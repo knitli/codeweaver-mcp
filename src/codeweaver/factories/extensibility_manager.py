@@ -15,10 +15,6 @@ import logging
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
-from contextlib import AbstractAsyncContextManager
-
-from typing import Any, AsyncContextManager
-
 
 from codeweaver.backends.base import VectorBackend
 from codeweaver.config import CodeWeaverConfig

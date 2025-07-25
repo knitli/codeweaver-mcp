@@ -13,19 +13,18 @@ with support for capability detection and configuration validation.
 import logging
 
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import ClassVar
 
-from codeweaver.config import EmbeddingConfig
+from codeweaver._types.provider_enums import ProviderCapability, ProviderType
+from codeweaver._types.provider_registry import EmbeddingProviderInfo
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
     EmbeddingProviderBase,
-    ProviderCapability,
-    ProviderInfo,
     RerankProvider,
     RerankProviderBase,
 )
-from codeweaver.rate_limiter import RateLimiter
+from codeweaver.providers.config import EmbeddingProviderConfig, RerankingProviderConfig
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +36,7 @@ class ProviderRegistration:
 
     provider_class: type[EmbeddingProviderBase | RerankProviderBase | CombinedProvider]
     capabilities: list[ProviderCapability]
-    provider_info: ProviderInfo
+    provider_info: EmbeddingProviderInfo
     is_available: bool = True
     unavailable_reason: str | None = None
 
@@ -54,7 +53,7 @@ class ProviderRegistry:
         cls,
         name: str,
         provider_class: type[EmbeddingProviderBase | CombinedProvider],
-        provider_info: ProviderInfo,
+        provider_info: EmbeddingProviderInfo,
         *,
         check_availability: bool = True,
     ) -> None:
@@ -71,12 +70,12 @@ class ProviderRegistry:
 
         if check_availability:
             is_available, unavailable_reason = cls._check_provider_availability(
-                provider_class, ProviderCapability.EMBEDDING
+                provider_class, ProviderCapability.EMBEDDINGS
             )
 
         registration = ProviderRegistration(
             provider_class=provider_class,
-            capabilities=[ProviderCapability.EMBEDDING],
+            capabilities=[ProviderCapability.EMBEDDINGS],
             provider_info=provider_info,
             is_available=is_available,
             unavailable_reason=unavailable_reason,
@@ -96,7 +95,7 @@ class ProviderRegistry:
         cls,
         name: str,
         provider_class: type[RerankProviderBase | CombinedProvider],
-        provider_info: ProviderInfo,
+        provider_info: EmbeddingProviderInfo,
         *,
         check_availability: bool = True,
     ) -> None:
@@ -138,7 +137,7 @@ class ProviderRegistry:
         cls,
         name: str,
         provider_class: type[CombinedProvider],
-        provider_info: ProviderInfo,
+        provider_info: EmbeddingProviderInfo,
         *,
         check_availability: bool = True,
     ) -> None:
@@ -156,7 +155,7 @@ class ProviderRegistry:
         if check_availability:
             # Check both capabilities
             embed_available, embed_reason = cls._check_provider_availability(
-                provider_class, ProviderCapability.EMBEDDING
+                provider_class, ProviderCapability.EMBEDDINGS
             )
             rerank_available, rerank_reason = cls._check_provider_availability(
                 provider_class, ProviderCapability.RERANKING
@@ -174,7 +173,7 @@ class ProviderRegistry:
         # Register for embedding
         embed_registration = ProviderRegistration(
             provider_class=provider_class,
-            capabilities=[ProviderCapability.EMBEDDING],
+            capabilities=[ProviderCapability.EMBEDDINGS],
             provider_info=provider_info,
             is_available=is_available,
             unavailable_reason=unavailable_reason,
@@ -226,7 +225,36 @@ class ProviderRegistry:
             return True, None
 
     @classmethod
-    def get_available_embedding_providers(cls) -> dict[str, ProviderInfo]:
+    def get_available_providers(cls, capability: ProviderCapability) -> dict[str, EmbeddingProviderInfo]:
+        """Get all available providers for a specific capability."""
+        cls._ensure_initialized()
+        if capability == ProviderCapability.EMBEDDINGS:
+            return cls.get_available_embedding_providers()
+        if capability == ProviderCapability.RERANKING:
+            return cls.get_available_reranking_providers()
+        return {}
+
+    @classmethod
+    def get_provider_info(cls, provider_type: ProviderType) -> EmbeddingProviderInfo | None:
+        """Get provider info by provider type."""
+        cls._ensure_initialized()
+        # Map provider type to name
+        provider_name = provider_type.value
+
+        # Check embedding providers first
+        embedding_providers = cls.get_available_embedding_providers()
+        if provider_name in embedding_providers:
+            return embedding_providers[provider_name]
+
+        # Check reranking providers
+        reranking_providers = cls.get_available_reranking_providers()
+        if provider_name in reranking_providers:
+            return reranking_providers[provider_name]
+
+        return None
+
+    @classmethod
+    def get_available_embedding_providers(cls) -> dict[str, EmbeddingProviderInfo]:
         """Get all available embedding providers."""
         cls._ensure_initialized()
         return {
@@ -236,7 +264,7 @@ class ProviderRegistry:
         }
 
     @classmethod
-    def get_available_reranking_providers(cls) -> dict[str, ProviderInfo]:
+    def get_available_reranking_providers(cls) -> dict[str, EmbeddingProviderInfo]:
         """Get all available reranking providers."""
         cls._ensure_initialized()
         return {
@@ -305,13 +333,21 @@ class ProviderRegistry:
             logger.debug("VoyageAI provider not available")
 
         try:
-            from codeweaver.providers.openai import OpenAIProvider
+            from codeweaver.providers.openai import OpenAICompatibleProvider, OpenAIProvider
 
+            # Register legacy OpenAI provider
             cls.register_embedding_provider(
                 "openai", OpenAIProvider, OpenAIProvider.get_static_provider_info()
             )
+
+            # Register flexible OpenAI-compatible provider
+            cls.register_embedding_provider(
+                "openai-compatible",
+                OpenAICompatibleProvider,
+                OpenAICompatibleProvider.get_static_provider_info()
+            )
         except ImportError:
-            logger.debug("OpenAI provider not available")
+            logger.debug("OpenAI providers not available")
 
         try:
             from codeweaver.providers.cohere import CohereProvider
@@ -355,13 +391,12 @@ class ProviderFactory:
         self.registry = registry or ProviderRegistry
 
     def create_embedding_provider(
-        self, config: EmbeddingConfig, rate_limiter: RateLimiter | None = None
+        self, config: EmbeddingProviderConfig
     ) -> EmbeddingProvider:
         """Create an embedding provider based on configuration.
 
         Args:
-            config: Embedding configuration
-            rate_limiter: Optional rate limiter
+            config: Embedding provider configuration (Pydantic model)
 
         Returns:
             Configured embedding provider instance
@@ -374,10 +409,10 @@ class ProviderFactory:
         def raise_type_error(provider_name: str) -> None:
             """Raise a TypeError for invalid provider."""
             raise TypeError(
-                "Provider %s does not implement EmbeddingProvider protocol", provider_name
+                f"Provider {provider_name} does not implement EmbeddingProvider protocol"
             )
 
-        provider_name = config.provider.lower()
+        provider_name = config.provider_type.value.lower()
         registration = self.registry.get_embedding_provider_registration(provider_name)
 
         if registration is None:
@@ -394,21 +429,8 @@ class ProviderFactory:
             )
 
         try:
-            # Convert config to dict for provider
-            provider_config = {
-                "api_key": config.api_key,
-                "model": config.model,
-                "dimension": config.dimension,
-                "batch_size": config.batch_size,
-                "base_url": getattr(config, "base_url", None),
-                "custom_headers": getattr(config, "custom_headers", {}),
-                "rate_limiter": rate_limiter,
-            }
-
-            # Remove None values
-            provider_config = {k: v for k, v in provider_config.items() if v is not None}
-
-            provider = registration.provider_class(provider_config)
+            # Pass config directly to provider - providers handle their own configuration
+            provider = registration.provider_class(config)
 
             # Ensure it implements the correct protocol
             if not isinstance(provider, EmbeddingProvider | EmbeddingProviderBase):
@@ -416,28 +438,19 @@ class ProviderFactory:
 
         except Exception as e:
             raise RuntimeError(
-                "Failed to create embedding provider %s: %s", provider_name, e
+                f"Failed to create embedding provider {provider_name}: {e}"
             ) from e
 
         else:
             return provider
 
     def create_reranking_provider(
-        self,
-        provider_name: str,
-        api_key: str | None = None,
-        model: str | None = None,
-        rate_limiter: RateLimiter | None = None,
-        **kwargs: Any,
+        self, config: RerankingProviderConfig
     ) -> RerankProvider:
         """Create a reranking provider.
 
         Args:
-            provider_name: Name of the reranking provider
-            api_key: API key for the provider
-            model: Model name to use
-            rate_limiter: Optional rate limiter
-            **kwargs: Additional provider-specific configuration
+            config: Reranking provider configuration (Pydantic model)
 
         Returns:
             Configured reranking provider instance
@@ -449,9 +462,9 @@ class ProviderFactory:
 
         def raise_type_error(provider_name: str) -> None:
             """Raise a TypeError for invalid provider."""
-            raise TypeError("Provider %s does not implement RerankProvider protocol", provider_name)
+            raise TypeError(f"Provider {provider_name} does not implement RerankProvider protocol")
 
-        provider_name = provider_name.lower()
+        provider_name = config.provider_type.value.lower()
         registration = self.registry.get_reranking_provider_registration(provider_name)
 
         if registration is None:
@@ -468,18 +481,8 @@ class ProviderFactory:
             )
 
         try:
-            # Prepare provider config
-            provider_config = {
-                "api_key": api_key,
-                "model": model,
-                "rate_limiter": rate_limiter,
-                **kwargs,
-            }
-
-            # Remove None values
-            provider_config = {k: v for k, v in provider_config.items() if v is not None}
-
-            provider = registration.provider_class(provider_config)
+            # Pass config directly to provider - providers handle their own configuration
+            provider = registration.provider_class(config)
 
             # Ensure it implements the correct protocol
             if not isinstance(provider, RerankProvider | RerankProviderBase):
@@ -494,15 +497,13 @@ class ProviderFactory:
     def get_default_reranking_provider(
         self,
         embedding_provider_name: str,
-        api_key: str | None = None,
-        rate_limiter: RateLimiter | None = None,
+        config: RerankingProviderConfig,
     ) -> RerankProvider | None:
         """Get the default reranking provider for an embedding provider.
 
         Args:
             embedding_provider_name: Name of the embedding provider
-            api_key: API key to use (if the same provider supports reranking)
-            rate_limiter: Optional rate limiter
+            config: Reranking provider configuration
 
         Returns:
             Default reranking provider or None if none available
@@ -510,20 +511,22 @@ class ProviderFactory:
         # If the embedding provider also supports reranking, use it
         if self.registry.is_reranking_provider_available(embedding_provider_name):
             try:
-                return self.create_reranking_provider(
-                    embedding_provider_name, api_key=api_key, rate_limiter=rate_limiter
-                )
+                return self.create_reranking_provider(config)
             except Exception:
                 logger.warning(
                     "Failed to create reranking provider for %s", embedding_provider_name
                 )
 
         # Fallback to VoyageAI if available (best reranking quality)
-        if self.registry.is_reranking_provider_available("voyage") and api_key:
+        if self.registry.is_reranking_provider_available("voyage"):
             try:
-                return self.create_reranking_provider(
-                    "voyage", api_key=api_key, rate_limiter=rate_limiter
+                # Create VoyageAI config for fallback
+                from codeweaver.providers.config import VoyageConfig
+                voyage_config = VoyageConfig(
+                    api_key=config.api_key,
+                    rerank_model=config.model,
                 )
+                return self.create_reranking_provider(voyage_config)
             except Exception:
                 logger.warning("Failed to create fallback VoyageAI reranking provider")
 

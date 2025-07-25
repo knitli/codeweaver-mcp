@@ -20,10 +20,10 @@ Usage:
     python main.py
 
 Environment Variables:
-    VOYAGE_API_KEY: Your Voyage AI API key
-    QDRANT_URL: Your Qdrant Cloud URL
-    QDRANT_API_KEY: Your Qdrant Cloud API key
-    COLLECTION_NAME: Name for the code collection (default: code-embeddings)
+    EMBEDDING_API_KEY: Your embedding provider API key
+    VECTOR_BACKEND_URL: Your vector database URL
+    VECTOR_BACKEND_API_KEY: Your vector database API key
+    VECTOR_BACKEND_COLLECTION: Name for the code collection (default: code-embeddings)
 """
 
 import asyncio
@@ -35,7 +35,12 @@ from fastmcp import Context, FastMCP
 
 from codeweaver.chunker import AST_GREP_AVAILABLE
 from codeweaver.config import get_config_manager
-from codeweaver.server import create_server, detect_configuration_type
+from codeweaver.server import (
+    CodeEmbeddingsServer,
+    ExtensibleCodeEmbeddingsServer,
+    create_server,
+    detect_configuration_type,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +53,7 @@ server_instance = None
 config_manager = None
 
 
-def get_server_instance():
+def get_server_instance() -> CodeEmbeddingsServer | ExtensibleCodeEmbeddingsServer:
     """Get or create the server instance with automatic type detection."""
     global server_instance, config_manager
     if server_instance is None:
@@ -232,7 +237,7 @@ async def main() -> None:
         print(f"\n❌ Configuration error: {e}")
         print("\n📋 Configuration help:")
         print("You can configure Code Weaver using:")
-        print("1. Environment variables (VOYAGE_API_KEY, QDRANT_URL, etc.)")
+        print("1. Environment variables (EMBEDDING_API_KEY, VECTOR_BACKEND_URL, etc.)")
         print("2. TOML config files in these locations:")
         print("   - .local.code-weaver.toml (workspace local)")
         print("   - .code-weaver.toml (repository)")

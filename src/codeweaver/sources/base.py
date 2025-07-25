@@ -16,126 +16,56 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
-from enum import Enum
-from typing import Any, Protocol, TypedDict, runtime_checkable
+from typing import Annotated, Any, Protocol, runtime_checkable
+
+from pydantic import BaseModel, ConfigDict, Field, computed_field
+
+from codeweaver._types.source_capabilities import SourceCapabilities
+from codeweaver._types.source_enums import ContentType, SourceCapability, SourceProvider
 
 
 logger = logging.getLogger(__name__)
 
 
-class SourceCapability(Enum):
-    """Capabilities supported by different data sources."""
-
-    # Core capabilities
-    CONTENT_DISCOVERY = "content_discovery"  # Can discover content items
-    CONTENT_READING = "content_reading"  # Can read content from items
-    CHANGE_WATCHING = "change_watching"  # Can watch for content changes
-
-    # Advanced capabilities
-    INCREMENTAL_SYNC = "incremental_sync"  # Supports incremental updates
-    VERSION_HISTORY = "version_history"  # Provides version/commit history
-    METADATA_EXTRACTION = "metadata_extraction"  # Rich metadata extraction
-    REAL_TIME_UPDATES = "real_time_updates"  # Real-time change notifications
-    BATCH_PROCESSING = "batch_processing"  # Efficient batch operations
-    CONTENT_DEDUPLICATION = "content_deduplication"  # Built-in deduplication
-    RATE_LIMITING = "rate_limiting"  # Built-in rate limiting
-    AUTHENTICATION = "authentication"  # Supports authentication
-    PAGINATION = "pagination"  # Supports paginated discovery
+# SourceCapability is now imported from _types.source_enums
 
 
-class ContentItem:
-    """Universal content item representing discoverable content from any source."""
+class ContentItem(BaseModel):
+    """Universal content item with Pydantic validation."""
 
-    def __init__(
-        self,
-        path: str,
-        content_type: str,
-        metadata: dict[str, Any] | None = None,
-        last_modified: datetime | None = None,
-        size: int | None = None,
-        language: str | None = None,
-        source_id: str | None = None,
-        version: str | None = None,
-        checksum: str | None = None,
-    ):
-        """Initialize a content item.
+    model_config = ConfigDict(
+        extra="allow",  # Allow source-specific metadata
+        validate_assignment=True,
+        use_enum_values=True
+    )
 
-        Args:
-            path: Universal identifier for the content (URL, file path, etc.)
-            content_type: Type of content ('file', 'url', 'database', 'api', 'git')
-            metadata: Source-specific metadata
-            last_modified: Last modification timestamp
-            size: Content size in bytes
-            language: Detected programming language
-            source_id: Identifier of the source that discovered this content
-            version: Version identifier (commit hash, revision, etc.)
-            checksum: Content checksum for change detection
-        """
-        self.path = path
-        self.content_type = content_type
-        self.metadata = metadata or {}
-        self.last_modified = last_modified
-        self.size = size
-        self.language = language
-        self.source_id = source_id
-        self.version = version
-        self.checksum = checksum
+    path: Annotated[str, Field(description="Universal identifier for content")]
+    content_type: Annotated[ContentType, Field(description="Type of content")]
+    metadata: Annotated[dict[str, Any], Field(default_factory=dict, description="Source-specific metadata")]
+    last_modified: Annotated[datetime | None, Field(None, description="Last modification timestamp")]
+    size: Annotated[int | None, Field(None, ge=0, description="Content size in bytes")]
+    language: Annotated[str | None, Field(None, description="Detected programming language")]
+    source_id: Annotated[str | None, Field(None, description="Source identifier")]
+    version: Annotated[str | None, Field(None, description="Version identifier")]
+    checksum: Annotated[str | None, Field(None, description="Content checksum")]
 
-        # Generate unique identifier
-        self.id = self._generate_id()
-
-    def _generate_id(self) -> str:
-        """Generate a unique identifier for this content item."""
-        # Combine path, content_type, and source_id for uniqueness
-        identifier_parts = [self.path, self.content_type]
+    @computed_field
+    @property
+    def id(self) -> str:
+        """Generate unique identifier."""
+        parts = [self.path, self.content_type.value]
         if self.source_id:
-            identifier_parts.append(self.source_id)
-
-        identifier_string = "|".join(identifier_parts)
-        return hashlib.sha256(identifier_string.encode()).hexdigest()[:16]
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert content item to dictionary representation."""
-        return {
-            "id": self.id,
-            "path": self.path,
-            "content_type": self.content_type,
-            "metadata": self.metadata,
-            "last_modified": self.last_modified.isoformat() if self.last_modified else None,
-            "size": self.size,
-            "language": self.language,
-            "source_id": self.source_id,
-            "version": self.version,
-            "checksum": self.checksum,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ContentItem":
-        """Create content item from dictionary representation."""
-        last_modified = None
-        if data.get("last_modified"):
-            last_modified = datetime.fromisoformat(data["last_modified"])
-
-        return cls(
-            path=data["path"],
-            content_type=data["content_type"],
-            metadata=data.get("metadata"),
-            last_modified=last_modified,
-            size=data.get("size"),
-            language=data.get("language"),
-            source_id=data.get("source_id"),
-            version=data.get("version"),
-            checksum=data.get("checksum"),
-        )
+            parts.append(self.source_id)
+        return hashlib.sha256("|".join(parts).encode()).hexdigest()[:16]
 
     def __str__(self) -> str:
         """String representation of the content item."""
-        return f"ContentItem(id={self.id}, type={self.content_type}, path={self.path})"
+        return f"ContentItem(id={self.id}, type={self.content_type.value}, path={self.path})"
 
     def __repr__(self) -> str:
         """Detailed representation of the content item."""
         return (
-            f"ContentItem(path={self.path!r}, content_type={self.content_type!r}, "
+            f"ContentItem(path={self.path!r}, content_type={self.content_type.value!r}, "
             f"size={self.size}, language={self.language!r})"
         )
 
@@ -185,36 +115,33 @@ class SourceWatcher:
                 )
 
 
-class BaseSourceConfig(TypedDict, total=False):
-    """Base configuration for all data sources."""
+class SourceConfig(BaseModel):
+    """Base configuration for all sources."""
 
-    # Core settings
-    enabled: bool
-    priority: int
-    source_id: str
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+
+    enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
+    priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
+    source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
 
     # Content filtering
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    max_file_size_mb: int
+    include_patterns: Annotated[list[str], Field(default_factory=list)]
+    exclude_patterns: Annotated[list[str], Field(default_factory=list)]
+    max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000)]
 
     # Performance settings
-    batch_size: int
-    max_concurrent_requests: int
-    request_timeout_seconds: int
+    batch_size: Annotated[int, Field(8, ge=1, le=1000)]
+    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100)]
+    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300)]
 
     # Change detection
-    enable_change_watching: bool
-    change_check_interval_seconds: int
+    enable_change_watching: bool = Field(False, description="Enable change watching")
+    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600)]
 
     # Content processing
-    enable_content_deduplication: bool
-    enable_metadata_extraction: bool
-    supported_languages: list[str]
-
-
-# Type alias for source-specific configurations
-SourceConfig = BaseSourceConfig
+    enable_content_deduplication: bool = Field(True, description="Enable content deduplication")
+    enable_metadata_extraction: bool = Field(False, description="Enable metadata extraction")
+    supported_languages: list[str] = Field(default_factory=list, description="Supported programming languages")
 
 
 @runtime_checkable
@@ -311,15 +238,15 @@ class AbstractDataSource(ABC):
     of the DataSource protocol across different source types.
     """
 
-    def __init__(self, source_type: str, source_id: str | None = None):
+    def __init__(self, source_type: SourceProvider, source_id: str | None = None):
         """Initialize the abstract data source.
 
         Args:
-            source_type: Type identifier for this source (e.g., 'filesystem', 'git')
+            source_type: Type identifier for this source (e.g., SourceProvider.FILESYSTEM)
             source_id: Unique identifier for this source instance
         """
         self.source_type = source_type
-        self.source_id = source_id or f"{source_type}_{id(self)}"
+        self.source_id = source_id or f"{source_type.value}_{id(self)}"
         self._watchers: list[SourceWatcher] = []
 
     @abstractmethod
@@ -456,14 +383,14 @@ class SourceRegistry:
         """
         return list(self._sources.keys())
 
-    def get_source_capabilities(self, source_type: str) -> set[SourceCapability] | None:
+    def get_source_capabilities(self, source_type: SourceProvider) -> SourceCapabilities | None:
         """Get capabilities for a registered source type.
 
         Args:
             source_type: Type identifier for the source
 
         Returns:
-            Set of capabilities if source is registered, None otherwise
+            SourceCapabilities object if source is registered, None otherwise
         """
         if source_class := self._sources.get(source_type):
             # Create a temporary instance to get capabilities
@@ -471,7 +398,7 @@ class SourceRegistry:
                 instance = source_class()
                 return instance.get_capabilities()
             except Exception:
-                logger.warning("Failed to get capabilities for source type: %s", source_type)
+                logger.warning("Failed to get capabilities for source type: %s", source_type.value)
         return None
 
 

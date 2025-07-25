@@ -32,71 +32,56 @@ Migration examples have been moved to `examples/migration/sources_migration.py`.
 See the examples directory for complete migration demonstrations.
 """
 
-from codeweaver.sources.api import APISource
+from codeweaver._types.source_capabilities import SourceCapabilities
+
+# Import new types
+from codeweaver._types.source_enums import (
+    APIType,
+    AuthType,
+    ContentType,
+    DatabaseType,
+    SourceCapability,
+    SourceProvider,
+)
+from codeweaver._types.source_providers import SOURCE_PROVIDERS, SourceProviderInfo
 from codeweaver.sources.base import (
     AbstractDataSource,
-    BaseSourceConfig,
     ContentItem,
     DataSource,
-    SourceCapability,
     SourceConfig,
     SourceRegistry,
     SourceWatcher,
     get_source_registry,
 )
-from codeweaver.sources.config import (
-    DataSourcesConfig,
-    extend_config_with_data_sources,
-    get_example_data_sources_config,
-)
-from codeweaver.sources.database import DatabaseSource
+from codeweaver.sources.config import DataSourcesConfig
 from codeweaver.sources.factory import SourceFactory, get_source_factory
 from codeweaver.sources.filesystem import FileSystemSource, FileSystemSourceConfig
-
-# Placeholder implementations (for future development)
-from codeweaver.sources.git import GitRepositorySource
-from codeweaver.sources.integration import (
-    BackwardCompatibilityAdapter,
-    DataSourceManager,
-    create_backward_compatible_server_integration,
-    integrate_data_sources_with_config,
-)
-from codeweaver.sources.web import WebCrawlerSource
+from codeweaver.sources.integration import DataSourceManager
 
 
 __all__ = [
-    "APISource",
-    "AbstractDataSource",
-    "BackwardCompatibilityAdapter",
-    "BaseSourceConfig",
+    "SOURCE_PROVIDERS",
+    "APIType",
     # Core protocols and data structures
+    "AbstractDataSource",
+    "AuthType",
     "ContentItem",
+    "ContentType",
     "DataSource",
-    # Integration and migration
     "DataSourceManager",
-    # Configuration system
     "DataSourcesConfig",
-    "DatabaseSource",
-    # File system implementation (fully implemented)
+    "DatabaseType",
     "FileSystemSource",
     "FileSystemSourceConfig",
-    # Placeholder implementations (for future development)
-    "GitRepositorySource",
+    "SourceCapabilities",
     "SourceCapability",
     "SourceConfig",
-    # Factory system
     "SourceFactory",
+    # New type system
+    "SourceProvider",
+    "SourceProviderInfo",
     "SourceRegistry",
     "SourceWatcher",
-    "WebCrawlerSource",
-    "create_backward_compatible_server_integration",
-    "extend_config_with_data_sources",
-    "get_example_data_sources_config",
     "get_source_factory",
     "get_source_registry",
-    "integrate_data_sources_with_config",
 ]
-
-# Version info for the data source system
-__version__ = "1.0.0"
-__status__ = "Production Ready (FileSystem), Preview (Others)"

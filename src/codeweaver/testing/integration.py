@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from codeweaver.backends.base import HybridSearchBackend, VectorBackend
-from codeweaver.backends.factory import create_backend
+from codeweaver.backends.factory import BackendFactory
 from codeweaver.config import CodeWeaverConfig
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.providers.factory import create_embedding_provider, create_rerank_provider
@@ -220,7 +220,7 @@ class IntegrationTestSuite:
             # Create real backend from factory
             config = CodeWeaverConfig()
             config.merge_from_dict(self.config.config_overrides)
-            self.backend = await create_backend(config.backend)
+            self.backend = await BackendFactory.create_backend(config.backend)
 
         # Create embedding provider
         if self.config.embedding_provider == "mock":
