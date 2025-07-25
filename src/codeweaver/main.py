@@ -20,10 +20,10 @@ Usage:
     python main.py
 
 Environment Variables:
-    EMBEDDING_API_KEY: Your embedding provider API key
-    VECTOR_BACKEND_URL: Your vector database URL
-    VECTOR_BACKEND_API_KEY: Your vector database API key
-    VECTOR_BACKEND_COLLECTION: Name for the code collection (default: code-embeddings)
+    CW_EMBEDDING_API_KEY: Your embedding provider API key
+    CW_VECTOR_BACKEND_URL: Your vector database URL
+    CW_VECTOR_BACKEND_API_KEY: Your vector database API key
+    CW_VECTOR_BACKEND_COLLECTION: Name for the code collection (default: code-embeddings)
 """
 
 import asyncio
@@ -237,7 +237,7 @@ async def main() -> None:
         print(f"\n❌ Configuration error: {e}")
         print("\n📋 Configuration help:")
         print("You can configure Code Weaver using:")
-        print("1. Environment variables (EMBEDDING_API_KEY, VECTOR_BACKEND_URL, etc.)")
+        print("1. Environment variables (CW_EMBEDDING_API_KEY, CW_VECTOR_BACKEND_URL, etc.)")
         print("2. TOML config files in these locations:")
         print("   - .local.code-weaver.toml (workspace local)")
         print("   - .code-weaver.toml (repository)")

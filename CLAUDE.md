@@ -107,7 +107,7 @@ uv run python src/codeweaver/main.py
 uv run codeweaver
 
 # Run with environment variables
-EMBEDDING_API_KEY=your_key VECTOR_BACKEND_URL=your_url uv run codeweaver
+CW_EMBEDDING_API_KEY=your_key CW_VECTOR_BACKEND_URL=your_url uv run codeweaver
 ```
 
 ### Code Quality & Linting
@@ -184,10 +184,10 @@ The server exposes four main tools:
 
 ## Environment Variables Required
 
-- **`EMBEDDING_API_KEY`**: Your embedding provider API key (required)
-- **`VECTOR_BACKEND_URL`**: Your vector database URL (required)
-- **`VECTOR_BACKEND_API_KEY`**: Your vector database API key (optional if no auth)
-- **`VECTOR_BACKEND_COLLECTION`**: Vector collection name (defaults to "codeweaver-UUID4")
+- **`CW_EMBEDDING_API_KEY`**: Your embedding provider API key (required)
+- **`CW_VECTOR_BACKEND_URL`**: Your vector database URL (required)
+- **`CW_VECTOR_BACKEND_API_KEY`**: Your vector database API key (optional if no auth)
+- **`CW_VECTOR_BACKEND_COLLECTION`**: Vector collection name (defaults to "codeweaver-UUID4")
 
 ## Language Support
 
@@ -301,9 +301,9 @@ Add to `claude_desktop_config.json`:
       "command": "uv",
       "args": ["run", "codeweaver"],
       "env": {
-        "EMBEDDING_API_KEY": "your-key",
-        "VECTOR_BACKEND_URL": "your-url",
-        "VECTOR_BACKEND_API_KEY": "your-api-key"
+        "CW_EMBEDDING_API_KEY": "your-key",
+        "CW_VECTOR_BACKEND_URL": "your-url",
+        "CW_VECTOR_BACKEND_API_KEY": "your-api-key"
       }
     }
   }

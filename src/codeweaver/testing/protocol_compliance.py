@@ -123,8 +123,8 @@ class ProtocolComplianceValidator:
                 result = await self.validate_vector_backend(implementation)
             elif protocol_name == "hybrid_search_backend":
                 result = await self.validate_hybrid_search_backend(implementation)
-            elif protocol_name == "embedding_provider":
-                result = await self.validate_embedding_provider(implementation)
+            elif protocol_name == "CW_EMBEDDING_PROVIDER":
+                result = await self.validate_CW_EMBEDDING_PROVIDER(implementation)
             elif protocol_name == "rerank_provider":
                 result = await self.validate_rerank_provider(implementation)
             elif protocol_name == "data_source":
@@ -200,7 +200,7 @@ class ProtocolComplianceValidator:
 
         return result
 
-    async def validate_embedding_provider(self, provider: EmbeddingProvider) -> ComplianceResult:
+    async def validate_CW_EMBEDDING_PROVIDER(self, provider: EmbeddingProvider) -> ComplianceResult:
         """Validate EmbeddingProvider protocol compliance."""
         result = ComplianceResult(
             protocol_name="EmbeddingProvider",
@@ -215,11 +215,11 @@ class ProtocolComplianceValidator:
 
         # Test embedding functionality
         if hasattr(provider, "embed_documents"):
-            await self._test_embedding_provider_functionality(provider, result)
+            await self._test_CW_EMBEDDING_PROVIDER_functionality(provider, result)
 
         # Performance benchmarks
         if self.performance_benchmarks and result.is_compliant:
-            await self._benchmark_embedding_provider(provider, result)
+            await self._benchmark_CW_EMBEDDING_PROVIDER(provider, result)
 
         return result
 
@@ -490,7 +490,7 @@ class ProtocolComplianceValidator:
             with contextlib.suppress(Exception):
                 await backend.delete_collection(test_collection)
 
-    async def _test_embedding_provider_functionality(
+    async def _test_CW_EMBEDDING_PROVIDER_functionality(
         self, provider: EmbeddingProvider, result: ComplianceResult
     ) -> None:
         """Test EmbeddingProvider functionality."""
@@ -729,7 +729,7 @@ class ProtocolComplianceValidator:
     ) -> None:
         """Run performance benchmarks for hybrid search backend."""
 
-    async def _benchmark_embedding_provider(
+    async def _benchmark_CW_EMBEDDING_PROVIDER(
         self, provider: EmbeddingProvider, result: ComplianceResult
     ) -> None:
         """Run performance benchmarks for embedding provider."""
@@ -791,10 +791,10 @@ async def validate_hybrid_search_backend_protocol(backend: HybridSearchBackend) 
     return await validator.validate_hybrid_search_backend(backend)
 
 
-async def validate_embedding_provider_protocol(provider: EmbeddingProvider) -> ComplianceResult:
+async def validate_CW_EMBEDDING_PROVIDER_protocol(provider: EmbeddingProvider) -> ComplianceResult:
     """Validate an EmbeddingProvider implementation."""
     validator = ProtocolComplianceValidator()
-    return await validator.validate_embedding_provider(provider)
+    return await validator.validate_CW_EMBEDDING_PROVIDER(provider)
 
 
 async def validate_rerank_provider_protocol(provider: RerankProvider) -> ComplianceResult:

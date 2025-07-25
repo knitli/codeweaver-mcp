@@ -202,7 +202,7 @@ class CohereProvider(CombinedProvider):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -236,7 +236,7 @@ class CohereProvider(CombinedProvider):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -266,7 +266,7 @@ class CohereProvider(CombinedProvider):
             return False, "cohere package not installed (install with: uv add cohere)"
 
         # Both embedding and reranking are supported
-        if capability in [ProviderCapability.EMBEDDINGS, ProviderCapability.RERANKING]:
+        if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
             return True, None
 
         return False, f"Capability {capability.value} not supported by Cohere"

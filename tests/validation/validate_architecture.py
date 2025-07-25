@@ -105,7 +105,7 @@ def test_configuration_structure() -> bool | None:
         config.indexing = Mock()
         config.indexing.batch_size = 8
         config.embedding = Mock()
-        config.embedding.provider = "voyage"
+        config.embedding.provider = "voyage-ai"
         config.qdrant = Mock()
         config.qdrant.collection_name = "test"
 

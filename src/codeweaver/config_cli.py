@@ -22,13 +22,11 @@ from codeweaver.config_migration import (
     ConfigValidator,
     check_backend_compatibility,
     generate_deployment_configs,
-    migrate_config_file,
-    validate_config_file,
     validate_configuration_file,
 )
 
 
-def setup_logging(verbose: bool = False) -> None:
+def setup_logging(*, verbose: bool = False) -> None:
     """Setup logging configuration."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(level=level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -37,27 +35,7 @@ def setup_logging(verbose: bool = False) -> None:
 def cmd_validate(args: argparse.Namespace) -> None:
     """Validate a configuration file."""
     try:
-        config, warnings = validate_configuration_file(args.config_file)
-
-        print(f"✅ Configuration file: {args.config_file}")
-        print(f"📋 Format: {'Legacy' if config.is_legacy_config() else 'New'}")
-        print(f"🏗️  Backend: {config.get_effective_backend_provider()}")
-        print(f"🤖 Provider: {config.get_effective_embedding_provider()}")
-
-        if warnings:
-            print(f"\n⚠️  Validation Warnings ({len(warnings)}):")
-            for i, warning in enumerate(warnings, 1):
-                print(f"  {i}. {warning}")
-        else:
-            print("\n✅ No validation warnings found")
-
-        if args.show_effective_config:
-            print("\n📄 Effective Configuration:")
-            effective_config = config.to_new_format_dict()
-            import json
-
-            print(json.dumps(effective_config, indent=2))
-
+        _validate_cmd(args)
     except ConfigMigrationError as e:
         print(f"❌ Validation failed: {e}", file=sys.stderr)
         sys.exit(1)
@@ -66,35 +44,28 @@ def cmd_validate(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-def cmd_migrate(args: argparse.Namespace) -> None:
-    """Migrate a configuration file."""
-    try:
-        output_path = args.output or (Path(args.config_file).parent / "config-v2.toml")
+def _validate_cmd(args: argparse.Namespace) -> None:
+    """Internal command to validate a configuration file."""
+    config, warnings = validate_configuration_file(args.config_file)
 
-        migrated_content = migrate_config_file(args.config_file, output_path)
+    print(f"✅ Configuration file: {args.config_file}")
+    print(f"📋 Format: {'Legacy' if config.is_legacy_config() else 'New'}")
+    print(f"🏗️  Backend: {config.get_effective_backend_provider()}")
+    print(f"🤖 Provider: {config.get_effective_CW_EMBEDDING_PROVIDER()}")
 
-        print("✅ Migration completed successfully")
-        print(f"📁 Input: {args.config_file}")
-        print(f"📁 Output: {output_path}")
+    if warnings:
+        print(f"\n⚠️  Validation Warnings ({len(warnings)}):")
+        for i, warning in enumerate(warnings, 1):
+            print(f"  {i}. {warning}")
+    else:
+        print("\n✅ No validation warnings found")
 
-        if args.show_diff:
-            print("\n📄 Migrated Configuration:")
-            print(migrated_content)
+    if args.show_effective_config:
+        print("\n📄 Effective Configuration:")
+        effective_config = config.to_new_format_dict()
+        import json
 
-        # Validate the migrated configuration
-        if Path(output_path).exists():
-            warnings = validate_config_file(output_path)
-            if warnings:
-                print(f"\n⚠️  Post-migration warnings ({len(warnings)}):")
-                for i, warning in enumerate(warnings, 1):
-                    print(f"  {i}. {warning}")
-
-    except ConfigMigrationError as e:
-        print(f"❌ Migration failed: {e}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"❌ Unexpected error: {e}", file=sys.stderr)
-        sys.exit(1)
+        print(json.dumps(effective_config, indent=2))
 
 
 def cmd_generate(args: argparse.Namespace) -> None:
@@ -153,8 +124,9 @@ def cmd_check_compatibility(args: argparse.Namespace) -> None:
 
     # Additional checks
     if args.enable_hybrid:
-        hybrid_warnings = ConfigValidator.validate_hybrid_search_config(args.backend, True, True)
-        if hybrid_warnings:
+        if hybrid_warnings := ConfigValidator.validate_hybrid_search_config(
+            args.backend, True, True
+        ):
             print("\n🔀 Hybrid Search Warnings:")
             for warning in hybrid_warnings:
                 print(f"  • {warning}")
@@ -164,21 +136,21 @@ def cmd_check_compatibility(args: argparse.Namespace) -> None:
 
 def cmd_info(args: argparse.Namespace) -> None:
     """Show configuration system information."""
-    print("📊 CodeWeaver Configuration System")
-    print("==================================")
-    print()
-
-    # Supported backends
-    print("🏗️  Supported Backends:")
-    for backend in ConfigValidator.BACKEND_EMBEDDING_COMPATIBILITY:
-        hybrid_support = "✅" if backend in ConfigValidator.HYBRID_SEARCH_BACKENDS else "❌"
+    _print_args(
+        "📊 CodeWeaver Configuration System",
+        "==================================",
+        "🏗️  Supported Backends:",
+    )
+    validator = ConfigValidator()
+    for backend in validator.backend_embedding_compatibility:
+        hybrid_support = "✅" if backend in validator.hybrid_search_backends else "❌"
         print(f"  • {backend:15} (Hybrid: {hybrid_support})")
     print()
 
     # Supported providers
     print("🤖 Supported Embedding Providers:")
     all_providers = set()
-    for providers in ConfigValidator.BACKEND_EMBEDDING_COMPATIBILITY.values():
+    for providers in validator.backend_embedding_compatibility.values():
         all_providers.update(providers)
 
     for provider in sorted(all_providers):
@@ -190,30 +162,36 @@ def cmd_info(args: argparse.Namespace) -> None:
     # Configuration locations
     print("📁 Configuration File Locations (precedence order):")
     print("  1. .local.code-weaver.toml (workspace local)")
-    print("  2. .code-weaver.toml (repository)")
-    print("  3. ~/.config/code-weaver/config.toml (user)")
-    print()
-
-    # Environment variables
-    print("🌍 Key Environment Variables:")
+    _print_args(
+        "  2. .code-weaver.toml (repository)",
+        "  3. ~/.config/code-weaver/config.toml (user)",
+        "🌍 Key Environment Variables:",
+    )
     env_vars = [
-        ("VECTOR_BACKEND_PROVIDER", "Backend provider (qdrant, pinecone, etc.)"),
-        ("VECTOR_BACKEND_URL", "Backend URL"),
-        ("VECTOR_BACKEND_API_KEY", "Backend API key"),
-        ("EMBEDDING_PROVIDER", "Embedding provider (voyage, openai, etc.)"),
-        ("EMBEDDING_API_KEY", "Embedding API key"),
-        ("VOYAGE_API_KEY", "Voyage AI API key"),
-        ("OPENAI_API_KEY", "OpenAI API key"),
-        ("VECTOR_BACKEND_URL", "Vector database URL"),
-        ("VECTOR_BACKEND_API_KEY", "Vector database API key"),
-        ("VECTOR_BACKEND_PROVIDER", "Vector database provider"),
-        ("VECTOR_BACKEND_COLLECTION", "Vector database collection name"),
-        ("ENABLE_HYBRID_SEARCH", "Enable hybrid search (true/false)"),
-        ("USE_LOCAL_MODELS", "Use local models (true/false)"),
+        ("CW_VECTOR_BACKEND_PROVIDER", "Backend provider (qdrant, pinecone, etc.)"),
+        ("CW_VECTOR_BACKEND_URL", "Backend URL"),
+        ("CW_VECTOR_BACKEND_API_KEY", "Backend API key"),
+        ("CW_EMBEDDING_PROVIDER", "Embedding provider (voyage, openai, etc.)"),
+        ("CW_EMBEDDING_API_KEY", "Embedding API key"),
+        ("CW_VOYAGE_API_KEY", "Voyage AI API key"),
+        ("CW_OPENAI_API_KEY", "OpenAI API key"),
+        ("CW_VECTOR_BACKEND_COLLECTION", "Vector database collection name"),
+        ("CW_ENABLE_HYBRID_SEARCH", "Enable hybrid search (true/false)"),
+        ("CW_USE_LOCAL_MODELS", "Use local models (true/false)"),
     ]
 
     for var, description in env_vars:
         print(f"  • {var:25} - {description}")
+
+
+# TODO Rename this here and in `cmd_info`
+def _print_args(arg0, arg1, arg2):
+    print(arg0)
+    print(arg1)
+    print()
+
+    # Supported backends
+    print(arg2)
 
 
 def main() -> NoReturn:
@@ -304,8 +282,6 @@ Examples:
     # Route to appropriate command handler
     if args.command == "validate":
         cmd_validate(args)
-    elif args.command == "migrate":
-        cmd_migrate(args)
     elif args.command == "generate":
         cmd_generate(args)
     elif args.command == "check-compatibility":

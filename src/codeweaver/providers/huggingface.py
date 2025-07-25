@@ -282,7 +282,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             display_name=self._registry_entry.display_name,
             description=self._registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -309,7 +309,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -345,16 +345,13 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             local_reason = None
 
         # Handle different capabilities
-        if capability == ProviderCapability.EMBEDDINGS:
+        if capability == ProviderCapability.EMBEDDING:
             if api_available or local_available:
                 return True, None
             return (False, f"Neither API ({api_reason}) nor local ({local_reason}) mode available")
 
         if capability == ProviderCapability.LOCAL_INFERENCE:
-            if local_available:
-                return True, None
-            return False, local_reason
-
+            return (True, None) if local_available else (False, local_reason)
         if capability == ProviderCapability.BATCH_PROCESSING:
             # Batch processing is always available if embedding is available
             if api_available or local_available:

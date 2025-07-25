@@ -15,10 +15,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from codeweaver._types.source_enums import SourceProvider
+from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.sources.base import ContentItem, DataSource
-from codeweaver.sources.config import DataSourcesConfig
-from codeweaver.sources.factory import get_source_factory
+from codeweaver.sources.config import DataSourcesConfig, SourceConfig
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +38,7 @@ class DataSourceManager:
             config: Data sources configuration
         """
         self.config = config
-        self.source_factory = get_source_factory()
+        self.source_registry = SourceRegistry()
         self._active_sources: list[DataSource] = []
         self._watchers: list[Any] = []
 
@@ -57,27 +56,32 @@ class DataSourceManager:
 
         for source_config in enabled_configs:
             try:
-                raw_source_type = source_config["type"]
-                config = source_config["config"]
+                source_type = source_config["type"]
+                config_obj = source_config["config"]
 
-                # Convert string to enum
-                try:
-                    source_type = SourceProvider(raw_source_type)
-                except ValueError:
-                    logger.warning("Unknown source type: %s", raw_source_type)
+                # Create source configuration object
+                source_config_obj = SourceConfig(config_obj)
+
+                # Validate source type is available
+                if not self.source_registry.has_component(source_type):
+                    logger.warning("Unknown source type: %s", source_type)
                     continue
 
                 # Create and validate the source
-                source = self.source_factory.create_source(source_type, config)
+                source = self.source_registry.create_source(source_type, source_config_obj)
 
-                if await source.validate_source(config):
+                # Validate source configuration if the source supports it
+                if (
+                    (hasattr(source, 'validate_source')
+                    and await source.validate_source(config_obj))
+                    or not hasattr(source, 'validate_source')
+                ):
                     self._active_sources.append(source)
                     logger.info(
-                        "Initialized data source: %s (%s)", source.source_id, source_type.value
+                        "Initialized data source: %s (%s)", source.source_id, source_type
                     )
                 else:
-                    logger.warning("Validation failed for data source: %s", source_type.value)
-
+                    logger.warning("Validation failed for data source: %s", source_type)
             except Exception:
                 logger.exception("Failed to initialize data source %s.", source_config)
 
@@ -99,7 +103,8 @@ class DataSourceManager:
                     logger.warning("No configuration found for source: %s", source.source_id)
                     continue
 
-                content = await source.discover_content(source_config["config"])
+                config_obj = source_config["config"]
+                content = await source.discover_content(config_obj)
                 all_content.extend(content)
 
                 logger.info(
@@ -144,11 +149,11 @@ class DataSourceManager:
                 if not source_config:
                     continue
 
-                config = source_config["config"]
-                if not config.get("enable_change_watching", False):
+                config_obj = source_config["config"]
+                if not config_obj.get("enable_change_watching", False):
                     continue
 
-                watcher = await source.watch_changes(config, callback)
+                watcher = await source.watch_changes(config_obj, callback)
                 await watcher.start()
                 self._watchers.append(watcher)
 

@@ -13,57 +13,62 @@ with politeness policies and content extraction capabilities.
 import logging
 
 from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import Annotated, Any
 
-from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceCapability, SourceWatcher
+from pydantic import BaseModel, ConfigDict, Field
+
+from codeweaver._types.source_capabilities import SourceCapabilities
+from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceWatcher
 
 
 logger = logging.getLogger(__name__)
 
 
-class WebCrawlerSourceConfig(TypedDict, total=False):
+class WebCrawlerSourceConfig(BaseModel):
     """Configuration specific to web crawler data sources."""
 
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+
     # Inherited from BaseSourceConfig
-    enabled: bool
-    priority: int
-    source_id: str
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    max_file_size_mb: int
-    batch_size: int
-    max_concurrent_requests: int
-    request_timeout_seconds: int
-    enable_change_watching: bool
-    change_check_interval_seconds: int
-    enable_content_deduplication: bool
-    enable_metadata_extraction: bool
-    supported_languages: list[str]
+    enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
+    priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
+    source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
+    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
+    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
+    batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
+    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
+    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
+    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
+    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
+    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
+    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
 
     # Web crawler specific settings
-    start_urls: list[str]
-    allowed_domains: list[str]
-    max_depth: int
-    max_pages: int
+    start_urls: Annotated[list[str], Field(description="Starting URLs for crawling (required)")]
+    allowed_domains: Annotated[list[str], Field(default_factory=list, description="Domains allowed for crawling")]
+    max_depth: Annotated[int, Field(3, ge=1, le=10, description="Maximum crawling depth")]
+    max_pages: Annotated[int, Field(1000, ge=1, le=100000, description="Maximum number of pages to crawl")]
 
     # Politeness settings
-    delay_between_requests: float
-    respect_robots_txt: bool
-    user_agent: str
-    max_requests_per_second: float
+    delay_between_requests: Annotated[float, Field(1.0, ge=0.1, le=10.0, description="Delay between requests in seconds")]
+    respect_robots_txt: Annotated[bool, Field(True, description="Respect robots.txt rules")]
+    user_agent: Annotated[str, Field("CodeWeaver/1.0", min_length=1, description="User agent string for requests")]
+    max_requests_per_second: Annotated[float, Field(1.0, gt=0, le=10.0, description="Maximum requests per second")]
 
     # Content extraction settings
-    extract_text_only: bool
-    include_code_blocks: bool
-    include_links: bool
-    include_images: bool
-    min_content_length: int
+    extract_text_only: Annotated[bool, Field(True, description="Extract text content only")]
+    include_code_blocks: Annotated[bool, Field(True, description="Include code blocks in extraction")]
+    include_links: Annotated[bool, Field(False, description="Include links in extracted content")]
+    include_images: Annotated[bool, Field(False, description="Include image information")]
+    min_content_length: Annotated[int, Field(100, ge=1, le=10000, description="Minimum content length to index")]
 
     # Content filtering
-    allowed_content_types: list[str]
-    exclude_file_extensions: list[str]
-    css_selectors: list[str]  # Specific content selectors
-    xpath_expressions: list[str]  # XPath content selectors
+    allowed_content_types: Annotated[list[str], Field(default_factory=lambda: ["text/html", "text/plain", "text/markdown"], description="Allowed MIME content types")]
+    exclude_file_extensions: Annotated[list[str], Field(default_factory=lambda: [".pdf", ".doc", ".docx", ".xls", ".xlsx"], description="File extensions to exclude")]
+    css_selectors: Annotated[list[str], Field(default_factory=list, description="CSS selectors for specific content extraction")]
+    xpath_expressions: Annotated[list[str], Field(default_factory=list, description="XPath expressions for content extraction")]
 
 
 class WebCrawlerSource(AbstractDataSource):
@@ -90,17 +95,17 @@ class WebCrawlerSource(AbstractDataSource):
         """
         super().__init__("web", source_id)
 
-    def get_capabilities(self) -> set[SourceCapability]:
+    def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by web crawler source."""
-        return {
-            SourceCapability.CONTENT_DISCOVERY,
-            SourceCapability.CONTENT_READING,
-            SourceCapability.CHANGE_WATCHING,
-            SourceCapability.METADATA_EXTRACTION,
-            SourceCapability.BATCH_PROCESSING,
-            SourceCapability.RATE_LIMITING,
-            SourceCapability.CONTENT_DEDUPLICATION,
-        }
+        return SourceCapabilities(
+            supports_content_discovery=True,
+            supports_content_reading=True,
+            supports_change_watching=True,
+            supports_metadata_extraction=True,
+            supports_batch_processing=True,
+            supports_rate_limiting=True,
+            supports_content_deduplication=True,
+        )
 
     async def discover_content(self, config: WebCrawlerSourceConfig) -> list[ContentItem]:
         """Discover content by crawling websites.

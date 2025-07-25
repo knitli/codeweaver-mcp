@@ -35,7 +35,7 @@ def test_environment() -> bool:
     print("🧪 Testing Environment Setup...")
 
     # Check environment variables
-    required_vars = ["EMBEDDING_API_KEY", "VECTOR_BACKEND_URL"]
+    required_vars = ["CW_EMBEDDING_API_KEY", "CW_VECTOR_BACKEND_URL"]
     missing_vars = []
 
     missing_vars.extend(var for var in required_vars if not os.getenv(var))
@@ -47,7 +47,7 @@ def test_environment() -> bool:
     try:
         import voyageai
 
-        client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+        client = voyageai.Client(api_key=os.getenv("CW_VOYAGE_API_KEY"))
 
         # Test embedding
         result = client.embed(
@@ -71,7 +71,9 @@ def test_environment() -> bool:
     try:
         from qdrant_client import QdrantClient
 
-        qdrant = QdrantClient(url=os.getenv("VECTOR_BACKEND_URL"), api_key=os.getenv("VECTOR_BACKEND_API_KEY"))
+        qdrant = QdrantClient(
+            url=os.getenv("CW_VECTOR_BACKEND_URL"), api_key=os.getenv("CW_VECTOR_BACKEND_API_KEY")
+        )
 
         # Test connection
         qdrant.get_collections()
@@ -87,9 +89,9 @@ def test_environment() -> bool:
 def _print_env_missing_vars_message(missing_vars):
     print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
     print("\nSet these environment variables:")
-    print("  export VOYAGE_API_KEY='your-voyage-ai-key'")
-    print("  export VECTOR_BACKEND_URL='https://your-cluster.qdrant.tech:6333'")
-    print("  export VECTOR_BACKEND_API_KEY='your-qdrant-key'  # Optional")
+    print("  export CW_VOYAGE_API_KEY='your-voyage-ai-key'")
+    print("  export CW_VECTOR_BACKEND_URL='https://your-cluster.qdrant.tech:6333'")
+    print("  export CW_VECTOR_BACKEND_API_KEY='your-qdrant-key'  # Optional")
     return False
 
 
@@ -188,7 +190,7 @@ const userService = new UserService('https://api.example.com');
     return True
 
 
-async def test_full_workflow(test_path: str | None = None) -> bool:
+async def test_full_workflow(test_path: str | None = None) -> bool:  # noqa: PT028
     # sourcery skip: avoid-global-variables, no-long-functions
     """Test the complete indexing and search workflow."""
     print("\n🚀 Testing Full Workflow...")

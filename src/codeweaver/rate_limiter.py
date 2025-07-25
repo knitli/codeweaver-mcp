@@ -93,7 +93,7 @@ class RateLimiter:
 
     def _get_window_duration(self, operation: str) -> float:
         """Get the rate limiting window duration for an operation."""
-        if operation.startswith("voyage"):
+        if operation.startswith("voyage-ai"):
             return 60.0  # 1 minute window for Voyage AI
         if operation.startswith("openai"):
             return 60.0  # 1 minute window for OpenAI
@@ -101,7 +101,7 @@ class RateLimiter:
 
     def _check_rate_limits(self, operation: str, state: RateLimitState, tokens: int) -> bool:
         """Check if the operation is within rate limits."""
-        if operation.startswith("voyage"):
+        if operation.startswith("voyage-ai"):
             # Check Voyage AI limits
             if state.requests_made >= self.config.voyage_requests_per_minute:
                 return False

@@ -49,7 +49,7 @@ await manager.initialize()
 
 # Get components
 backend = await manager.get_backend()
-embedder = await manager.get_embedding_provider()
+embedder = await manager.get_CW_EMBEDDING_PROVIDER()
 reranker = await manager.get_reranking_provider()
 
 # Use components...
@@ -90,11 +90,11 @@ from codeweaver.factories.extensibility_manager import ExtensibilityManager
 class CodeEmbeddingsServer:
     def __init__(self, config):
         self.manager = ExtensibilityManager(config)
-        
+
     async def initialize(self):
         await self.manager.initialize()
         self.backend = await self.manager.get_backend()
-        self.embedder = await self.manager.get_embedding_provider()
+        self.embedder = await self.manager.get_CW_EMBEDDING_PROVIDER()
 ```
 
 ### Using Migration Helper
@@ -124,20 +124,20 @@ config = ExtensibilityConfig(
     enable_plugin_discovery=True,
     plugin_directories=["/path/to/plugins"],
     auto_load_plugins=True,
-    
+
     # Dependency injection
     enable_dependency_injection=True,
     singleton_backends=True,
     singleton_providers=True,
-    
+
     # Lifecycle management
     enable_graceful_shutdown=True,
     shutdown_timeout=30.0,
-    
+
     # Performance
     lazy_initialization=True,
     component_caching=True,
-    
+
     # Compatibility
     enable_legacy_fallbacks=True,
     migration_mode=False,
@@ -177,7 +177,7 @@ from codeweaver.backends.base import VectorBackend
 
 class MyCustomBackend(VectorBackend):
     """Custom vector database backend."""
-    
+
     @classmethod
     def get_plugin_info(cls):
         return {
@@ -195,11 +195,11 @@ class MyCustomBackend(VectorBackend):
             },
             "requirements": ["custom-db-client>=2.0.0"],
         }
-    
+
     async def create_collection(self, name: str, dimension: int) -> None:
         # Implementation
         pass
-    
+
     async def search_vectors(self, query_vector, filters=None, limit=10):
         # Implementation
         pass
@@ -212,7 +212,7 @@ from codeweaver.providers.base import EmbeddingProvider
 
 class MyEmbeddingProvider(EmbeddingProvider):
     """Custom embedding provider."""
-    
+
     @classmethod
     def get_plugin_info(cls):
         return {
@@ -227,7 +227,7 @@ class MyEmbeddingProvider(EmbeddingProvider):
                 "requires_api_key": True,
             },
         }
-    
+
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
         # Implementation
         pass

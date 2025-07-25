@@ -152,11 +152,11 @@ class DataSource(Protocol):
     universal content discovery, reading, and change watching capabilities.
     """
 
-    def get_capabilities(self) -> set[SourceCapability]:
+    def get_capabilities(self) -> SourceCapabilities:
         """Get the capabilities supported by this data source.
 
         Returns:
-            Set of capabilities supported by this source
+            Capabilities model with detailed source capabilities
         """
         ...
 
@@ -250,7 +250,7 @@ class AbstractDataSource(ABC):
         self._watchers: list[SourceWatcher] = []
 
     @abstractmethod
-    def get_capabilities(self) -> set[SourceCapability]:
+    def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by this source implementation."""
 
     @abstractmethod

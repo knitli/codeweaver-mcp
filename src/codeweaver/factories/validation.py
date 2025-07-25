@@ -120,7 +120,7 @@ class FactoryValidator:
         if self.level >= ValidationLevel.STANDARD:
             self._validation_checks.extend([
                 self._validate_backend_connectivity,
-                self._validate_embedding_provider,
+                self._validate_CW_EMBEDDING_PROVIDER,
                 self._validate_plugin_system,
             ])
 
@@ -307,7 +307,7 @@ class FactoryValidator:
                 severity="error",
             )
 
-    async def _validate_embedding_provider(
+    async def _validate_CW_EMBEDDING_PROVIDER(
         self, config: CodeWeaverConfig
     ) -> ValidationResult | None:
         """Validate embedding provider functionality."""
@@ -316,7 +316,7 @@ class FactoryValidator:
 
         try:
             # Create provider instance
-            provider = self.factory.providers.create_embedding_provider(config.embedding)
+            provider = self.factory.providers.create_CW_EMBEDDING_PROVIDER(config.embedding)
 
             # Test basic functionality
             test_text = "This is a validation test"
@@ -421,7 +421,7 @@ class FactoryValidator:
 
         # Known optimal pairings
         optimal_pairs = {
-            ("qdrant", "voyage"),
+            ("qdrant", "voyage-ai"),
             ("pinecone", "openai"),
             ("weaviate", "cohere"),
             ("chroma", "sentence-transformers"),
@@ -454,7 +454,7 @@ class FactoryValidator:
             return None
 
         if dimension := config.embedding.dimension:
-                # Check dimension limits for backends
+            # Check dimension limits for backends
             return (
                 CompatibilityResult(
                     level=CompatibilityLevel.PARTIAL,
@@ -481,10 +481,18 @@ class FactoryValidator:
         """Check API key requirements."""
         missing_keys = []
 
-        if config.embedding and config.embedding.provider != "sentence-transformers" and not config.embedding.api_key:
+        if (
+            config.embedding
+            and config.embedding.provider != "sentence-transformers"
+            and not config.embedding.api_key
+        ):
             missing_keys.append("embedding")
 
-        if hasattr(config.backend, "api_key") and not config.backend.api_key and config.backend.provider in ["pinecone", "weaviate"]:
+        if (
+            hasattr(config.backend, "api_key")
+            and not config.backend.api_key
+            and config.backend.provider in ["pinecone", "weaviate"]
+        ):
             missing_keys.append("backend")
 
         if missing_keys:

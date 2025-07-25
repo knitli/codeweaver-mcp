@@ -14,7 +14,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
 from codeweaver._types.enums import RerankResult
-from codeweaver._types.provider_enums import ProviderKind
 from codeweaver._types.provider_registry import EmbeddingProviderInfo
 
 

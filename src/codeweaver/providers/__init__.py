@@ -20,7 +20,7 @@ from codeweaver.providers.custom import (
     ProviderSDK,
     ValidationResult,
     register_combined_provider,
-    register_embedding_provider,
+    register_CW_EMBEDDING_PROVIDER,
     register_reranking_provider,
 )
 from codeweaver.providers.factory import ProviderFactory, ProviderRegistry, get_provider_factory
@@ -40,7 +40,7 @@ __all__ = [
     "RerankResult",
     "ValidationResult",
     "get_provider_factory",
+    "register_CW_EMBEDDING_PROVIDER",
     "register_combined_provider",
-    "register_embedding_provider",
     "register_reranking_provider",
 ]

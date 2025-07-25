@@ -98,12 +98,12 @@ class TestBenchmarkResult:
             metadata={"test": "value"},
         )
 
-        result_dict = result.to_dict()
+        result_data = result.to_dict()
 
-        assert isinstance(result_dict, dict)
-        assert result_dict["benchmark_name"] == "test_benchmark"
-        assert result_dict["operations_per_second"] == 10.0
-        assert result_dict["metadata"]["test"] == "value"
+        assert isinstance(result_data, dict)
+        assert result_data["benchmark_name"] == "test_benchmark"
+        assert result_data["operations_per_second"] == 10.0
+        assert result_data["metadata"]["test"] == "value"
 
 
 class TestBenchmarkSuite:
@@ -113,18 +113,20 @@ class TestBenchmarkSuite:
         """Test benchmark suite initialization."""
         # Default configuration
         suite = BenchmarkSuite()
-        assert suite.warmup_iterations == 3
-        assert suite.benchmark_iterations == 10
-        assert suite.timeout_seconds == 60
+        self._warmup_bench(suite, 3, 10, 60)
         assert suite.measure_resources is False
 
         # Custom configuration
         suite = BenchmarkSuite(
             warmup_iterations=1, benchmark_iterations=5, timeout_seconds=30, measure_resources=True
         )
-        assert suite.warmup_iterations == 1
-        assert suite.benchmark_iterations == 5
-        assert suite.timeout_seconds == 30
+        self._warmup_bench(suite, 1, 5, 30)
+
+    # TODO Rename this here and in `test_benchmark_suite_initialization`
+    def _warmup_bench(self, suite, arg1, arg2, arg3):
+        assert suite.warmup_iterations == arg1
+        assert suite.benchmark_iterations == arg2
+        assert suite.timeout_seconds == arg3
         # measure_resources may be False if psutil not available
 
     @pytest.mark.asyncio

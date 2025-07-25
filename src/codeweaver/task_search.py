@@ -125,6 +125,7 @@ class TaskSearchCoordinator:
         """Analyze query for complexity indicators."""
 
         class QueryIndicators(typing.NamedTuple):
+            """Indicators of query complexity."""
             has_broad_scope: bool
             has_complex_pattern: bool
 
@@ -142,6 +143,7 @@ class TaskSearchCoordinator:
         """Analyze filter specificity."""
 
         class FilterSpecificity(typing.NamedTuple):
+            """Specificity of search filters."""
             has_specific_filters: bool
             is_path_specific: bool
 

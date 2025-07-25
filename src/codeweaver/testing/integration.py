@@ -24,7 +24,7 @@ from codeweaver.backends.base import HybridSearchBackend, VectorBackend
 from codeweaver.backends.factory import BackendFactory
 from codeweaver.config import CodeWeaverConfig
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.providers.factory import create_embedding_provider, create_rerank_provider
+from codeweaver.providers.factory import create_CW_EMBEDDING_PROVIDER, create_rerank_provider
 from codeweaver.sources.base import DataSource
 from codeweaver.sources.factory import create_data_source
 from codeweaver.testing.mocks import (
@@ -46,7 +46,7 @@ class TestConfiguration:
 
     # Component selection
     backend_type: str = "mock"
-    embedding_provider: str = "mock"
+    CW_EMBEDDING_PROVIDER: str = "mock"
     rerank_provider: str | None = "mock"
     data_source_type: str = "mock"
 
@@ -157,7 +157,7 @@ class IntegrationTestSuite:
 
         # Component instances
         self.backend: VectorBackend | None = None
-        self.embedding_provider: EmbeddingProvider | None = None
+        self.CW_EMBEDDING_PROVIDER: EmbeddingProvider | None = None
         self.rerank_provider: RerankProvider | None = None
         self.data_source: DataSource | None = None
 
@@ -223,15 +223,15 @@ class IntegrationTestSuite:
             self.backend = await BackendFactory.create_backend(config.backend)
 
         # Create embedding provider
-        if self.config.embedding_provider == "mock":
-            self.embedding_provider = MockEmbeddingProvider(
+        if self.config.CW_EMBEDDING_PROVIDER == "mock":
+            self.CW_EMBEDDING_PROVIDER = MockEmbeddingProvider(
                 latency_ms=self.config.mock_latency_ms, error_rate=self.config.mock_error_rate
             )
         else:
             # Create real provider from factory
             config = CodeWeaverConfig()
             config.merge_from_dict(self.config.config_overrides)
-            self.embedding_provider = await create_embedding_provider(config.provider)
+            self.CW_EMBEDDING_PROVIDER = await create_CW_EMBEDDING_PROVIDER(config.provider)
 
         # Create rerank provider if specified
         if self.config.rerank_provider:
@@ -305,11 +305,11 @@ class IntegrationTestSuite:
                     result.errors.extend(compliance_result.validation_errors)
 
             # Test embedding provider compliance
-            if self.embedding_provider:
-                compliance_result = await self.validator.validate_embedding_provider(
-                    self.embedding_provider
+            if self.CW_EMBEDDING_PROVIDER:
+                compliance_result = await self.validator.validate_CW_EMBEDDING_PROVIDER(
+                    self.CW_EMBEDDING_PROVIDER
                 )
-                result.compliance_results["embedding_provider"] = compliance_result
+                result.compliance_results["CW_EMBEDDING_PROVIDER"] = compliance_result
 
                 if not compliance_result.is_compliant:
                     result.success = False
@@ -403,22 +403,26 @@ class IntegrationTestSuite:
 
     async def _test_embedding_workflow(self) -> bool:
         """Test embedding provider workflow."""
-        if not self.embedding_provider:
+        if not self.CW_EMBEDDING_PROVIDER:
             return False
 
         try:
             # Test document embeddings
-            embeddings = await self.embedding_provider.embed_documents(self.config.test_documents)
+            embeddings = await self.CW_EMBEDDING_PROVIDER.embed_documents(
+                self.config.test_documents
+            )
             if len(embeddings) != len(self.config.test_documents):
                 return False
 
             # Test query embedding
-            query_embedding = await self.embedding_provider.embed_query(self.config.test_queries[0])
-            if len(query_embedding) != self.embedding_provider.dimension:
+            query_embedding = await self.CW_EMBEDDING_PROVIDER.embed_query(
+                self.config.test_queries[0]
+            )
+            if len(query_embedding) != self.CW_EMBEDDING_PROVIDER.dimension:
                 return False
 
             # Test provider info
-            provider_info = self.embedding_provider.get_provider_info()
+            provider_info = self.CW_EMBEDDING_PROVIDER.get_provider_info()
 
         except Exception:
             logger.exception("Embedding workflow test failed")
@@ -429,16 +433,18 @@ class IntegrationTestSuite:
 
     async def _test_search_workflow(self) -> bool:
         """Test vector backend search workflow."""
-        if not self.backend or not self.embedding_provider:
+        if not self.backend or not self.CW_EMBEDDING_PROVIDER:
             return False
 
         try:
             # Create collection
-            dimension = self.embedding_provider.dimension
+            dimension = self.CW_EMBEDDING_PROVIDER.dimension
             await self.backend.create_collection(name=self.test_collection, dimension=dimension)
 
             # Generate embeddings and index documents
-            embeddings = await self.embedding_provider.embed_documents(self.config.test_documents)
+            embeddings = await self.CW_EMBEDDING_PROVIDER.embed_documents(
+                self.config.test_documents
+            )
 
             from codeweaver.backends.base import VectorPoint
 
@@ -452,7 +458,9 @@ class IntegrationTestSuite:
             await self.backend.upsert_vectors(self.test_collection, vectors)
 
             # Test search
-            query_embedding = await self.embedding_provider.embed_query(self.config.test_queries[0])
+            query_embedding = await self.CW_EMBEDDING_PROVIDER.embed_query(
+                self.config.test_queries[0]
+            )
             results = await self.backend.search_vectors(
                 collection_name=self.test_collection, query_vector=query_embedding, limit=3
             )
@@ -518,12 +526,12 @@ class IntegrationTestSuite:
 
     async def _test_hybrid_search_workflow(self) -> bool:
         """Test hybrid search workflow."""
-        if not isinstance(self.backend, HybridSearchBackend) or not self.embedding_provider:
+        if not isinstance(self.backend, HybridSearchBackend) or not self.CW_EMBEDDING_PROVIDER:
             return False
 
         try:
             # Setup collection with sparse index
-            dimension = self.embedding_provider.dimension
+            dimension = self.CW_EMBEDDING_PROVIDER.dimension
             await self.backend.create_collection(name=self.test_collection, dimension=dimension)
 
             await self.backend.create_sparse_index(
@@ -531,7 +539,9 @@ class IntegrationTestSuite:
             )
 
             # Index documents with sparse vectors
-            embeddings = await self.embedding_provider.embed_documents(self.config.test_documents)
+            embeddings = await self.CW_EMBEDDING_PROVIDER.embed_documents(
+                self.config.test_documents
+            )
 
             from codeweaver.backends.base import VectorPoint
 
@@ -550,7 +560,9 @@ class IntegrationTestSuite:
             await self.backend.upsert_vectors(self.test_collection, vectors)
 
             # Test hybrid search
-            query_embedding = await self.embedding_provider.embed_query(self.config.test_queries[0])
+            query_embedding = await self.CW_EMBEDDING_PROVIDER.embed_query(
+                self.config.test_queries[0]
+            )
             results = await self.backend.hybrid_search(
                 collection_name=self.test_collection,
                 dense_vector=query_embedding,
@@ -566,12 +578,12 @@ class IntegrationTestSuite:
 
     async def _test_complete_pipeline(self) -> bool:
         """Test complete indexing and search pipeline."""
-        if not all([self.backend, self.embedding_provider, self.data_source]):
+        if not all([self.backend, self.CW_EMBEDDING_PROVIDER, self.data_source]):
             return False
 
         try:
             # Create collection
-            dimension = self.embedding_provider.dimension
+            dimension = self.CW_EMBEDDING_PROVIDER.dimension
             await self.backend.create_collection(name=self.test_collection, dimension=dimension)
 
             # Discover content from data source
@@ -587,7 +599,7 @@ class IntegrationTestSuite:
                 content = await self.data_source.read_content(item)
                 documents.append(content)
 
-            embeddings = await self.embedding_provider.embed_documents(documents)
+            embeddings = await self.CW_EMBEDDING_PROVIDER.embed_documents(documents)
 
             # Index in vector backend
             from codeweaver.backends.base import VectorPoint
@@ -600,7 +612,7 @@ class IntegrationTestSuite:
             await self.backend.upsert_vectors(self.test_collection, vectors)
 
             # Search
-            query_embedding = await self.embedding_provider.embed_query("test query")
+            query_embedding = await self.CW_EMBEDDING_PROVIDER.embed_query("test query")
             results = await self.backend.search_vectors(
                 collection_name=self.test_collection, query_vector=query_embedding, limit=3
             )
@@ -643,7 +655,7 @@ class IntegrationTestSuite:
             if not config.backend.provider:
                 return False
 
-            if not config.provider.embedding_provider:
+            if not config.provider.CW_EMBEDDING_PROVIDER:
                 return False
 
             # Test configuration serialization/deserialization
@@ -659,11 +671,11 @@ class IntegrationTestSuite:
 
 
 def create_test_configuration(
-    backend_type: str = "mock", embedding_provider: str = "mock", **kwargs: Any
+    backend_type: str = "mock", CW_EMBEDDING_PROVIDER: str = "mock", **kwargs: Any
 ) -> TestConfiguration:
     """Create a test configuration with sensible defaults."""
     return TestConfiguration(
-        backend_type=backend_type, embedding_provider=embedding_provider, **kwargs
+        backend_type=backend_type, CW_EMBEDDING_PROVIDER=CW_EMBEDDING_PROVIDER, **kwargs
     )
 
 

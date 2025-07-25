@@ -111,7 +111,7 @@ class HuggingFaceProvider(EmbeddingProvider): ...
 # Provider registry
 class ProviderRegistry:
     @classmethod
-    def create_embedding_provider(cls, config: EmbeddingConfig) -> EmbeddingProvider:
+    def create_CW_EMBEDDING_PROVIDER(cls, config: EmbeddingConfig) -> EmbeddingProvider:
         if config.provider == "voyage":
             return VoyageAIProvider(config)
         elif config.provider == "openai":
@@ -357,7 +357,7 @@ class ExtensibilityManager:
     def __init__(self, config: CodeWeaverConfig):
         self.config = config
         self.backend = BackendFactory.create(config.backend)
-        self.embedding_provider = ProviderFactory.create_embedding(config.embedding)
+        self.CW_EMBEDDING_PROVIDER = ProviderFactory.create_embedding(config.embedding)
         self.rerank_provider = ProviderFactory.create_rerank(config.embedding)
         self.data_sources = [SourceFactory.create(src) for src in config.data_sources.sources]
         self.hybrid_manager = HybridSearchManager(self.backend, config.backend)
@@ -393,7 +393,6 @@ class ExtensibilityManager:
 - Refactor existing Qdrant code into `QdrantBackend` class
 - Implement `VectorBackend` protocol for Qdrant
 - Add `QdrantHybridBackend` with sparse vector support
-- Ensure backward compatibility with existing deployments
 
 **Week 5: Additional Vector Backends**
 - Pencil in adapters for Pinecone, Chroma, Weaviate, and PgVector

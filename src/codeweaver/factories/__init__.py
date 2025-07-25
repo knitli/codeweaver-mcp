@@ -13,7 +13,6 @@ with plugin discovery, dependency injection, and lifecycle management.
 from codeweaver.factories.dependency_injection import DependencyContainer, Lifecycle, ServiceLocator
 from codeweaver.factories.extensibility_manager import ExtensibilityConfig, ExtensibilityManager
 from codeweaver.factories.integration import (
-    LegacyCompatibilityAdapter,
     ServerMigrationHelper,
     create_extensibility_context,
     create_migration_config,
@@ -44,7 +43,6 @@ __all__ = [
     # Validation
     "FactoryValidator",
     # Integration utilities
-    "LegacyCompatibilityAdapter",
     "Lifecycle",
     # Plugin discovery
     "PluginDiscovery",

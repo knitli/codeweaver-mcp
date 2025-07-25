@@ -43,12 +43,12 @@ def test_basic_configuration() -> None:
 
     # Test default values
     assert config.backend.provider == "qdrant"
-    assert config.provider.embedding_provider == "voyage"
+    assert config.provider.CW_EMBEDDING_PROVIDER == "voyage-ai"
     assert config.data_sources.enabled
 
     # Test effective methods
     assert config.get_effective_backend_provider() == "qdrant"
-    assert config.get_effective_embedding_provider() == "voyage"
+    assert config.get_effective_CW_EMBEDDING_PROVIDER() == "voyage-ai"
 
     print("   ✅ Basic configuration tests passed")
 
@@ -60,11 +60,11 @@ def test_legacy_migration() -> None:
     # Create legacy configuration
     legacy_config = {
         "embedding": {
-            "provider": "voyage",
+            "provider": "voyage-ai",
             "api_key": "test-voyage-key",
             "model": "voyage-code-3",
             "dimension": 1024,
-            "rerank_provider": "voyage",
+            "rerank_provider": "voyage-ai",
         },
         "qdrant": {
             "url": "https://test-cluster.qdrant.io",
@@ -93,8 +93,8 @@ def test_legacy_migration() -> None:
     assert config._migrated_from_legacy
     assert config.backend.provider == "qdrant"
     assert config.backend.url == "https://test-cluster.qdrant.io"
-    assert config.provider.embedding_provider == "voyage"
-    assert config.provider.embedding_api_key == "test-voyage-key"
+    assert config.provider.CW_EMBEDDING_PROVIDER == "voyage-ai"
+    assert config.provider.CW_EMBEDDING_API_KEY == "test-voyage-key"
 
     print("   ✅ Legacy migration tests passed")
 
@@ -104,10 +104,10 @@ def test_validation() -> None:
     print("🧪 Testing validation...")
 
     # Test backend-provider compatibility
-    warnings = ConfigValidator.validate_backend_provider_combination("qdrant", "voyage")
+    warnings = ConfigValidator.validate_backend_provider_combination("qdrant", "voyage-ai")
     assert len(warnings) == 0  # Should be compatible
 
-    warnings = ConfigValidator.validate_backend_provider_combination("unknown", "voyage")
+    warnings = ConfigValidator.validate_backend_provider_combination("unknown", "voyage-ai")
     assert len(warnings) > 0  # Should have warnings
 
     # Test hybrid search validation
@@ -118,10 +118,10 @@ def test_validation() -> None:
     assert len(warnings) > 0  # Pinecone doesn't support hybrid search natively
 
     # Test reranking validation
-    warnings = ConfigValidator.validate_reranking_config("voyage", "voyage")
+    warnings = ConfigValidator.validate_reranking_config("voyage-ai", "voyage-ai")
     assert len(warnings) == 0  # Voyage supports reranking
 
-    warnings = ConfigValidator.validate_reranking_config("openai", "voyage")
+    warnings = ConfigValidator.validate_reranking_config("openai", "voyage-ai")
     assert len(warnings) == 0  # Mixed providers are allowed
 
     print("   ✅ Validation tests passed")
@@ -133,7 +133,8 @@ def test_environment_variables() -> None:
 
     # Save original environment
     original_env = {
-        key: os.environ.get(key) for key in ["EMBEDDING_API_KEY", "VECTOR_BACKEND_URL", "EMBEDDING_PROVIDER"]
+        key: os.environ.get(key)
+        for key in ["CW_EMBEDDING_API_KEY", "CW_VECTOR_BACKEND_URL", "CW_EMBEDDING_PROVIDER"]
     }
 
     try:
@@ -153,9 +154,9 @@ def test_environment_variables() -> None:
 def test_env_configuration() -> None:
     """Test configuration with environment variables."""
     # Set test environment variables
-    os.environ["VOYAGE_API_KEY"] = "test-key"
-    os.environ["VECTOR_BACKEND_URL"] = "http://localhost:6333"
-    os.environ["EMBEDDING_PROVIDER"] = "voyage"
+    os.environ["CW_VOYAGE_API_KEY"] = "test-key"
+    os.environ["CW_VECTOR_BACKEND_URL"] = "http://localhost:6333"
+    os.environ["CW_EMBEDDING_PROVIDER"] = "voyage-ai"
 
     # Test configuration with environment variables
     config = CodeWeaverConfig()
@@ -163,7 +164,7 @@ def test_env_configuration() -> None:
 
     assert config.embedding.api_key == "test-key"
     assert config.qdrant.url == "http://localhost:6333"
-    assert config.embedding.provider == "voyage"
+    assert config.embedding.provider == "voyage-ai"
 
     # Test environment validation
     env_results = validate_environment_variables()
@@ -171,6 +172,7 @@ def test_env_configuration() -> None:
 
 
 def test_configuration_examples() -> None:
+    # sourcery skip: extract-duplicate-method
     """Test configuration example generation."""
     print("🧪 Testing configuration examples...")
 
@@ -204,8 +206,8 @@ api_key = "test-key"
 enable_hybrid_search = true
 
 [provider]
-embedding_provider = "voyage"
-embedding_api_key = "voyage-key"
+CW_EMBEDDING_PROVIDER = "voyage-ai"
+CW_EMBEDDING_API_KEY = "voyage-key"
 embedding_model = "voyage-code-3"
 
 [data_sources]
@@ -242,7 +244,7 @@ def _test_toml_implementation(temp_file):
 
     assert config.backend.provider == "qdrant"
     assert config.backend.url == "https://test.qdrant.io"
-    assert config.provider.embedding_provider == "voyage"
+    assert config.provider.CW_EMBEDDING_PROVIDER == "voyage-ai"
     assert len(config.data_sources.sources) == 1
 
     # Should have minimal warnings for a well-configured setup
@@ -265,7 +267,7 @@ def test_multi_backend_support() -> None:
         assert config.get_effective_backend_provider() == backend
 
         # Test validation
-        warnings = ConfigValidator.validate_backend_provider_combination(backend, "voyage")
+        warnings = ConfigValidator.validate_backend_provider_combination(backend, "voyage-ai")
         # All combinations should be at least theoretically valid
         assert isinstance(warnings, list)
 
@@ -286,13 +288,13 @@ def test_configuration_suggestions() -> None:
 
     # Test with improved configuration
     config.backend.enable_hybrid_search = True
-    config.provider.rerank_provider = "voyage"
+    config.provider.rerank_provider = "voyage-ai"
     config.backend.batch_size = 100
 
     print("   ✅ Configuration suggestion tests passed")
 
 
-def main() -> None:
+def main() -> None:  # sourcery skip: extract-method
     """Run all configuration tests."""
     print("🚀 CodeWeaver Configuration System Test Suite")
     print("=" * 60)

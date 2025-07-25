@@ -62,7 +62,7 @@ def test_configuration_detection() -> bool | None:
             config.qdrant = Mock()
             config.qdrant.url = "test"
             config.embedding = Mock()
-            config.embedding.provider = "voyage"
+            config.embedding.provider = "voyage-ai"
             config.rate_limiting = Mock()
             config.server = Mock()
 
@@ -108,7 +108,7 @@ def test_server_factory() -> bool | None:  # sourcery skip: extract-method
             config.qdrant.api_key = "test"
             config.qdrant.collection_name = "test"
             config.embedding = Mock()
-            config.embedding.provider = "voyage"
+            config.embedding.provider = "voyage-ai"
             config.embedding.api_key = "test"
             config.rate_limiting = Mock()
             config.rate_limiting.enabled = True
@@ -172,33 +172,6 @@ def test_migration_utilities() -> bool | None:  # sourcery skip: extract-method
         return True
 
 
-def test_compatibility_layer() -> bool | None:  # sourcery skip: extract-method
-    """Test the compatibility layer."""
-    logger.info("Testing compatibility layer...")
-
-    try:
-        with patch("codeweaver.factories.extensibility_manager.ExtensibilityManager"):
-            from codeweaver.factories.integration import LegacyCompatibilityAdapter
-
-            # Mock the manager
-            mock_manager_instance = Mock()
-            adapter = LegacyCompatibilityAdapter(mock_manager_instance)
-
-            # Test adapter methods exist
-            assert hasattr(adapter, "get_qdrant_client")
-            assert hasattr(adapter, "get_embedder")
-            assert hasattr(adapter, "get_reranker")
-            logger.info("✅ Compatibility adapter created successfully")
-
-    except Exception:
-        logger.exception("❌ Compatibility layer test failed: ")
-        return False
-
-    else:
-        logger.info("✅ Compatibility layer test passed")
-        return True
-
-
 def test_main_integration() -> bool | None:  # sourcery skip: extract-method
     """Test main.py integration."""
     logger.info("Testing main.py integration...")
@@ -224,7 +197,7 @@ def test_main_integration() -> bool | None:  # sourcery skip: extract-method
             mock_config.qdrant.api_key = "test"
             mock_config.qdrant.collection_name = "test"
             mock_config.embedding = Mock()
-            mock_config.embedding.provider = "voyage"
+            mock_config.embedding.provider = "voyage-ai"
             mock_config.embedding.api_key = "test"
             mock_config.rate_limiting = Mock()
             mock_config.rate_limiting.enabled = True
@@ -265,7 +238,6 @@ def main() -> int:
         test_configuration_detection,
         test_server_factory,
         test_migration_utilities,
-        test_compatibility_layer,
         test_main_integration,
     ]
 

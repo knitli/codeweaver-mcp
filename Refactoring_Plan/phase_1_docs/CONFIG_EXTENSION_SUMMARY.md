@@ -10,7 +10,7 @@ Successfully extended CodeWeaver's configuration schema to support the new exten
 
 **New Configuration Classes:**
 - `BackendConfig` - Supports 15+ vector databases (Qdrant, Pinecone, Chroma, Weaviate, pgvector, Milvus, Elasticsearch)
-- `ProviderConfig` - Supports 5+ embedding/reranking providers (VoyageAI, OpenAI, Cohere, SentenceTransformers, HuggingFace)  
+- `ProviderConfig` - Supports 5+ embedding/reranking providers (VoyageAI, OpenAI, Cohere, SentenceTransformers, HuggingFace)
 - `DataSourceConfig` - Multi-source support (filesystem, git, database, API, web)
 
 **Legacy Compatibility:**
@@ -28,7 +28,7 @@ Successfully extended CodeWeaver's configuration schema to support the new exten
 
 **Validation Framework:**
 - Backend-provider compatibility matrix
-- Hybrid search capability validation  
+- Hybrid search capability validation
 - API key requirement validation
 - Configuration consistency checks
 
@@ -57,19 +57,19 @@ python -m codeweaver.config_cli info
 **New Environment Variables:**
 ```bash
 # Backend-agnostic
-VECTOR_BACKEND_PROVIDER=qdrant|pinecone|chroma|weaviate|pgvector
-VECTOR_BACKEND_URL=https://your-backend-url
-VECTOR_BACKEND_API_KEY=your-backend-key
+CW_VECTOR_BACKEND_PROVIDER=qdrant|pinecone|chroma|weaviate|pgvector
+CW_VECTOR_BACKEND_URL=https://your-backend-url
+CW_VECTOR_BACKEND_API_KEY=your-backend-key
 
-# Provider-agnostic  
-EMBEDDING_PROVIDER=voyage|openai|cohere|sentence-transformers|huggingface
-EMBEDDING_API_KEY=your-provider-key
+# Provider-agnostic
+CW_EMBEDDING_PROVIDER=voyage|openai|cohere|sentence-transformers|huggingface
+CW_EMBEDDING_API_KEY=your-provider-key
 EMBEDDING_MODEL=your-model-name
 
 # Feature flags
-ENABLE_HYBRID_SEARCH=true|false
+CW_ENABLE_HYBRID_SEARCH=true|false
 ENABLE_SPARSE_VECTORS=true|false
-USE_LOCAL_MODELS=true|false
+CW_USE_LOCAL_MODELS=true|false
 ```
 
 **Legacy Variables (Still Supported):**
@@ -123,13 +123,13 @@ USE_LOCAL_MODELS=true|false
 class CodeWeaverConfig:
     # New extensible configuration (primary)
     backend: BackendConfig
-    provider: ProviderConfig  
+    provider: ProviderConfig
     data_sources: DataSourceConfig
-    
+
     # Legacy configuration (backward compatibility)
     embedding: EmbeddingConfig
     qdrant: QdrantConfig
-    
+
     # Shared configuration
     chunking: ChunkingConfig
     indexing: IndexingConfig
@@ -187,7 +187,7 @@ url = "https://cluster.qdrant.io"
 enable_hybrid_search = true
 
 [provider]
-embedding_provider = "voyage"
+CW_EMBEDDING_PROVIDER = "voyage"
 embedding_model = "voyage-code-3"
 rerank_provider = "voyage"
 
@@ -204,17 +204,17 @@ priority = 1
 
 ```bash
 # New format
-export VECTOR_BACKEND_PROVIDER=qdrant
-export VECTOR_BACKEND_URL=https://cluster.qdrant.io
-export EMBEDDING_PROVIDER=voyage
-export EMBEDDING_API_KEY=your-key
-export ENABLE_HYBRID_SEARCH=true
+export CW_VECTOR_BACKEND_PROVIDER=qdrant
+export CW_VECTOR_BACKEND_URL=https://cluster.qdrant.io
+export CW_EMBEDDING_PROVIDER=voyage
+export CW_EMBEDDING_API_KEY=your-key
+export CW_ENABLE_HYBRID_SEARCH=true
 ```
 
 ## ✅ Success Criteria Met
 
 1. **✅ 15+ Backend Support**: Full configuration support for all major vector databases
-2. **✅ 5+ Provider Support**: Complete embedding and reranking provider integration  
+2. **✅ 5+ Provider Support**: Complete embedding and reranking provider integration
 3. **✅ 100% Backward Compatibility**: All existing configurations continue to work unchanged
 4. **✅ Automatic Migration**: Seamless transition from legacy to new format
 5. **✅ Comprehensive Validation**: Full validation with helpful error messages
@@ -230,7 +230,7 @@ export ENABLE_HYBRID_SEARCH=true
 - **Enhanced Performance**: Hybrid search, connection pooling, caching
 - **Multi-Source Support**: Index from multiple sources simultaneously
 
-### For Developers  
+### For Developers
 - **Extensible Architecture**: Easy to add new backends and providers
 - **Strong Validation**: Comprehensive configuration validation
 - **Clear Migration Path**: Automatic and manual migration options

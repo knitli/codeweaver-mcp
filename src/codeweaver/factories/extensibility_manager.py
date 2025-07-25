@@ -7,9 +7,10 @@
 Central coordinator for CodeWeaver's extensibility system.
 
 Manages the lifecycle and coordination of all extensible components including
-backends, providers, data sources, with plugin discovery and dependency injection.
+backends, providers, data sources, using the new unified factory architecture.
 """
 
+import asyncio
 import logging
 
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
@@ -18,9 +19,7 @@ from typing import Any
 
 from codeweaver.backends.base import VectorBackend
 from codeweaver.config import CodeWeaverConfig
-from codeweaver.factories.dependency_injection import DependencyContainer
-from codeweaver.factories.plugin_discovery import PluginDiscovery
-from codeweaver.factories.unified_factory import UnifiedFactory
+from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.rate_limiter import RateLimiter
 from codeweaver.sources.base import DataSource
@@ -36,12 +35,11 @@ class ExtensibilityConfig:
     # Plugin discovery settings
     enable_plugin_discovery: bool = True
     plugin_directories: list[str] | None = None
-    auto_load_plugins: bool = True
+    auto_discover_plugins: bool = True
 
-    # Dependency injection settings
+    # Factory settings
     enable_dependency_injection: bool = True
-    singleton_backends: bool = True
-    singleton_providers: bool = True
+    validate_configurations: bool = True
 
     # Lifecycle management
     enable_graceful_shutdown: bool = True
@@ -51,17 +49,13 @@ class ExtensibilityConfig:
     lazy_initialization: bool = True
     component_caching: bool = True
 
-    # Compatibility settings
-    enable_legacy_fallbacks: bool = True
-    migration_mode: bool = False
-
 
 @dataclass
 class ComponentInstances:
     """Container for instantiated components."""
 
     backend: VectorBackend | None = None
-    embedding_provider: EmbeddingProvider | None = None
+    CW_EMBEDDING_PROVIDER: EmbeddingProvider | None = None
     reranking_provider: RerankProvider | None = None
     data_sources: list[DataSource] | None = None
     rate_limiter: RateLimiter | None = None
@@ -71,8 +65,8 @@ class ExtensibilityManager:
     """
     Central coordinator for CodeWeaver's extensibility system.
 
-    Manages the complete lifecycle of extensible components with plugin discovery,
-    dependency injection, configuration validation, and graceful shutdown.
+    Manages the complete lifecycle of extensible components using the new
+    unified factory architecture with plugin discovery and validation.
     """
 
     def __init__(
@@ -87,10 +81,8 @@ class ExtensibilityManager:
         self.config = config
         self.extensibility_config = extensibility_config or ExtensibilityConfig()
 
-        # Initialize core systems
-        self._dependency_container: DependencyContainer | None = None
-        self._plugin_discovery: PluginDiscovery | None = None
-        self._unified_factory: UnifiedFactory | None = None
+        # Initialize new factory system
+        self._factory: CodeWeaverFactory | None = None
 
         # Component instances
         self._components = ComponentInstances()
@@ -106,29 +98,23 @@ class ExtensibilityManager:
         logger.info("Initializing extensibility system")
 
         try:
-            # Initialize dependency injection container
-            if self.extensibility_config.enable_dependency_injection:
-                self._dependency_container = DependencyContainer(
-                    singleton_backends=self.extensibility_config.singleton_backends,
-                    singleton_providers=self.extensibility_config.singleton_providers,
-                )
-                logger.info("Dependency injection container initialized")
-
-            # Initialize plugin discovery
-            if self.extensibility_config.enable_plugin_discovery:
-                self._plugin_discovery = PluginDiscovery(
-                    plugin_directories=self.extensibility_config.plugin_directories,
-                    auto_load=self.extensibility_config.auto_load_plugins,
-                )
-                await self._plugin_discovery.discover_plugins()
-                logger.info("Plugin discovery system initialized")
-
-            # Initialize unified factory with discovered components
-            self._unified_factory = UnifiedFactory(
-                dependency_container=self._dependency_container,
-                plugin_discovery=self._plugin_discovery,
+            # Initialize new unified factory
+            self._factory = CodeWeaverFactory(
+                config=self.config,
+                enable_plugins=self.extensibility_config.enable_plugin_discovery,
+                enable_dependency_injection=self.extensibility_config.enable_dependency_injection,
+                plugin_directories=self.extensibility_config.plugin_directories,
+                auto_discover_plugins=self.extensibility_config.auto_discover_plugins,
             )
-            logger.info("Unified factory initialized")
+            logger.info("CodeWeaver factory initialized")
+
+            # Validate configuration if required
+            if self.extensibility_config.validate_configurations:
+                validation_result = self._factory.validate_configuration(self.config)
+                if not validation_result.is_valid:
+                    logger.warning("Configuration validation issues: %s", validation_result.errors)
+                if validation_result.warnings:
+                    logger.info("Configuration warnings: %s", validation_result.warnings)
 
             # Initialize core components if not in lazy mode
             if not self.extensibility_config.lazy_initialization:
@@ -138,20 +124,21 @@ class ExtensibilityManager:
             logger.info("Extensibility system initialization complete")
 
         except Exception:
-            logger.exception("Failed to initialize extensibility system: %s", self.config.name)
+            logger.exception("Failed to initialize extensibility system")
             raise
 
     async def _initialize_core_components(self) -> None:
         """Initialize core components (backend, providers, rate limiter)."""
         try:
             # Initialize rate limiter
-            self._components.rate_limiter = RateLimiter(self.config.rate_limiting)
+            if hasattr(self.config, "rate_limiting"):
+                self._components.rate_limiter = RateLimiter(self.config.rate_limiting)
 
             # Initialize backend
             self._components.backend = await self._create_backend()
 
             # Initialize embedding provider
-            self._components.embedding_provider = await self._create_embedding_provider()
+            self._components.CW_EMBEDDING_PROVIDER = await self._create_CW_EMBEDDING_PROVIDER()
 
             # Initialize reranking provider
             self._components.reranking_provider = await self._create_reranking_provider()
@@ -162,15 +149,15 @@ class ExtensibilityManager:
             logger.info("Core components initialized")
 
         except Exception:
-            logger.exception("Failed to initialize core components: %s", self.config.name)
+            logger.exception("Failed to initialize core components")
             raise
 
     async def _create_backend(self) -> VectorBackend:
         """Create and configure the vector backend."""
-        if not self._unified_factory:
-            raise RuntimeError("Unified factory not initialized")
+        if not self._factory:
+            raise RuntimeError("Factory not initialized")
 
-        backend = self._unified_factory.backends.create_backend(self.config.backend)
+        backend = self._factory.create_backend(self.config.backend)
 
         # Register shutdown handler
         if hasattr(backend, "close"):
@@ -178,14 +165,12 @@ class ExtensibilityManager:
 
         return backend
 
-    async def _create_embedding_provider(self) -> EmbeddingProvider:
+    async def _create_CW_EMBEDDING_PROVIDER(self) -> EmbeddingProvider:
         """Create and configure the embedding provider."""
-        if not self._unified_factory:
-            raise RuntimeError("Unified factory not initialized")
+        if not self._factory:
+            raise RuntimeError("Factory not initialized")
 
-        provider = self._unified_factory.providers.create_embedding_provider(
-            config=self.config.embedding, rate_limiter=self._components.rate_limiter
-        )
+        provider = self._factory.create_provider(self.config.embedding)
 
         # Register shutdown handler
         if hasattr(provider, "close"):
@@ -195,36 +180,25 @@ class ExtensibilityManager:
 
     async def _create_reranking_provider(self) -> RerankProvider | None:
         """Create and configure the reranking provider."""
-        if not self._unified_factory:
-            raise RuntimeError("Unified factory not initialized")
-
-        provider = self._unified_factory.providers.get_default_reranking_provider(
-            embedding_provider_name=self.config.embedding.provider,
-            api_key=self.config.embedding.api_key,
-            rate_limiter=self._components.rate_limiter,
-        )
-
-        # Register shutdown handler
-        if provider and hasattr(provider, "close"):
-            self._shutdown_handlers.append(provider.close)
-
-        return provider
+        # For now, reranking providers are handled by the existing provider factory
+        # This could be extended in the future to use the new factory system
+        return None
 
     async def _create_data_sources(self) -> list[DataSource]:
         """Create and configure data sources."""
-        if not self._unified_factory:
-            raise RuntimeError("Unified factory not initialized")
+        if not self._factory:
+            raise RuntimeError("Factory not initialized")
 
         if not hasattr(self.config, "data_sources") or not self.config.data_sources:
-            # Fallback to file system source for backward compatibility
+            # No data sources configured
             return []
 
-        sources = self._unified_factory.sources.create_multiple_sources(
-            self.config.data_sources.sources
-        )
+        sources = []
+        for source_config in self.config.data_sources.sources:
+            source = self._factory.create_source(source_config)
+            sources.append(source)
 
-        # Register shutdown handlers
-        for source in sources:
+            # Register shutdown handler
             if hasattr(source, "cleanup"):
                 self._shutdown_handlers.append(source.cleanup)
 
@@ -240,15 +214,15 @@ class ExtensibilityManager:
 
         return self._components.backend
 
-    async def get_embedding_provider(self) -> EmbeddingProvider:
+    async def get_CW_EMBEDDING_PROVIDER(self) -> EmbeddingProvider:
         """Get the embedding provider instance, creating it if necessary."""
         if not self._initialized:
             await self.initialize()
 
-        if self._components.embedding_provider is None:
-            self._components.embedding_provider = await self._create_embedding_provider()
+        if self._components.CW_EMBEDDING_PROVIDER is None:
+            self._components.CW_EMBEDDING_PROVIDER = await self._create_CW_EMBEDDING_PROVIDER()
 
-        return self._components.embedding_provider
+        return self._components.CW_EMBEDDING_PROVIDER
 
     async def get_reranking_provider(self) -> RerankProvider | None:
         """Get the reranking provider instance, creating it if necessary."""
@@ -270,26 +244,26 @@ class ExtensibilityManager:
 
         return self._components.data_sources
 
-    def get_rate_limiter(self) -> RateLimiter:
+    def get_rate_limiter(self) -> RateLimiter | None:
         """Get the rate limiter instance."""
-        if self._components.rate_limiter is None:
+        if self._components.rate_limiter is None and hasattr(self.config, "rate_limiting"):
             self._components.rate_limiter = RateLimiter(self.config.rate_limiting)
 
         return self._components.rate_limiter
 
-    def get_unified_factory(self) -> UnifiedFactory:
-        """Get the unified factory instance.
+    def get_factory(self) -> CodeWeaverFactory:
+        """Get the factory instance.
 
         Returns:
-            Unified factory for creating additional components
+            CodeWeaver factory for creating additional components
 
         Raises:
             RuntimeError: If the extensibility system is not initialized
         """
-        if not self._unified_factory:
+        if not self._factory:
             raise RuntimeError("Extensibility system not initialized. Call initialize() first.")
 
-        return self._unified_factory
+        return self._factory
 
     def get_component_info(self) -> dict[str, Any]:
         """Get comprehensive information about all available components.
@@ -297,23 +271,23 @@ class ExtensibilityManager:
         Returns:
             Dictionary with detailed component information
         """
-        if not self._unified_factory:
+        if not self._factory:
             return {"error": "Extensibility system not initialized"}
 
-        info = self._unified_factory.get_component_info()
+        info = self._factory.get_available_components()
 
         # Add extensibility system status
         info.update({
             "extensibility_manager": {
                 "initialized": self._initialized,
-                "dependency_injection_enabled": self._dependency_container is not None,
-                "plugin_discovery_enabled": self._plugin_discovery is not None,
                 "lazy_initialization": self.extensibility_config.lazy_initialization,
                 "component_caching": self.extensibility_config.component_caching,
+                "plugin_discovery_enabled": self.extensibility_config.enable_plugin_discovery,
+                "dependency_injection_enabled": self.extensibility_config.enable_dependency_injection,
             },
             "components_instantiated": {
                 "backend": self._components.backend is not None,
-                "embedding_provider": self._components.embedding_provider is not None,
+                "CW_EMBEDDING_PROVIDER": self._components.CW_EMBEDDING_PROVIDER is not None,
                 "reranking_provider": self._components.reranking_provider is not None,
                 "data_sources": self._components.data_sources is not None,
                 "rate_limiter": self._components.rate_limiter is not None,
@@ -328,27 +302,16 @@ class ExtensibilityManager:
         Returns:
             Validation results with any issues found
         """
-        if not self._unified_factory:
+        if not self._factory:
             return {"error": "Extensibility system not initialized"}
 
-        # Convert config to dict for validation
-        config_data = {
+        validation_result = self._factory.validate_configuration(self.config)
 
-            "backend": self.config.backend.__dict__
-            if hasattr(self.config.backend, "__dict__")
-            else {},
-            "embedding": self.config.embedding.__dict__
-            if hasattr(self.config.embedding, "__dict__")
-            else {},
+        return {
+            "valid": validation_result.is_valid,
+            "errors": validation_result.errors,
+            "warnings": validation_result.warnings,
         }
-
-        # Add data sources if available
-        if hasattr(self.config, "data_sources") and self.config.data_sources:
-
-            config_data["data_sources"] = self.config.data_sources.__dict__
-
-        return self._unified_factory.validate_configuration(config_data)
-
 
     @asynccontextmanager
     async def managed_lifecycle(self) -> AbstractAsyncContextManager["ExtensibilityManager"]:
@@ -381,13 +344,7 @@ class ExtensibilityManager:
             except Exception as e:
                 logger.warning("Error during component shutdown: %s", e)
 
-        # Cleanup plugin discovery
-        if self._plugin_discovery:
-            await self._plugin_discovery.cleanup()
-
-        # Cleanup dependency container
-        if self._dependency_container:
-            await self._dependency_container.cleanup()
+        # Factory cleanup is handled automatically
 
         # Clear component instances
         self._components = ComponentInstances()
@@ -395,7 +352,3 @@ class ExtensibilityManager:
         self._initialized = False
 
         logger.info("Extensibility system shutdown complete")
-
-
-# Import asyncio at the end to avoid circular imports
-import asyncio

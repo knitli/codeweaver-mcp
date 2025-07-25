@@ -165,7 +165,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
             display_name=self._registry_entry.display_name,
             description=self._registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -189,7 +189,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.LOCAL_INFERENCE,
                 ProviderCapability.BATCH_PROCESSING,
             ],
@@ -214,7 +214,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
 
         # Check supported capabilities
         supported_capabilities = {
-            ProviderCapability.EMBEDDINGS,
+            ProviderCapability.EMBEDDING,
             ProviderCapability.LOCAL_INFERENCE,
             ProviderCapability.BATCH_PROCESSING,
         }

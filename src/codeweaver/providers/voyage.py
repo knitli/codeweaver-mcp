@@ -210,7 +210,7 @@ class VoyageAIProvider(CombinedProvider):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
                 ProviderCapability.CUSTOM_DIMENSIONS,
@@ -239,7 +239,7 @@ class VoyageAIProvider(CombinedProvider):
             display_name=registry_entry.display_name,
             description=registry_entry.description,
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.RERANKING,
                 ProviderCapability.BATCH_PROCESSING,
                 ProviderCapability.CUSTOM_DIMENSIONS,
@@ -264,7 +264,7 @@ class VoyageAIProvider(CombinedProvider):
             return False, "voyageai package not installed (install with: uv add voyageai)"
 
         # Both embedding and reranking are supported
-        if capability in [ProviderCapability.EMBEDDINGS, ProviderCapability.RERANKING]:
+        if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
             return True, None
 
         return False, f"Capability {capability.value} not supported by VoyageAI"

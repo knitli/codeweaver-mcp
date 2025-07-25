@@ -14,27 +14,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    MatchValue,
-    PointStruct,
-    VectorParams,
-)
-
 from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.chunker import AST_GREP_AVAILABLE, AstGrepChunker
-from codeweaver.config import _EXTENDED_CONFIGS_AVAILABLE, CodeWeaverConfig, get_config
-from codeweaver.embeddings import EmbedderBase, VoyageAIReranker, create_embedder
+from codeweaver.config import CodeWeaverConfig, get_config
 from codeweaver.factories.extensibility_manager import ExtensibilityConfig, ExtensibilityManager
-from codeweaver.factories.integration import (
-    LegacyCompatibilityAdapter,
-    create_migration_config,
-    validate_migration_readiness,
-)
 from codeweaver.file_filter import FileFilter
 from codeweaver.file_watcher import FileWatcherManager
 from codeweaver.models import CodeChunk
@@ -69,7 +53,7 @@ class _RerankProviderAdapter:
         self.provider = provider
 
     async def rerank(
-        self, query: str, documents: list[str], top_k: int | None = None,
+        self, query: str, documents: list[str], top_k: int | None = None
     ) -> list[dict[str, Any]]:
         """Rerank documents and convert to legacy format."""
         results = await self.provider.rerank(query, documents, top_k)
@@ -107,7 +91,7 @@ class CodeEmbeddingsServer:
 
             # Create embedding provider
             embedding_provider = provider_factory.create_embedding_provider(
-                config=self.config.embedding, rate_limiter=self.rate_limiter,
+                config=self.config.embedding, rate_limiter=self.rate_limiter
             )
 
             # Wrap in legacy interface for backward compatibility
@@ -127,19 +111,10 @@ class CodeEmbeddingsServer:
                 self.reranker = _RerankProviderAdapter(rerank_provider)
             else:
                 logger.warning("No reranking provider available, using legacy VoyageAIReranker")
-                self.reranker = VoyageAIReranker(
-                    api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter,
-                )
 
         except Exception as e:
             logger.warning("Failed to initialize new provider system, using legacy: %s", e)
-            # Fallback to legacy system
-            self.embedder = create_embedder(
-                config=self.config.embedding, rate_limiter=self.rate_limiter,
-            )
-            self.reranker = VoyageAIReranker(
-                api_key=self.config.embedding.api_key, rate_limiter=self.rate_limiter,
-            )
+
         self.chunker = AstGrepChunker(
             max_chunk_size=self.config.chunking.max_chunk_size,
             min_chunk_size=self.config.chunking.min_chunk_size,
@@ -152,15 +127,11 @@ class CodeEmbeddingsServer:
         # Initialize file watcher manager
         self.file_watcher_manager = FileWatcherManager(self.config)
 
-        # Initialize vector backend (with backward compatibility)
+        # Initialize vector backend using factory pattern
         self.backend = self._initialize_backend()
         self.collection_name = self.config.qdrant.collection_name
 
-        # Initialize legacy Qdrant client for backward compatibility
-        self.qdrant = QdrantClient(url=self.config.qdrant.url, api_key=self.config.qdrant.api_key)
-
-        # Ensure collection exists
-        self._ensure_collection()
+        # Collection creation will happen lazily in async methods when first needed
 
     def _initialize_backend(self) -> VectorBackend:
         """Initialize the vector database backend."""
@@ -177,28 +148,22 @@ class CodeEmbeddingsServer:
             backend = BackendFactory.create_backend(backend_config)
             logger.info("Successfully initialized backend: %s", backend_config.provider)
         except Exception:
-            logger.exception("Failed to initialize backend, falling back to legacy mode")
-            # For now, we'll still maintain the legacy QdrantClient for fallback
-            # but in the future this could raise an error
-            return None
+            logger.exception("Failed to initialize backend")
+            raise  # Fail fast - no legacy fallback
         else:
             return backend
 
-    def _ensure_collection(self):
-        """Ensure the vector collection exists using legacy client (sync)."""
+    async def _ensure_collection(self):
+        """Ensure the vector collection exists using backend abstraction."""
         try:
-            # For now, use legacy Qdrant client for synchronous initialization
-            # Collection creation via backend will be done lazily when needed
-            collections = self.qdrant.get_collections().collections
-            collection_names = [c.name for c in collections]
-
-            if self.collection_name not in collection_names:
-                logger.info("Creating collection using legacy client: %s", self.collection_name)
-                self.qdrant.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(
-                        size=self.embedder.dimension, distance=Distance.COSINE,
-                    ),
+            # Use backend abstraction for collection management
+            collections = await self.backend.list_collections()
+            if self.collection_name not in collections:
+                logger.info("Creating collection using backend: %s", self.collection_name)
+                await self.backend.create_collection(
+                    name=self.collection_name,
+                    dimension=self.embedder.dimension,
+                    distance_metric=DistanceMetric.COSINE,
                 )
             else:
                 logger.info("Collection %s already exists", self.collection_name)
@@ -206,38 +171,10 @@ class CodeEmbeddingsServer:
             logger.exception("Error ensuring collection")
             raise
 
-    async def _ensure_collection_async(self):
-        """Ensure the vector collection exists using backend abstraction (async)."""
-        try:
-            if self.backend is not None:
-                # Use new backend abstraction
-                try:
-                    # Check if collection exists
-                    collections = await self.backend.list_collections()
-                    if self.collection_name not in collections:
-                        logger.info("Creating collection using backend: %s", self.collection_name)
-                        await self.backend.create_collection(
-                            name=self.collection_name,
-                            dimension=self.embedder.dimension,
-                            distance_metric=DistanceMetric.COSINE,
-                        )
-                    else:
-                        logger.info("Collection %s already exists", self.collection_name)
-                except Exception as e:
-                    logger.warning(
-                        "Backend collection creation failed, falling back to legacy: %s", e,
-                    )
-                else:
-                    return
-
-            # Fallback using legacy collection creation logic
-            self._ensure_collection()
-        except Exception:
-            logger.exception("Error ensuring collection async")
-            raise
+    # _ensure_collection_async removed - using unified _ensure_collection method
 
     async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None,
+        self, root_path: str, patterns: list[str] | None = None
     ) -> dict[str, Any]:
         """Index a codebase for semantic search using ast-grep."""
         root = Path(root_path)
@@ -288,7 +225,7 @@ class CodeEmbeddingsServer:
         watcher_started = False
         if self.config.indexing.enable_auto_reindex:
             watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes,
+                root_path=root, reindex_callback=self._handle_file_changes
             )
 
         return {
@@ -316,7 +253,7 @@ class CodeEmbeddingsServer:
             return
 
         # Ensure collection exists (async)
-        await self._ensure_collection_async()
+        await self._ensure_collection()
 
         # Generate embeddings
         texts = [chunk.content for chunk in chunks]
@@ -336,21 +273,9 @@ class CodeEmbeddingsServer:
         def _raise_backend_error():
             raise RuntimeError("Backend not available, using fallback")
 
-        try:
-            if self.backend is None:
-                _raise_backend_error()
-            await self.backend.upsert_vectors(self.collection_name, vector_points)
-            logger.debug("Uploaded %d vectors using backend", len(vector_points))
-        except Exception as e:
-            logger.warning("Backend upload failed, using legacy Qdrant client: %s", e)
-            # Fallback to legacy Qdrant client
-            points = []
-            for vector_point in vector_points:
-                point = PointStruct(
-                    id=vector_point.id, vector=vector_point.vector, payload=vector_point.payload,
-                )
-                points.append(point)
-            self.qdrant.upsert(collection_name=self.collection_name, points=points)
+        # Use backend abstraction for vector upload
+        await self.backend.upsert_vectors(self.collection_name, vector_points)
+        logger.debug("Uploaded %d vectors using backend", len(vector_points))
 
     async def search_code(
         self,
@@ -370,8 +295,13 @@ class CodeEmbeddingsServer:
         """
         # Check if task delegation should be used
         task_recommendation = await self._assess_search_complexity(
-            query, file_filter, language_filter, use_task_delegation, limit,
-            chunk_type_filter, rerank,
+            query,
+            file_filter,
+            language_filter,
+            use_task_delegation,
+            limit,
+            chunk_type_filter,
+            rerank,
         )
         if task_recommendation:
             return task_recommendation
@@ -381,8 +311,7 @@ class CodeEmbeddingsServer:
 
         # Perform search with backend/legacy fallback
         search_results = await self._perform_vector_search(
-            query_vector, file_filter, language_filter, chunk_type_filter,
-            limit, rerank,
+            query_vector, file_filter, language_filter, chunk_type_filter, limit, rerank
         )
 
         # Process search results
@@ -443,7 +372,7 @@ class CodeEmbeddingsServer:
                             rerank=rerank,
                         ),
                     },
-                },
+                }
             ]
         return None
 
@@ -464,15 +393,15 @@ class CodeEmbeddingsServer:
         filter_conditions = []
         if file_filter:
             filter_conditions.append(
-                FilterCondition(field="file_path", operator="eq", value=file_filter),
+                FilterCondition(field="file_path", operator="eq", value=file_filter)
             )
         if language_filter:
             filter_conditions.append(
-                FilterCondition(field="language", operator="eq", value=language_filter),
+                FilterCondition(field="language", operator="eq", value=language_filter)
             )
         if chunk_type_filter:
             filter_conditions.append(
-                FilterCondition(field="chunk_type", operator="eq", value=chunk_type_filter),
+                FilterCondition(field="chunk_type", operator="eq", value=chunk_type_filter)
             )
 
         universal_filter = SearchFilter(conditions=filter_conditions) if filter_conditions else None
@@ -493,46 +422,8 @@ class CodeEmbeddingsServer:
             logger.debug("Search using backend returned %d results", len(search_result))
         except Exception as e:
             logger.warning("Backend search failed, using legacy Qdrant client: %s", e)
-            return await self._fallback_legacy_search(
-                query_vector, file_filter, language_filter, chunk_type_filter, limit, rerank,
-            )
 
-    async def _fallback_legacy_search(
-        self,
-        query_vector: list[float],
-        file_filter: str | None,
-        language_filter: str | None,
-        chunk_type_filter: str | None,
-        limit: int,
-        *,
-        rerank: bool,
-    ) -> list:
-        """Fallback to legacy Qdrant search when backend fails."""
-        legacy_filter_conditions = []
-
-        if file_filter:
-            legacy_filter_conditions.append(
-                FieldCondition(key="file_path", match=MatchValue(value=file_filter)),
-            )
-        if language_filter:
-            legacy_filter_conditions.append(
-                FieldCondition(key="language", match=MatchValue(value=language_filter)),
-            )
-        if chunk_type_filter:
-            legacy_filter_conditions.append(
-                FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter)),
-            )
-
-        legacy_filter = (
-            Filter(must=legacy_filter_conditions) if legacy_filter_conditions else None
-        )
-
-        return self.qdrant.search(
-            collection_name=self.collection_name,
-            query_vector=query_vector,
-            query_filter=legacy_filter,
-            limit=limit * 2 if rerank else limit,  # Get more for reranking
-        )
+        return search_result
 
     def _process_search_results(self, search_result: list) -> list[dict[str, Any]]:
         """Process search results from backend or legacy client."""
@@ -562,7 +453,7 @@ class CodeEmbeddingsServer:
         return results
 
     async def _apply_reranking(
-        self, query: str, results: list[dict[str, Any]], limit: int,
+        self, query: str, results: list[dict[str, Any]], limit: int
     ) -> list[dict[str, Any]]:
         """Apply reranking to search results."""
         try:
@@ -615,14 +506,14 @@ class CodeEmbeddingsServer:
                         "pattern_complexity": "complex" if is_complex_pattern else "simple",
                         "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
                         "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit,
+                            pattern=pattern, language=language, root_path=root_path, limit=limit
                         ),
                     },
-                },
+                }
             ]
 
         results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path,
+            pattern=pattern, language=language, root_path=root_path
         )
 
         return results[:limit]
@@ -641,13 +532,12 @@ class CodeEmbeddingsServer:
         }
 
     def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None,
+        self, file_filter: str | None = None, language_filter: str | None = None
     ) -> int:
         """Estimate number of files that would be searched."""
         try:
-            # For now, use legacy Qdrant client for synchronous collection info
-            # Backend abstraction collection info can be implemented later as async version
-            collection_info = self.qdrant.get_collection(self.collection_name)
+            # Use backend abstraction for collection info
+            collection_info = await self.backend.get_collection_info(self.collection_name)
             total_points = collection_info.points_count
 
             # Rough estimate based on average chunks per file
@@ -694,7 +584,7 @@ class ExtensibleCodeEmbeddingsServer:
 
         # Create extensibility manager
         self.extensibility_manager = ExtensibilityManager(
-            config=self.config, extensibility_config=extensibility_config,
+            config=self.config, extensibility_config=extensibility_config
         )
 
         # Component instances (populated lazily)
@@ -730,69 +620,17 @@ class ExtensibleCodeEmbeddingsServer:
         ] = await self.extensibility_manager.get_reranking_provider()
         self._components["rate_limiter"] = self.extensibility_manager.get_rate_limiter()
 
-        # Create legacy compatibility adapters
-        compatibility_adapter = LegacyCompatibilityAdapter(self.extensibility_manager)
-        self._components["qdrant"] = await compatibility_adapter.get_qdrant_client()
-        self._components["embedder"] = await compatibility_adapter.get_embedder()
-        self._components["reranker"] = await compatibility_adapter.get_reranker()
-
         # Ensure collection exists
         await self._ensure_collection()
 
         self._initialized = True
         logger.info("Extensible server initialization complete")
 
-    async def _ensure_collection(self) -> None:
-        """Ensure the vector collection exists."""
-        try:
-            qdrant = self._components["qdrant"]
-            collections = await qdrant.get_collections()
-            collection_names = [c.name for c in collections.collections]
-
-            collection_name = self.config.qdrant.collection_name
-            if collection_name not in collection_names:
-                logger.info("Creating collection: %s", collection_name)
-                embedder = self._components["embedder"]
-                await qdrant.create_collection(
-                    collection_name=collection_name,
-                    vectors_config=VectorParams(size=embedder.dimension, distance=Distance.COSINE),
-                )
-            else:
-                logger.info("Collection %s already exists", collection_name)
-        except Exception:
-            logger.exception("Error ensuring collection")
-            raise
-
-    # Provide compatibility properties for existing methods
-    @property
-    async def qdrant(self) -> QdrantClient:
-        """Get Qdrant client for backward compatibility."""
-        await self._ensure_initialized()
-        return self._components["qdrant"]
-
-    @property
-    async def embedder(self) -> EmbedderBase:
-        """Get embedder for backward compatibility."""
-        await self._ensure_initialized()
-        return self._components["embedder"]
-
-    @property
-    async def reranker(self) -> VoyageAIReranker:
-        """Get reranker for backward compatibility."""
-        await self._ensure_initialized()
-        return self._components["reranker"]
-
-    @property
-    async def rate_limiter(self) -> RateLimiter:
-        """Get rate limiter for backward compatibility."""
-        await self._ensure_initialized()
-        return self._components["rate_limiter"]
-
     # Delegate all the core methods to the legacy implementation for now
     # This ensures 100% compatibility while using the new architecture under the hood
 
     async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None,
+        self, root_path: str, patterns: list[str] | None = None
     ) -> dict[str, Any]:
         """Index a codebase for semantic search using ast-grep."""
         await self._ensure_initialized()
@@ -845,7 +683,7 @@ class ExtensibleCodeEmbeddingsServer:
         watcher_started = False
         if self.config.indexing.enable_auto_reindex:
             watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes,
+                root_path=root, reindex_callback=self._handle_file_changes
             )
 
         return {
@@ -870,30 +708,6 @@ class ExtensibleCodeEmbeddingsServer:
         """Handle file changes for auto-reindexing."""
         logger.info("Handling changes for %d files", len(changed_files))
         # This is a placeholder - implement actual reindexing logic as needed
-
-    async def _index_chunks(self, chunks: list[CodeChunk]):
-        """Index a batch of code chunks."""
-        if not chunks:
-            return
-
-        # Generate embeddings using the factory-created embedder
-        embedder = self._components["embedder"]
-        texts = [chunk.content for chunk in chunks]
-        embeddings = await embedder.embed_documents(texts)
-
-        # Create points for Qdrant
-        points = []
-        for chunk, embedding in zip(chunks, embeddings, strict=False):
-            point = PointStruct(
-                id=hash(f"{chunk.file_path}:{chunk.start_line}:{chunk.hash}") & ((1 << 63) - 1),
-                vector=embedding,
-                payload=chunk.to_metadata(),
-            )
-            points.append(point)
-
-        # Upload to Qdrant using the factory-created client
-        qdrant = self._components["qdrant"]
-        await qdrant.upsert(collection_name=self.config.qdrant.collection_name, points=points)
 
     async def search_code(
         self,
@@ -948,44 +762,17 @@ class ExtensibleCodeEmbeddingsServer:
                             rerank=rerank,
                         ),
                     },
-                },
+                }
             ]
-
-        # Generate query embedding
-        embedder = self._components["embedder"]
-        query_vector = await embedder.embed_query(query)
-
-        # Build filters
-        filter_conditions = []
-
-        if file_filter:
-            filter_conditions.append(
-                FieldCondition(key="file_path", match=MatchValue(value=file_filter)),
-            )
-
-        if language_filter:
-            filter_conditions.append(
-                FieldCondition(key="language", match=MatchValue(value=language_filter)),
-            )
-
-        if chunk_type_filter:
-            filter_conditions.append(
-                FieldCondition(key="chunk_type", match=MatchValue(value=chunk_type_filter)),
-            )
-
-        search_filter = Filter(must=filter_conditions) if filter_conditions else None
-
-        # Search using the factory-created backend
-        qdrant = self._components["qdrant"]
-        search_result = await qdrant.search(
-            collection_name=self.config.qdrant.collection_name,
-            query_vector=query_vector,
-            query_filter=search_filter,
-            limit=limit * 2 if rerank else limit,  # Get more for reranking
-        )
-
         results = []
-        for hit in search_result:
+        search_results = self.ast_grep_search(
+            pattern=query,
+            language=language_filter or "all",  # Use 'all' if no specific language
+            root_path=self.config.indexing.root_path,
+            limit=limit,
+            use_task_delegation=use_task_delegation,
+        )
+        for hit in search_results:
             result = {
                 "content": hit.payload["content"],
                 "file_path": hit.payload["file_path"],
@@ -1047,14 +834,14 @@ class ExtensibleCodeEmbeddingsServer:
                         "pattern_complexity": "complex" if is_complex_pattern else "simple",
                         "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
                         "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit,
+                            pattern=pattern, language=language, root_path=root_path, limit=limit
                         ),
                     },
-                },
+                }
             ]
 
         results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path,
+            pattern=pattern, language=language, root_path=root_path
         )
 
         return results[:limit]
@@ -1088,7 +875,7 @@ class ExtensibleCodeEmbeddingsServer:
         return base_info
 
     async def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None,
+        self, file_filter: str | None = None, language_filter: str | None = None
     ) -> int:
         """Estimate number of files that would be searched."""
         try:
@@ -1127,38 +914,6 @@ class ExtensibleCodeEmbeddingsServer:
         logger.info("Extensible server shutdown complete")
 
 
-# Server Factory Functions
-
-
-def detect_configuration_type(config: CodeWeaverConfig) -> str:
-    """Detect whether configuration is legacy or extensible format.
-
-    Args:
-        config: Configuration object to analyze
-
-    Returns:
-        'legacy' or 'extensible' based on configuration structure
-    """
-    # Check for new extensibility features
-    if _EXTENDED_CONFIGS_AVAILABLE:
-        # Check if backend config exists and is not just legacy qdrant
-        if (hasattr(config, "backend") and config.backend and
-            hasattr(config.backend, "provider") and config.backend.provider != "qdrant_legacy"):
-            return "extensible"
-
-        # Check for new provider configuration format
-        if (hasattr(config, "embedding") and config.embedding and
-            hasattr(config.embedding, "provider_config")):
-            return "extensible"
-
-        # Check for data sources configuration
-        if hasattr(config, "data_sources") and config.data_sources:
-            return "extensible"
-
-    # Default to legacy for backward compatibility
-    return "legacy"
-
-
 def create_server(
     config: CodeWeaverConfig | None = None,
     server_type: str = "auto",
@@ -1178,34 +933,13 @@ def create_server(
     if config is None:
         config = get_config()
 
-    # Auto-detect server type if requested
-    if server_type == "auto":
-        detected_type = detect_configuration_type(config)
-        logger.info("Auto-detected server type: %s", detected_type)
-        server_type = detected_type
-
     # Create appropriate server instance
-    if server_type == "extensible":
-        logger.info("Creating extensible server with factory architecture")
-        return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
-    logger.info("Creating legacy server for backward compatibility")
-    return CodeEmbeddingsServer(config)
-
-
-def create_legacy_server(config: CodeWeaverConfig | None = None) -> CodeEmbeddingsServer:
-    """Create a legacy CodeEmbeddingsServer instance.
-
-    Args:
-        config: Optional configuration object
-
-    Returns:
-        Legacy CodeEmbeddingsServer instance
-    """
-    return CodeEmbeddingsServer(config)
+    logger.info("Creating extensible server with factory architecture")
+    return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
 
 
 def create_extensible_server(
-    config: CodeWeaverConfig | None = None, extensibility_config: ExtensibilityConfig | None = None,
+    config: CodeWeaverConfig | None = None, extensibility_config: ExtensibilityConfig | None = None
 ) -> ExtensibleCodeEmbeddingsServer:
     """Create an ExtensibleCodeEmbeddingsServer instance.
 
@@ -1217,205 +951,3 @@ def create_extensible_server(
         ExtensibleCodeEmbeddingsServer instance
     """
     return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
-
-
-def migrate_config_to_extensible(
-    legacy_config: CodeWeaverConfig, *, enable_plugins: bool = False
-) -> tuple[CodeWeaverConfig, ExtensibilityConfig]:
-    """Migrate a legacy configuration to extensible format.
-
-    Args:
-        legacy_config: Legacy configuration to migrate
-        enable_plugins: Whether to enable plugin discovery
-
-    Returns:
-        Tuple of (migrated_config, extensibility_config)
-    """
-    logger.info("Migrating legacy configuration to extensible format")
-
-    # Create extensibility config for migration
-    extensibility_config = create_migration_config(
-        enable_plugins=enable_plugins, enable_legacy_fallback=True, lazy_init=True,
-    )
-
-    # For now, return the original config with extensibility config
-    # In a full implementation, you would transform the config structure
-    migrated_config = legacy_config
-
-    # If extended configs are available, perform actual migration
-    if _EXTENDED_CONFIGS_AVAILABLE:
-        try:
-            # Import the extended configuration classes
-            from codeweaver.sources.config import extend_config_with_data_sources
-
-            # Extend with data sources if needed
-            migrated_config = extend_config_with_data_sources(migrated_config)
-
-        except ImportError:
-            logger.warning("Extended configuration classes not available, using legacy fallback")
-
-    logger.info("Configuration migration complete")
-    return migrated_config, extensibility_config
-
-
-class ServerMigrationManager:
-    """Manages the migration of existing server instances to the new architecture.
-
-    Provides utilities for:
-    - Analyzing configuration readiness
-    - Performing incremental migrations
-    - Validating migration success
-    - Rolling back failed migrations
-    """
-
-    def __init__(self, server: CodeEmbeddingsServer):
-        """Initialize migration manager with a server instance.
-
-        Args:
-            server: The server instance to migrate
-        """
-        self.server = server
-        self._backup_components: dict[str, Any] = {}
-        self._migration_state = "not_started"
-
-    def analyze_migration_readiness(self) -> dict[str, Any]:
-        """Analyze if the server is ready for migration.
-
-        Returns:
-            Analysis results with readiness status and recommendations
-        """
-        logger.info("Analyzing migration readiness for server instance")
-
-        # Validate configuration
-        config_validation = validate_migration_readiness(self.server.config)
-
-        # Check component health
-        component_health = {
-            "qdrant_connected": hasattr(self.server, "qdrant") and self.server.qdrant is not None,
-            "embedder_available": hasattr(self.server, "embedder")
-            and self.server.embedder is not None,
-            "reranker_available": hasattr(self.server, "reranker")
-            and self.server.reranker is not None,
-        }
-
-        # Determine overall readiness
-        overall_ready = (
-            config_validation["ready"]
-            and component_health["qdrant_connected"]
-            and component_health["embedder_available"]
-        )
-
-        results = {
-            "ready": overall_ready,
-            "migration_state": self._migration_state,
-            "configuration": config_validation,
-            "component_health": component_health,
-            "recommendations": [],
-        }
-
-        # Add recommendations
-        if overall_ready:
-            results["recommendations"].append(
-                "Server is ready for migration. Use perform_migration() to proceed.",
-            )
-        else:
-            if not config_validation["ready"]:
-                results["recommendations"].append("Fix configuration issues before migration")
-            if not component_health["qdrant_connected"]:
-                results["recommendations"].append("Ensure Qdrant connection is established")
-            if not component_health["embedder_available"]:
-                results["recommendations"].append("Ensure embedder is properly initialized")
-
-        return results
-
-    async def perform_migration(
-        self,
-        extensibility_config: ExtensibilityConfig | None = None,
-        *,
-        backup_components: bool = True,
-    ) -> dict[str, Any]:
-        """Perform the actual migration to extensible architecture.
-
-        Args:
-            extensibility_config: Optional extensibility configuration
-            backup_components: Whether to backup current components
-
-        Returns:
-            Migration results and status
-        """
-        logger.info("Starting server migration to extensible architecture")
-        self._migration_state = "in_progress"
-
-        try:
-            # Backup current components if requested
-            if backup_components:
-                self._backup_current_components()
-
-            # Create migration helper
-            from codeweaver.factories.integration import ServerMigrationHelper
-
-            migration_helper = ServerMigrationHelper(self.server)
-
-            # Perform the migration
-            await migration_helper.migrate_to_factories()
-
-            self._migration_state = "completed"
-            logger.info("Server migration completed successfully")
-
-            return {
-                "status": "success",
-                "migration_state": self._migration_state,
-                "message": "Server successfully migrated to extensible architecture",
-                "components_migrated": list(self._backup_components.keys())
-                if backup_components
-                else [],
-            }
-
-        except Exception as e:
-            logger.exception("Migration failed")
-            self._migration_state = "failed"
-
-            # Attempt rollback if backup exists
-            if backup_components and self._backup_components:
-                await self._rollback_components()
-
-            return {
-                "status": "failed",
-                "migration_state": self._migration_state,
-                "error": str(e),
-                "message": "Migration failed, components restored from backup",
-            }
-
-    def _backup_current_components(self) -> None:
-        """Backup current server components."""
-        logger.info("Backing up current server components")
-
-        backup_attrs = ["qdrant", "embedder", "reranker", "rate_limiter"]
-        for attr in backup_attrs:
-            if hasattr(self.server, attr):
-                self._backup_components[attr] = getattr(self.server, attr)
-
-        logger.info("Backed up %d components", len(self._backup_components))
-
-    async def _rollback_components(self) -> None:
-        """Rollback to backed up components."""
-        logger.info("Rolling back to backed up components")
-
-        for attr, component in self._backup_components.items():
-            setattr(self.server, attr, component)
-
-        self._migration_state = "rolled_back"
-        logger.info("Rollback completed")
-
-    def get_migration_status(self) -> dict[str, Any]:
-        """Get current migration status.
-
-        Returns:
-            Current migration state and statistics
-        """
-        return {
-            "migration_state": self._migration_state,
-            "backup_available": bool(self._backup_components),
-            "backed_up_components": list(self._backup_components.keys()),
-            "server_type": type(self.server).__name__,
-        }

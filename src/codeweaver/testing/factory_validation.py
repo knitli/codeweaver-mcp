@@ -10,7 +10,6 @@ Validates that factory patterns work correctly with configuration loading,
 component instantiation, and error handling across all protocols.
 """
 
-
 import contextlib
 import logging
 
@@ -23,7 +22,7 @@ from codeweaver.config import CodeWeaverConfig
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.providers.factory import (
     ProviderFactory,
-    create_embedding_provider,
+    create_CW_EMBEDDING_PROVIDER,
     create_rerank_provider,
 )
 from codeweaver.sources.base import DataSource
@@ -117,7 +116,9 @@ class FactoryPatternValidator:
         results = {"backend_factory": await self.validate_backend_factory()}
 
         # Validate provider factories
-        results["embedding_provider_factory"] = await self.validate_embedding_provider_factory()
+        results[
+            "CW_EMBEDDING_PROVIDER_factory"
+        ] = await self.validate_CW_EMBEDDING_PROVIDER_factory()
         results["rerank_provider_factory"] = await self.validate_rerank_provider_factory()
 
         # Validate data source factory
@@ -197,7 +198,7 @@ class FactoryPatternValidator:
 
         return result
 
-    async def validate_embedding_provider_factory(self) -> FactoryValidationResult:
+    async def validate_CW_EMBEDDING_PROVIDER_factory(self) -> FactoryValidationResult:
         """Validate embedding provider factory pattern."""
         result = FactoryValidationResult(
             factory_name="EmbeddingProviderFactory",
@@ -218,7 +219,7 @@ class FactoryPatternValidator:
         for test_case in test_cases:
             try:
                 # Test provider creation
-                provider = await create_embedding_provider(test_case["config"])
+                provider = await create_CW_EMBEDDING_PROVIDER(test_case["config"])
 
                 # Validate instance type
                 if not isinstance(provider, test_case["expected_type"]):
@@ -409,9 +410,9 @@ class FactoryPatternValidator:
                 result.failed_creations += 1
 
             # Test provider creation from configuration
-            config.provider.embedding_provider = "mock_embedding"
+            config.provider.CW_EMBEDDING_PROVIDER = "mock_embedding"
 
-            provider = await create_embedding_provider(config.provider.to_dict())
+            provider = await create_CW_EMBEDDING_PROVIDER(config.provider.to_dict())
             if isinstance(provider, EmbeddingProvider):
                 result.created_instances += 1
                 result.test_details["provider_from_config"] = "success"
@@ -456,7 +457,7 @@ class FactoryPatternValidator:
         try:
             # Test backend registration
             class TestBackend:
-                """ A mock backend class for testing registration. """
+                """A mock backend class for testing registration."""
 
             BackendFactory.register_backend("test", TestBackend, supports_hybrid=True)
             providers = BackendFactory.list_supported_providers()
@@ -470,7 +471,7 @@ class FactoryPatternValidator:
 
             # Test provider registration
             class TestProvider:
-                """ A mock provider class for testing registration. """
+                """A mock provider class for testing registration."""
 
             ProviderFactory.register_provider("test_provider", TestProvider)
             providers = ProviderFactory.list_available_providers()
@@ -484,7 +485,7 @@ class FactoryPatternValidator:
 
             # Test source registration
             class TestSource:
-                """ A mock data source class for testing registration. """
+                """A mock data source class for testing registration."""
 
             SourceFactory.register_source("test_source", TestSource)
             sources = SourceFactory.list_available_sources()
@@ -522,8 +523,8 @@ async def validate_factory_pattern(factory_name: str) -> FactoryValidationResult
 
     if factory_name == "backend":
         return await validator.validate_backend_factory()
-    if factory_name == "embedding_provider":
-        return await validator.validate_embedding_provider_factory()
+    if factory_name == "CW_EMBEDDING_PROVIDER":
+        return await validator.validate_CW_EMBEDDING_PROVIDER_factory()
     if factory_name == "rerank_provider":
         return await validator.validate_rerank_provider_factory()
     if factory_name == "data_source":
@@ -559,8 +560,7 @@ def print_factory_validation_results(results: dict[str, FactoryValidationResult]
                 print(f"    - {warning}")
 
     # Summary
-    total_valid = sum(bool(result.is_valid)
-                  for result in results.values())
+    total_valid = sum(bool(result.is_valid) for result in results.values())
     total_factories = len(results)
 
     print(f"\nSUMMARY: {total_valid}/{total_factories} factory patterns valid")

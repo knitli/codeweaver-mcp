@@ -56,11 +56,14 @@ class ProviderMigrationHelper:
     def create_migration_config(self, config):
         """Create migrated configuration."""
         from dataclasses import asdict
+
         migrated = asdict(config)
 
         # Update model names
-        if (migrated["embedding"]["model"] == "voyage-code-3" and
-            migrated["embedding"]["provider"] == "openai"):
+        if (
+            migrated["embedding"]["model"] == "voyage-code-3"
+            and migrated["embedding"]["provider"] == "openai"
+        ):
             migrated["embedding"]["model"] = "text-embedding-3-small"
 
         return migrated
@@ -72,12 +75,12 @@ class ProviderMigrationHelper:
                 "description": "Best quality for code search",
                 "config": {
                     "embedding": {
-                        "provider": "voyage",
+                        "provider": "voyage-ai",
                         "model": "voyage-code-3",
                         "dimension": 1024,
                     }
                 },
-                "notes": ["Requires VOYAGE_API_KEY"]
+                "notes": ["Requires CW_VOYAGE_API_KEY"],
             }
         }
 
@@ -86,11 +89,11 @@ def validate_provider_availability():
     """Validate provider availability."""
     registry = ProviderRegistry()
 
-    all_embedding = registry.get_all_embedding_providers()
+    all_embedding = registry.get_all_CW_EMBEDDING_PROVIDERs()
     all_reranking = registry.get_all_reranking_providers()
 
     result = {
-        "embedding_providers": {},
+        "CW_EMBEDDING_PROVIDERs": {},
         "reranking_providers": {},
         "summary": {
             "total_embedding": len(all_embedding),
@@ -102,7 +105,7 @@ def validate_provider_availability():
 
     # Embedding provider status
     for name, registration in all_embedding.items():
-        result["embedding_providers"][name] = {
+        result["CW_EMBEDDING_PROVIDERs"][name] = {
             "available": registration.is_available,
             "reason": registration.unavailable_reason,
         }
@@ -122,21 +125,21 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
-async def test_provider_registry() -> None:
+async def test_provider_registry() -> None:  # noqa: RUF029
     """Test provider registry functionality."""
     print("\n=== Provider Registry Test ===")
 
     registry = ProviderRegistry()
 
     # Get available providers
-    embedding_providers = registry.get_available_embedding_providers()
+    CW_EMBEDDING_PROVIDERs = registry.get_available_CW_EMBEDDING_PROVIDERs()
     reranking_providers = registry.get_available_reranking_providers()
 
-    print(f"Available embedding providers: {list(embedding_providers.keys())}")
+    print(f"Available embedding providers: {list(CW_EMBEDDING_PROVIDERs.keys())}")
     print(f"Available reranking providers: {list(reranking_providers.keys())}")
 
     # Show provider details
-    for name, info in embedding_providers.items():
+    for name, info in CW_EMBEDDING_PROVIDERs.items():
         print(f"\n{info.display_name} ({name}):")
         print(f"  Description: {info.description}")
         print(f"  Capabilities: {[cap.value for cap in info.supported_capabilities]}")
@@ -146,7 +149,7 @@ async def test_provider_registry() -> None:
             print(f"  Supported models: {info.supported_models.get('embedding', [])}")
 
 
-async def test_provider_factory() -> None:
+async def test_provider_factory() -> None:  # noqa: RUF029
     """Test provider factory functionality."""
     print("\n=== Provider Factory Test ===")
 
@@ -154,7 +157,12 @@ async def test_provider_factory() -> None:
 
     # Test creating providers with mock configurations
     test_configs = [
-        {"provider": "voyage", "api_key": "test-key", "model": "voyage-code-3", "dimension": 1024},
+        {
+            "provider": "voyage-ai",
+            "api_key": "test-key",
+            "model": "voyage-code-3",
+            "dimension": 1024,
+        },
         {
             "provider": "openai",
             "api_key": "test-key",
@@ -172,7 +180,7 @@ async def test_provider_factory() -> None:
             # Create embedding config
             config = EmbeddingConfig(**config_dict)
 
-            if factory.registry.is_embedding_provider_available(provider_name):
+            if factory.registry.is_CW_EMBEDDING_PROVIDER_available(provider_name):
                 print(f"  ✓ Provider {provider_name} is available")
 
                 # Note: We can't actually create providers without real API keys
@@ -180,7 +188,7 @@ async def test_provider_factory() -> None:
                 print(f"  - Would create provider with model: {config.model}")
                 print(f"  - Would use dimension: {config.dimension}")
 
-            elif registration := factory.registry.get_embedding_provider_registration(
+            elif registration := factory.registry.get_CW_EMBEDDING_PROVIDER_registration(
                 provider_name
             ):
                 print(
@@ -193,7 +201,7 @@ async def test_provider_factory() -> None:
             print(f"  ✗ Error testing {provider_name}: {e}")
 
 
-async def test_migration_helper() -> None:
+async def test_migration_helper() -> None:  # noqa: RUF029
     """Test migration helper functionality."""
     print("\n=== Migration Helper Test ===")
 
@@ -228,7 +236,7 @@ async def test_migration_helper() -> None:
         print(f"  Migrated model: {migrated['embedding']['model']}")
 
 
-async def test_provider_availability() -> None:
+async def test_provider_availability() -> None:  # noqa: RUF029
     """Test provider availability validation."""
     print("\n=== Provider Availability Test ===")
 
@@ -243,7 +251,7 @@ async def test_provider_availability() -> None:
     )
 
     print("\nEmbedding provider status:")
-    for name, status in availability["embedding_providers"].items():
+    for name, status in availability["CW_EMBEDDING_PROVIDERs"].items():
         status_icon = "✓" if status["available"] else "✗"
         print(f"  {status_icon} {name}")
         if not status["available"] and status["reason"]:
@@ -257,7 +265,7 @@ async def test_provider_availability() -> None:
             print(f"    Reason: {status['reason']}")
 
 
-async def test_configuration_examples() -> None:
+async def test_configuration_examples() -> None:  # noqa: RUF029
     """Test configuration examples generation."""
     print("\n=== Configuration Examples Test ===")
 
@@ -282,7 +290,7 @@ async def test_configuration_examples() -> None:
                 print(f"    - {note}")
 
 
-async def test_backward_compatibility() -> None:
+async def test_backward_compatibility() -> None:  # noqa: RUF029
     """Test backward compatibility with legacy interfaces."""
     print("\n=== Backward Compatibility Test ===")
 
@@ -291,7 +299,7 @@ async def test_backward_compatibility() -> None:
     try:
         # Test with VoyageAI (will show deprecation warning)
         EmbeddingConfig(
-            provider="voyage", api_key="test-key", model="voyage-code-3", dimension=1024
+            provider="voyage-ai", api_key="test-key", model="voyage-code-3", dimension=1024
         )
 
         print("  - Calling create_embedder (expect deprecation warning)")
@@ -328,7 +336,7 @@ async def main() -> None:
         print("\nTo use the new provider system in your code:")
         print("1. Import: from codeweaver.providers import get_provider_factory")
         print("2. Create: factory = get_provider_factory()")
-        print("3. Use: provider = factory.create_embedding_provider(config)")
+        print("3. Use: provider = factory.create_CW_EMBEDDING_PROVIDER(config)")
         print("\nFor backward compatibility, existing code will continue to work")
         print("but will show deprecation warnings encouraging migration.")
 

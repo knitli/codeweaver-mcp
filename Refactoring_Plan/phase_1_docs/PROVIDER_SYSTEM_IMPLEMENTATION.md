@@ -101,7 +101,7 @@ normalize_embeddings: bool = True
 **Environment Variable Support:**
 - `COHERE_API_KEY`, `HUGGINGFACE_API_KEY`
 - `RERANK_PROVIDER`, `RERANK_MODEL`
-- `USE_LOCAL_MODELS`, `MODEL_DEVICE`
+- `CW_USE_LOCAL_MODELS`, `MODEL_DEVICE`
 
 **Enhanced Validation:**
 - Provider availability checking
@@ -163,7 +163,7 @@ factory = get_provider_factory()
 
 # Create embedding provider
 config = EmbeddingConfig(provider="voyage", api_key="your-key")
-embedder = factory.create_embedding_provider(config)
+embedder = factory.create_CW_EMBEDDING_PROVIDER(config)
 
 # Create reranking provider
 reranker = factory.get_default_reranking_provider("voyage", api_key="your-key")
@@ -219,7 +219,7 @@ embedder = create_embedder(config)
 # New way (recommended)
 from codeweaver.providers import get_provider_factory
 factory = get_provider_factory()
-embedder = factory.create_embedding_provider(config)
+embedder = factory.create_CW_EMBEDDING_PROVIDER(config)
 ```
 
 ## 🚀 Future Extensibility
@@ -231,7 +231,7 @@ class MyProvider(EmbeddingProviderBase):
     # Implementation...
 
 # 2. Register provider
-ProviderRegistry.register_embedding_provider(
+ProviderRegistry.register_CW_EMBEDDING_PROVIDER(
     "my-provider", MyProvider, provider_info
 )
 

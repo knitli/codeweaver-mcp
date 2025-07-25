@@ -13,56 +13,61 @@ API documentation, schemas, and responses as indexable content.
 import logging
 
 from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import Annotated, Any
 
-from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceCapability, SourceWatcher
+from pydantic import BaseModel, ConfigDict, Field
+
+from codeweaver._types.source_capabilities import SourceCapabilities
+from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceWatcher
 
 
 logger = logging.getLogger(__name__)
 
 
-class APISourceConfig(TypedDict, total=False):
+class APISourceConfig(BaseModel):
     """Configuration specific to API data sources."""
 
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+
     # Inherited from BaseSourceConfig
-    enabled: bool
-    priority: int
-    source_id: str
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    max_file_size_mb: int
-    batch_size: int
-    max_concurrent_requests: int
-    request_timeout_seconds: int
-    enable_change_watching: bool
-    change_check_interval_seconds: int
-    enable_content_deduplication: bool
-    enable_metadata_extraction: bool
-    supported_languages: list[str]
+    enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
+    priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
+    source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
+    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
+    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
+    batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
+    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
+    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
+    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
+    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
+    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
+    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
 
     # API specific settings
-    api_type: str  # 'rest', 'graphql', 'openapi', 'swagger'
-    base_url: str
-    endpoints: list[str]
+    api_type: Annotated[str, Field(description="API type: 'rest', 'graphql', 'openapi', 'swagger'")]
+    base_url: Annotated[str, Field(description="Base URL for the API (required)")]
+    endpoints: Annotated[list[str], Field(default_factory=list, description="List of API endpoints to index")]
 
     # Authentication
-    auth_type: str | None  # 'bearer', 'basic', 'api_key', 'oauth2'
-    api_key: str | None
-    bearer_token: str | None
-    username: str | None
-    password: str | None
+    auth_type: Annotated[str | None, Field(None, description="Authentication type: 'bearer', 'basic', 'api_key', 'oauth2'")]
+    api_key: Annotated[str | None, Field(None, description="API key for authentication")]
+    bearer_token: Annotated[str | None, Field(None, description="Bearer token for authentication")]
+    username: Annotated[str | None, Field(None, description="Username for basic authentication")]
+    password: Annotated[str | None, Field(None, description="Password for basic authentication")]
 
     # Request settings
-    headers: dict[str, str]
-    query_parameters: dict[str, str]
-    request_method: str  # 'GET', 'POST', etc.
-    request_body: dict[str, Any] | None
+    headers: Annotated[dict[str, str], Field(default_factory=dict, description="Custom HTTP headers")]
+    query_parameters: Annotated[dict[str, str], Field(default_factory=dict, description="Default query parameters")]
+    request_method: Annotated[str, Field("GET", description="HTTP request method: 'GET', 'POST', etc.")]
+    request_body: Annotated[dict[str, Any] | None, Field(None, description="Request body for POST/PUT requests")]
 
     # Content extraction settings
-    schema_discovery: bool  # Discover OpenAPI/GraphQL schemas
-    sample_responses: bool  # Include sample API responses
-    include_documentation: bool  # Include API documentation
-    max_response_size_kb: int
+    schema_discovery: Annotated[bool, Field(True, description="Discover OpenAPI/GraphQL schemas")]
+    sample_responses: Annotated[bool, Field(False, description="Include sample API responses")]
+    include_documentation: Annotated[bool, Field(True, description="Include API documentation")]
+    max_response_size_kb: Annotated[int, Field(1024, ge=1, le=10240, description="Maximum response size in KB")]
 
 
 class APISource(AbstractDataSource):
@@ -87,18 +92,18 @@ class APISource(AbstractDataSource):
         """
         super().__init__("api", source_id)
 
-    def get_capabilities(self) -> set[SourceCapability]:
+    def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by API source."""
-        return {
-            SourceCapability.CONTENT_DISCOVERY,
-            SourceCapability.CONTENT_READING,
-            SourceCapability.CHANGE_WATCHING,
-            SourceCapability.METADATA_EXTRACTION,
-            SourceCapability.BATCH_PROCESSING,
-            SourceCapability.AUTHENTICATION,
-            SourceCapability.RATE_LIMITING,
-            SourceCapability.PAGINATION,
-        }
+        return SourceCapabilities(
+            supports_content_discovery=True,
+            supports_content_reading=True,
+            supports_change_watching=True,
+            supports_metadata_extraction=True,
+            supports_batch_processing=True,
+            supports_authentication=True,
+            supports_rate_limiting=True,
+            supports_pagination=True,
+        )
 
     async def discover_content(self, config: APISourceConfig) -> list[ContentItem]:
         """Discover content from an API.

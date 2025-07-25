@@ -27,15 +27,15 @@ async def main():
     # Integration testing
     result = await run_integration_tests()
     print(result)
-    
+
     # Performance benchmarking
     from codeweaver.testing.mocks import MockVectorBackend, MockEmbeddingProvider
     components = {
         "vector_backend": MockVectorBackend(),
-        "embedding_provider": MockEmbeddingProvider(),
+        "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
     }
     bench_results = await run_performance_benchmarks(components)
-    
+
     # Factory validation
     factory_results = await validate_all_factory_patterns()
 
@@ -51,7 +51,7 @@ Validates that implementations conform to their protocol interfaces:
 ```python
 from codeweaver.testing import (
     validate_vector_backend_protocol,
-    validate_embedding_provider_protocol,
+    validate_CW_EMBEDDING_PROVIDER_protocol,
 )
 from codeweaver.testing.mocks import MockVectorBackend, MockEmbeddingProvider
 
@@ -59,18 +59,18 @@ async def test_compliance():
     # Test vector backend compliance
     backend = MockVectorBackend()
     result = await validate_vector_backend_protocol(backend)
-    
+
     if result.is_compliant:
         print(f"✅ {result}")
     else:
         print(f"❌ {result}")
         for error in result.validation_errors:
             print(f"  - {error}")
-    
+
     # Test embedding provider compliance
     provider = MockEmbeddingProvider()
-    result = await validate_embedding_provider_protocol(provider)
-    
+    result = await validate_CW_EMBEDDING_PROVIDER_protocol(provider)
+
     print(result.get_detailed_report())
 ```
 
@@ -96,7 +96,7 @@ hybrid_backend = MockHybridSearchBackend(latency_ms=15.0)
 # Embedding provider with custom dimensions
 provider = MockEmbeddingProvider(
     provider_name="test_provider",
-    model_name="test_model", 
+    model_name="test_model",
     dimension=256,
     latency_ms=50.0
 )
@@ -122,7 +122,7 @@ from codeweaver.testing.integration import (
 # Create custom test configuration
 config = create_test_configuration(
     backend_type="mock",
-    embedding_provider="mock",
+    CW_EMBEDDING_PROVIDER="mock",
     rerank_provider="mock",
     run_performance_tests=False,
     mock_latency_ms=5.0
@@ -165,7 +165,7 @@ for result in results:
 # Benchmark multiple components
 components = {
     "vector_backend": MockVectorBackend(),
-    "embedding_provider": MockEmbeddingProvider(),
+    "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
 }
 
 all_results = await run_performance_benchmarks(components)
@@ -214,7 +214,7 @@ validator = ProtocolComplianceValidator(
 # Test multiple protocols
 implementations = {
     "vector_backend": MockVectorBackend(),
-    "embedding_provider": MockEmbeddingProvider(),
+    "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
     "rerank_provider": MockRerankProvider(),
     "data_source": MockDataSource(),
 }
@@ -253,15 +253,15 @@ from codeweaver.testing.benchmarks import BenchmarkSuite
 async def test_performance_regression():
     """Test for performance regressions."""
     suite = BenchmarkSuite(benchmark_iterations=5)
-    
+
     # Baseline measurements
     baseline_backend = MockVectorBackend(latency_ms=1.0)
     baseline_results = await suite.benchmark_vector_backend(baseline_backend)
-    
+
     # New implementation measurements
     new_backend = MockVectorBackend(latency_ms=2.0)  # Simulated regression
     new_results = await suite.benchmark_vector_backend(new_backend)
-    
+
     # Compare performance
     for baseline, new in zip(baseline_results, new_results):
         ratio = new.operations_per_second / baseline.operations_per_second
@@ -281,27 +281,27 @@ from codeweaver.testing.integration import TestConfiguration
 config = TestConfiguration(
     # Component selection
     backend_type="mock",  # or "qdrant", "pinecone", etc.
-    embedding_provider="mock",  # or "voyage", "openai", etc.
+    CW_EMBEDDING_PROVIDER="mock",  # or "voyage", "openai", etc.
     rerank_provider="mock",  # or "voyage", "cohere", etc.
     data_source_type="mock",  # or "filesystem", "git", etc.
-    
+
     # Test settings
     run_compliance_tests=True,
     run_performance_tests=True,
     run_workflow_tests=True,
     test_timeout_seconds=60,
-    
+
     # Mock settings
     mock_latency_ms=10.0,
     mock_error_rate=0.0,
-    
+
     # Test data
     test_documents=[
         "Custom test document 1",
         "Custom test document 2",
     ],
     test_queries=["custom query"],
-    
+
     # Configuration overrides
     config_overrides={
         "backend": {"batch_size": 50},
@@ -371,7 +371,7 @@ from codeweaver.testing.benchmarks import run_performance_benchmarks
 async def test_performance():
     components = {"vector_backend": YourBackend()}
     results = await run_performance_benchmarks(components)
-    
+
     # Assert performance requirements
     for result_list in results.values():
         for result in result_list:
@@ -387,7 +387,7 @@ from codeweaver.testing import validate_vector_backend_protocol
 async def test_custom_backend_compliance():
     backend = YourCustomBackend()
     result = await validate_vector_backend_protocol(backend)
-    
+
     assert result.is_compliant
     assert len(result.validation_errors) == 0
 ```

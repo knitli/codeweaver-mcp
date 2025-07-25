@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
@@ -35,8 +33,8 @@ try:
         CombinedProviderConfig,
         EmbeddingProviderConfig,
         HuggingFaceConfig,
-        OpenAIConfig,
         OpenAICompatibleConfig,
+        OpenAIConfig,
         RerankingProviderConfig,
         SentenceTransformersConfig,
         VoyageConfig,
@@ -63,33 +61,37 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-
-
 class EmbeddingConfig(BaseModel):
     """Configuration for embedding providers."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    provider: str = Field(default="voyage", description="Embedding provider (voyage, openai, cohere, etc.)")
+    provider: str = Field(
+        default="voyage-ai", description="Embedding provider (voyage, openai, cohere, etc.)"
+    )
     api_key: str | None = Field(default=None, description="API key for the embedding provider")
     model: str = Field(default="voyage-code-3", description="Embedding model to use")
     dimension: int = Field(default=1024, ge=1, le=4096, description="Embedding dimension")
     batch_size: int = Field(default=8, ge=1, le=100, description="Batch size for embeddings")
 
     # OpenAI-compatible provider settings
-    base_url: str | None = Field(default=None, description="Base URL for OpenAI-compatible providers")
-    custom_headers: dict[str, str] = Field(default_factory=dict, description="Custom headers for API requests")
+    base_url: str | None = Field(
+        default=None, description="Base URL for OpenAI-compatible providers"
+    )
+    custom_headers: dict[str, str] = Field(
+        default_factory=dict, description="Custom headers for API requests"
+    )
 
     # Reranking configuration
-    rerank_provider: str | None = Field(default=None, description="Reranking provider (if different from embedding)")
+    rerank_provider: str | None = Field(
+        default=None, description="Reranking provider (if different from embedding)"
+    )
     rerank_model: str | None = Field(default=None, description="Reranking model to use")
 
     # Local model settings (for sentence-transformers, huggingface local)
     use_local: bool = Field(default=False, description="Use local models instead of API")
     device: str = Field(default="auto", description="Device for local models (cpu, cuda, auto)")
     normalize_embeddings: bool = Field(default=True, description="Whether to normalize embeddings")
-
-
 
 
 class QdrantConfig(BaseModel):
@@ -102,7 +104,9 @@ class QdrantConfig(BaseModel):
     collection_name: str = Field(default="code-embeddings", description="Qdrant collection name")
 
     # Hybrid search settings
-    enable_sparse_vectors: bool = Field(default=False, description="Enable sparse vectors for hybrid search")
+    enable_sparse_vectors: bool = Field(
+        default=False, description="Enable sparse vectors for hybrid search"
+    )
     sparse_vector_name: str = Field(default="sparse", description="Name of the sparse vector field")
 
 
@@ -111,20 +115,31 @@ class ChunkingConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    max_chunk_size: Annotated[int, Field(default=1500, ge=100, le=10000)] = Field(description="Maximum chunk size in characters")
-    min_chunk_size: Annotated[int, Field(default=50, ge=10, le=500)] = Field(description="Minimum chunk size in characters")
-    max_file_size_mb: Annotated[int, Field(default=1, ge=1, le=100)] = Field(description="Skip files larger than this (MB)")
+    max_chunk_size: Annotated[int, Field(default=1500, ge=100, le=10000)] = Field(
+        description="Maximum chunk size in characters"
+    )
+    min_chunk_size: Annotated[int, Field(default=50, ge=10, le=500)] = Field(
+        description="Minimum chunk size in characters"
+    )
+    max_file_size_mb: Annotated[int, Field(default=1, ge=1, le=100)] = Field(
+        description="Skip files larger than this (MB)"
+    )
 
     # Language-specific settings
-    language_settings: dict[str, dict[str, Any]] = Field(default_factory=dict, description="Language-specific chunking settings")
+    language_settings: dict[str, dict[str, Any]] = Field(
+        default_factory=dict, description="Language-specific chunking settings"
+    )
 
     @field_validator("max_chunk_size", "min_chunk_size")
     @classmethod
     def validate_chunk_sizes(cls, v: int, info) -> int:
         """Validate chunk size constraints."""
-        if info.field_name == "max_chunk_size" and hasattr(info.data, "min_chunk_size"):
-            if v <= info.data.get("min_chunk_size", 50):
-                raise ValueError("max_chunk_size must be greater than min_chunk_size")
+        if (
+            info.field_name == "max_chunk_size"
+            and hasattr(info.data, "min_chunk_size")
+            and v <= info.data.get("min_chunk_size", 50)
+        ):
+            raise ValueError("max_chunk_size must be greater than min_chunk_size")
         return v
 
 
@@ -153,16 +168,24 @@ class IndexingConfig(BaseModel):
             ".vscode",
             ".idea",
         ],
-        description="Additional patterns to ignore during indexing"
+        description="Additional patterns to ignore during indexing",
     )
 
     # File watching
-    enable_auto_reindex: bool = Field(default=False, description="Enable automatic reindexing on file changes")
-    watch_debounce_seconds: Annotated[float, Field(default=2.0, ge=0.1, le=60.0)] = Field(description="Debounce time for file watching")
+    enable_auto_reindex: bool = Field(
+        default=False, description="Enable automatic reindexing on file changes"
+    )
+    watch_debounce_seconds: Annotated[float, Field(default=2.0, ge=0.1, le=60.0)] = Field(
+        description="Debounce time for file watching"
+    )
 
     # Performance
-    batch_size: Annotated[int, Field(default=8, ge=1, le=100)] = Field(description="Batch size for indexing operations")
-    max_concurrent_files: Annotated[int, Field(default=10, ge=1, le=50)] = Field(description="Maximum concurrent files to process")
+    batch_size: Annotated[int, Field(default=8, ge=1, le=100)] = Field(
+        description="Batch size for indexing operations"
+    )
+    max_concurrent_files: Annotated[int, Field(default=10, ge=1, le=50)] = Field(
+        description="Maximum concurrent files to process"
+    )
 
 
 class RateLimitConfig(BaseModel):
@@ -171,21 +194,39 @@ class RateLimitConfig(BaseModel):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     # Voyage AI rate limiting
-    voyage_requests_per_minute: Annotated[int, Field(default=100, ge=1, le=10000)] = Field(description="Voyage AI requests per minute")
-    voyage_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(description="Voyage AI tokens per minute")
+    voyage_requests_per_minute: Annotated[int, Field(default=100, ge=1, le=10000)] = Field(
+        description="Voyage AI requests per minute"
+    )
+    voyage_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(
+        description="Voyage AI tokens per minute"
+    )
 
     # OpenAI rate limiting
-    openai_requests_per_minute: Annotated[int, Field(default=5000, ge=1, le=50000)] = Field(description="OpenAI requests per minute")
-    openai_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(description="OpenAI tokens per minute")
+    openai_requests_per_minute: Annotated[int, Field(default=5000, ge=1, le=50000)] = Field(
+        description="OpenAI requests per minute"
+    )
+    openai_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(
+        description="OpenAI tokens per minute"
+    )
 
     # Qdrant rate limiting
-    qdrant_requests_per_second: Annotated[int, Field(default=100, ge=1, le=1000)] = Field(description="Qdrant requests per second")
+    qdrant_requests_per_second: Annotated[int, Field(default=100, ge=1, le=1000)] = Field(
+        description="Qdrant requests per second"
+    )
 
     # Exponential backoff
-    initial_backoff_seconds: Annotated[float, Field(default=1.0, ge=0.1, le=10.0)] = Field(description="Initial backoff time")
-    max_backoff_seconds: Annotated[float, Field(default=60.0, ge=1.0, le=300.0)] = Field(description="Maximum backoff time")
-    backoff_multiplier: Annotated[float, Field(default=2.0, ge=1.1, le=5.0)] = Field(description="Backoff multiplier factor")
-    max_retries: Annotated[int, Field(default=5, ge=1, le=20)] = Field(description="Maximum number of retries")
+    initial_backoff_seconds: Annotated[float, Field(default=1.0, ge=0.1, le=10.0)] = Field(
+        description="Initial backoff time"
+    )
+    max_backoff_seconds: Annotated[float, Field(default=60.0, ge=1.0, le=300.0)] = Field(
+        description="Maximum backoff time"
+    )
+    backoff_multiplier: Annotated[float, Field(default=2.0, ge=1.1, le=5.0)] = Field(
+        description="Backoff multiplier factor"
+    )
+    max_retries: Annotated[int, Field(default=5, ge=1, le=20)] = Field(
+        description="Maximum number of retries"
+    )
 
 
 class ServerConfig(BaseModel):
@@ -195,32 +236,36 @@ class ServerConfig(BaseModel):
 
     server_name: str = Field(default="code-weaver-mcp", description="MCP server name")
     server_version: str = Field(default="2.0.0", description="MCP server version")
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(default="INFO", description="Logging level")
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
+        default="INFO", description="Logging level"
+    )
 
     # Performance settings
-    enable_request_logging: bool = Field(default=False, description="Enable request/response logging")
-    max_search_results: Annotated[int, Field(default=50, ge=1, le=1000)] = Field(description="Maximum search results to return")
-
-
+    enable_request_logging: bool = Field(
+        default=False, description="Enable request/response logging"
+    )
+    max_search_results: Annotated[int, Field(default=50, ge=1, le=1000)] = Field(
+        description="Maximum search results to return"
+    )
 
 
 # Temporarily commented out to resolve circular dependency during testing
-# TODO: Move to separate module or restructure imports 
+# TODO: Move to separate module or restructure imports
 # class ModernProviderConfig(BaseModel):
 #     """Modern provider configuration using new Pydantic models."""
-# 
+#
 #     model_config = ConfigDict(extra="allow", validate_assignment=True)
-# 
+#
 #     # Primary embedding provider
 #     embedding: "EmbeddingProviderConfig | CombinedProviderConfig | None" = Field(
 #         default=None, description="Primary embedding provider configuration"
 #     )
-# 
+#
 #     # Primary reranking provider (optional, can be same as embedding if CombinedProvider)
 #     reranking: "RerankingProviderConfig | CombinedProviderConfig | None" = Field(
 #         default=None, description="Primary reranking provider configuration"
 #     )
-# 
+#
 #     # Provider-specific configurations
 #     voyage: "VoyageConfig | None" = Field(default=None, description="Voyage AI provider configuration")
 #     openai: "OpenAIConfig | None" = Field(default=None, description="OpenAI provider configuration")
@@ -229,11 +274,11 @@ class ServerConfig(BaseModel):
 #     sentence_transformers: "SentenceTransformersConfig | None" = Field(
 #         default=None, description="SentenceTransformers provider configuration"
 #     )
-# 
+#
 #     # Advanced settings
 #     enable_caching: bool = Field(default=True, description="Enable provider response caching")
 #     cache_ttl_seconds: Annotated[int, Field(default=3600, ge=60, le=86400)] = Field(description="Cache TTL in seconds")
-# 
+#
 #     def get_provider_config(self, provider_type: "ProviderType") -> "EmbeddingProviderConfig | RerankingProviderConfig | CombinedProviderConfig | None":
 #         """Get configuration for a specific provider type."""
 #         provider_map = {
@@ -244,11 +289,11 @@ class ServerConfig(BaseModel):
 #             ProviderType.SENTENCE_TRANSFORMERS: self.sentence_transformers,
 #         }
 #         return provider_map.get(provider_type)
-# 
+#
 #     def get_active_embedding_provider(self) -> EmbeddingProviderConfig | CombinedProviderConfig | None:
 #         """Get the active embedding provider configuration."""
 #         return self.embedding
-# 
+#
 #     def get_active_reranking_provider(self) -> RerankingProviderConfig | CombinedProviderConfig | None:
 #         """Get the active reranking provider configuration."""
 #         return self.reranking
@@ -265,16 +310,20 @@ class ModernProviderConfig(BaseModel):
         default=None, description="Primary embedding provider configuration"
     )
 
-    # Primary reranking provider  
+    # Primary reranking provider
     reranking: RerankingProviderConfig | CombinedProviderConfig | None = Field(
         default=None, description="Primary reranking provider configuration"
     )
 
     # Provider-specific configurations
-    voyage: VoyageConfig | None = Field(default=None, description="Voyage AI provider configuration")
+    voyage: VoyageConfig | None = Field(
+        default=None, description="Voyage AI provider configuration"
+    )
     openai: OpenAIConfig | None = Field(default=None, description="OpenAI provider configuration")
     cohere: CohereConfig | None = Field(default=None, description="Cohere provider configuration")
-    huggingface: HuggingFaceConfig | None = Field(default=None, description="HuggingFace provider configuration")
+    huggingface: HuggingFaceConfig | None = Field(
+        default=None, description="HuggingFace provider configuration"
+    )
     sentence_transformers: SentenceTransformersConfig | None = Field(
         default=None, description="Sentence Transformers provider configuration"
     )
@@ -294,11 +343,15 @@ class ModernProviderConfig(BaseModel):
         }
         return provider_map.get(provider_type)
 
-    def get_active_embedding_provider(self) -> EmbeddingProviderConfig | CombinedProviderConfig | None:
+    def get_active_embedding_provider(
+        self,
+    ) -> EmbeddingProviderConfig | CombinedProviderConfig | None:
         """Get the active embedding provider configuration."""
         return self.embedding
 
-    def get_active_reranking_provider(self) -> RerankingProviderConfig | CombinedProviderConfig | None:
+    def get_active_reranking_provider(
+        self,
+    ) -> RerankingProviderConfig | CombinedProviderConfig | None:
         """Get the active reranking provider configuration."""
         return self.reranking
 
@@ -310,15 +363,23 @@ class DataSourceConfig(BaseModel):
 
     enabled: bool = Field(default=True, description="Enable data sources system")
     default_source_type: str = Field(default="filesystem", description="Default source type")
-    max_concurrent_sources: Annotated[int, Field(default=5, ge=1, le=20)] = Field(description="Maximum concurrent sources")
+    max_concurrent_sources: Annotated[int, Field(default=5, ge=1, le=20)] = Field(
+        description="Maximum concurrent sources"
+    )
 
     # Content processing
-    enable_content_deduplication: bool = Field(default=True, description="Enable content deduplication")
-    content_cache_ttl_hours: Annotated[int, Field(default=24, ge=1, le=168)] = Field(description="Content cache TTL in hours")
+    enable_content_deduplication: bool = Field(
+        default=True, description="Enable content deduplication"
+    )
+    content_cache_ttl_hours: Annotated[int, Field(default=24, ge=1, le=168)] = Field(
+        description="Content cache TTL in hours"
+    )
     enable_metadata_extraction: bool = Field(default=True, description="Enable metadata extraction")
 
     # Source definitions
-    sources: list[dict[str, Any]] = Field(default_factory=list, description="List of configured data sources")
+    sources: list[dict[str, Any]] = Field(
+        default_factory=list, description="List of configured data sources"
+    )
 
 
 class CodeWeaverConfig(BaseModel):
@@ -329,30 +390,51 @@ class CodeWeaverConfig(BaseModel):
     """
 
     model_config = ConfigDict(
-        extra="allow",
-        validate_assignment=True,
-        str_strip_whitespace=True,
-        use_enum_values=True,
+        extra="allow", validate_assignment=True, str_strip_whitespace=True, use_enum_values=True
     )
 
     # New extensible configuration (primary)
-    backend: BackendConfigExtended = Field(default_factory=BackendConfigExtended, description="Vector database backend configuration")
-    providers: ModernProviderConfig = Field(default_factory=ModernProviderConfig, description="Modern provider configuration")
-    data_sources: DataSourceConfig = Field(default_factory=DataSourceConfig, description="Data source configuration")
+    backend: BackendConfigExtended = Field(
+        default_factory=BackendConfigExtended, description="Vector database backend configuration"
+    )
+    providers: ModernProviderConfig = Field(
+        default_factory=ModernProviderConfig, description="Modern provider configuration"
+    )
+    data_sources: DataSourceConfig = Field(
+        default_factory=DataSourceConfig, description="Data source configuration"
+    )
 
     # Legacy configuration (maintained for compatibility during transition)
-    embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig, description="Legacy embedding configuration")
-    qdrant: QdrantConfig = Field(default_factory=QdrantConfig, description="Legacy Qdrant configuration")
+    embedding: EmbeddingConfig = Field(
+        default_factory=EmbeddingConfig, description="Legacy embedding configuration"
+    )
+    qdrant: QdrantConfig = Field(
+        default_factory=QdrantConfig, description="Legacy Qdrant configuration"
+    )
 
     # Shared configuration
-    chunking: ChunkingConfig = Field(default_factory=ChunkingConfig, description="Code chunking configuration")
-    indexing: IndexingConfig = Field(default_factory=IndexingConfig, description="Codebase indexing configuration")
-    rate_limiting: RateLimitConfig = Field(default_factory=RateLimitConfig, description="API rate limiting configuration")
-    server: ServerConfig = Field(default_factory=ServerConfig, description="MCP server configuration")
+    chunking: ChunkingConfig = Field(
+        default_factory=ChunkingConfig, description="Code chunking configuration"
+    )
+    indexing: IndexingConfig = Field(
+        default_factory=IndexingConfig, description="Codebase indexing configuration"
+    )
+    rate_limiting: RateLimitConfig = Field(
+        default_factory=RateLimitConfig, description="API rate limiting configuration"
+    )
+    server: ServerConfig = Field(
+        default_factory=ServerConfig, description="MCP server configuration"
+    )
 
     # Migration and compatibility settings
-    config_version: str = Field(default="2.0", alias="_config_version", description="Configuration schema version")
-    migrated_from_legacy: bool = Field(default=False, alias="_migrated_from_legacy", description="Whether config was migrated from legacy format")
+    config_version: str = Field(
+        default="2.0", alias="_config_version", description="Configuration schema version"
+    )
+    migrated_from_legacy: bool = Field(
+        default=False,
+        alias="_migrated_from_legacy",
+        description="Whether config was migrated from legacy format",
+    )
 
     @model_validator(mode="after")
     def validate_config_consistency(self) -> "CodeWeaverConfig":
@@ -366,19 +448,19 @@ class CodeWeaverConfig(BaseModel):
 
         return self
 
-    def merge_from_dict(self, config_dict: dict[str, Any]) -> None:
+    def merge_from_dict(self, parsed_config: dict[str, Any]) -> None:
         """Merge configuration from a dictionary with migration support."""
         # Check if this is a legacy configuration
-        has_legacy_sections = any(key in config_dict for key in ["embedding", "qdrant"])
+        has_legacy_sections = any(key in parsed_config for key in ["embedding", "qdrant"])
         has_new_sections = any(
-            key in config_dict for key in ["backend", "providers", "data_sources"]
+            key in parsed_config for key in ["backend", "providers", "data_sources"]
         )
-        has_mixed_provider_sections = "provider" in config_dict and "providers" in config_dict
+        has_mixed_provider_sections = "provider" in parsed_config and "providers" in parsed_config
 
         # If we have legacy sections but no new sections, perform migration
         if has_legacy_sections and not has_new_sections:
             logger.info("Detected legacy configuration, performing migration")
-            self._migrate_legacy_config(config_dict)
+            self._migrate_legacy_config(parsed_config)
             self.migrated_from_legacy = True
 
         # Handle mixed provider configurations (both old "provider" and new "providers")
@@ -387,7 +469,7 @@ class CodeWeaverConfig(BaseModel):
             # Legacy provider config is kept for backward compatibility
 
         # Process configuration sections using Pydantic model updates
-        for section_name, section_data in config_dict.items():
+        for section_name, section_data in parsed_config.items():
             if hasattr(self, section_name) and isinstance(section_data, dict):
                 # Get the current section model
                 current_section = getattr(self, section_name)
@@ -408,7 +490,9 @@ class CodeWeaverConfig(BaseModel):
                                 try:
                                     setattr(current_section, key, value)
                                 except Exception as field_error:
-                                    logger.warning("Failed to set %s.%s: %s", section_name, key, field_error)
+                                    logger.warning(
+                                        "Failed to set %s.%s: %s", section_name, key, field_error
+                                    )
                             else:
                                 logger.warning("Unknown config key: %s.%s", section_name, key)
                 else:
@@ -432,132 +516,58 @@ class CodeWeaverConfig(BaseModel):
                 logger.warning("Unknown config section: %s", section_name)
 
         # Handle special case for configuration version tracking (legacy format)
-        if "_config_version" in config_dict:
-            self.config_version = config_dict["_config_version"]
-        if "_migrated_from_legacy" in config_dict:
-            self.migrated_from_legacy = config_dict["_migrated_from_legacy"]
-
-    def _migrate_legacy_config(self, config_dict: dict[str, Any]) -> None:
-        """Migrate legacy configuration to new format."""
-        # Migrate embedding configuration to both legacy and modern provider configuration
-        if "embedding" in config_dict:
-            embedding_config = config_dict["embedding"]
-            if isinstance(embedding_config, dict):
-                # Legacy provider config for backward compatibility
-                legacy_provider_dict = {
-                    "embedding_provider": embedding_config.get("provider", "voyage"),
-                    "embedding_api_key": embedding_config.get("api_key"),
-                    "embedding_model": embedding_config.get("model", "voyage-code-3"),
-                    "embedding_dimension": embedding_config.get("dimension", 1024),
-                    "embedding_batch_size": embedding_config.get("batch_size", 8),
-                    "rerank_provider": embedding_config.get("rerank_provider"),
-                    "rerank_model": embedding_config.get("rerank_model"),
-                    "base_url": embedding_config.get("base_url"),
-                    "custom_headers": embedding_config.get("custom_headers", {}),
-                    "use_local": embedding_config.get("use_local", False),
-                    "device": embedding_config.get("device", "auto"),
-                    "normalize_embeddings": embedding_config.get("normalize_embeddings", True),
-                }
-                config_dict["provider"] = legacy_provider_dict
-
-                # Create modern provider config
-                provider_name = embedding_config.get("provider", "voyage")
-                modern_providers_dict = self._create_modern_provider_config(
-                    provider_name, embedding_config
-                )
-                config_dict["providers"] = modern_providers_dict
-
-        # Migrate Qdrant configuration to backend configuration
-        if "qdrant" in config_dict:
-            qdrant_config = config_dict["qdrant"]
-            if isinstance(qdrant_config, dict):
-                backend_dict = {
-                    "provider": "qdrant",
-                    "url": qdrant_config.get("url"),
-                    "api_key": qdrant_config.get("api_key"),
-                    "collection_name": qdrant_config.get("collection_name", "code-embeddings"),
-                    "enable_sparse_vectors": qdrant_config.get("enable_sparse_vectors", False),
-                    "enable_hybrid_search": qdrant_config.get("enable_sparse_vectors", False),
-                }
-                config_dict["backend"] = backend_dict
-
-        # Create default data sources configuration if not present
-        if "data_sources" not in config_dict:
-            data_sources_dict = {
-                "enabled": True,
-                "default_source_type": "filesystem",
-                "sources": [
-                    {
-                        "type": "filesystem",
-                        "enabled": True,
-                        "priority": 1,
-                        "source_id": "default_filesystem",
-                        "config": {
-                            "root_path": ".",
-                            "use_gitignore": config_dict.get("indexing", {}).get(
-                                "use_gitignore", True
-                            ),
-                            "additional_ignore_patterns": config_dict.get("indexing", {}).get(
-                                "additional_ignore_patterns", []
-                            ),
-                            "max_file_size_mb": config_dict.get("chunking", {}).get(
-                                "max_file_size_mb", 1
-                            ),
-                        },
-                    }
-                ],
-            }
-            config_dict["data_sources"] = data_sources_dict
-
-        logger.info("Successfully migrated legacy configuration to new format")
+        if "_config_version" in parsed_config:
+            self.config_version = parsed_config["_config_version"]
+        if "_migrated_from_legacy" in parsed_config:
+            self.migrated_from_legacy = parsed_config["_migrated_from_legacy"]
 
     def merge_from_env(self) -> None:
         """Merge configuration from environment variables with new and legacy support."""
         # New provider configuration
-        if provider := os.getenv("EMBEDDING_PROVIDER"):
+        if provider := os.getenv("CW_EMBEDDING_PROVIDER"):
             self.provider.embedding_provider = provider.lower()
             # Also update modern provider config if applicable
             if hasattr(self.providers, provider.lower()):
                 setattr(self.providers, provider.lower(), True)
-        if api_key := os.getenv("EMBEDDING_API_KEY"):
-            self.provider.embedding_api_key = api_key
+        if api_key := os.getenv("CW_EMBEDDING_API_KEY"):
+            self.provider.CW_EMBEDDING_API_KEY = api_key
             # Update modern provider configs
             if self.providers.embedding:
                 self.providers.embedding.api_key = api_key
-        if model := os.getenv("EMBEDDING_MODEL"):
+        if model := os.getenv("CW_EMBEDDING_MODEL"):
             self.embedding.model = model
             if self.providers.embedding:
                 self.providers.embedding.model = model
-        if dimension := os.getenv("EMBEDDING_DIMENSION"):
+        if dimension := os.getenv("CW_EMBEDDING_DIMENSION"):
             self.embedding.dimension = int(dimension)
             if self.providers.embedding:
                 self.providers.embedding.dimension = int(dimension)
 
         # Provider-specific API keys
-        if api_key := os.getenv("VOYAGE_API_KEY"):
+        if api_key := os.getenv("CW_VOYAGE_API_KEY"):
             # Set legacy embedding config for backward compatibility
-            if self.embedding.provider == "voyage":
+            if self.embedding.provider == "voyage-ai":
                 self.embedding.api_key = api_key
             # Update modern provider config
             if self.providers.voyage:
                 self.providers.voyage.api_key = api_key
-        if api_key := os.getenv("OPENAI_API_KEY"):
+        if api_key := os.getenv("CW_OPENAI_API_KEY"):
             if self.embedding.provider == "openai":
                 self.embedding.api_key = api_key
             # Update modern provider config
             if self.providers.openai:
                 self.providers.openai.api_key = api_key
-        if api_key := os.getenv("COHERE_API_KEY"):
+        if api_key := os.getenv("CW_COHERE_API_KEY"):
             if self.provider.embedding_provider == "cohere":
-                self.provider.embedding_api_key = api_key
+                self.provider.CW_EMBEDDING_API_KEY = api_key
             if self.embedding.provider == "cohere":
                 self.embedding.api_key = api_key
             # Update modern provider config
             if self.providers.cohere:
                 self.providers.cohere.api_key = api_key
-        if api_key := os.getenv("HUGGINGFACE_API_KEY"):
+        if api_key := os.getenv("CW_HUGGINGFACE_API_KEY"):
             if self.provider.embedding_provider == "huggingface":
-                self.provider.embedding_api_key = api_key
+                self.provider.CW_EMBEDDING_API_KEY = api_key
             if self.embedding.provider == "huggingface":
                 self.embedding.api_key = api_key
             # Update modern provider config
@@ -565,55 +575,55 @@ class CodeWeaverConfig(BaseModel):
                 self.providers.huggingface.api_key = api_key
 
         # Reranking configuration
-        if rerank_provider := os.getenv("RERANK_PROVIDER"):
+        if rerank_provider := os.getenv("CW_RERANK_PROVIDER"):
             self.provider.rerank_provider = rerank_provider.lower()
             self.embedding.rerank_provider = rerank_provider.lower()
-        if rerank_model := os.getenv("RERANK_MODEL"):
+        if rerank_model := os.getenv("CW_RERANK_MODEL"):
             self.provider.rerank_model = rerank_model
             self.embedding.rerank_model = rerank_model
 
         # Local model settings
-        if use_local := os.getenv("USE_LOCAL_MODELS"):
+        if use_local := os.getenv("CW_USE_LOCAL_MODELS"):
             value = use_local.lower() in ("true", "1", "yes")
             self.provider.use_local = value
             self.embedding.use_local = value
-        if device := os.getenv("MODEL_DEVICE"):
+        if device := os.getenv("CW_MODEL_DEVICE"):
             self.provider.device = device.lower()
             self.embedding.device = device.lower()
 
         # New backend configuration
-        if backend_provider := os.getenv("VECTOR_BACKEND_PROVIDER"):
+        if backend_provider := os.getenv("CW_VECTOR_BACKEND_PROVIDER"):
             self.backend.provider = backend_provider.lower()
-        if backend_url := os.getenv("VECTOR_BACKEND_URL"):
+        if backend_url := os.getenv("CW_VECTOR_BACKEND_URL"):
             self.backend.url = backend_url
-        if backend_key := os.getenv("VECTOR_BACKEND_API_KEY"):
+        if backend_key := os.getenv("CW_VECTOR_BACKEND_API_KEY"):
             self.backend.api_key = backend_key
 
         # Collection settings
-        if collection := os.getenv("VECTOR_BACKEND_COLLECTION"):
+        if collection := os.getenv("CW_VECTOR_BACKEND_COLLECTION"):
             self.backend.collection_name = collection
 
         # Feature flags
-        if hybrid := os.getenv("ENABLE_HYBRID_SEARCH"):
+        if hybrid := os.getenv("CW_ENABLE_HYBRID_SEARCH"):
             value = hybrid.lower() in ("true", "1", "yes")
             self.backend.enable_hybrid_search = value
-        if sparse := os.getenv("ENABLE_SPARSE_VECTORS"):
+        if sparse := os.getenv("CW_ENABLE_SPARSE_VECTORS"):
             value = sparse.lower() in ("true", "1", "yes")
             self.backend.enable_sparse_vectors = value
 
         # Legacy embedding configuration (for backward compatibility)
-        if model := os.getenv("VOYAGE_MODEL"):
+        if model := os.getenv("CW_VOYAGE_MODEL"):
             self.embedding.model = model
-            if self.provider.embedding_provider == "voyage":
+            if self.provider.embedding_provider == "voyage-ai":
                 self.provider.embedding_model = model
-        if provider := os.getenv("EMBEDDING_PROVIDER"):
+        if provider := os.getenv("CW_EMBEDDING_PRODIVER"):
             self.embedding.provider = provider.lower()
-        if base_url := os.getenv("OPENAI_BASE_URL"):
+        if base_url := os.getenv("CW_OPENAI_BASE_URL"):
             self.embedding.base_url = base_url
             self.provider.base_url = base_url
 
         # Server configuration
-        if log_level := os.getenv("LOG_LEVEL"):
+        if log_level := os.getenv("CW_LOG_LEVEL"):
             self.server.log_level = log_level.upper()
 
         # Sync legacy and new configurations
@@ -622,7 +632,7 @@ class CodeWeaverConfig(BaseModel):
     def get_effective_embedding_provider(self) -> str:
         """Get the effective embedding provider (prefer modern config)."""
         if self.providers.embedding:
-            return getattr(self.providers.embedding, 'provider_name', 'unknown')
+            return getattr(self.providers.embedding, "provider_name", "unknown")
         return self.embedding.provider
 
     def get_effective_backend_provider(self) -> str:
@@ -640,7 +650,7 @@ class CodeWeaverConfig(BaseModel):
     def is_legacy_config(self) -> bool:
         """Check if this is primarily a legacy configuration."""
         return (self.embedding.api_key or self.qdrant.url) and not (
-            self.provider.embedding_api_key or self.backend.url
+            self.provider.CW_EMBEDDING_API_KEY or self.backend.url
         )
 
     def to_new_format_dict(self) -> dict[str, Any]:
@@ -668,7 +678,8 @@ class CodeWeaverConfig(BaseModel):
             # Fallback to legacy provider format
             result["provider"] = {
                 "embedding_provider": self.get_effective_embedding_provider(),
-                "embedding_api_key": self.provider.embedding_api_key or self.embedding.api_key,
+                "embedding_api_key": self.provider.CW_EMBEDDING_API_KEY
+                or self.embedding.api_key,
                 "embedding_model": self.provider.embedding_model or self.embedding.model,
                 "embedding_dimension": self.provider.embedding_dimension
                 or self.embedding.dimension,
@@ -699,20 +710,20 @@ class CodeWeaverConfig(BaseModel):
 
         provider_name = self.provider.embedding_provider.lower()
         try:
-            if provider_name == "voyage":
+            if provider_name == "voyage-ai":
                 self.providers.voyage = VoyageConfig(
-                    api_key=self.provider.embedding_api_key,
+                    api_key=self.provider.CW_EMBEDDING_API_KEY,
                     model=self.provider.embedding_model,
                     dimension=self.provider.embedding_dimension,
                     batch_size=self.provider.embedding_batch_size,
                     normalize_embeddings=self.provider.normalize_embeddings,
                 )
                 self.providers.embedding = self.providers.voyage
-                if self.provider.rerank_provider == "voyage":
+                if self.provider.rerank_provider == "voyage-ai":
                     self.providers.reranking = self.providers.voyage
             elif provider_name == "openai":
                 self.providers.openai = OpenAIConfig(
-                    api_key=self.provider.embedding_api_key,
+                    api_key=self.provider.CW_EMBEDDING_API_KEY,
                     model=self.provider.embedding_model,
                     dimension=self.provider.embedding_dimension,
                     batch_size=self.provider.embedding_batch_size,
@@ -721,7 +732,7 @@ class CodeWeaverConfig(BaseModel):
                 self.providers.embedding = self.providers.openai
             elif provider_name == "cohere":
                 self.providers.cohere = CohereConfig(
-                    api_key=self.provider.embedding_api_key,
+                    api_key=self.provider.CW_EMBEDDING_API_KEY,
                     model=self.provider.embedding_model,
                     dimension=self.provider.embedding_dimension,
                     batch_size=self.provider.embedding_batch_size,
@@ -734,7 +745,9 @@ class CodeWeaverConfig(BaseModel):
         except Exception as e:
             logger.warning("Failed to initialize modern provider config: %s", e)
 
-    def _create_modern_provider_config(self, provider_name: str, embedding_config: dict[str, Any]) -> dict[str, Any]:
+    def _create_modern_provider_config(
+        self, provider_name: str, embedding_config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create modern provider configuration from legacy embedding config."""
         if not _EXTENDED_CONFIGS_AVAILABLE:
             return {}
@@ -746,15 +759,15 @@ class CodeWeaverConfig(BaseModel):
         batch_size = embedding_config.get("batch_size", 8)
         normalize = embedding_config.get("normalize_embeddings", True)
 
-        if provider_name == "voyage":
-            provider_configs["voyage"] = {
+        if provider_name == "voyage-ai":
+            provider_configs["voyage-ai"] = {
                 "api_key": api_key,
                 "model": model or "voyage-code-3",
                 "dimension": dimension,
                 "batch_size": batch_size,
                 "normalize_embeddings": normalize,
             }
-            provider_configs["embedding"] = provider_configs["voyage"]
+            provider_configs["embedding"] = provider_configs["voyage-ai"]
         elif provider_name == "openai":
             provider_configs["openai"] = {
                 "api_key": api_key,
@@ -818,11 +831,11 @@ class ConfigManager:
             if config_path.exists():
                 try:
                     with config_path.open("r", encoding="utf-8") as f:
-                        config_dict = tomlkit.load(f)
+                        parsed_config = tomlkit.load(f)
 
                     # Remove tomlkit-specific objects and convert to plain dict
-                    clean_dict = self._clean_toml_dict(config_dict)
-                    config.merge_from_dict(clean_dict)
+                    filtered_parsed_config = self._clean_toml_dict(parsed_config)
+                    config.merge_from_dict(filtered_parsed_config)
                     logger.info("Loaded configuration from: %s", config_path)
                 except Exception as e:
                     logger.warning("Failed to load config from %s: %s", config_path, e)
@@ -851,7 +864,7 @@ class ConfigManager:
             return {key: self._clean_toml_dict(value) for key, value in toml_dict.items()}
         if isinstance(toml_dict, list):
             return [self._clean_toml_dict(item) for item in toml_dict]
-        if hasattr(toml_dict, 'unwrap'):
+        if hasattr(toml_dict, "unwrap"):
             # tomlkit objects have an unwrap method
             return self._clean_toml_dict(toml_dict.unwrap())
         return toml_dict
@@ -862,30 +875,24 @@ class ConfigManager:
         provider = config.get_effective_embedding_provider().lower()
 
         # Validate embedding provider
-        if provider in ["voyage", "openai", "cohere", "huggingface"]:
+        if provider in ["voyage-ai", "openai", "cohere", "huggingface"]:
             # These providers require API keys (unless using local models)
             api_key = config.embedding.api_key
             use_local = config.embedding.use_local
 
-            if provider == "huggingface" and use_local:
+            if (provider == "huggingface" and use_local) or provider == "sentence-transformers":
                 # Local HuggingFace models don't require API key
-                pass
-            elif provider == "sentence-transformers":
-                # Local models don't require API key
                 pass
             elif not api_key:
                 provider_env_map = {
-                    "voyage": "VOYAGE_API_KEY",
-                    "openai": "OPENAI_API_KEY",
-                    "cohere": "COHERE_API_KEY",
-                    "huggingface": "HUGGINGFACE_API_KEY",
+                    "voyage-ai": "CW_VOYAGE_API_KEY",
+                    "openai": "CW_OPENAI_API_KEY",
+                    "cohere": "CW_COHERE_API_KEY",
+                    "huggingface": "CW_HUGGINGFACE_API_KEY",
                 }
                 env_var = provider_env_map.get(provider, f"{provider.upper()}_API_KEY")
                 raise ValueError(f"{env_var} is required when using {provider} embeddings")
-        elif provider == "sentence-transformers":
-            # Local provider, no API key required
-            pass
-        else:
+        elif provider != "sentence-transformers":
             # Try to use provider factory to validate
             try:
                 from codeweaver.providers import get_provider_factory
@@ -907,18 +914,18 @@ class ConfigManager:
         backend_url = config.get_effective_backend_url()
         if not backend_url:
             backend_provider = config.get_effective_backend_provider()
-            raise ValueError(f"VECTOR_BACKEND_URL is required for {backend_provider} provider")
+            raise ValueError(f"You must provide a backend url for provider {backend_provider}")
 
         # Validate backend provider
         backend_provider = config.get_effective_backend_provider()
         supported_backends = [
             "qdrant",
-            "pinecone",
-            "chroma",
-            "weaviate",
-            "pgvector",
-            "milvus",
-            "elasticsearch",
+           # "pinecone",
+           # "chroma",
+           # "weaviate",
+           # "pgvector",
+           # "milvus",
+           # "elasticsearch",
         ]
         if backend_provider not in supported_backends:
             logger.warning(
@@ -972,9 +979,7 @@ class ConfigManager:
             List of existing config file paths
         """
         existing = []
-        for path in self.get_config_path_hierarchy():
-            if path.exists():
-                existing.append(path)
+        existing.extend(path for path in self.get_config_path_hierarchy() if path.exists())
         return existing
 
     def save_config(self, config: CodeWeaverConfig, config_path: str | Path | None = None) -> Path:
@@ -990,13 +995,13 @@ class ConfigManager:
         if config_path is None:
             # Use the user config location as default for saving
             save_path = Path.home() / ".config" / "code-weaver" / "config.toml"
-            save_path.parent.mkdir(parents=True, exist_ok=True)
         else:
             save_path = Path(config_path)
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-
+        save_path.parent.mkdir(parents=True, exist_ok=True)
         # Convert config to dictionary
-        config_dict = config.model_dump(exclude_unset=True, exclude={"config_version", "migrated_from_legacy"})
+        parsed_config = config.model_dump(
+            exclude_unset=True, exclude={"config_version", "migrated_from_legacy"}
+        )
 
         # Create TOML document with comments
         doc = tomlkit.document()
@@ -1008,23 +1013,23 @@ class ConfigManager:
         doc.add(tomlkit.nl())
 
         # Add sections with comments
-        if "backend" in config_dict:
+        if "backend" in parsed_config:
             doc.add(tomlkit.comment("Vector Database Backend Configuration"))
-            doc["backend"] = config_dict["backend"]
+            doc["backend"] = parsed_config["backend"]
             doc.add(tomlkit.nl())
 
-        if "provider" in config_dict:
+        if "provider" in parsed_config:
             doc.add(tomlkit.comment("Embedding and Reranking Provider Configuration"))
-            doc["provider"] = config_dict["provider"]
+            doc["provider"] = parsed_config["provider"]
             doc.add(tomlkit.nl())
 
-        if "data_sources" in config_dict:
+        if "data_sources" in parsed_config:
             doc.add(tomlkit.comment("Data Sources Configuration"))
-            doc["data_sources"] = config_dict["data_sources"]
+            doc["data_sources"] = parsed_config["data_sources"]
             doc.add(tomlkit.nl())
 
         # Add other sections
-        for key, value in config_dict.items():
+        for key, value in parsed_config.items():
             if key not in ["backend", "provider", "data_sources"]:
                 doc.add(tomlkit.comment(f"{key.replace('_', ' ').title()} Configuration"))
                 doc[key] = value
@@ -1045,16 +1050,16 @@ class ConfigManager:
         logger.info("Saved configuration to: %s", save_path)
         return save_path
 
-    def load_config_from_dict(self, config_dict: dict[str, Any]) -> CodeWeaverConfig:
+    def load_config_from_dict(self, parsed_config: dict[str, Any]) -> CodeWeaverConfig:
         """Load configuration from a dictionary with validation.
 
         Args:
-            config_dict: Configuration dictionary
+            parsed_config: Configuration dictionary
 
         Returns:
             Validated configuration object
         """
-        config = CodeWeaverConfig.model_validate(config_dict)
+        config = CodeWeaverConfig.model_validate(parsed_config)
 
         # Apply environment variable overrides
         # config.merge_from_env()  # Temporarily disabled while removing legacy provider code
@@ -1090,7 +1095,9 @@ class ConfigManager:
 
         return config
 
-    def get_example_config(self, config_format: Literal["new", "legacy", "migration"] = "new") -> str:
+    def get_example_config(
+        self, config_format: Literal["new", "legacy", "migration"] = "new"
+    ) -> str:
         """Get an example TOML configuration file."""
         if config_format == "new":
             return self._get_new_format_example()
@@ -1110,8 +1117,8 @@ class ConfigManager:
 # Vector Database Backend Configuration
 [backend]
 provider = "qdrant"  # qdrant, pinecone, chroma, weaviate, pgvector, milvus, elasticsearch
-url = "YOUR_BACKEND_URL"  # Can also use VECTOR_BACKEND_URL env var
-api_key = "YOUR_BACKEND_API_KEY"  # Can also use VECTOR_BACKEND_API_KEY env var
+url = "YOUR_BACKEND_URL"  # Can also use CW_VECTOR_BACKEND_URL env var
+api_key = "YOUR_BACKEND_API_KEY"  # Can also use CW_VECTOR_BACKEND_API_KEY env var
 collection_name = "code-embeddings"
 
 # Feature capabilities
@@ -1139,7 +1146,7 @@ cache_ttl_seconds = 3600
 
 # Voyage AI Configuration (Combined embedding + reranking)
 [providers.voyage]
-api_key = "YOUR_VOYAGE_API_KEY"  # Can also use VOYAGE_API_KEY env var
+api_key = "YOUR_CW_VOYAGE_API_KEY"  # Can also use CW_VOYAGE_API_KEY env var
 model = "voyage-code-3"
 embedding_model = "voyage-code-3"
 reranking_model = "voyage-rerank-2"
@@ -1151,20 +1158,20 @@ enable_reranking = true
 
 # Set active providers
 [providers.embedding]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-code-3"
 normalize_embeddings = true
 batch_size = 8
 
 [providers.reranking]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-rerank-2"
 top_k = 50
 return_scores = true
 
 # OpenAI Configuration (embedding only)
 # [providers.openai]
-# api_key = "YOUR_OPENAI_API_KEY"
+# api_key = "YOUR_CW_OPENAI_API_KEY"
 # model = "text-embedding-3-small"
 # max_input_length = 8191
 # normalize_embeddings = true
@@ -1189,14 +1196,14 @@ return_scores = true
 
 # Legacy Provider Configuration (for backward compatibility)
 [provider]
-embedding_provider = "voyage"  # voyage, openai, cohere, sentence-transformers, huggingface
-embedding_api_key = "YOUR_EMBEDDING_API_KEY"  # Can also use VOYAGE_API_KEY, OPENAI_API_KEY, etc.
+embedding_provider = "voyage-ai"  # voyage, openai, cohere, sentence-transformers, huggingface
+CW_EMBEDDING_API_KEY = "YOUR_CW_EMBEDDING_API_KEY"  # Can also use CW_VOYAGE_API_KEY, CW_OPENAI_API_KEY, etc.
 embedding_model = "voyage-code-3"
 embedding_dimension = 1024
 embedding_batch_size = 8
 
 # Reranking configuration
-rerank_provider = "voyage"  # If None, uses embedding provider if available
+rerank_provider = "voyage-ai"  # If None, uses embedding provider if available
 rerank_model = "voyage-rerank-2"  # If None, uses provider default
 
 # Provider-specific settings
@@ -1251,8 +1258,8 @@ change_check_interval_seconds = 60
 
 # Legacy Configuration (for backward compatibility)
 [embedding]
-provider = "voyage"  # Kept for backward compatibility
-api_key = "YOUR_VOYAGE_API_KEY"  # Synced with provider.embedding_api_key
+provider = "voyage-ai"  # Kept for backward compatibility
+api_key = "YOUR_CW_VOYAGE_API_KEY"  # Synced with provider.CW_EMBEDDING_API_KEY
 model = "voyage-code-3"  # Synced with provider.embedding_model
 
 [qdrant]
@@ -1302,15 +1309,15 @@ max_search_results = 50
 # This format is supported for backward compatibility
 
 [embedding]
-provider = "voyage"  # "voyage" or "openai"
-api_key = "YOUR_VOYAGE_API_KEY"  # Can also use VOYAGE_API_KEY env var
+provider = "voyage-ai"  # "voyage-ai" or "openai"
+api_key = "YOUR_CW_VOYAGE_API_KEY"  # Can also use CW_VOYAGE_API_KEY env var
 model = "voyage-code-3"
 dimension = 1024
 batch_size = 8
 
 [qdrant]
-url = "YOUR_BACKEND_URL"  # Can also use VECTOR_BACKEND_URL env var
-api_key = "YOUR_BACKEND_API_KEY"  # Can also use VECTOR_BACKEND_API_KEY env var
+url = "YOUR_BACKEND_URL"  # Can also use CW_VECTOR_BACKEND_URL env var
+api_key = "YOUR_BACKEND_API_KEY"  # Can also use CW_VECTOR_BACKEND_API_KEY env var
 collection_name = "code-embeddings"
 enable_sparse_vectors = false
 
@@ -1359,7 +1366,7 @@ max_search_results = 50
 # =============================================================================
 
 # [embedding]
-# provider = "voyage"
+# provider = "voyage-ai"
 # api_key = "your-voyage-key"
 # model = "voyage-code-3"
 #
@@ -1394,8 +1401,8 @@ model = "voyage-code-3"
 
 # Legacy Provider Configuration (for backward compatibility)
 [provider]
-embedding_provider = "voyage"
-embedding_api_key = "your-voyage-key"
+embedding_provider = "voyage-ai"
+CW_EMBEDDING_API_KEY = "your-voyage-key"
 embedding_model = "voyage-code-3"
 embedding_dimension = 1024
 
@@ -1448,14 +1455,14 @@ use_gitignore = true
         try:
             # Try to load and parse the TOML file
             with path.open("r", encoding="utf-8") as f:
-                config_dict = tomlkit.load(f)
+                parsed_config = tomlkit.load(f)
 
             # Clean the TOML dict
-            clean_dict = self._clean_toml_dict(config_dict)
+            filtered_parsed_config = self._clean_toml_dict(parsed_config)
 
             # Try to create a config object from it
             temp_config = CodeWeaverConfig()
-            temp_config.merge_from_dict(clean_dict)
+            temp_config.merge_from_dict(filtered_parsed_config)
 
             # Run validation
             self._validate_config(temp_config)
@@ -1468,40 +1475,9 @@ use_gitignore = true
 
         return result
 
-    def migrate_legacy_config_file(self, legacy_path: str | Path, new_path: str | Path | None = None) -> Path:
-        """Migrate a legacy configuration file to the new format.
-
-        Args:
-            legacy_path: Path to the legacy configuration file
-            new_path: Optional path for the migrated configuration. If None, uses default location.
-
-        Returns:
-            Path where the migrated configuration was saved
-        """
-        legacy_path = Path(legacy_path)
-
-        if not legacy_path.exists():
-            raise FileNotFoundError(f"Legacy configuration file not found: {legacy_path}")
-
-        # Load the legacy configuration
-        with legacy_path.open("r", encoding="utf-8") as f:
-            legacy_dict = tomlkit.load(f)
-
-        # Clean the TOML dict
-        clean_dict = self._clean_toml_dict(legacy_dict)
-
-        # Create a new config and apply the legacy settings
-        config = CodeWeaverConfig()
-        config.merge_from_dict(clean_dict)
-        config.migrated_from_legacy = True
-
-        # Save to the new location
-        if new_path is None:
-            new_path = Path.home() / ".config" / "code-weaver" / "config.toml"
-
-        return self.save_config(config, new_path)
-
-    def export_config_template(self, template_type: Literal["minimal", "full", "enterprise"] = "full") -> str:
+    def export_config_template(
+        self, template_type: Literal["minimal", "full", "enterprise"] = "full"
+    ) -> str:
         """Export a configuration template with different levels of detail.
 
         Args:
@@ -1528,17 +1504,17 @@ api_key = "YOUR_BACKEND_API_KEY"
 
 # Modern Provider Configuration
 [providers.voyage]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-code-3"
 
 [providers.embedding]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-code-3"
 
 # Legacy Provider Configuration
 [provider]
-embedding_provider = "voyage"
-embedding_api_key = "YOUR_VOYAGE_API_KEY"
+embedding_provider = "voyage-ai"
+CW_EMBEDDING_API_KEY = "YOUR_CW_VOYAGE_API_KEY"
 
 # Basic Data Source
 [[data_sources.sources]]
@@ -1582,7 +1558,7 @@ cache_ttl_seconds = 7200  # 2 hours
 
 # Voyage AI Configuration (Primary)
 [providers.voyage]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-code-3"
 embedding_model = "voyage-code-3"
 reranking_model = "voyage-rerank-2"
@@ -1595,13 +1571,13 @@ enable_reranking = true
 
 # Set as active providers
 [providers.embedding]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-code-3"
 batch_size = 16
 timeout_seconds = 60.0
 
 [providers.reranking]
-api_key = "YOUR_VOYAGE_API_KEY"
+api_key = "YOUR_CW_VOYAGE_API_KEY"
 model = "voyage-rerank-2"
 top_k = 100
 relevance_threshold = 0.1
@@ -1609,7 +1585,7 @@ return_scores = true
 
 # Backup OpenAI Configuration
 [providers.openai]
-api_key = "YOUR_OPENAI_API_KEY"
+api_key = "YOUR_CW_OPENAI_API_KEY"
 model = "text-embedding-3-large"
 max_input_length = 8191
 batch_size = 16
@@ -1617,14 +1593,14 @@ timeout_seconds = 60.0
 
 # Legacy Provider Configuration (for backward compatibility)
 [provider]
-embedding_provider = "voyage"  # Options: voyage, openai, cohere, sentence-transformers, huggingface
-embedding_api_key = "YOUR_VOYAGE_API_KEY"
+embedding_provider = "voyage-ai"  # Options: voyage, openai, cohere, sentence-transformers, huggingface
+CW_EMBEDDING_API_KEY = "YOUR_CW_VOYAGE_API_KEY"
 embedding_model = "voyage-code-3"
 embedding_dimension = 1024
 embedding_batch_size = 16
 
 # Reranking (optional but recommended)
-rerank_provider = "voyage"
+rerank_provider = "voyage-ai"
 rerank_model = "voyage-rerank-2"
 
 # Caching and optimization
@@ -1702,10 +1678,10 @@ def validate_environment_variables() -> dict[str, Any]:
 
     # Check for provider-specific API keys
     provider_vars = {
-        "VOYAGE_API_KEY": "Voyage AI",
-        "OPENAI_API_KEY": "OpenAI",
-        "COHERE_API_KEY": "Cohere",
-        "HUGGINGFACE_API_KEY": "HuggingFace",
+        "CW_VOYAGE_API_KEY": "Voyage AI",
+        "CW_OPENAI_API_KEY": "OpenAI",
+        "CW_COHERE_API_KEY": "Cohere",
+        "CW_HUGGINGFACE_API_KEY": "HuggingFace",
     }
 
     for var, provider in provider_vars.items():
@@ -1714,10 +1690,10 @@ def validate_environment_variables() -> dict[str, Any]:
 
     # Check backend configuration
     backend_vars = {
-        "VECTOR_BACKEND_URL": "Backend URL",
-        "VECTOR_BACKEND_API_KEY": "Backend API key",
-        "VECTOR_BACKEND_PROVIDER": "Backend provider",
-        "VECTOR_BACKEND_COLLECTION": "Backend collection name",
+        "CW_VECTOR_BACKEND_URL": "Backend URL",
+        "CW_VECTOR_BACKEND_API_KEY": "Backend API key",
+        "CW_VECTOR_BACKEND_PROVIDER": "Backend provider",
+        "CW_VECTOR_BACKEND_COLLECTION": "Backend collection name",
     }
 
     for var, description in backend_vars.items():
@@ -1725,22 +1701,20 @@ def validate_environment_variables() -> dict[str, Any]:
             validation_results["detected_vars"][var] = description
 
     # Check for required variables
-    if not os.getenv("VECTOR_BACKEND_URL"):
-        validation_results["errors"].append(
-            "No backend URL found. Set VECTOR_BACKEND_URL"
-        )
+    if not os.getenv("CW_VECTOR_BACKEND_URL"):
+        validation_results["errors"].append("No backend URL found. Set CW_VECTOR_BACKEND_URL")
         validation_results["valid"] = False
 
     # Check for embedding provider API key
-    embedding_provider = os.getenv("EMBEDDING_PROVIDER", "voyage").lower()
-    use_local = os.getenv("USE_LOCAL_MODELS", "false").lower() in ("true", "1", "yes")
+    embedding_provider = os.getenv("CW_EMBEDDING_PROVIDER", "CW_VOYAGE_AI").lower()
+    use_local = os.getenv("CW_USE_LOCAL_MODELS", "false").lower() in ("true", "1", "yes")
 
-    if not use_local and embedding_provider in ["voyage", "openai", "cohere", "huggingface"]:
+    if not use_local and embedding_provider in ["voyage-ai", "openai", "cohere", "huggingface"]:
         provider_key_map = {
-            "voyage": "VOYAGE_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "cohere": "COHERE_API_KEY",
-            "huggingface": "HUGGINGFACE_API_KEY",
+            "voyage-ai": "CW_VOYAGE_API_KEY",
+            "openai": "CW_OPENAI_API_KEY",
+            "cohere": "CW_COHERE_API_KEY",
+            "huggingface": "CW_HUGGINGFACE_API_KEY",
         }
 
         required_key = provider_key_map.get(embedding_provider)
@@ -1776,7 +1750,9 @@ def get_effective_config_summary() -> dict[str, Any]:
                 "provider": config.get_effective_embedding_provider(),
                 "model": config.provider.embedding_model or config.embedding.model,
                 "dimension": config.provider.embedding_dimension or config.embedding.dimension,
-                "has_api_key": bool(config.provider.embedding_api_key or config.embedding.api_key),
+                "has_api_key": bool(
+                    config.provider.CW_EMBEDDING_API_KEY or config.embedding.api_key
+                ),
                 "use_local": config.provider.use_local or config.embedding.use_local,
             },
             "data_sources": {
@@ -1796,9 +1772,9 @@ def is_configuration_migrated() -> bool:
     """Check if configuration has been migrated from legacy format."""
     try:
         config = get_config()
-        return config.migrated_from_legacy
     except Exception:
         return False
+    return config.migrated_from_legacy
 
 
 def suggest_configuration_improvements() -> list[str]:
@@ -1826,7 +1802,7 @@ def suggest_configuration_improvements() -> list[str]:
         # Check for reranking opportunities
         provider = config.get_effective_embedding_provider()
         rerank_provider = config.provider.rerank_provider or config.embedding.rerank_provider
-        if provider in ["voyage", "cohere"] and not rerank_provider:
+        if provider in ["voyage-ai", "cohere"] and not rerank_provider:
             suggestions.append(
                 f"Your {provider} provider supports reranking. "
                 "Consider enabling it for improved search relevance."

@@ -86,9 +86,9 @@ async def test_mock_vector_backend_compliance():
     assert result.is_compliant
 
 # Test protocol interface validation
-async def test_embedding_provider_properties():
+async def test_CW_EMBEDDING_PROVIDER_properties():
     provider = MockEmbeddingProvider(dimension=256)
-    result = await validate_embedding_provider_protocol(provider)
+    result = await validate_CW_EMBEDDING_PROVIDER_protocol(provider)
     assert result.is_compliant
     assert provider.dimension == 256
 ```
@@ -328,26 +328,26 @@ jobs:
     strategy:
       matrix:
         python-version: [3.11, 3.12]
-    
+
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install dependencies
       run: |
         pip install uv
         uv sync --dev
-    
+
     - name: Run fast tests
       run: |
         uv run pytest tests/ -m "not slow" --cov=src/codeweaver/testing
-    
+
     - name: Run integration tests
       run: |
         uv run pytest tests/ -m "integration" --timeout=300
-    
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
 ```
@@ -429,21 +429,21 @@ Follow consistent test structure:
 ```python
 class TestNewFeature:
     """Test new feature functionality."""
-    
+
     def test_initialization(self):
         """Test feature initialization."""
         pass
-    
+
     @pytest.mark.asyncio
     async def test_basic_functionality(self):
         """Test basic feature functionality."""
         pass
-    
+
     @pytest.mark.asyncio
     async def test_error_handling(self):
         """Test feature error handling."""
         pass
-    
+
     @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_performance(self):
@@ -458,13 +458,13 @@ Document test purpose and scenarios:
 ```python
 def test_complex_scenario(self):
     """Test complex scenario with multiple components.
-    
+
     This test validates:
     1. Component initialization
     2. Inter-component communication
     3. Error recovery
     4. Performance characteristics
-    
+
     Expected behavior:
     - All components should initialize successfully
     - Communication should be reliable

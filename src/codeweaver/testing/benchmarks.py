@@ -159,7 +159,7 @@ class BenchmarkSuite:
 
         return results
 
-    async def benchmark_embedding_provider(
+    async def benchmark_CW_EMBEDDING_PROVIDER(
         self, provider: EmbeddingProvider, test_scenarios: list[dict[str, Any]] | None = None
     ) -> list[BenchmarkResult]:
         """Benchmark embedding provider performance."""
@@ -237,7 +237,7 @@ class BenchmarkSuite:
                     f"{scenario_name}_search",
                     "search_vectors",
                     backend,
-                    lambda b: b.search_vectors(collection_name, query_vector, limit=10),
+                    lambda b, qv=query_vector: b.search_vectors(collection_name, qv, limit=10),
                 )
                 results.append(result)
 
@@ -247,8 +247,10 @@ class BenchmarkSuite:
 
                 query_vectors = [v.vector for v in test_vectors[:10]]
 
-                async def batch_search_func(b: VectorBackend) -> list[VectorPoint]:
-                    tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in query_vectors]
+                async def batch_search_func(
+                    b: VectorBackend, vectors=query_vectors
+                ) -> list[VectorPoint]:
+                    tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in vectors]
                     return await asyncio.gather(*tasks)
 
                 result = await self._benchmark_operation(
@@ -285,7 +287,7 @@ class BenchmarkSuite:
                         f"{scenario_name}_embed_documents_batch_{batch_size}",
                         "embed_documents",
                         provider,
-                        lambda p: p.embed_documents(batch),
+                        lambda p, batch_data=batch: p.embed_documents(batch_data),
                         batch_size=batch_size,
                     )
                     results.append(result)
@@ -325,7 +327,9 @@ class BenchmarkSuite:
                     f"{scenario_name}_rerank_{doc_count}_docs",
                     "rerank",
                     provider,
-                    lambda p: p.rerank(query, docs_subset, top_k=doc_count // 2),
+                    lambda p, docs=docs_subset, count=doc_count: p.rerank(
+                        query, docs, top_k=count // 2
+                    ),
                     batch_size=doc_count,
                 )
                 results.append(result)
@@ -653,8 +657,8 @@ async def run_performance_benchmarks(
     for component_type, implementation in components.items():
         if component_type == "vector_backend":
             results[component_type] = await suite.benchmark_vector_backend(implementation)
-        elif component_type == "embedding_provider":
-            results[component_type] = await suite.benchmark_embedding_provider(implementation)
+        elif component_type == "CW_EMBEDDING_PROVIDER":
+            results[component_type] = await suite.benchmark_CW_EMBEDDING_PROVIDER(implementation)
         elif component_type == "rerank_provider":
             results[component_type] = await suite.benchmark_rerank_provider(implementation)
         elif component_type == "data_source":

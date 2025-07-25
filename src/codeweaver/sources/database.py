@@ -13,56 +13,61 @@ database records, procedures, views, and schemas as indexable content.
 import logging
 
 from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import Annotated, Any
 
-from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceCapability, SourceWatcher
+from pydantic import BaseModel, ConfigDict, Field
+
+from codeweaver._types.source_capabilities import SourceCapabilities
+from codeweaver.sources.base import AbstractDataSource, ContentItem, SourceWatcher
 
 
 logger = logging.getLogger(__name__)
 
 
-class DatabaseSourceConfig(TypedDict, total=False):
+class DatabaseSourceConfig(BaseModel):
     """Configuration specific to database data sources."""
 
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+
     # Inherited from BaseSourceConfig
-    enabled: bool
-    priority: int
-    source_id: str
-    include_patterns: list[str]
-    exclude_patterns: list[str]
-    max_file_size_mb: int
-    batch_size: int
-    max_concurrent_requests: int
-    request_timeout_seconds: int
-    enable_change_watching: bool
-    change_check_interval_seconds: int
-    enable_content_deduplication: bool
-    enable_metadata_extraction: bool
-    supported_languages: list[str]
+    enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
+    priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
+    source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
+    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
+    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
+    batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
+    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
+    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
+    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
+    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
+    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
+    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
 
     # Database specific settings
-    database_type: str  # 'postgresql', 'mysql', 'sqlite', 'mongodb', 'elasticsearch'
-    connection_string: str
-    host: str | None
-    port: int | None
-    database_name: str
+    database_type: Annotated[str, Field(description="Database type: 'postgresql', 'mysql', 'sqlite', 'mongodb', 'elasticsearch'")]
+    connection_string: Annotated[str, Field(description="Database connection string (required)")]
+    host: Annotated[str | None, Field(None, description="Database host (optional if using connection string)")]
+    port: Annotated[int | None, Field(None, ge=1, le=65535, description="Database port (optional if using connection string)")]
+    database_name: Annotated[str, Field(description="Database name (required)")]
 
     # Authentication
-    username: str | None
-    password: str | None
-    ssl_mode: str | None
+    username: Annotated[str | None, Field(None, description="Username for database authentication")]
+    password: Annotated[str | None, Field(None, description="Password for database authentication")]
+    ssl_mode: Annotated[str | None, Field(None, description="SSL mode for secure connections")]
 
     # Content discovery settings
-    include_tables: list[str]
-    include_views: list[str]
-    include_procedures: list[str]
-    include_schemas: list[str]
+    include_tables: Annotated[list[str], Field(default_factory=list, description="Tables to include in indexing")]
+    include_views: Annotated[list[str], Field(default_factory=list, description="Views to include in indexing")]
+    include_procedures: Annotated[list[str], Field(default_factory=list, description="Stored procedures to include in indexing")]
+    include_schemas: Annotated[list[str], Field(default_factory=list, description="Database schemas to include")]
 
     # Data extraction settings
-    max_record_length: int
-    sample_size: int
-    content_fields: list[str]  # Fields to treat as content
-    metadata_fields: list[str]  # Fields to include as metadata
+    max_record_length: Annotated[int, Field(10000, ge=100, le=100000, description="Maximum record length for content extraction")]
+    sample_size: Annotated[int, Field(100, ge=1, le=10000, description="Number of sample records to extract per table")]
+    content_fields: Annotated[list[str], Field(default_factory=list, description="Database fields to treat as indexable content")]
+    metadata_fields: Annotated[list[str], Field(default_factory=list, description="Database fields to include as metadata")]
 
 
 class DatabaseSource(AbstractDataSource):
@@ -87,18 +92,18 @@ class DatabaseSource(AbstractDataSource):
         """
         super().__init__("database", source_id)
 
-    def get_capabilities(self) -> set[SourceCapability]:
+    def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by database source."""
-        return {
-            SourceCapability.CONTENT_DISCOVERY,
-            SourceCapability.CONTENT_READING,
-            SourceCapability.CHANGE_WATCHING,
-            SourceCapability.METADATA_EXTRACTION,
-            SourceCapability.BATCH_PROCESSING,
-            SourceCapability.AUTHENTICATION,
-            SourceCapability.PAGINATION,
-            SourceCapability.RATE_LIMITING,
-        }
+        return SourceCapabilities(
+            supports_content_discovery=True,
+            supports_content_reading=True,
+            supports_change_watching=True,
+            supports_metadata_extraction=True,
+            supports_batch_processing=True,
+            supports_authentication=True,
+            supports_pagination=True,
+            supports_rate_limiting=True,
+        )
 
     async def discover_content(self, config: DatabaseSourceConfig) -> list[ContentItem]:
         """Discover content from a database.

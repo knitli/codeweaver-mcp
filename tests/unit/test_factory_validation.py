@@ -399,9 +399,9 @@ class TestFactoryIntegration:
 
         # At least some factories should be valid if mocks are registered
         valid_factories = [r for r in results.values() if r.is_valid]
-        assert len(valid_factories) > 0, (
-            "No valid factories found - mock registration may have failed"
-        )
+        assert (
+            valid_factories
+        ), "No valid factories found - mock registration may have failed"
 
 
 @pytest.mark.asyncio

@@ -200,9 +200,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             return 2048  # OpenAI's maximum
         if "openrouter.ai" in self._base_url:
             return 128   # OpenRouter's typical limit
-        if "together.ai" in self._base_url:
-            return 256   # Together AI's typical limit
-        return 128   # Conservative default for unknown services
+        return 256 if "together.ai" in self._base_url else 128
 
     @property
     def max_input_length(self) -> int | None:
@@ -211,9 +209,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             return self._max_input_length
 
         # Service-specific defaults based on base URL
-        if "openai.com" in self._base_url:
-            return 500000  # OpenAI's limit
-        return 32000   # Conservative default for other services
+        return 500000 if "openai.com" in self._base_url else 32000
 
     @rate_limited("openai_embed_documents", calculate_embedding_tokens)
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
@@ -281,7 +277,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             display_name=f"{self._service_name} (OpenAI-Compatible)",
             description=f"OpenAI-compatible embeddings via {self._service_name} at {self._base_url}",
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.BATCH_PROCESSING,
             ],
             capabilities=None,  # Dynamic capabilities
@@ -302,7 +298,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             display_name="OpenAI-Compatible Provider",
             description="Flexible provider for any OpenAI-compatible embedding API",
             supported_capabilities=[
-                ProviderCapability.EMBEDDINGS,
+                ProviderCapability.EMBEDDING,
                 ProviderCapability.BATCH_PROCESSING,
             ],
             capabilities=None,  # Dynamic capabilities
@@ -322,7 +318,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             return False, "openai package not installed (install with: uv add openai)"
 
         # Only embedding is supported
-        if capability == ProviderCapability.EMBEDDINGS:
+        if capability == ProviderCapability.EMBEDDING:
             return True, None
 
         return False, f"Capability {capability.value} not supported by OpenAI-compatible provider"

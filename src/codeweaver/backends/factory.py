@@ -17,13 +17,15 @@ from typing import Annotated, Any, ClassVar, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from codeweaver._types.base import CapabilityQueryMixin
+from codeweaver._types.capabilities import BackendCapabilities
+from codeweaver._types.provider_enums import ProviderKind
 from codeweaver.backends.base import BackendConnectionError, HybridSearchBackend, VectorBackend
 from codeweaver.backends.qdrant import QdrantHybridBackend
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
     LocalEmbeddingProvider,
-    ProviderKind,
     RerankProvider,
 )
 
@@ -168,7 +170,7 @@ class BackendConfig(BaseModel):
         return url
 
 
-class BackendFactory:
+class BackendFactory(CapabilityQueryMixin):
     """
     Factory for creating vector database backends.
 
@@ -306,26 +308,36 @@ class BackendFactory:
             }
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
-        # Add planned providers (not yet implemented)
+        # Add planned providers using centralized BackendCapabilities model
+        from codeweaver._types.capabilities import get_all_backend_capabilities
+
+        # Get all backend capabilities from centralized source
+        all_capabilities = get_all_backend_capabilities()
+
+        # Convert to legacy format for backward compatibility
         planned_providers = {
-            "pinecone": {"available": False, "supports_hybrid_search": False},
-            "chroma": {"available": False, "supports_hybrid_search": False},
-            "weaviate": {"available": False, "supports_hybrid_search": True},
-            "pgvector": {"available": False, "supports_hybrid_search": False},
-            "redis": {"available": False, "supports_hybrid_search": False},
-            "elasticsearch": {"available": False, "supports_hybrid_search": True},
-            "opensearch": {"available": False, "supports_hybrid_search": True},
-            "milvus": {"available": False, "supports_hybrid_search": False},
-            "vespa": {"available": False, "supports_hybrid_search": True},
-            "faiss": {"available": False, "supports_hybrid_search": False},
-            "annoy": {"available": False, "supports_hybrid_search": False},
-            "scann": {"available": False, "supports_hybrid_search": False},
-            "lancedb": {"available": False, "supports_hybrid_search": False},
-            "marqo": {"available": False, "supports_hybrid_search": True},
+            provider: {
+                "available": False,  # Not yet implemented
+                "supports_hybrid_search": caps.supports_hybrid_search,
+                "supports_streaming": caps.supports_streaming,
+                "supports_transactions": caps.supports_transactions,
+            }
+            for provider, caps in all_capabilities.items()
+            if provider not in cls._backends  # Only include planned backends, not already implemented ones
         }
 
         providers |= planned_providers
         return providers
+
+    @classmethod
+    def get_all_capabilities(cls) -> dict[str, BackendCapabilities]:
+        """Get all backend capabilities using standardized interface.
+
+        Returns:
+            Dictionary mapping backend names to their capabilities
+        """
+        from codeweaver._types.capabilities import get_all_backend_capabilities
+        return get_all_backend_capabilities()
 
     @classmethod
     def register_backend(
@@ -372,7 +384,6 @@ class BackendFactory:
             raise ValueError(f"Unsupported URL scheme: {url}")
 
         # Ensure we have a valid ProviderKind for the config
-        from codeweaver.providers.base import ProviderKind
         kind = kwargs.pop('kind', ProviderKind.COMBINED)
 
         config = BackendConfig(provider=provider, kind=kind, url=base_url, **kwargs)

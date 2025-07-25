@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def test_backend_factory() -> bool | None:
+async def test_backend_factory() -> bool | None:  # noqa: RUF029
     """Test backend factory creation."""
     logger.info("Testing backend factory...")
 
@@ -58,7 +58,7 @@ async def test_backend_factory() -> bool | None:
         return True
 
 
-async def test_backend_protocol() -> bool | None:
+async def test_backend_protocol() -> bool | None:  # noqa: RUF029
     """Test backend protocol compliance."""
     def raise_value_error(message: str):
         """Helper function to raise ValueError with a message."""

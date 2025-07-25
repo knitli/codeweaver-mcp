@@ -21,6 +21,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
+from codeweaver._types.provider_enums import ProviderCapability
 from codeweaver.backends.base import (
     CollectionInfo,
     DistanceMetric,
@@ -29,7 +30,7 @@ from codeweaver.backends.base import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver.providers.base import ProviderCapability, ProviderInfo, RerankResult
+from codeweaver.providers.base import ProviderInfo, RerankResult
 from codeweaver.sources.base import (
     AbstractDataSource,
     ContentItem,

@@ -5,6 +5,9 @@ SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
+# I NEED TO BE UPDATED
+# This README is a work in progress and needs to be updated with the latest features, installation
+
 # CodeWeaver
 
 **Semantic code search powered by Voyage AI and ast-grep**
@@ -43,7 +46,7 @@ pip install voyageai qdrant-client mcp ast-grep-py
 ### Configure
 ```bash
 # Set your API keys
-export VOYAGE_API_KEY="your-voyage-ai-key"
+export CW_VOYAGE_API_KEY="your-voyage-ai-key"
 export QDRANT_URL="https://your-cluster.qdrant.tech:6333"
 export QDRANT_API_KEY="your-qdrant-key"
 ```
@@ -57,7 +60,7 @@ Add to your `claude_desktop_config.json`:
       "command": "python",
       "args": ["/path/to/codevoyager/server.py"],
       "env": {
-        "VOYAGE_API_KEY": "your-voyage-ai-key",
+        "CW_VOYAGE_API_KEY": "your-voyage-ai-key",
         "QDRANT_URL": "https://your-cluster.qdrant.tech:6333",
         "QDRANT_API_KEY": "your-qdrant-key"
       }
@@ -191,7 +194,7 @@ Choose embedding dimensions based on your needs:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `VOYAGE_API_KEY` | ? | - | Your Voyage AI API key |
+| `CW_VOYAGE_API_KEY` | ? | - | Your Voyage AI API key |
 | `QDRANT_URL` | ? | - | Qdrant instance URL |
 | `QDRANT_API_KEY` | ? | - | Qdrant API key (if auth enabled) |
 | `COLLECTION_NAME` | ? | `code-embeddings` | Collection name in Qdrant |

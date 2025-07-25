@@ -39,7 +39,10 @@ class BackendConfigExtended(BackendConfig):
 
     # Override required fields with defaults
     provider: Annotated[str, Field(default="qdrant", description="Backend provider type")]
-    kind: Annotated[ProviderKind, Field(default=ProviderKind.COMBINED, description="Provider kind classification")]
+    kind: Annotated[
+        ProviderKind,
+        Field(default=ProviderKind.COMBINED, description="Provider kind classification"),
+    ]
 
     # Collection management
     collection_name: Annotated[
@@ -48,21 +51,17 @@ class BackendConfigExtended(BackendConfig):
             default_factory=lambda: f"codeweaver-{uuid4()}",
             description="Name of the vector collection",
             min_length=1,
-            max_length=255
-        )
+            max_length=255,
+        ),
     ]
     auto_create_collection: Annotated[
-        bool,
-        Field(default=True, description="Automatically create collection if it doesn't exist")
+        bool, Field(default=True, description="Automatically create collection if it doesn't exist")
     ]
     collection_dimension: Annotated[
         int,
         Field(
-            default=1024,
-            ge=1,
-            le=4096,
-            description="Vector dimension for the collection (1-4096)"
-        )
+            default=1024, ge=1, le=4096, description="Vector dimension for the collection (1-4096)"
+        ),
     ]
 
     # Advanced hybrid search settings
@@ -70,16 +69,19 @@ class BackendConfigExtended(BackendConfig):
         list[str],
         Field(
             default_factory=lambda: ["content", "chunk_type"],
-            description="Fields to index for sparse vector search"
-        )
+            description="Fields to index for sparse vector search",
+        ),
     ]
     sparse_index_type: Annotated[
         SparseIndexType,
-        Field(default=SparseIndexType.BM25, description="Type of sparse index to use")
+        Field(default=SparseIndexType.BM25, description="Type of sparse index to use"),
     ]
     hybrid_fusion_strategy: Annotated[
         HybridFusionStrategy,
-        Field(default=HybridFusionStrategy.RRF, description="Strategy for fusing dense and sparse results")
+        Field(
+            default=HybridFusionStrategy.RRF,
+            description="Strategy for fusing dense and sparse results",
+        ),
     ]
     hybrid_alpha: Annotated[
         float,
@@ -87,140 +89,70 @@ class BackendConfigExtended(BackendConfig):
             default=0.5,
             ge=0.0,
             le=1.0,
-            description="Balance between dense (1.0) and sparse (0.0) search"
-        )
+            description="Balance between dense (1.0) and sparse (0.0) search",
+        ),
     ]
 
     # Performance and scaling
     batch_size: Annotated[
-        int,
-        Field(
-            default=100,
-            ge=1,
-            le=1000,
-            description="Batch size for operations (1-1000)"
-        )
+        int, Field(default=100, ge=1, le=1000, description="Batch size for operations (1-1000)")
     ]
     max_batch_size: Annotated[
-        int,
-        Field(
-            default=1000,
-            ge=1,
-            le=10000,
-            description="Maximum batch size limit (1-10000)"
-        )
+        int, Field(default=1000, ge=1, le=10000, description="Maximum batch size limit (1-10000)")
     ]
     connection_pool_size: Annotated[
-        int,
-        Field(
-            default=10,
-            ge=1,
-            le=100,
-            description="Connection pool size (1-100)"
-        )
+        int, Field(default=10, ge=1, le=100, description="Connection pool size (1-100)")
     ]
     enable_connection_pooling: Annotated[
-        bool,
-        Field(default=True, description="Enable connection pooling")
+        bool, Field(default=True, description="Enable connection pooling")
     ]
     enable_request_compression: Annotated[
-        bool,
-        Field(default=True, description="Enable request compression")
+        bool, Field(default=True, description="Enable request compression")
     ]
 
     # Caching and optimization
     enable_result_caching: Annotated[
-        bool,
-        Field(default=False, description="Enable result caching")
+        bool, Field(default=False, description="Enable result caching")
     ]
     cache_ttl_seconds: Annotated[
-        int,
-        Field(
-            default=300,
-            ge=1,
-            le=86400,
-            description="Cache TTL in seconds (1-86400)"
-        )
+        int, Field(default=300, ge=1, le=86400, description="Cache TTL in seconds (1-86400)")
     ]
     enable_query_optimization: Annotated[
-        bool,
-        Field(default=True, description="Enable query optimization")
+        bool, Field(default=True, description="Enable query optimization")
     ]
 
     # High availability and failover
     replica_urls: Annotated[
-        list[str],
-        Field(default_factory=list, description="List of replica URLs for failover")
+        list[str], Field(default_factory=list, description="List of replica URLs for failover")
     ]
-    enable_failover: Annotated[
-        bool,
-        Field(default=False, description="Enable automatic failover")
-    ]
+    enable_failover: Annotated[bool, Field(default=False, description="Enable automatic failover")]
     health_check_interval: Annotated[
         int,
-        Field(
-            default=30,
-            ge=1,
-            le=3600,
-            description="Health check interval in seconds (1-3600)"
-        )
+        Field(default=30, ge=1, le=3600, description="Health check interval in seconds (1-3600)"),
     ]
 
     # Security and compliance
-    enable_tls: Annotated[
-        bool,
-        Field(default=True, description="Enable TLS encryption")
-    ]
-    verify_ssl: Annotated[
-        bool,
-        Field(default=True, description="Verify SSL certificates")
-    ]
+    enable_tls: Annotated[bool, Field(default=True, description="Enable TLS encryption")]
+    verify_ssl: Annotated[bool, Field(default=True, description="Verify SSL certificates")]
     require_encryption: Annotated[
-        bool,
-        Field(default=True, description="Require encryption for all connections")
+        bool, Field(default=True, description="Require encryption for all connections")
     ]
-    enable_grpc: Annotated[
-        bool,
-        Field(default=False, description="Enable gRPC protocol")
-    ]
-    prefer_http: Annotated[
-        bool,
-        Field(default=False, description="Prefer HTTP over gRPC")
-    ]
-    prefer_grpc: Annotated[
-        bool,
-        Field(default=True, description="Prefer gRPC over HTTP")
-    ]
+    enable_grpc: Annotated[bool, Field(default=False, description="Enable gRPC protocol")]
+    prefer_http: Annotated[bool, Field(default=False, description="Prefer HTTP over gRPC")]
+    prefer_grpc: Annotated[bool, Field(default=True, description="Prefer gRPC over HTTP")]
     client_cert_path: Annotated[
-        str | None,
-        Field(default=None, description="Path to client certificate file")
+        str | None, Field(default=None, description="Path to client certificate file")
     ]
     client_key_path: Annotated[
-        str | None,
-        Field(default=None, description="Path to client private key file")
+        str | None, Field(default=None, description="Path to client private key file")
     ]
 
     # Monitoring and observability
-    enable_metrics: Annotated[
-        bool,
-        Field(default=False, description="Enable metrics collection")
-    ]
-    metrics_endpoint: Annotated[
-        str | None,
-        Field(default=None, description="Metrics endpoint URL")
-    ]
-    enable_tracing: Annotated[
-        bool,
-        Field(default=False, description="Enable distributed tracing")
-    ]
+    enable_metrics: Annotated[bool, Field(default=False, description="Enable metrics collection")]
+    metrics_endpoint: Annotated[str | None, Field(default=None, description="Metrics endpoint URL")]
+    enable_tracing: Annotated[bool, Field(default=False, description="Enable distributed tracing")]
     trace_sample_rate: Annotated[
-        float,
-        Field(
-            default=0.1,
-            ge=0.0,
-            le=1.0,
-            description="Trace sample rate (0.0-1.0)"
-        )
+        float, Field(default=0.1, ge=0.0, le=1.0, description="Trace sample rate (0.0-1.0)")
     ]
 
     @field_validator("replica_urls", mode="before")
@@ -262,14 +194,14 @@ def create_backend_config_from_env() -> BackendConfigExtended:
     Create backend configuration from environment variables.
 
     Uses new backend-agnostic environment variables:
-    - VECTOR_BACKEND_PROVIDER, VECTOR_BACKEND_URL, VECTOR_BACKEND_API_KEY
-    - VECTOR_BACKEND_COLLECTION
+    - CW_VECTOR_BACKEND_PROVIDER, CW_VECTOR_BACKEND_URL, CW_VECTOR_BACKEND_API_KEY
+    - CW_VECTOR_BACKEND_COLLECTION
 
     Returns:
         Backend configuration from environment
     """
     # Check for new environment variables
-    provider_env_var = os.getenv("VECTOR_BACKEND_PROVIDER", "qdrant").lower()
+    provider_env_var = os.getenv("CW_VECTOR_BACKEND_PROVIDER", "qdrant").lower()
 
     # Convert to enum if possible, otherwise use string
     try:
@@ -277,14 +209,14 @@ def create_backend_config_from_env() -> BackendConfigExtended:
     except ValueError:
         provider = provider_env_var  # Use string if not in enum
 
-    url = os.getenv("VECTOR_BACKEND_URL")
-    api_key = os.getenv("VECTOR_BACKEND_API_KEY")
+    url = os.getenv("CW_VECTOR_BACKEND_URL")
+    api_key = os.getenv("CW_VECTOR_BACKEND_API_KEY")
 
     # Collection settings
-    collection_name = os.getenv("VECTOR_BACKEND_COLLECTION", "code-embeddings")
+    collection_name = os.getenv("CW_VECTOR_BACKEND_COLLECTION", "code-embeddings")
 
     # Feature flags
-    enable_hybrid = os.getenv("ENABLE_HYBRID_SEARCH", "false").lower() == "true"
+    enable_hybrid = os.getenv("CW_ENABLE_HYBRID_SEARCH", "false").lower() == "true"
     enable_sparse = os.getenv("ENABLE_SPARSE_VECTORS", "false").lower() == "true"
 
     # Performance settings
