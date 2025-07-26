@@ -5,15 +5,19 @@
 
 """CodeWeaver MCP Server.
 
-A Model Context Protocol (MCP) server that provides semantic code search powered by
-Voyage AI embeddings and ast-grep structural search. Enables AI assistants to understand
-and navigate codebases using natural language queries and precise structural patterns.
+An extensible Model Context Protocol (MCP) server providing semantic code search through
+a plugin-based architecture. Built with factory patterns and protocol-based interfaces
+to support multiple embedding providers, vector databases, and data sources.
 
 Key Features:
-- Semantic code search with Voyage AI embeddings
-- Structural search using ast-grep patterns
-- Support for 20+ programming languages
-- Vector similarity search with Qdrant
+- Extensible architecture with pluggable providers and backends
+- Factory pattern for dynamic component creation and configuration
+- Support for multiple embedding providers (Voyage AI, OpenAI, Cohere, HuggingFace)
+- Multiple vector database backends (Qdrant, Pinecone, Weaviate, ChromaDB)
+- Universal data source abstraction (filesystem, git, database, API, web)
+- Structural search using ast-grep patterns for 20+ programming languages
+- Configuration-driven initialization with comprehensive plugin system
+- FastMCP middleware integration for cross-cutting concerns
 """
 
 __version__ = "0.1.0"

@@ -7,23 +7,32 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 """
-Voyage AI Code Embeddings MCP Server with FastMCP and ast-grep Integration.
+CodeWeaver Extensible MCP Server with Plugin Architecture.
 
-A modern Model Context Protocol server using FastMCP that provides semantic code search using:
-- Voyage AI's voyage-code-3 embeddings (best-in-class for code)
-- Voyage AI's voyage-rerank-2 reranker
-- Qdrant Cloud vector database
-- ast-grep tree-sitter parsing for 20+ languages
-- Direct ast-grep structural search capabilities
+An extensible Model Context Protocol server built on factory patterns and protocol-based
+interfaces. Supports multiple embedding providers, vector databases, and data sources
+through a comprehensive plugin system and configuration-driven initialization.
+
+Key Architecture Features:
+- Factory pattern for dynamic component creation and management
+- Protocol-based interfaces for provider, backend, and source abstraction
+- Plugin discovery engine with entry point and directory scanning
+- Configuration-driven initialization supporting multiple formats (TOML, env vars)
+- FastMCP middleware integration for cross-cutting concerns
+- Runtime capability querying and component validation
+
+Supported Components:
+- Embedding Providers: Voyage AI, OpenAI, Cohere, HuggingFace, Custom
+- Vector Backends: Qdrant, Pinecone, Weaviate, ChromaDB, Custom
+- Data Sources: Filesystem, Git, Database, API, Web, Custom
+- Languages: 20+ programming languages via ast-grep tree-sitter parsing
 
 Usage:
     python main.py
 
-Environment Variables:
-    CW_EMBEDDING_API_KEY: Your embedding provider API key
-    CW_VECTOR_BACKEND_URL: Your vector database URL
-    CW_VECTOR_BACKEND_API_KEY: Your vector database API key
-    CW_VECTOR_BACKEND_COLLECTION: Name for the code collection (default: code-embeddings)
+Configuration:
+    Uses hierarchical configuration system with environment variables, TOML files,
+    and runtime discovery. See config.py for full configuration options.
 """
 
 import asyncio

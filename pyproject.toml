@@ -25,7 +25,7 @@ keywords = [
 ]
 
 version = "0.1.0"
-description = "An extensible code indexing and search engine with support for multiple backends and providers."
+description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

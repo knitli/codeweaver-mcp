@@ -5,13 +5,13 @@ SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
-# CodeVoyager - AI Assistant Usage Guide
+# CodeWeaver - AI Assistant Usage Guide
 
-This guide explains how to effectively use CodeVoyager, a semantic code search MCP server, to help developers understand and navigate their codebases.
+This guide explains how to effectively use CodeWeaver, an extensible semantic code search MCP server with plugin architecture, to help developers understand and navigate their codebases.
 
-## What CodeVoyager Does
+## What CodeWeaver Does
 
-CodeVoyager is a powerful code search tool that provides:
+CodeWeaver is an extensible code search platform built on factory patterns that provides:
 - **Semantic search**: Understand code by meaning, not just keywords
 - **Structural search**: Find exact code patterns using ast-grep
 - **Multi-language support**: 20+ programming languages with proper AST parsing
@@ -216,7 +216,7 @@ Help users choose the right search approach:
 - Structural search perfect for annotations, inheritance
 
 ### Language Limitations
-If ast-grep is not available, CodeVoyager falls back to simpler parsing but still provides semantic search capabilities.
+If ast-grep is not available, CodeWeaver falls back to simpler parsing but still provides semantic search capabilities through its extensible provider system.
 
 ## Best Practices for AI Assistants
 
@@ -288,13 +288,13 @@ Assistant Response:
 ## Integration Notes
 
 ### For Claude Desktop Users:
-CodeVoyager integrates seamlessly with Claude Desktop through the MCP protocol. Users can ask natural language questions about their code, and Claude will use CodeVoyager tools automatically.
+CodeWeaver integrates seamlessly with Claude Desktop through the MCP protocol. Users can ask natural language questions about their code, and Claude will use CodeWeaver tools automatically.
 
 ### For VS Code Users:
-When available through MCP extension, CodeVoyager tools appear in the command palette and chat interfaces.
+When available through MCP extension, CodeWeaver tools appear in the command palette and chat interfaces.
 
 ### For API Users:
-Direct programmatic access available for integration into custom development tools.
+Direct programmatic access available for integration into custom development tools. The extensible architecture allows custom providers and backends to be plugged in through the factory system.
 
 ## Troubleshooting Guide
 
@@ -336,12 +336,13 @@ Direct programmatic access available for integration into custom development too
 - Filter searches to reduce API calls
 - Cache results when possible
 
-## Remember: CodeVoyager's Strengths
+## Remember: CodeWeaver's Strengths
 
-1. **Superior Code Understanding**: Voyage AI embeddings are specifically trained for code
-2. **Precise Structural Search**: ast-grep provides exact pattern matching
-3. **Language Breadth**: 20+ languages with proper AST support
-4. **Contextual Results**: Understands code semantics, not just keywords
-5. **Hybrid Search**: Combines semantic meaning with structural precision
+1. **Extensible Architecture**: Plugin-based system supporting multiple embedding providers and vector databases
+2. **Superior Code Understanding**: Support for best-in-class embeddings (Voyage AI, OpenAI, Cohere, HuggingFace)
+3. **Precise Structural Search**: ast-grep provides exact pattern matching across 20+ languages
+4. **Configuration-Driven**: Factory pattern allows runtime component selection and customization
+5. **Protocol-Based Design**: Clean interfaces enable easy addition of new providers and backends
+6. **Hybrid Search**: Combines semantic meaning with structural precision across multiple provider systems
 
 Use these strengths to help developers navigate, understand, and improve their codebases more effectively than traditional text-based search tools.

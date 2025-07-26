@@ -11,35 +11,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CodeWeaver is a Model Context Protocol (MCP) server that provides semantic code search powered by Voyage AI embeddings and ast-grep structural search. It enables AI assistants to understand and navigate codebases using natural language queries and precise structural patterns.
+CodeWeaver is an extensible Model Context Protocol (MCP) server built on factory patterns and protocol-based interfaces. It provides semantic code search through a plugin architecture supporting multiple embedding providers, vector databases, and data sources.
 
-**Key Technologies:**
-- **Voyage AI**: Best-in-class code embeddings (`voyage-code-3`) and reranking (`voyage-rerank-2`)
-- **ast-grep**: Tree-sitter based structural search supporting 20+ programming languages
-- **Qdrant**: Vector database for efficient similarity search
-- **FastMCP**: Model Context Protocol implementation
+**Key Architecture Features:**
+- **Extensible Plugin System**: Factory pattern with runtime component discovery
+- **Protocol-Based Interfaces**: Universal abstractions for providers, backends, and sources
+- **Configuration-Driven**: Hierarchical config system with environment variables and TOML files
+- **Multiple Provider Support**: Voyage AI, OpenAI, Cohere, HuggingFace, and custom providers
+- **Multiple Backend Support**: Qdrant, Pinecone, Weaviate, ChromaDB, and custom backends
+- **Universal Data Sources**: Filesystem, Git, Database, API, Web, and custom sources
+- **ast-grep Integration**: Tree-sitter based structural search for 20+ programming languages
+- **FastMCP Middleware**: Cross-cutting concerns and request processing
 
 ## Architecture
 
 ### Core Components
 
-- **`src/codeweaver/main.py`**: Main MCP server implementation with all tools and logic
-- **`src/codeweaver/__init__.py`**: Package initialization (currently empty)
+- **`src/codeweaver/main.py`**: Server entry point with configuration-driven initialization
+- **`src/codeweaver/server.py`**: Clean server implementation using plugin system and FastMCP middleware
+- **`src/codeweaver/__init__.py`**: Package-level documentation and version info
 - **`src/codeweaver/assistant_guide.md`**: Comprehensive usage guide for AI assistants
 
 ### Extended CodeWeaver Architecture
 
-The project has been extended with a modular architecture supporting multiple providers and data sources:
+The project implements a comprehensive extensible architecture with the factory pattern as its foundation:
 
-- **`src/codeweaver/`**: Core server implementation with factory pattern design
-  - **`server.py`**: Main CodeEmbeddingsServer implementation
-  - **`base.py`**: Core protocols and base classes
-  - **`config.py`**: Configuration management system
-  - **`providers/`**: Embedding and reranking provider abstraction (Voyage AI, OpenAI, Cohere, etc.)
-  - **`backends/`**: Vector database abstraction (Qdrant, future: Pinecone, Weaviate, etc.)
-  - **`sources/`**: Data source abstraction (filesystem, future: git, databases, APIs)
-  - **`factories/`**: Factory pattern implementations for extensibility
-  - **`testing/`**: Test utilities and helper functions (NOT actual tests)
+- **`src/codeweaver/`**: Core extensible server implementation
+  - **`server.py`**: Clean server using plugin system and FastMCP middleware
+  - **`config.py`**: Hierarchical configuration management system
+  - **`_types/`**: Centralized type system with protocols, enums, and data structures
+  - **`factories/`**: Factory pattern implementations for extensibility and plugin discovery
+    - **`codeweaver_factory.py`**: Main orchestrator for unified component creation
+    - **`backend_registry.py`**: Vector database backend registration and management
+    - **`source_registry.py`**: Data source registration and management
+    - **`plugin_protocols.py`**: Plugin interface definitions and validation
+    - **`extensibility_manager.py`**: Overall plugin system coordination
+  - **`providers/`**: Embedding and reranking provider abstraction (Voyage AI, OpenAI, Cohere, HuggingFace, Custom)
+  - **`backends/`**: Vector database abstraction (Qdrant, Pinecone, Weaviate, ChromaDB, Custom)
+  - **`sources/`**: Universal data source abstraction (Filesystem, Git, Database, API, Web, Custom)
+  - **`middleware/`**: FastMCP middleware for chunking, filtering, and cross-cutting concerns
+  - **`client/`**: Client utilities and logging infrastructure
+  - **`testing/`**: Testing utilities and framework helpers (NOT actual tests)
 
 ### Test Organization
 
@@ -56,30 +68,30 @@ Tests are organized by type and purpose:
   - `test_server_functionality.py`: Server functionality tests
 
 - **`tests/validation/`**: Validation scripts for architecture and implementation
-  - `validate_architecture.py`: Architecture validation
-  - `validate_backend_refactoring.py`: Backend refactoring validation
-  - `test_config_system.py`: Configuration system tests
-  - `test_provider_system.py`: Provider system tests
 
-### Examples and Demonstrations
+### Key Classes and Architecture Components
 
-- **`examples/`**: Example code and demonstrations
-  - `backend_examples.py`: Vector database backend usage examples
-  - `server_factory_example.py`: Server factory pattern examples
-  - `testing_framework_demo.py`: Testing framework demonstrations
-  - `validation_demo.py`: Validation system demonstrations
-  - **`migration/`**: Migration guides and examples
-    - `sources_migration.py`: Data source migration examples
-    - `providers_migration.py`: Provider system migration examples
+#### Factory System
+1. **`CodeWeaverFactory`**: Main orchestrator for unified component creation and dependency injection
+2. **`BackendRegistry`**: Manages vector database backend registration, validation, and creation
+3. **`SourceRegistry`**: Manages data source registration, validation, and creation
+4. **`ExtensibilityManager`**: Coordinates plugin discovery, validation, and lifecycle management
+5. **`PluginDiscoveryEngine`**: Handles entry point scanning, directory scanning, and module introspection
 
-### Key Classes
+#### Core Server Components
+6. **`CleanCodeWeaverServer`**: Main MCP server using plugin system and FastMCP middleware
+7. **`ConfigManager`**: Hierarchical configuration system with TOML and environment variable support
 
-1. **`CodeEmbeddingsServer`**: Main MCP server orchestrating all functionality
-2. **`AstGrepChunker`**: Handles intelligent code chunking using ast-grep parsers
-3. **`VoyageAIEmbedder`**: Manages Voyage AI embeddings for semantic search
-4. **`VoyageAIReranker`**: Handles result reranking for improved relevance
-5. **`AstGrepStructuralSearch`**: Provides direct ast-grep pattern matching
-6. **`CodeChunk`**: Data structure representing semantic code segments
+#### Protocol-Based Interfaces
+8. **`VectorBackend`**: Universal protocol for vector database operations
+9. **`EmbeddingProvider`**: Universal protocol for embedding and reranking operations
+10. **`DataSource`**: Universal protocol for content discovery and processing
+11. **`PluginInterface`**: Universal protocol for plugin registration and validation
+
+#### Data Structures
+12. **`ContentItem`**: Universal content representation across all data sources
+13. **`ComponentInfo`**: Metadata for component registration and capabilities
+14. **`PluginInfo`**: Plugin metadata and validation information
 
 ## Common Development Commands
 
