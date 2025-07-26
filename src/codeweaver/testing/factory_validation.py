@@ -16,6 +16,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from codeweaver._types import ProviderType
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.config import CodeWeaverConfig
@@ -101,11 +102,56 @@ class FactoryPatternValidator:
         )
 
         # Register mock providers
-        ProviderFactory.register_provider("mock_embedding", MockEmbeddingProvider)
-        ProviderFactory.register_provider("mock_rerank", MockRerankProvider)
+        from codeweaver._types import (
+            EmbeddingProviderInfo,
+            ProviderCapabilities,
+            ProviderCapability,
+        )
+        from codeweaver.providers.factory import ProviderRegistry
+
+        # Create mock provider info
+        mock_provider_info = EmbeddingProviderInfo(
+            name="mock_embedding",
+            display_name="Mock Embedding Provider",
+            description="Test embedding provider for validation",
+            supported_capabilities=[ProviderCapability.EMBEDDING],
+            capabilities=ProviderCapabilities(
+                supports_embedding=True,
+                supports_reranking=False,
+                supports_batch_processing=True,
+                max_batch_size=32,
+                max_input_length=8192,
+                requires_api_key=False,
+                default_embedding_model="mock-model",
+                supported_embedding_models=["mock-model"],
+                native_dimensions={"mock-model": 1536}
+            )
+        )
+
+        mock_rerank_info = EmbeddingProviderInfo(
+            name="mock_rerank",
+            display_name="Mock Rerank Provider",
+            description="Test reranking provider for validation",
+            supported_capabilities=[ProviderCapability.RERANKING],
+            capabilities=ProviderCapabilities(
+                supports_embedding=False,
+                supports_reranking=True,
+                supports_batch_processing=True,
+                max_batch_size=32,
+                max_input_length=8192,
+                requires_api_key=False,
+                default_reranking_model="mock-rerank-model",
+                supported_reranking_models=["mock-rerank-model"]
+            )
+        )
+
+        ProviderRegistry.register_embedding_provider("mock_embedding", MockEmbeddingProvider, mock_provider_info, check_availability=False)
+        ProviderRegistry.register_reranking_provider("mock_rerank", MockRerankProvider, mock_rerank_info, check_availability=False)
 
         # Register mock data source
-        SourceFactory.register_source("mock", MockDataSource)
+        from codeweaver.sources.base import get_source_registry
+        source_registry = get_source_registry()
+        source_registry.register("mock", MockDataSource)
 
     async def validate_all_factories(self) -> dict[str, FactoryValidationResult]:
         """Validate all factory patterns."""
@@ -135,12 +181,12 @@ class FactoryPatternValidator:
         test_cases = [
             {
                 "name": "mock_backend",
-                "config": BackendConfig(provider="mock", url="test://localhost"),
+                "config": BackendConfig(provider="mock", kind="combined", url="http://localhost:6333"),
                 "expected_type": MockVectorBackend,
             },
             {
                 "name": "mock_hybrid_backend",
-                "config": BackendConfig(provider="mock_hybrid", url="test://localhost"),
+                "config": BackendConfig(provider="mock_hybrid", kind="combined", url="http://localhost:6333"),
                 "expected_type": MockHybridSearchBackend,
             },
         ]
@@ -182,7 +228,7 @@ class FactoryPatternValidator:
 
             # Test invalid provider
             with contextlib.suppress(Exception):
-                invalid_config = BackendConfig(provider="nonexistent", url="test://localhost")
+                invalid_config = BackendConfig(provider="nonexistent", kind="combined", url="http://localhost:6333")
                 await BackendFactory.create_backend(invalid_config)
                 result.validation_errors.append("Should have failed with invalid provider")
         except Exception as e:
@@ -215,7 +261,11 @@ class FactoryPatternValidator:
         for test_case in test_cases:
             try:
                 # Test provider creation
-                provider = await create_embedding_provider(test_case["config"])
+                from codeweaver.providers.config import EmbeddingProviderConfig
+
+                config = EmbeddingProviderConfig(provider_type=ProviderType.MOCK_EMBEDDING)
+                factory = ProviderFactory()
+                provider = factory.create_embedding_provider(config)
 
                 # Validate instance type
                 if not isinstance(provider, test_case["expected_type"]):
@@ -245,10 +295,10 @@ class FactoryPatternValidator:
 
         # Test factory methods
         try:
-            # Test list_available_providers
-            providers = ProviderFactory.list_available_providers()
-            if not isinstance(providers, list):
-                result.validation_errors.append("list_available_providers should return list")
+            # Test get_available_embedding_providers
+            providers = ProviderRegistry.get_available_embedding_providers()
+            if not isinstance(providers, dict):
+                result.validation_errors.append("get_available_embedding_providers should return dict")
             elif "mock_embedding" not in providers:
                 result.warnings.append("Mock embedding provider not found in available providers")
 
@@ -282,7 +332,11 @@ class FactoryPatternValidator:
         for test_case in test_cases:
             try:
                 # Test provider creation
-                provider = await create_rerank_provider(test_case["config"])
+                from codeweaver.providers.config import RerankingProviderConfig
+
+                config = RerankingProviderConfig(provider_type=ProviderType.MOCK_RERANK)
+                factory = ProviderFactory()
+                provider = factory.create_reranking_provider(config)
 
                 # Validate instance type
                 if not isinstance(provider, test_case["expected_type"]):
@@ -395,7 +449,8 @@ class FactoryPatternValidator:
 
             # Test backend creation from configuration
             config.backend.provider = "mock"
-            config.backend.url = "test://localhost"
+            config.backend.kind = "combined"
+            config.backend.url = "http://localhost:6333"
 
             backend = await BackendFactory.create_backend(config.backend)
             if isinstance(backend, VectorBackend):
@@ -469,8 +524,34 @@ class FactoryPatternValidator:
             class TestProvider:
                 """A mock provider class for testing registration."""
 
-            ProviderFactory.register_provider("test_provider", TestProvider)
-            providers = ProviderFactory.list_available_providers()
+            from codeweaver._types import (
+                EmbeddingProviderInfo,
+                ProviderCapabilities,
+                ProviderCapability,
+            )
+            from codeweaver.providers.factory import ProviderRegistry
+
+            # Create test provider info
+            test_provider_info = EmbeddingProviderInfo(
+                name="test_provider",
+                display_name="Test Provider",
+                description="Test provider for validation",
+                supported_capabilities=[ProviderCapability.EMBEDDING],
+                capabilities=ProviderCapabilities(
+                    supports_embedding=True,
+                    supports_reranking=False,
+                    supports_batch_processing=True,
+                    max_batch_size=32,
+                    max_input_length=8192,
+                    requires_api_key=False,
+                    default_embedding_model="test-model",
+                    supported_embedding_models=["test-model"],
+                    native_dimensions={"test-model": 1536}
+                )
+            )
+
+            ProviderRegistry.register_embedding_provider("test_provider", TestProvider, test_provider_info, check_availability=False)
+            providers = ProviderRegistry.get_available_embedding_providers()
 
             if "test_provider" in providers:
                 result.created_instances += 1
@@ -483,10 +564,13 @@ class FactoryPatternValidator:
             class TestSource:
                 """A mock data source class for testing registration."""
 
-            SourceFactory.register_source("test_source", TestSource)
-            sources = SourceFactory.list_available_sources()
+            from codeweaver.sources.base import get_source_registry
+            source_registry = get_source_registry()
+            source_registry.register("test_source", TestSource)
 
-            if "test_source" in sources:
+            # Check if source was registered
+            source_class = source_registry.get_source_class("test_source")
+            if source_class is TestSource:
                 result.created_instances += 1
                 result.test_details["source_registration"] = "success"
             else:

@@ -22,3 +22,16 @@ uv = "latest"
 
 [env]
 GH_REPO="knitli/code-weaver-mcp"
+
+[tasks]
+
+fix = """
+#!/bin/bash
+ruff check --fix --unsafe-fixes . &&
+ruff format . &&
+hk fix
+"""
+
+check = "hk check"
+
+

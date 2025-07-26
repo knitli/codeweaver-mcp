@@ -31,8 +31,8 @@ from codeweaver.testing.mocks import (
 from codeweaver.testing.protocol_compliance import (
     ComplianceResult,
     ProtocolComplianceValidator,
-    validate_embedding_provider_protocol,
     validate_data_source_protocol,
+    validate_embedding_provider_protocol,
     validate_hybrid_search_backend_protocol,
     validate_rerank_provider_protocol,
     validate_vector_backend_protocol,

@@ -14,7 +14,7 @@ import logging
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -248,7 +248,7 @@ class AbstractDataSource(ABC):
         metadata = {
             "source_type": self.source_type,
             "source_id": self.source_id,
-            "discovered_at": datetime.now(datetime.UTC).isoformat(),
+            "discovered_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Add any existing metadata from the item

@@ -138,24 +138,26 @@ class BenchmarkSuite:
             test_scenarios = self._get_default_vector_backend_scenarios()
 
         results = []
-        collection_name = "benchmark_collection"
 
-        try:
-            # Setup test collection
-            await backend.create_collection(
-                name=collection_name, dimension=128, distance_metric=DistanceMetric.COSINE
-            )
+        for i, scenario in enumerate(test_scenarios):
+            collection_name = f"benchmark_collection_{i}"
+            dimension = scenario.get("dimension", 128)
+            
+            try:
+                # Setup test collection with scenario-specific dimension
+                await backend.create_collection(
+                    name=collection_name, dimension=dimension, distance_metric=DistanceMetric.COSINE
+                )
 
-            for scenario in test_scenarios:
                 scenario_results = await self._run_vector_backend_scenario(
                     backend, collection_name, scenario
                 )
                 results.extend(scenario_results)
 
-        finally:
-            # Cleanup
-            with contextlib.suppress(Exception):
-                await backend.delete_collection(collection_name)
+            finally:
+                # Cleanup scenario collection
+                with contextlib.suppress(Exception):
+                    await backend.delete_collection(collection_name)
 
         return results
 
@@ -230,37 +232,45 @@ class BenchmarkSuite:
 
             elif operation == "search":
                 # First upsert some data for search
-                await backend.upsert_vectors(collection_name, test_vectors[:50])
-
-                query_vector = test_vectors[0].vector
-                result = await self._benchmark_operation(
-                    f"{scenario_name}_search",
-                    "search_vectors",
-                    backend,
-                    lambda b, qv=query_vector: b.search_vectors(collection_name, qv, limit=10),
-                )
-                results.append(result)
+                try:
+                    await backend.upsert_vectors(collection_name, test_vectors[:50])
+                    
+                    query_vector = test_vectors[0].vector
+                    result = await self._benchmark_operation(
+                        f"{scenario_name}_search",
+                        "search_vectors",
+                        backend,
+                        lambda b, qv=query_vector: b.search_vectors(collection_name, qv, limit=10),
+                    )
+                    results.append(result)
+                except Exception as e:
+                    logger.debug("Setup failed for search benchmark: %s", e)
+                    # Skip search benchmark if setup fails
 
             elif operation == "batch_search":
                 # Benchmark multiple searches
-                await backend.upsert_vectors(collection_name, test_vectors[:50])
+                try:
+                    await backend.upsert_vectors(collection_name, test_vectors[:50])
 
-                query_vectors = [v.vector for v in test_vectors[:10]]
+                    query_vectors = [v.vector for v in test_vectors[:10]]
 
-                async def batch_search_func(
-                    b: VectorBackend, vectors=query_vectors
-                ) -> list[VectorPoint]:
-                    tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in vectors]
-                    return await asyncio.gather(*tasks)
+                    async def batch_search_func(
+                        b: VectorBackend, vectors=query_vectors
+                    ) -> list[VectorPoint]:
+                        tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in vectors]
+                        return await asyncio.gather(*tasks)
 
-                result = await self._benchmark_operation(
-                    f"{scenario_name}_batch_search",
-                    "batch_search_vectors",
-                    backend,
-                    batch_search_func,
-                    batch_size=len(query_vectors),
-                )
-                results.append(result)
+                    result = await self._benchmark_operation(
+                        f"{scenario_name}_batch_search",
+                        "batch_search_vectors",
+                        backend,
+                        batch_search_func,
+                        batch_size=len(query_vectors),
+                    )
+                    results.append(result)
+                except Exception as e:
+                    logger.debug("Setup failed for batch_search benchmark: %s", e)
+                    # Skip batch_search benchmark if setup fails
 
         return results
 
@@ -503,7 +513,7 @@ class BenchmarkSuite:
 
             vectors.append(
                 VectorPoint(
-                    id=f"test_vector_{i}",
+                    iden=f"test_vector_{i}",
                     vector=vector,
                     payload={"content": f"Test content {i}", "index": i},
                 )

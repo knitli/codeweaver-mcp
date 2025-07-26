@@ -26,7 +26,7 @@ from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver._types import ExtensibilityConfig, SearchResult
+from codeweaver._types import ExtensibilityConfig, ContentSearchResult
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
 
 # CodeWeaver domain-specific middleware
@@ -332,7 +332,7 @@ class CodeWeaverServer:
             results = []
             for hit in search_results:
                 payload = hit.payload
-                search_result = SearchResult(
+                search_result = ContentSearchResult(
                     content=payload["content"],
                     file_path=payload["file_path"],
                     start_line=payload["start_line"],

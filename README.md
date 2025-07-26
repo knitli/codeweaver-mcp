@@ -49,9 +49,9 @@ CodeWeaver is designed to be intuitive and easy to use. We prioritize developer 
 - **MCP Integration**: Seamless compatibility with AI assistants like Claude.
 - **Make AI Useful for Your Codebase**: CodeWeaver is built to help AI assistants like Claude understand your codebase better, enabling them to answer questions, find patterns, and assist with development tasks. Less tokens. More context. Better results.
 
-### **Tools Designed For AI Assistants**
+### **Tools Actually Built For AI Assistants**
 
-- **Focus on AI Assistants**. CodeWeaver's MCP tool API is designed specifically for AI assistants, not humans. We want to make it easy for AI to understand and navigate your codebase without overwhelming it with unnecessary complexity.
+- **Focus on AI Assistants**. We designed Codeweaver's MCP tool API specifically for AI assistants, not humans. We want to make it easy for AI to understand and navigate your codebase without overwhelming it with unnecessary complexity.
   - The problem with most AI tools today is that they are designed for humans. AIs need their own set of tools optimized for their unique capabilities and limitations.
 - **Deliver only what the assistant needs**. The best human APIs are actually terrible AI APIs. AI assistants get quickly overwhelmed by huge arrays of choices. CodeWeaver provides a clean, structured interface that AI can easily understand.
 - **Abstract away complexity**. CodeWeaver handles the heavy lifting of indexing, chunking, searching, parsing, reranking, and more. Our goal is to seamlessly bring together complex data sources into a single, easy-to-use interface for AI assistants with **a single MCP tool for assistants**: **search**.

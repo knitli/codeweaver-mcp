@@ -15,13 +15,14 @@ CodeWeaver is an extensible Model Context Protocol (MCP) server built on factory
 
 **Key Architecture Features:**
 - **Extensible Plugin System**: Factory pattern with runtime component discovery
-- **Protocol-Based Interfaces**: Universal abstractions for providers, backends, and sources
+- **Protocol-Based Interfaces**: Universal abstractions for providers, backends, sources, and services
+- **Service Layer Architecture**: Clean abstraction layer connecting middleware with factory patterns
 - **Configuration-Driven**: Hierarchical config system with environment variables and TOML files
 - **Multiple Provider Support**: Voyage AI, OpenAI, Cohere, HuggingFace, and custom providers
 - **Multiple Backend Support**: Qdrant, Pinecone, Weaviate, ChromaDB, and custom backends
 - **Universal Data Sources**: Filesystem, Git, Database, API, Web, and custom sources
 - **ast-grep Integration**: Tree-sitter based structural search for 20+ programming languages
-- **FastMCP Middleware**: Cross-cutting concerns and request processing
+- **FastMCP Middleware**: Cross-cutting concerns and request processing with service injection
 
 ## Architecture
 
@@ -41,14 +42,19 @@ The project implements a comprehensive extensible architecture with the factory 
   - **`config.py`**: Hierarchical configuration management system
   - **`_types/`**: Centralized type system with protocols, enums, and data structures
   - **`factories/`**: Factory pattern implementations for extensibility and plugin discovery
-    - **`codeweaver_factory.py`**: Main orchestrator for unified component creation
+    - **`codeweaver_factory.py`**: Main orchestrator for unified component creation including services
     - **`backend_registry.py`**: Vector database backend registration and management
     - **`source_registry.py`**: Data source registration and management
+    - **`service_registry.py`**: Service provider registration and lifecycle management
     - **`plugin_protocols.py`**: Plugin interface definitions and validation
     - **`extensibility_manager.py`**: Overall plugin system coordination
   - **`providers/`**: Embedding and reranking provider abstraction (Voyage AI, OpenAI, Cohere, HuggingFace, Custom)
   - **`backends/`**: Vector database abstraction (Qdrant, Pinecone, Weaviate, ChromaDB, Custom)
   - **`sources/`**: Universal data source abstraction (Filesystem, Git, Database, API, Web, Custom)
+  - **`services/`**: Service layer architecture connecting middleware with factory patterns
+    - **`manager.py`**: ServicesManager for coordinating all services with health monitoring
+    - **`middleware_bridge.py`**: Bridge between FastMCP middleware and service layer
+    - **`providers/`**: Service provider implementations (chunking, filtering, validation, etc.)
   - **`middleware/`**: FastMCP middleware for chunking, filtering, and cross-cutting concerns
   - **`client/`**: Client utilities and logging infrastructure
   - **`testing/`**: Testing utilities and framework helpers (NOT actual tests)
@@ -66,8 +72,10 @@ Tests are organized by type and purpose:
   - `test_integration.py`: General integration tests
   - `test_benchmarks.py`: Performance benchmarks
   - `test_server_functionality.py`: Server functionality tests
+  - `test_service_integration.py`: Service layer integration tests
 
 - **`tests/validation/`**: Validation scripts for architecture and implementation
+  - `validate_service_implementation.py`: Service layer compliance validation
 
 ### Key Classes and Architecture Components
 
@@ -75,23 +83,30 @@ Tests are organized by type and purpose:
 1. **`CodeWeaverFactory`**: Main orchestrator for unified component creation and dependency injection
 2. **`BackendRegistry`**: Manages vector database backend registration, validation, and creation
 3. **`SourceRegistry`**: Manages data source registration, validation, and creation
-4. **`ExtensibilityManager`**: Coordinates plugin discovery, validation, and lifecycle management
-5. **`PluginDiscoveryEngine`**: Handles entry point scanning, directory scanning, and module introspection
+4. **`ServiceRegistry`**: Manages service provider registration, validation, and creation
+5. **`ExtensibilityManager`**: Coordinates plugin discovery, validation, and lifecycle management
+6. **`PluginDiscoveryEngine`**: Handles entry point scanning, directory scanning, and module introspection
 
 #### Core Server Components
-6. **`CodeWeaverServer`**: Main MCP server using plugin system and FastMCP middleware
-7. **`ConfigManager`**: Hierarchical configuration system with TOML and environment variable support
+7. **`CodeWeaverServer`**: Main MCP server using plugin system and FastMCP middleware
+8. **`ConfigManager`**: Hierarchical configuration system with TOML and environment variable support
+9. **`ServicesManager`**: Coordinates all services with health monitoring and auto-recovery
 
 #### Protocol-Based Interfaces
-8. **`VectorBackend`**: Universal protocol for vector database operations
-9. **`EmbeddingProvider`**: Universal protocol for embedding and reranking operations
-10. **`DataSource`**: Universal protocol for content discovery and processing
-11. **`PluginInterface`**: Universal protocol for plugin registration and validation
+10. **`VectorBackend`**: Universal protocol for vector database operations
+11. **`EmbeddingProvider`**: Universal protocol for embedding and reranking operations
+12. **`DataSource`**: Universal protocol for content discovery and processing
+13. **`ServiceProvider`**: Universal protocol for service lifecycle and health management
+14. **`ChunkingService`**: Protocol for content chunking services
+15. **`FilteringService`**: Protocol for file filtering and discovery services
+16. **`PluginInterface`**: Universal protocol for plugin registration and validation
 
 #### Data Structures
-12. **`ContentItem`**: Universal content representation across all data sources
-13. **`ComponentInfo`**: Metadata for component registration and capabilities
-14. **`PluginInfo`**: Plugin metadata and validation information
+17. **`ContentItem`**: Universal content representation across all data sources
+18. **`ComponentInfo`**: Metadata for component registration and capabilities
+19. **`PluginInfo`**: Plugin metadata and validation information
+20. **`ServiceHealth`**: Health status and metrics for service monitoring
+21. **`ServicesConfig`**: Hierarchical configuration for all services
 
 ## Common Development Commands
 
@@ -166,6 +181,12 @@ uv run python tests/integration/test_benchmarks.py
 
 # Test server functionality manually
 uv run python tests/integration/test_server_functionality.py /path/to/test/codebase
+
+# Test service layer integration
+uv run python tests/integration/test_service_integration.py
+
+# Validate service implementation
+uv run python tests/validation/validate_service_implementation.py
 ```
 
 ### Building and Distribution
@@ -200,6 +221,138 @@ The server exposes four main tools:
 - **`CW_VECTOR_BACKEND_URL`**: Your vector database URL (required)
 - **`CW_VECTOR_BACKEND_API_KEY`**: Your vector database API key (optional if no auth)
 - **`CW_VECTOR_BACKEND_COLLECTION`**: Vector collection name (defaults to "codeweaver-UUID4")
+
+## Service Layer Architecture
+
+CodeWeaver implements a comprehensive service layer that provides clean abstraction between FastMCP middleware and the factory pattern system. This architecture enables dependency injection, health monitoring, and extensible service providers.
+
+### Service Types
+
+**Core Services** (required for basic operation):
+- **Chunking Service**: Intelligent code segmentation using ast-grep with fallback parsing
+- **Filtering Service**: File discovery and filtering with gitignore support
+
+**Optional Services** (enhanced functionality):
+- **Validation Service**: Content validation with configurable rules
+- **Cache Service**: Performance optimization through intelligent caching
+- **Monitoring Service**: Health monitoring and auto-recovery
+- **Metrics Service**: Performance metrics collection and analysis
+
+### Service Provider Architecture
+
+```python
+# Example: Creating and using services
+from codeweaver._types import ServiceType, ServicesConfig
+from codeweaver.services.manager import ServicesManager
+
+# Initialize services
+config = ServicesConfig()
+services_manager = ServicesManager(config)
+await services_manager.initialize()
+
+# Get services through dependency injection
+chunking_service = services_manager.get_chunking_service()
+filtering_service = services_manager.get_filtering_service()
+
+# Use services
+chunks = await chunking_service.chunk_content(content, file_path)
+files = await filtering_service.discover_files(base_path)
+```
+
+### Middleware Integration
+
+The service layer integrates seamlessly with FastMCP middleware through the ServiceBridge:
+
+```python
+from codeweaver.services.middleware_bridge import ServiceBridge
+from codeweaver.services.manager import ServicesManager
+
+# Create service bridge
+services_manager = ServicesManager(config)
+service_bridge = ServiceBridge(services_manager)
+
+# Services are automatically injected into tool contexts
+# Tools can access services via context.fastmcp_context.get_state_value("chunking_service")
+```
+
+### Service Configuration
+
+Services are configured through a hierarchical configuration system:
+
+```python
+from codeweaver._types import ServicesConfig, ChunkingServiceConfig
+
+# Configure services
+services_config = ServicesConfig(
+    chunking=ChunkingServiceConfig(
+        provider="fastmcp_chunking",
+        max_chunk_size=1500,
+        min_chunk_size=50,
+        ast_grep_enabled=True,
+        performance_mode="balanced"
+    ),
+    filtering=FilteringServiceConfig(
+        provider="fastmcp_filtering",
+        use_gitignore=True,
+        max_file_size=1024*1024,
+        parallel_scanning=True
+    )
+)
+```
+
+### Health Monitoring
+
+All services implement comprehensive health monitoring:
+
+```python
+# Get health report for all services
+health_report = await services_manager.get_health_report()
+print(f"Overall status: {health_report.overall_status}")
+
+# Check individual service health
+chunking_health = await chunking_service.health_check()
+print(f"Chunking service: {chunking_health.status}")
+```
+
+### Creating Custom Services
+
+Implement custom services by extending the base provider and implementing the service protocol:
+
+```python
+from codeweaver.services.providers.base_provider import BaseServiceProvider
+from codeweaver._types.services import ValidationService
+
+class CustomValidationProvider(BaseServiceProvider, ValidationService):
+    async def _initialize_provider(self) -> None:
+        # Initialize your service
+        pass
+    
+    async def validate_content(self, content, rules=None):
+        # Implement validation logic
+        pass
+
+# Register with factory
+factory.register_service_provider(
+    ServiceType.VALIDATION,
+    "custom_validation", 
+    CustomValidationProvider
+)
+```
+
+### Service Plugin Development
+
+Services can be extended through plugins:
+
+```python
+# Plugin interface for services
+class ServicePlugin:
+    def get_service_class(self):
+        return MyCustomServiceProvider
+    
+    @property
+    def service_type(self):
+        return ServiceType.VALIDATION
+```
 
 ## Language Support
 
@@ -343,7 +496,9 @@ src/codeweaver/_types/
 ├── enums.py            # Cross-module enums (ComponentState, SearchComplexity, etc.)
 ├── exceptions.py       # Cross-module exception types
 ├── provider_*.py       # Provider-related types and registries
-└── source_*.py         # Source-related types and registries
+├── source_*.py         # Source-related types and registries
+├── service_*.py        # Service-related types and protocols
+└── services.py         # Service protocol interfaces
 ```
 
 This organization ensures clean separation of concerns, prevents circular dependencies, and makes the codebase more maintainable by centralizing reusable types while keeping implementation-specific types close to their usage.
@@ -354,6 +509,9 @@ This organization ensures clean separation of concerns, prevents circular depend
 - **Fallback parsing**: Graceful degradation when ast-grep unavailable
 - **Batched processing**: Efficient handling of large codebases
 - **Smart filtering**: File type, language, and directory-based filtering
+- **Service layer**: Clean abstraction connecting middleware with factory patterns
+- **Protocol-based DI**: Runtime-checkable protocols for dependency injection
+- **Health monitoring**: Comprehensive service health tracking with auto-recovery
 
 ### Performance Considerations
 - Chunks limited to 1500 characters max, 50 characters min

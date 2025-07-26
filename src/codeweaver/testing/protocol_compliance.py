@@ -19,7 +19,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver._types import ContentItem
+from codeweaver._types import ContentItem, ProviderInfo, RerankResult
 from codeweaver.backends.base import (
     CollectionInfo,
     DistanceMetric,
@@ -30,7 +30,6 @@ from codeweaver.backends.base import (
     VectorPoint,
 )
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver._types import ProviderInfo, RerankResult
 from codeweaver.sources.base import DataSource, SourceCapability, SourceConfig
 
 
@@ -415,7 +414,7 @@ class ProtocolComplianceValidator:
 
             # Test vector deletion
             result.total_tests += 1
-            await backend.delete_vectors(test_collection, [test_vectors[0].id])
+            await backend.delete_vectors(test_collection, [test_vectors[0].iden])
             result.passed_tests += 1
 
             # Cleanup
@@ -757,7 +756,7 @@ class ProtocolComplianceValidator:
 
                 vectors.append(
                     VectorPoint(
-                        id=f"test_vector_{i}",
+                        iden=f"test_vector_{i}",
                         vector=vector,
                         payload={"content": f"Test content {i}", "category": "test"},
                     )

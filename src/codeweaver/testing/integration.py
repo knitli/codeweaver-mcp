@@ -437,7 +437,7 @@ class IntegrationTestSuite:
             return False
 
         else:
-            return provider_info.name
+            return True
 
     async def _test_search_workflow(self) -> bool:
         """Test vector backend search workflow."""
@@ -457,7 +457,7 @@ class IntegrationTestSuite:
             from codeweaver.backends.base import VectorPoint
 
             vectors = [
-                VectorPoint(id=i, vector=embedding, payload={"content": doc, "index": i})
+                VectorPoint(iden=i, vector=embedding, payload={"content": doc, "index": i})
                 for i, (doc, embedding) in enumerate(
                     zip(self.config.test_documents, embeddings, strict=False)
                 )
@@ -613,7 +613,7 @@ class IntegrationTestSuite:
             from codeweaver.backends.base import VectorPoint
 
             vectors = [
-                VectorPoint(id=item.id, vector=embedding, payload=item.to_dict())
+                VectorPoint(iden=item.path, vector=embedding, payload=item.model_dump())
                 for item, embedding in zip(content_items[:5], embeddings, strict=False)
             ]
 

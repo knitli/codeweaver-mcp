@@ -23,6 +23,8 @@ import tempfile
 from pathlib import Path
 from typing import Literal
 
+import pytest
+
 
 # Add the server to path
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
@@ -95,6 +97,7 @@ def _print_env_missing_vars_message(missing_vars):
     return False
 
 
+@pytest.mark.asyncio
 async def test_chunker() -> bool:
     """Test the code chunker with sample files."""
     print("\n🔧 Testing Code Chunker...")
@@ -189,9 +192,9 @@ const userService = new UserService('https://api.example.com');
 
     return True
 
-
-async def test_full_workflow(test_path: str | None = None) -> bool:  # noqa: PT028
-    # sourcery skip: avoid-global-variables, no-long-functions
+@pytest.mark.asyncio
+async def test_full_workflow(test_path: str | None = None) -> bool:    # noqa: PT028
+    # sourcery skip: avoid-global-variables, low-code-quality, no-long-functions
     """Test the complete indexing and search workflow."""
     print("\n🚀 Testing Full Workflow...")
 
@@ -377,14 +380,16 @@ module.exports = { debounce, ApiClient };
     try:
         print("📚 Indexing codebase...")
 
-        # Get components
-        filesystem_source = None
         data_sources = await server['extensibility_manager'].get_data_sources()
-        for source in data_sources:
-            if hasattr(source, 'provider') and source.provider.value == "filesystem":
-                filesystem_source = source
-                break
-
+        filesystem_source = next(
+            (
+                source
+                for source in data_sources
+                if hasattr(source, 'provider')
+                and source.provider.value == "filesystem"
+            ),
+            None,
+        )
         if not filesystem_source:
             from codeweaver.sources.filesystem import FileSystemSource
             filesystem_source = FileSystemSource()
@@ -411,7 +416,7 @@ module.exports = { debounce, ApiClient };
 
         result = {
             'total_chunks': len(chunks),
-            'files_processed': len(set(c.file_path for c in chunks))
+            'files_processed': len({c.file_path for c in chunks}),
         }
 
         print(
@@ -453,13 +458,13 @@ module.exports = { debounce, ApiClient };
             # Convert search results to expected format
             results = []
             for result in search_results:
-                result_dict = {
+                result_data = {
                     'similarity_score': result.score,
                     'file_path': result.payload.get('file_path', 'unknown'),
                     'chunk_type': result.payload.get('chunk_type', 'unknown'),
                     'content': result.payload.get('content', ''),
                 }
-                results.append(result_dict)
+                results.append(result_data)
 
             print(f"✅ Query '{query}': {len(results)} results")
 

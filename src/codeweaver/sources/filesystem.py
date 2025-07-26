@@ -15,13 +15,19 @@ import contextlib
 import logging
 
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from pydantic import ConfigDict, Field, field_validator
 
-from codeweaver._types import CodeChunk, ContentItem, ContentType, SourceCapabilities, SourceProvider
+from codeweaver._types import (
+    CodeChunk,
+    ContentItem,
+    ContentType,
+    SourceCapabilities,
+    SourceProvider,
+)
 from codeweaver.sources.base import AbstractDataSource, SourceConfig, SourceWatcher
 
 
@@ -81,7 +87,7 @@ class FileSystemSourceWatcher(SourceWatcher):
         self.root_path = root_path
         self.config = config
         self._watch_task: asyncio.Task | None = None
-        self._last_scan_time = datetime.now(datetime.UTC)
+        self._last_scan_time = datetime.now(timezone.utc)
 
     async def start(self) -> bool:
         """Start watching for file system changes."""
@@ -144,7 +150,7 @@ class FileSystemSourceWatcher(SourceWatcher):
     async def _detect_changes(self) -> list[ContentItem]:
         """Detect files that have changed since last scan."""
         changed_items = []
-        current_time = datetime.now(datetime.UTC)
+        current_time = datetime.now(timezone.utc)
 
         try:
             # Find files modified since last scan
@@ -289,8 +295,8 @@ class FileSystemSource(AbstractDataSource):
         return filtered_items
 
     async def index_content(
-        self, 
-        path: Path, 
+        self,
+        path: Path,
         context: dict[str, Any] | None = None
     ) -> list[CodeChunk]:
         """Index content using middleware services from context.
@@ -304,13 +310,13 @@ class FileSystemSource(AbstractDataSource):
         """
         if not path.exists():
             raise ValueError(f"Path does not exist: {path}")
-            
+
         logger.info("Indexing content: %s", path)
-        
+
         # Get services from FastMCP context if available
         filtering_service = context.get("filtering_service") if context else None
         chunking_service = context.get("chunking_service") if context else None
-        
+
         # Find files using filtering service or fallback
         if filtering_service:
             files = await filtering_service.find_files(path)
@@ -318,30 +324,30 @@ class FileSystemSource(AbstractDataSource):
         else:
             files = await self._fallback_file_discovery(path)
             logger.info("Found %d files using fallback discovery", len(files))
-        
+
         # Process files using chunking service or fallback
         all_chunks = []
         for file_path in files:
             try:
                 content = file_path.read_text(encoding='utf-8', errors='ignore')
-                
+
                 # Skip empty files
                 if not content.strip():
                     logger.debug("Skipping empty file: %s", file_path)
                     continue
-                
+
                 if chunking_service:
                     chunks = await chunking_service.chunk_file(file_path, content)
                 else:
                     chunks = await self._fallback_chunking(file_path, content)
-                    
+
                 all_chunks.extend(chunks)
                 logger.debug("Processed %s: %d chunks", file_path.name, len(chunks))
-                
+
             except Exception as e:
                 logger.warning("Failed to process file %s: %s", file_path, e)
                 continue
-        
+
         logger.info("Indexing complete: %d chunks from %d files", len(all_chunks), len(files))
         return all_chunks
 
@@ -354,12 +360,12 @@ class FileSystemSource(AbstractDataSource):
         """Fallback chunking when chunking service is not available."""
         # Import chunking logic as fallback
         from codeweaver.middleware.chunking import ChunkingMiddleware
-        
+
         # Create temporary chunking middleware for fallback
         config = {"max_chunk_size": 1500, "min_chunk_size": 50, "ast_grep_enabled": True}
         chunker = ChunkingMiddleware(config)
         legacy_chunks = await chunker.chunk_file(file_path, content)
-        
+
         # Convert legacy models to new Pydantic models
         pydantic_chunks = []
         for legacy_chunk in legacy_chunks:
@@ -374,7 +380,7 @@ class FileSystemSource(AbstractDataSource):
                 metadata={"fallback_chunking": True},
             )
             pydantic_chunks.append(pydantic_chunk)
-            
+
         return pydantic_chunks
 
     async def structural_search(
@@ -400,22 +406,22 @@ class FileSystemSource(AbstractDataSource):
             from ast_grep_py import SgRoot
         except ImportError:
             raise ValueError("ast-grep not available, install with: pip install ast-grep-py")
-        
+
         # Determine search root
         if root_path is None:
             root_path = Path.cwd()
         elif isinstance(root_path, str):
             root_path = Path(root_path)
-            
+
         if not root_path.exists():
             raise ValueError(f"Root path does not exist: {root_path}")
-        
-        logger.info("Performing structural search: pattern='%s', language=%s, root=%s", 
+
+        logger.info("Performing structural search: pattern='%s', language=%s, root=%s",
                    pattern, language, root_path)
-        
+
         # Get filtering service from context if available
         filtering_service = context.get("filtering_service") if context else None
-        
+
         # Find files for the specified language
         if filtering_service:
             # Use filtering service with language-specific patterns
@@ -424,23 +430,23 @@ class FileSystemSource(AbstractDataSource):
         else:
             # Fallback to manual file discovery
             files = await self._discover_files_for_language(root_path, language)
-            
+
         logger.debug("Found %d files for structural search", len(files))
-        
+
         results = []
-        
+
         for file_path in files:
             try:
                 content = file_path.read_text(encoding="utf-8", errors="ignore")
-                
-                # Parse and search with ast-grep  
+
+                # Parse and search with ast-grep
                 detected_language = language or self._detect_language_from_extension(file_path)
                 if not detected_language:
                     continue
-                    
+
                 sg_root = SgRoot(content, detected_language)
                 tree = sg_root.root()
-                
+
                 # Find all matches for the pattern
                 matches = tree.find_all(pattern)
                 for match in matches:
@@ -455,11 +461,11 @@ class FileSystemSource(AbstractDataSource):
                         "language": detected_language,
                         "pattern": pattern,
                     })
-                    
+
             except Exception as e:
                 logger.warning("Error searching %s: %s", file_path, e)
                 continue
-        
+
         logger.info("Structural search complete: %d matches found", len(results))
         return results
 
@@ -467,7 +473,7 @@ class FileSystemSource(AbstractDataSource):
         """Get file patterns for a specific language."""
         if not language:
             return ["*"]  # Search all files
-            
+
         # Language to extension mapping (simplified from search.py)
         lang_extensions = {
             "python": ["*.py", "*.py3", "*.pyi"],
@@ -493,45 +499,45 @@ class FileSystemSource(AbstractDataSource):
             "elixir": ["*.ex", "*.exs"],
             "lua": ["*.lua"],
         }
-        
+
         return lang_extensions.get(language.lower(), [f"*.{language}"])
 
     async def _discover_files_for_language(
-        self, 
-        root_path: Path, 
+        self,
+        root_path: Path,
         language: str | None = None
     ) -> list[Path]:
         """Discover files for a specific language using fallback method."""
         patterns = self._get_file_patterns_for_language(language)
-        
+
         files = []
         try:
             # Use rignore if available for gitignore support
             import rignore
-            
+
             for entry in rignore.walk(str(root_path)):
                 if entry.is_file():
                     file_path = Path(entry.path)
-                    
+
                     # Check if file matches any pattern
                     import fnmatch
                     for pattern in patterns:
                         if fnmatch.fnmatch(file_path.name, pattern):
                             files.append(file_path)
                             break
-                            
+
         except ImportError:
             # Fallback to standard Path.rglob()
             for pattern in patterns:
                 files.extend(root_path.rglob(pattern))
-                
+
         return files
 
     def _detect_language_from_extension(self, file_path: Path) -> str | None:
         """Detect language from file extension for structural search."""
         extension = file_path.suffix.lower().lstrip('.')
-        
-        # Extension to language mapping  
+
+        # Extension to language mapping
         ext_lang_map = {
             'py': 'python', 'py3': 'python', 'pyi': 'python',
             'js': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript',
@@ -556,7 +562,7 @@ class FileSystemSource(AbstractDataSource):
             'ex': 'elixir', 'exs': 'elixir',
             'lua': 'lua',
         }
-        
+
         return ext_lang_map.get(extension)
 
     async def read_content(self, item: ContentItem) -> str:
@@ -701,7 +707,6 @@ class FileSystemSource(AbstractDataSource):
         """
         # Import here to avoid circular dependencies
         from codeweaver.config import get_config
-        from codeweaver.middleware.filtering import FileFilteringMiddleware
 
         # Convert source config to FileFilteringMiddleware-compatible config
         app_config = get_config()

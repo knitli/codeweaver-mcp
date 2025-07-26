@@ -258,7 +258,7 @@ class TestBenchmarkSuite:
         assert len(vectors) == 10
         for vector in vectors:
             assert len(vector.vector) == 128
-            assert vector.id is not None
+            assert vector.iden is not None
             assert vector.payload is not None
 
             # Check that vectors are normalized

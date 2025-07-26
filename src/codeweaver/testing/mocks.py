@@ -21,7 +21,7 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from codeweaver._types import ProviderCapability
+from codeweaver._types import ProviderCapability, ProviderInfo, RerankResult
 from codeweaver.backends.base import (
     CollectionInfo,
     DistanceMetric,
@@ -30,7 +30,6 @@ from codeweaver.backends.base import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver._types import ProviderInfo, RerankResult
 from codeweaver.sources.base import (
     AbstractDataSource,
     ContentItem,
@@ -46,15 +45,19 @@ logger = logging.getLogger(__name__)
 class MockVectorBackend:
     """Mock implementation of VectorBackend protocol for testing."""
 
-    def __init__(self, latency_ms: float = 10.0, error_rate: float = 0.0):
+    def __init__(self, latency_ms: float = 10.0, error_rate: float = 0.0, error_operations: list[str] | None = None):
         """Initialize mock vector backend.
 
         Args:
             latency_ms: Simulated latency in milliseconds
             error_rate: Probability of random errors (0.0-1.0)
+            error_operations: List of operations to apply error rate to. If None, applies to vector operations only.
+                Common operations: ["upsert_vectors", "search_vectors", "delete_vectors"]
+                Management operations: ["create_collection", "delete_collection"]
         """
         self.latency_ms = latency_ms
         self.error_rate = error_rate
+        self.error_operations = error_operations or ["upsert_vectors", "search_vectors", "delete_vectors"]
         self.collections: dict[str, dict[str, Any]] = {}
         self.vectors: dict[str, dict[str, VectorPoint]] = {}
 
@@ -65,7 +68,9 @@ class MockVectorBackend:
 
     def _maybe_raise_error(self, operation: str) -> None:
         """Randomly raise errors based on error rate."""
-        if self.error_rate > 0 and random.random() < self.error_rate:
+        if (self.error_rate > 0 and
+            operation in self.error_operations and
+            random.random() < self.error_rate):
             raise RuntimeError(f"Mock error in {operation}")
 
     async def create_collection(
@@ -143,8 +148,9 @@ class MockVectorBackend:
             if search_filter and not self._matches_filter(vector_point, search_filter):
                 continue
 
-            # Calculate cosine similarity
-            score = self._cosine_similarity(query_vector, vector_point.vector)
+            # Calculate cosine similarity and normalize to [0, 1]
+            cosine_sim = self._cosine_similarity(query_vector, vector_point.vector)
+            score = (cosine_sim + 1.0) / 2.0  # Convert from [-1, 1] to [0, 1]
 
             # Apply score threshold
             if score_threshold and score < score_threshold:
@@ -152,7 +158,7 @@ class MockVectorBackend:
 
             results.append(
                 SearchResult(
-                    id=vector_point.id,
+                    iden=vector_point.id,
                     score=score,
                     payload=vector_point.payload,
                     vector=vector_point.vector if kwargs.get("return_vectors") else None,
@@ -351,7 +357,7 @@ class MockHybridSearchBackend(MockVectorBackend):
 
             results.append(
                 SearchResult(
-                    id=vector_point.id,
+                    iden=vector_point.id,
                     score=score,
                     payload=vector_point.payload,
                     backend_metadata={"search_type": "sparse", "backend": "mock"},
@@ -385,14 +391,14 @@ class MockHybridSearchBackend(MockVectorBackend):
 
         # Add scores from dense results
         for rank, result in enumerate(dense_results):
-            scores[result.iden] = scores.get(result.iden, 0) + 1 / (k + rank + 1)
+            scores[result.id] = scores.get(result.id, 0) + 1 / (k + rank + 1)
 
         # Add scores from sparse results
         for rank, result in enumerate(sparse_results):
-            scores[result.iden] = scores.get(result.iden, 0) + 1 / (k + rank + 1)
+            scores[result.id] = scores.get(result.id, 0) + 1 / (k + rank + 1)
 
         # Create combined results
-        all_results = {r.iden: r for r in dense_results + sparse_results}
+        all_results = {r.id: r for r in dense_results + sparse_results}
         combined = []
 
         for result_id, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
@@ -411,8 +417,8 @@ class MockHybridSearchBackend(MockVectorBackend):
         scores = {}
 
         # Normalize and combine scores
-        dense_vecs = {r.iden: r.score for r in dense_results}
-        sparse_vecs = {r.iden: r.score for r in sparse_results}
+        dense_vecs = {r.id: r.score for r in dense_results}
+        sparse_vecs = {r.id: r.score for r in sparse_results}
 
         all_ids = set(dense_vecs.keys()) | set(sparse_vecs.keys())
 
@@ -422,7 +428,7 @@ class MockHybridSearchBackend(MockVectorBackend):
             scores[result_id] = alpha * dense_score + (1 - alpha) * sparse_score
 
         # Create combined results
-        all_results = {r.iden: r for r in dense_results + sparse_results}
+        all_results = {r.id: r for r in dense_results + sparse_results}
         combined = []
 
         for result_id, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
@@ -542,7 +548,6 @@ class MockEmbeddingProvider:
             supported_models={"embedding": [self._model_name, "mock-model-v2"]},
             rate_limits={"embed_requests": 1000, "embed_tokens": 100000},
             requires_api_key=False,
-            supports_batch_processing=True,
             max_batch_size=self.max_batch_size,
             max_input_length=self.max_input_length,
             native_dimensions={self._model_name: self._dimension},
@@ -667,7 +672,6 @@ class MockRerankProvider:
             supported_models={"reranking": [self._model_name, "mock-rerank-v2"]},
             rate_limits={"rerank_requests": 500, "rerank_documents": 10000},
             requires_api_key=False,
-            supports_batch_processing=False,
             max_batch_size=None,
             max_input_length=self.max_query_length,
         )
@@ -753,11 +757,11 @@ class MockDataSource(AbstractDataSource):
         await self._simulate_latency()
         self._maybe_raise_error("read_content")
 
-        content = self._content_data.get(item.id)
+        content = self._content_data.get(item.path)
         if content is None:
-            raise FileNotFoundError(f"Content item not found: {item.id}")
+            raise FileNotFoundError(f"Content item not found: {item.path}")
 
-        logger.debug("Read content for item: %s (%d chars)", item.id, len(content))
+        logger.debug("Read content for item: %s (%d chars)", item.path, len(content))
         return content
 
     async def watch_changes(
@@ -951,7 +955,7 @@ export default Button;
 
             # Customize content with file-specific information
             content = template.replace("mock", item.path.split("/")[-1].split(".")[0])
-            self._content_data[item.id] = content
+            self._content_data[item.path] = content
 
     async def _simulate_changes(self, watcher: SourceWatcher) -> None:
         """Simulate content changes for testing."""

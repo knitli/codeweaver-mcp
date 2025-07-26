@@ -40,6 +40,7 @@ from codeweaver.backends.config import (
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
 
+
 # Try to import DocArray backends (optional)
 try:
     from codeweaver.backends.docarray import factory as docarray_factory  # noqa: F401

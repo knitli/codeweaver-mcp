@@ -43,7 +43,7 @@ __all__ = [
     "RerankResult",
     "ValidationResult",
     "get_provider_factory",
-    "register_embedding_provider",
     "register_combined_provider",
+    "register_embedding_provider",
     "register_reranking_provider",
 ]
