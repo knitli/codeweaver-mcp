@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -13,8 +14,9 @@ Provides comprehensive TOML-based configuration using pydantic-settings with mul
 """
 
 import logging
+
 from pathlib import Path
-from typing import Annotated, Any, ClassVar, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -157,7 +159,7 @@ class ServerConfig(BaseModel):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     server_name: str = Field(default="codeweaver-mcp", description="MCP server name")
-    server_version: str = Field(default="2.0.0", description="MCP server version")
+    server_version: str = Field(default="1.0.0", description="MCP server version")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO", description="Logging level"
     )
@@ -252,7 +254,7 @@ class CodeWeaverConfig(BaseSettings):
         # TOML file settings
         toml_file=[
             ".local.codeweaver.toml",
-            ".codeweaver.toml", 
+            ".codeweaver.toml",
             Path.home() / ".config" / "codeweaver" / "config.toml",
         ],
         # Environment variable settings
@@ -277,7 +279,7 @@ class CodeWeaverConfig(BaseSettings):
     data_sources: DataSourceConfig = Field(
         default_factory=DataSourceConfig, description="Data source configuration"
     )
-    
+
     # Shared configuration
     chunking: ChunkingConfig = Field(
         default_factory=ChunkingConfig, description="Code chunking configuration"
@@ -314,12 +316,9 @@ class CodeWeaverConfig(BaseSettings):
 
     @field_validator("backend", mode="before")
     @classmethod
-    def setup_backend_from_env(cls, v: Any) -> Any:
+    def setup_backend_from_env(cls, value: Any) -> Any:
         """Set up backend configuration from environment variables if needed."""
-        if isinstance(v, dict):
-            return v
-        # Let pydantic-settings handle environment variables automatically
-        return v
+        return value
 
     def get_effective_embedding_provider(self) -> str:
         """Get the effective embedding provider name."""
@@ -365,29 +364,28 @@ class ConfigManager:
         search_paths = []
         if self.config_path:
             search_paths.append(self.config_path)
-        
+
         search_paths.extend([
             Path(".local.codeweaver.toml"),
             Path(".codeweaver.toml"),
             Path.home() / ".config" / "codeweaver" / "config.toml",
         ])
-        
+
         # Load TOML data from first existing file
         toml_data = {}
         for config_file in search_paths:
             if config_file.exists():
                 try:
                     import tomllib
+
                     with config_file.open("rb") as f:
                         toml_data = tomllib.load(f)
                     logger.info("Loaded configuration from: %s", config_file)
                     break
                 except Exception as e:
                     logger.warning("Failed to load config from %s: %s", config_file, e)
-        
-        # Create config with TOML data and environment variable support
-        config = CodeWeaverConfig(**toml_data)
-        return config
+
+        return CodeWeaverConfig(**toml_data)
 
     def reload_config(self) -> CodeWeaverConfig:
         """Reload configuration, clearing cache."""
@@ -409,16 +407,17 @@ class ConfigManager:
             save_path = Path.home() / ".config" / "codeweaver" / "config.toml"
         else:
             save_path = Path(config_path)
-        
+
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Use pydantic's model_dump_json for serialization
-        config_dict = config.model_dump(exclude_unset=True)
-        
+        config_data = config.model_dump(exclude_unset=True)
+
         # Convert to TOML format
         import tomli_w
+
         with save_path.open("wb") as f:
-            tomli_w.dump(config_dict, f)
+            tomli_w.dump(config_data, f)
 
         logger.info("Saved configuration to: %s", save_path)
         return save_path
@@ -476,10 +475,10 @@ def get_config() -> CodeWeaverConfig:
 
 def create_example_config() -> str:
     """Create an example TOML configuration."""
-    return '''# Code Weaver MCP Server Configuration
+    return """# Code Weaver MCP Server Configuration
 # Place this file in one of these locations (highest precedence first):
 # 1. .local.codeweaver.toml (workspace local)
-# 2. .codeweaver.toml (repository)  
+# 2. .codeweaver.toml (repository)
 # 3. ~/.config/codeweaver/config.toml (user)
 
 # Vector Database Backend Configuration
@@ -549,7 +548,7 @@ max_retries = 5
 server_name = "codeweaver-mcp"
 log_level = "INFO"
 max_search_results = 50
-'''
+"""
 
 
 def get_effective_config_summary() -> dict[str, Any]:

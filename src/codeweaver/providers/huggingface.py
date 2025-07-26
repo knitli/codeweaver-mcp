@@ -79,7 +79,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         if self._config.model not in self._registry_entry.capabilities.supported_embedding_models:
             logger.warning(
                 "Model %s not in known supported models. May work but not guaranteed.",
-                self._config.model
+                self._config.model,
             )
 
         # Configuration
@@ -96,7 +96,9 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             self._init_api_client()
 
         # Get dimension from registry or estimate
-        self._dimension = self._registry_entry.capabilities.native_dimensions.get(self._model_name, 768)
+        self._dimension = self._registry_entry.capabilities.native_dimensions.get(
+            self._model_name, 768
+        )
 
     def _validate_config(self) -> None:
         """Validate HuggingFace configuration."""
@@ -289,10 +291,11 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             ],
             capabilities=capabilities,
             default_models={"embedding": capabilities.default_embedding_model},
-            supported_models={
-                "embedding": capabilities.supported_embedding_models,
+            supported_models={"embedding": capabilities.supported_embedding_models},
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
             },
-            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
             requires_api_key=capabilities.requires_api_key,
             max_batch_size=capabilities.max_batch_size,
             max_input_length=capabilities.max_input_length,
@@ -316,10 +319,11 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             ],
             capabilities=capabilities,
             default_models={"embedding": capabilities.default_embedding_model},
-            supported_models={
-                "embedding": capabilities.supported_embedding_models,
+            supported_models={"embedding": capabilities.supported_embedding_models},
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
             },
-            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
             requires_api_key=capabilities.requires_api_key,
             max_batch_size=capabilities.max_batch_size,
             max_input_length=capabilities.max_input_length,

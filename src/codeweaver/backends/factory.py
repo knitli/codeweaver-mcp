@@ -54,103 +54,70 @@ class BackendConfig(BaseModel):
 
     # Core connection settings
     provider: Annotated[
-        type[CombinedProvider] | type[EmbeddingProvider] | type[LocalEmbeddingProvider] | type[RerankProvider] | str,
-        Field(description="Backend provider type or string identifier")
+        type[CombinedProvider]
+        | type[EmbeddingProvider]
+        | type[LocalEmbeddingProvider]
+        | type[RerankProvider]
+        | str,
+        Field(description="Backend provider type or string identifier"),
     ]
     kind: Annotated[ProviderKind, Field(description="Provider kind classification")]
     name: Annotated[
-        str | None,
-        Field(default=None, description="Custom name for the backend instance")
+        str | None, Field(default=None, description="Custom name for the backend instance")
     ]
-    url: Annotated[
-        str | None,
-        Field(default=None, description="Backend connection URL")
-    ]
-    api_key: Annotated[
-        str | None,
-        Field(default=None, description="API key for authentication")
-    ]
+    url: Annotated[str | None, Field(default=None, description="Backend connection URL")]
+    api_key: Annotated[str | None, Field(default=None, description="API key for authentication")]
     capabilities: Annotated[
         CustomBackendCapabilities | None,
         Field(
             default=None,
-            description="Capabilities of the backend, required for custom backends to define their features"
-        )
+            description="Capabilities of the backend, required for custom backends to define their features",
+        ),
     ]
 
     # Advanced capabilities
     enable_hybrid_search: Annotated[
-        bool,
-        Field(default=False, description="Enable hybrid dense/sparse search")
+        bool, Field(default=False, description="Enable hybrid dense/sparse search")
     ]
     enable_sparse_vectors: Annotated[
-        bool,
-        Field(default=False, description="Enable sparse vector support")
+        bool, Field(default=False, description="Enable sparse vector support")
     ]
     enable_streaming: Annotated[
-        bool,
-        Field(default=False, description="Enable streaming operations")
+        bool, Field(default=False, description="Enable streaming operations")
     ]
     enable_transactions: Annotated[
-        bool,
-        Field(default=False, description="Enable transaction support")
+        bool, Field(default=False, description="Enable transaction support")
     ]
 
     # Performance settings
     connection_timeout: Annotated[
         float,
         Field(
-            default=30.0,
-            ge=0.1,
-            le=300.0,
-            description="Connection timeout in seconds (0.1-300)"
-        )
+            default=30.0, ge=0.1, le=300.0, description="Connection timeout in seconds (0.1-300)"
+        ),
     ]
     request_timeout: Annotated[
         float,
-        Field(
-            default=60.0,
-            ge=0.1,
-            le=300.0,
-            description="Request timeout in seconds (0.1-300)"
-        )
+        Field(default=60.0, ge=0.1, le=300.0, description="Request timeout in seconds (0.1-300)"),
     ]
     max_connections: Annotated[
-        int,
-        Field(
-            default=10,
-            ge=1,
-            le=1000,
-            description="Maximum number of connections (1-1000)"
-        )
+        int, Field(default=10, ge=1, le=1000, description="Maximum number of connections (1-1000)")
     ]
     retry_count: Annotated[
-        int,
-        Field(
-            default=3,
-            ge=0,
-            le=10,
-            description="Number of retry attempts (0-10)"
-        )
+        int, Field(default=3, ge=0, le=10, description="Number of retry attempts (0-10)")
     ]
 
     # Storage preferences
-    prefer_memory: Annotated[
-        bool,
-        Field(default=False, description="Prefer memory-based storage")
-    ]
-    prefer_disk: Annotated[
-        bool,
-        Field(default=False, description="Prefer disk-based storage")
-    ]
+    prefer_memory: Annotated[bool, Field(default=False, description="Prefer memory-based storage")]
+    prefer_disk: Annotated[bool, Field(default=False, description="Prefer disk-based storage")]
 
     # Provider-specific settings
     provider_options: Annotated[
         dict[str, Any] | None,
         Field(
             default=None,
-            description="Additional options specific to the backend provider. Providers should validate these options themselves."
-        )
+            description="Additional options specific to the backend provider. Providers should validate these options themselves.",
+        ),
     ]
 
     @field_validator("api_key", mode="before")
@@ -168,7 +135,15 @@ class BackendConfig(BaseModel):
             if len(url) == 0:
                 return None
             # Basic URL validation - must start with http/https for web services
-            if not (url.startswith(("http://", "https://", "postgresql://", "postgres://", "mongodb://"))):
+            if not (
+                url.startswith((
+                    "http://",
+                    "https://",
+                    "postgresql://",
+                    "postgres://",
+                    "mongodb://",
+                ))
+            ):
                 raise ValueError(f"URL must be a valid connection string, got: {url}")
         return url
 
@@ -222,7 +197,7 @@ class BackendFactory(CapabilityQueryMixin):
             BackendConnectionError: If backend connection fails
         """
         # Handle both string and enum provider values
-        if hasattr(config.provider, 'value'):
+        if hasattr(config.provider, "value"):
             provider = config.provider.value.lower()
         else:
             provider = str(config.provider).lower()
@@ -248,7 +223,9 @@ class BackendFactory(CapabilityQueryMixin):
 
         except Exception as e:
             logger.exception("Failed to create %s backend", provider)
-            raise BackendConnectionError(f"Failed to create {provider} backend", backend_type=provider) from e
+            raise BackendConnectionError(
+                f"Failed to create {provider} backend", backend_type=provider
+            ) from e
 
     @classmethod
     def _get_hybrid_backend_class(cls, provider: str) -> type[HybridSearchBackend]:
@@ -271,7 +248,7 @@ class BackendFactory(CapabilityQueryMixin):
         args = {"url": config.url, "api_key": config.api_key}
 
         # Handle both string and enum provider values
-        if hasattr(config.provider, 'value'):
+        if hasattr(config.provider, "value"):
             provider = config.provider.value.lower()
         else:
             provider = str(config.provider).lower()
@@ -305,9 +282,7 @@ class BackendFactory(CapabilityQueryMixin):
                 "available": True,
                 "supports_hybrid_search": supports_hybrid,
                 "supports_streaming": hasattr(backend_class, "stream_upsert"),
-                "supports_transactions": hasattr(
-                    backend_class, "begin_transaction"
-                ),
+                "supports_transactions": hasattr(backend_class, "begin_transaction"),
             }
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
@@ -326,7 +301,8 @@ class BackendFactory(CapabilityQueryMixin):
                 "supports_transactions": caps.supports_transactions,
             }
             for provider, caps in all_capabilities.items()
-            if provider not in cls._backends  # Only include planned backends, not already implemented ones
+            if provider
+            not in cls._backends  # Only include planned backends, not already implemented ones
         }
 
         providers |= planned_providers
@@ -340,6 +316,7 @@ class BackendFactory(CapabilityQueryMixin):
             Dictionary mapping backend names to their capabilities
         """
         from codeweaver._types import get_all_backend_capabilities
+
         return get_all_backend_capabilities()
 
     @classmethod
@@ -387,7 +364,7 @@ class BackendFactory(CapabilityQueryMixin):
             raise ValueError(f"Unsupported URL scheme: {url}")
 
         # Ensure we have a valid ProviderKind for the config
-        kind = kwargs.pop('kind', ProviderKind.COMBINED)
+        kind = kwargs.pop("kind", ProviderKind.COMBINED)
 
         config = BackendConfig(provider=provider, kind=kind, url=base_url, **kwargs)
 

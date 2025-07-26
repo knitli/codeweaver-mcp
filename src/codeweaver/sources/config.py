@@ -26,20 +26,22 @@ logger = logging.getLogger(__name__)
 class DataSourcesConfig(BaseModel):
     """Configuration for data source abstraction system."""
 
-    model_config = ConfigDict(
-        extra="allow",
-        validate_assignment=True,
-        use_enum_values=True
-    )
+    model_config = ConfigDict(extra="allow", validate_assignment=True, use_enum_values=True)
 
     # Global data source settings
     enabled: bool = Field(True, description="Enable sources system")
-    default_source_type: SourceProvider = Field(SourceProvider.FILESYSTEM, description="Default source provider")
-    max_concurrent_sources: Annotated[int, Field(5, ge=1, le=20, description="Maximum concurrent sources")]
+    default_source_type: SourceProvider = Field(
+        SourceProvider.FILESYSTEM, description="Default source provider"
+    )
+    max_concurrent_sources: Annotated[
+        int, Field(5, ge=1, le=20, description="Maximum concurrent sources")
+    ]
 
     # Content processing settings
     enable_content_deduplication: bool = Field(True, description="Enable content deduplication")
-    content_cache_ttl_hours: Annotated[int, Field(24, ge=1, le=168, description="Content cache TTL in hours")]
+    content_cache_ttl_hours: Annotated[
+        int, Field(24, ge=1, le=168, description="Content cache TTL in hours")
+    ]
     enable_metadata_extraction: bool = Field(True, description="Enable metadata extraction")
 
     # Source-specific configurations
@@ -140,6 +142,7 @@ class DataSourcesConfig(BaseModel):
     def to_toml(self) -> str:
         """Export to TOML with Pydantic serialization."""
         import tomlkit
+
         data = self.model_dump(exclude_unset=True)
         return tomlkit.dumps(data)
 
@@ -147,5 +150,6 @@ class DataSourcesConfig(BaseModel):
     def from_toml(cls, toml_str: str) -> "DataSourcesConfig":
         """Load from TOML with validation."""
         import tomlkit
+
         data = tomlkit.parse(toml_str)
         return cls.model_validate(data)

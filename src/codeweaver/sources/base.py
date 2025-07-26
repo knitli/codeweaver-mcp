@@ -96,7 +96,9 @@ class SourceConfig(BaseModel):
     # Content processing
     enable_content_deduplication: bool = Field(True, description="Enable content deduplication")
     enable_metadata_extraction: bool = Field(False, description="Enable metadata extraction")
-    supported_languages: list[str] = Field(default_factory=list, description="Supported programming languages")
+    supported_languages: list[str] = Field(
+        default_factory=list, description="Supported programming languages"
+    )
 
 
 @runtime_checkable

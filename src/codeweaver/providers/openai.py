@@ -12,7 +12,9 @@ including OpenAI, OpenRouter, Together AI, local deployments, and custom service
 Supports arbitrary models, dynamic capability discovery, and service-agnostic configuration.
 """
 
+import asyncio
 import logging
+import time
 
 from typing import Any
 
@@ -24,7 +26,6 @@ from codeweaver._types import (
 )
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import OpenAICompatibleConfig, OpenAIConfig
-from codeweaver.rate_limiter import calculate_embedding_tokens, rate_limited
 
 
 try:
@@ -63,15 +64,15 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         self._base_url = self.config.get("base_url", "https://api.openai.com/v1")
 
         # Initialize OpenAI client
-        client_kwargs = {
-            "api_key": self.config["api_key"],
-            "base_url": self._base_url,
-        }
+        client_kwargs = {"api_key": self.config["api_key"], "base_url": self._base_url}
         if self.config.get("custom_headers"):
             client_kwargs["default_headers"] = self.config["custom_headers"]
 
         self.client = openai.AsyncOpenAI(**client_kwargs)
-        self.rate_limiter = self.config.get("rate_limiter")
+
+        # Simple rate limiting for API calls
+        self._last_request_time = 0.0
+        self._min_request_interval = 0.1  # 100ms between requests
 
         # Model configuration
         self._model = self.config.get("model", "text-embedding-3-small")
@@ -92,10 +93,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
 
         # Log service information for debugging
         logger.info(
-            "Initializing %s with model '%s' at %s",
-            self._service_name,
-            self._model,
-            self._base_url,
+            "Initializing %s with model '%s' at %s", self._service_name, self._model, self._base_url
         )
 
     def _initialize_dimensions(self) -> None:
@@ -113,11 +111,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         }
         if self._model in known_dimensions:
             self._dimension = known_dimensions[self._model]
-            logger.info(
-                "Using known dimensions for model '%s': %d",
-                self._model,
-                self._dimension,
-            )
+            logger.info("Using known dimensions for model '%s': %d", self._model, self._dimension)
             return
 
         # Auto-discover dimensions if enabled
@@ -125,9 +119,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             try:
                 self._dimension = self._discover_model_dimensions()
                 logger.info(
-                    "Auto-discovered dimensions for model '%s': %d",
-                    self._model,
-                    self._dimension,
+                    "Auto-discovered dimensions for model '%s': %d", self._model, self._dimension
                 )
             except Exception as e:
                 logger.warning(
@@ -140,9 +132,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             # Default fallback
             self._dimension = 1536
             logger.info(
-                "Using default dimensions for unknown model '%s': %d",
-                self._model,
-                self._dimension,
+                "Using default dimensions for unknown model '%s': %d", self._model, self._dimension
             )
 
     def _discover_model_dimensions(self) -> int:
@@ -157,10 +147,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         import asyncio
 
         async def _discover():
-            response = await self.client.embeddings.create(
-                input=["test"],
-                model=self._model,
-            )
+            response = await self.client.embeddings.create(input=["test"], model=self._model)
             return len(response.data[0].embedding)
 
         # Run the async discovery in a sync context
@@ -175,6 +162,17 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             # For now, just return a reasonable default
             raise RuntimeError("Cannot auto-discover dimensions in async context")
         return asyncio.run(_discover())
+
+    async def _apply_rate_limit(self) -> None:
+        """Apply basic rate limiting between API requests."""
+        current_time = time.time()
+        time_since_last = current_time - self._last_request_time
+
+        if time_since_last < self._min_request_interval:
+            sleep_time = self._min_request_interval - time_since_last
+            await asyncio.sleep(sleep_time)
+
+        self._last_request_time = time.time()
 
     # EmbeddingProvider implementation
 
@@ -203,7 +201,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         if "openai.com" in self._base_url:
             return 2048  # OpenAI's maximum
         if "openrouter.ai" in self._base_url:
-            return 128   # OpenRouter's typical limit
+            return 128  # OpenRouter's typical limit
         return 256 if "together.ai" in self._base_url else 128
 
     @property
@@ -215,9 +213,10 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         # Service-specific defaults based on base URL
         return 500000 if "openai.com" in self._base_url else 32000
 
-    @rate_limited("openai_embed_documents", calculate_embedding_tokens)
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for documents with rate limiting."""
+        """Generate embeddings for documents with basic rate limiting."""
+        await self._apply_rate_limit()
+
         try:
             # Process in batches if needed
             batch_size = min(self.max_batch_size or len(texts), len(texts))
@@ -244,9 +243,10 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         else:
             return embeddings
 
-    @rate_limited("openai_embed_query", lambda self, text, **kwargs: max(1, len(text) // 4))
     async def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for search query with rate limiting."""
+        """Generate embedding for search query with basic rate limiting."""
+        await self._apply_rate_limit()
+
         try:
             embedding_kwargs = {"input": [text], "model": self._model}
 

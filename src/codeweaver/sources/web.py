@@ -33,42 +33,90 @@ class WebCrawlerSourceConfig(BaseModel):
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
-    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
-    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    include_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to include")
+    ]
+    exclude_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to exclude")
+    ]
     max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
     batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
-    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
-    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    max_concurrent_requests: Annotated[
+        int, Field(10, ge=1, le=100, description="Maximum concurrent requests")
+    ]
+    request_timeout_seconds: Annotated[
+        int, Field(30, ge=1, le=300, description="Request timeout in seconds")
+    ]
     enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
-    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
-    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
-    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
-    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
+    change_check_interval_seconds: Annotated[
+        int, Field(60, ge=1, le=3600, description="Change check interval in seconds")
+    ]
+    enable_content_deduplication: Annotated[
+        bool, Field(True, description="Enable content deduplication")
+    ]
+    enable_metadata_extraction: Annotated[
+        bool, Field(False, description="Enable metadata extraction")
+    ]
+    supported_languages: Annotated[
+        list[str], Field(default_factory=list, description="Supported programming languages")
+    ]
 
     # Web crawler specific settings
     start_urls: Annotated[list[str], Field(description="Starting URLs for crawling (required)")]
-    allowed_domains: Annotated[list[str], Field(default_factory=list, description="Domains allowed for crawling")]
+    allowed_domains: Annotated[
+        list[str], Field(default_factory=list, description="Domains allowed for crawling")
+    ]
     max_depth: Annotated[int, Field(3, ge=1, le=10, description="Maximum crawling depth")]
-    max_pages: Annotated[int, Field(1000, ge=1, le=100000, description="Maximum number of pages to crawl")]
+    max_pages: Annotated[
+        int, Field(1000, ge=1, le=100000, description="Maximum number of pages to crawl")
+    ]
 
     # Politeness settings
-    delay_between_requests: Annotated[float, Field(1.0, ge=0.1, le=10.0, description="Delay between requests in seconds")]
+    delay_between_requests: Annotated[
+        float, Field(1.0, ge=0.1, le=10.0, description="Delay between requests in seconds")
+    ]
     respect_robots_txt: Annotated[bool, Field(True, description="Respect robots.txt rules")]
-    user_agent: Annotated[str, Field("CodeWeaver/1.0", min_length=1, description="User agent string for requests")]
-    max_requests_per_second: Annotated[float, Field(1.0, gt=0, le=10.0, description="Maximum requests per second")]
+    user_agent: Annotated[
+        str, Field("CodeWeaver/1.0", min_length=1, description="User agent string for requests")
+    ]
+    max_requests_per_second: Annotated[
+        float, Field(1.0, gt=0, le=10.0, description="Maximum requests per second")
+    ]
 
     # Content extraction settings
     extract_text_only: Annotated[bool, Field(True, description="Extract text content only")]
-    include_code_blocks: Annotated[bool, Field(True, description="Include code blocks in extraction")]
+    include_code_blocks: Annotated[
+        bool, Field(True, description="Include code blocks in extraction")
+    ]
     include_links: Annotated[bool, Field(False, description="Include links in extracted content")]
     include_images: Annotated[bool, Field(False, description="Include image information")]
-    min_content_length: Annotated[int, Field(100, ge=1, le=10000, description="Minimum content length to index")]
+    min_content_length: Annotated[
+        int, Field(100, ge=1, le=10000, description="Minimum content length to index")
+    ]
 
     # Content filtering
-    allowed_content_types: Annotated[list[str], Field(default_factory=lambda: ["text/html", "text/plain", "text/markdown"], description="Allowed MIME content types")]
-    exclude_file_extensions: Annotated[list[str], Field(default_factory=lambda: [".pdf", ".doc", ".docx", ".xls", ".xlsx"], description="File extensions to exclude")]
-    css_selectors: Annotated[list[str], Field(default_factory=list, description="CSS selectors for specific content extraction")]
-    xpath_expressions: Annotated[list[str], Field(default_factory=list, description="XPath expressions for content extraction")]
+    allowed_content_types: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: ["text/html", "text/plain", "text/markdown"],
+            description="Allowed MIME content types",
+        ),
+    ]
+    exclude_file_extensions: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: [".pdf", ".doc", ".docx", ".xls", ".xlsx"],
+            description="File extensions to exclude",
+        ),
+    ]
+    css_selectors: Annotated[
+        list[str],
+        Field(default_factory=list, description="CSS selectors for specific content extraction"),
+    ]
+    xpath_expressions: Annotated[
+        list[str],
+        Field(default_factory=list, description="XPath expressions for content extraction"),
+    ]
 
 
 class WebCrawlerSource(AbstractDataSource):

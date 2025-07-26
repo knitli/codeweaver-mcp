@@ -24,6 +24,9 @@ from codeweaver.sources.base import AbstractDataSource, SourceWatcher
 logger = logging.getLogger(__name__)
 
 
+# TODO: We're already built from Pydantic, so could we implement this with SqlModel with minimal effort? Maybe take a SQLModel object as a dependency injection to use for read/discover/watch?
+# The answer is 'yes', [see analysis](../../../plans/features/DATABASE_SQLMODEL_ANALYSIS.md) for details.
+
 class DatabaseSourceConfig(BaseModel):
     """Configuration specific to database data sources."""
 
@@ -33,23 +36,51 @@ class DatabaseSourceConfig(BaseModel):
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
-    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
-    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    include_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to include")
+    ]
+    exclude_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to exclude")
+    ]
     max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
     batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
-    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
-    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    max_concurrent_requests: Annotated[
+        int, Field(10, ge=1, le=100, description="Maximum concurrent requests")
+    ]
+    request_timeout_seconds: Annotated[
+        int, Field(30, ge=1, le=300, description="Request timeout in seconds")
+    ]
     enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
-    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
-    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
-    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
-    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
+    change_check_interval_seconds: Annotated[
+        int, Field(60, ge=1, le=3600, description="Change check interval in seconds")
+    ]
+    enable_content_deduplication: Annotated[
+        bool, Field(True, description="Enable content deduplication")
+    ]
+    enable_metadata_extraction: Annotated[
+        bool, Field(False, description="Enable metadata extraction")
+    ]
+    supported_languages: Annotated[
+        list[str], Field(default_factory=list, description="Supported programming languages")
+    ]
 
     # Database specific settings
-    database_type: Annotated[str, Field(description="Database type: 'postgresql', 'mysql', 'sqlite', 'mongodb', 'elasticsearch'")]
+    database_type: Annotated[
+        str,
+        Field(
+            description="Database type: 'postgresql', 'mysql', 'sqlite', 'mongodb', 'elasticsearch'"
+        ),
+    ]
     connection_string: Annotated[str, Field(description="Database connection string (required)")]
-    host: Annotated[str | None, Field(None, description="Database host (optional if using connection string)")]
-    port: Annotated[int | None, Field(None, ge=1, le=65535, description="Database port (optional if using connection string)")]
+    host: Annotated[
+        str | None, Field(None, description="Database host (optional if using connection string)")
+    ]
+    port: Annotated[
+        int | None,
+        Field(
+            None, ge=1, le=65535, description="Database port (optional if using connection string)"
+        ),
+    ]
     database_name: Annotated[str, Field(description="Database name (required)")]
 
     # Authentication
@@ -58,16 +89,35 @@ class DatabaseSourceConfig(BaseModel):
     ssl_mode: Annotated[str | None, Field(None, description="SSL mode for secure connections")]
 
     # Content discovery settings
-    include_tables: Annotated[list[str], Field(default_factory=list, description="Tables to include in indexing")]
-    include_views: Annotated[list[str], Field(default_factory=list, description="Views to include in indexing")]
-    include_procedures: Annotated[list[str], Field(default_factory=list, description="Stored procedures to include in indexing")]
-    include_schemas: Annotated[list[str], Field(default_factory=list, description="Database schemas to include")]
+    include_tables: Annotated[
+        list[str], Field(default_factory=list, description="Tables to include in indexing")
+    ]
+    include_views: Annotated[
+        list[str], Field(default_factory=list, description="Views to include in indexing")
+    ]
+    include_procedures: Annotated[
+        list[str],
+        Field(default_factory=list, description="Stored procedures to include in indexing"),
+    ]
+    include_schemas: Annotated[
+        list[str], Field(default_factory=list, description="Database schemas to include")
+    ]
 
     # Data extraction settings
-    max_record_length: Annotated[int, Field(10000, ge=100, le=100000, description="Maximum record length for content extraction")]
-    sample_size: Annotated[int, Field(100, ge=1, le=10000, description="Number of sample records to extract per table")]
-    content_fields: Annotated[list[str], Field(default_factory=list, description="Database fields to treat as indexable content")]
-    metadata_fields: Annotated[list[str], Field(default_factory=list, description="Database fields to include as metadata")]
+    max_record_length: Annotated[
+        int,
+        Field(10000, ge=100, le=100000, description="Maximum record length for content extraction"),
+    ]
+    sample_size: Annotated[
+        int, Field(100, ge=1, le=10000, description="Number of sample records to extract per table")
+    ]
+    content_fields: Annotated[
+        list[str],
+        Field(default_factory=list, description="Database fields to treat as indexable content"),
+    ]
+    metadata_fields: Annotated[
+        list[str], Field(default_factory=list, description="Database fields to include as metadata")
+    ]
 
 
 class DatabaseSource(AbstractDataSource):

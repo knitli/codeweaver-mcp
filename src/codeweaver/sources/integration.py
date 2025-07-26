@@ -72,14 +72,10 @@ class DataSourceManager:
 
                 # Validate source configuration if the source supports it
                 if (
-                    (hasattr(source, 'validate_source')
-                    and await source.validate_source(config_obj))
-                    or not hasattr(source, 'validate_source')
-                ):
+                    hasattr(source, "validate_source") and await source.validate_source(config_obj)
+                ) or not hasattr(source, "validate_source"):
                     self._active_sources.append(source)
-                    logger.info(
-                        "Initialized data source: %s (%s)", source.source_id, source_type
-                    )
+                    logger.info("Initialized data source: %s (%s)", source.source_id, source_type)
                 else:
                     logger.warning("Validation failed for data source: %s", source_type)
             except Exception:

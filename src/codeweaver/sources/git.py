@@ -33,21 +33,39 @@ class GitRepositorySourceConfig(BaseModel):
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
-    include_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to include")]
-    exclude_patterns: Annotated[list[str], Field(default_factory=list, description="File patterns to exclude")]
+    include_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to include")
+    ]
+    exclude_patterns: Annotated[
+        list[str], Field(default_factory=list, description="File patterns to exclude")
+    ]
     max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000, description="Maximum file size in MB")]
     batch_size: Annotated[int, Field(8, ge=1, le=1000, description="Batch size for processing")]
-    max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100, description="Maximum concurrent requests")]
-    request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300, description="Request timeout in seconds")]
+    max_concurrent_requests: Annotated[
+        int, Field(10, ge=1, le=100, description="Maximum concurrent requests")
+    ]
+    request_timeout_seconds: Annotated[
+        int, Field(30, ge=1, le=300, description="Request timeout in seconds")
+    ]
     enable_change_watching: Annotated[bool, Field(False, description="Enable change watching")]
-    change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600, description="Change check interval in seconds")]
-    enable_content_deduplication: Annotated[bool, Field(True, description="Enable content deduplication")]
-    enable_metadata_extraction: Annotated[bool, Field(False, description="Enable metadata extraction")]
-    supported_languages: Annotated[list[str], Field(default_factory=list, description="Supported programming languages")]
+    change_check_interval_seconds: Annotated[
+        int, Field(60, ge=1, le=3600, description="Change check interval in seconds")
+    ]
+    enable_content_deduplication: Annotated[
+        bool, Field(True, description="Enable content deduplication")
+    ]
+    enable_metadata_extraction: Annotated[
+        bool, Field(False, description="Enable metadata extraction")
+    ]
+    supported_languages: Annotated[
+        list[str], Field(default_factory=list, description="Supported programming languages")
+    ]
 
     # Git specific settings
     repository_url: Annotated[str, Field(description="Git repository URL (required)")]
-    local_clone_path: Annotated[str | None, Field(None, description="Local clone path for repository")]
+    local_clone_path: Annotated[
+        str | None, Field(None, description="Local clone path for repository")
+    ]
     branch: Annotated[str, Field("main", min_length=1, description="Git branch to checkout")]
     commit_hash: Annotated[str | None, Field(None, description="Specific commit hash to checkout")]
     depth: Annotated[int | None, Field(None, ge=1, description="Clone depth for shallow clones")]
@@ -59,9 +77,13 @@ class GitRepositorySourceConfig(BaseModel):
 
     # Sync settings
     auto_pull: Annotated[bool, Field(True, description="Automatically pull updates")]
-    pull_interval_minutes: Annotated[int, Field(30, ge=1, le=10080, description="Pull interval in minutes")]
+    pull_interval_minutes: Annotated[
+        int, Field(30, ge=1, le=10080, description="Pull interval in minutes")
+    ]
     track_file_history: Annotated[bool, Field(False, description="Track file history and changes")]
-    include_commit_metadata: Annotated[bool, Field(True, description="Include commit metadata in content items")]
+    include_commit_metadata: Annotated[
+        bool, Field(True, description="Include commit metadata in content items")
+    ]
 
 
 class GitRepositorySource(AbstractDataSource):

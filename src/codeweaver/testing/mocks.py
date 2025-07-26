@@ -30,7 +30,7 @@ from codeweaver.backends.base import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver.providers.base import ProviderInfo, RerankResult
+from codeweaver._types import ProviderInfo, RerankResult
 from codeweaver.sources.base import (
     AbstractDataSource,
     ContentItem,

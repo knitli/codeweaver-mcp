@@ -86,9 +86,9 @@ async def test_mock_vector_backend_compliance():
     assert result.is_compliant
 
 # Test protocol interface validation
-async def test_CW_EMBEDDING_PROVIDER_properties():
+async def test_embedding_provider_properties():
     provider = MockEmbeddingProvider(dimension=256)
-    result = await validate_CW_EMBEDDING_PROVIDER_protocol(provider)
+    result = await validate_embedding_provider_protocol(provider)
     assert result.is_compliant
     assert provider.dimension == 256
 ```

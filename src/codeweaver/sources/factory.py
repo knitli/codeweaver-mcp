@@ -55,7 +55,7 @@ class SourceFactory:
                 provider_type=SourceProvider.FILESYSTEM,
                 display_name="File System",
                 description="Local file system with gitignore support",
-                implemented=True
+                implemented=True,
             )
 
             self._registry.register(SourceProvider.FILESYSTEM, FileSystemSource)
@@ -67,7 +67,9 @@ class SourceFactory:
         except ImportError as e:
             logger.warning("Failed to import some data sources: %s", e)
 
-    def create_source(self, source_type: SourceProvider, config: SourceConfig | dict[str, Any]) -> DataSource:
+    def create_source(
+        self, source_type: SourceProvider, config: SourceConfig | dict[str, Any]
+    ) -> DataSource:
         """Create a data source instance of the specified type.
 
         Args:
@@ -156,7 +158,9 @@ class SourceFactory:
         logger.info("Created %d data sources", len(sources))
         return sources
 
-    async def validate_source_config(self, source_type: SourceProvider, config: SourceConfig) -> bool:
+    async def validate_source_config(
+        self, source_type: SourceProvider, config: SourceConfig
+    ) -> bool:
         """Validate a source configuration without creating the source.
 
         Args:
@@ -198,8 +202,12 @@ class SourceFactory:
             source_info[source_type.value] = {
                 "capabilities": capabilities.model_dump() if capabilities else {},
                 "implemented": provider_info.implemented if provider_info else False,
-                "description": provider_info.description if provider_info else f"Data source of type {source_type.value}",
-                "display_name": provider_info.display_name if provider_info else source_type.value.title(),
+                "description": provider_info.description
+                if provider_info
+                else f"Data source of type {source_type.value}",
+                "display_name": provider_info.display_name
+                if provider_info
+                else source_type.value.title(),
             }
 
         return source_info

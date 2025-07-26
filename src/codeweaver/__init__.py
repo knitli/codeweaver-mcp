@@ -15,3 +15,5 @@ Key Features:
 - Support for 20+ programming languages
 - Vector similarity search with Qdrant
 """
+
+__version__ = "0.1.0"

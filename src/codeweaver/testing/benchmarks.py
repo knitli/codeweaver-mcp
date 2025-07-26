@@ -159,7 +159,7 @@ class BenchmarkSuite:
 
         return results
 
-    async def benchmark_CW_EMBEDDING_PROVIDER(
+    async def benchmark_embedding_provider(
         self, provider: EmbeddingProvider, test_scenarios: list[dict[str, Any]] | None = None
     ) -> list[BenchmarkResult]:
         """Benchmark embedding provider performance."""
@@ -657,8 +657,8 @@ async def run_performance_benchmarks(
     for component_type, implementation in components.items():
         if component_type == "vector_backend":
             results[component_type] = await suite.benchmark_vector_backend(implementation)
-        elif component_type == "CW_EMBEDDING_PROVIDER":
-            results[component_type] = await suite.benchmark_CW_EMBEDDING_PROVIDER(implementation)
+        elif component_type == "embedding_provider":
+            results[component_type] = await suite.benchmark_embedding_provider(implementation)
         elif component_type == "rerank_provider":
             results[component_type] = await suite.benchmark_rerank_provider(implementation)
         elif component_type == "data_source":

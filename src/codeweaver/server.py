@@ -3,10 +3,14 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-"""Main MCP server implementation for code embeddings and search.
+"""
+Clean CodeWeaver server implementation using plugin system and FastMCP middleware.
 
-Orchestrates semantic search, chunking, and indexing functionality
-using configurable embedding providers and vector database backends.
+This is the new clean server implementation that integrates:
+- FastMCP middleware stack (chunking, filtering, rate limiting, logging)
+- Enhanced plugin system with factory pattern
+- New Pydantic models and types
+- Integrated FilesystemSource with AST-grep support
 """
 
 import logging
@@ -14,563 +18,39 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
-from codeweaver.backends.factory import BackendConfig, BackendFactory
-from codeweaver.chunker import AST_GREP_AVAILABLE, AstGrepChunker
+from fastmcp import Context, FastMCP
+
+from codeweaver._types import ExtensibilityConfig, SearchResult
+from codeweaver.factories.extensibility_manager import ExtensibilityManager
+# FastMCP built-in middleware
+from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.server.middleware.logging import LoggingMiddleware
+from fastmcp.server.middleware.timing import TimingMiddleware
+from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
+
+# CodeWeaver domain-specific middleware
+from codeweaver.middleware import (
+    ChunkingMiddleware,
+    FileFilteringMiddleware,
+)
+
 
 if TYPE_CHECKING:
     from codeweaver.config import CodeWeaverConfig
-from codeweaver._types import ExtensibilityConfig
-from codeweaver.factories.extensibility_manager import ExtensibilityManager
-from codeweaver.file_filter import FileFilter
-from codeweaver.file_watcher import FileWatcherManager
-from codeweaver.models import CodeChunk
-from codeweaver.providers import RerankProvider, get_provider_factory
-from codeweaver.rate_limiter import RateLimiter
-from codeweaver.search import AstGrepStructuralSearch
-from codeweaver.task_search import TaskSearchCoordinator
 
 
 logger = logging.getLogger(__name__)
 
 
-class BackendNotAvailableError(Exception):
-    """Custom exception for when the backend is not available."""
-
-    def __init__(self, message: str):
-        """Initialize with a custom message."""
-        super().__init__(message)
-        self.message = "Backend not available: %s", message
-
-
-def raise_if_backend_none() -> None:
-    """Raise an error if the backend is not available."""
-    raise BackendNotAvailableError("Backend not available, using fallback")
-
-
-class _RerankProviderAdapter:
-    """Adapter to make new reranking providers compatible with legacy interface."""
-
-    def __init__(self, provider: RerankProvider):
-        """Initialize adapter with a reranking provider instance."""
-        self.provider = provider
-
-    async def rerank(
-        self, query: str, documents: list[str], top_k: int | None = None
-    ) -> list[dict[str, Any]]:
-        """Rerank documents and convert to legacy format."""
-        results = await self.provider.rerank(query, documents, top_k)
-
-        # Convert RerankResult objects to legacy dict format
-        return [
-            {
-                "index": result.index,
-                "relevance_score": result.relevance_score,
-                "document": result.document,
-            }
-            for result in results
-        ]
-
-
-class CodeEmbeddingsServer:
-    """Main MCP server for code embeddings with ast-grep integration."""
-
-    def __init__(self, config: "CodeWeaverConfig | None" = None):
-        """Initialize the code embeddings server.
-
-        Args:
-            config: Optional configuration object. If None, loads from default sources.
-        """
-        # Load configuration - import at runtime to avoid circular import
-        from codeweaver.config import get_config
-        
-        self.config = config or get_config()
-
-        # Initialize rate limiter
-        self.rate_limiter = RateLimiter(self.config.rate_limiting)
-
-        # Initialize components with configuration and rate limiting
-        # Use new provider system with fallback to legacy for compatibility
-        try:
-            provider_factory = get_provider_factory()
-
-            # Create embedding provider
-            embedding_provider = provider_factory.create_embedding_provider(
-                config=self.config.embedding, rate_limiter=self.rate_limiter
-            )
-
-            # Wrap in legacy interface for backward compatibility
-            from codeweaver.embeddings import _ProviderAdapter
-
-            self.embedder = _ProviderAdapter(embedding_provider, self.config.embedding)
-
-            # Create reranking provider (with fallback)
-            rerank_provider = provider_factory.get_default_reranking_provider(
-                embedding_provider_name=self.config.embedding.provider,
-                api_key=self.config.embedding.api_key,
-                rate_limiter=self.rate_limiter,
-            )
-
-            if rerank_provider is not None:
-                # Wrap in legacy interface adapter
-                self.reranker = _RerankProviderAdapter(rerank_provider)
-            else:
-                logger.warning("No reranking provider available, using legacy VoyageAIReranker")
-
-        except Exception as e:
-            logger.warning("Failed to initialize new provider system, using legacy: %s", e)
-
-        self.chunker = AstGrepChunker(
-            max_chunk_size=self.config.chunking.max_chunk_size,
-            min_chunk_size=self.config.chunking.min_chunk_size,
-        )
-        self.structural_search = AstGrepStructuralSearch()
-
-        # Initialize Task search coordinator
-        self.task_coordinator = TaskSearchCoordinator(task_tool_available=True)
-
-        # Initialize file watcher manager
-        self.file_watcher_manager = FileWatcherManager(self.config)
-
-        # Initialize vector backend using factory pattern
-        self.backend = self._initialize_backend()
-        self.collection_name = self.config.qdrant.collection_name
-
-        # Collection creation will happen lazily in async methods when first needed
-
-    def _initialize_backend(self) -> VectorBackend:
-        """Initialize the vector database backend."""
-        # Create backend configuration from legacy Qdrant config
-        backend_config = BackendConfig(
-            provider="qdrant",
-            url=self.config.qdrant.url,
-            api_key=self.config.qdrant.api_key,
-            enable_hybrid_search=False,  # Default to basic for backward compatibility
-            enable_sparse_vectors=False,
-        )
-
-        try:
-            backend = BackendFactory.create_backend(backend_config)
-            logger.info("Successfully initialized backend: %s", backend_config.provider)
-        except Exception:
-            logger.exception("Failed to initialize backend")
-            raise  # Fail fast - no legacy fallback
-        else:
-            return backend
-
-    async def _ensure_collection(self):
-        """Ensure the vector collection exists using backend abstraction."""
-        try:
-            # Use backend abstraction for collection management
-            collections = await self.backend.list_collections()
-            if self.collection_name not in collections:
-                logger.info("Creating collection using backend: %s", self.collection_name)
-                await self.backend.create_collection(
-                    name=self.collection_name,
-                    dimension=self.embedder.dimension,
-                    distance_metric=DistanceMetric.COSINE,
-                )
-            else:
-                logger.info("Collection %s already exists", self.collection_name)
-        except Exception:
-            logger.exception("Error ensuring collection")
-            raise
-
-    # _ensure_collection_async removed - using unified _ensure_collection method
-
-    async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None
-    ) -> dict[str, Any]:
-        """Index a codebase for semantic search using ast-grep."""
-        root = Path(root_path)
-        if not root.exists():
-            raise ValueError(f"Path does not exist: {root_path}")
-
-        # Use file filter for intelligent file discovery
-        file_filter = FileFilter(self.config, root)
-        files = file_filter.find_files(patterns)
-
-        logger.info("Found %d files to index after filtering", len(files))
-
-        # Process files in batches
-        batch_size = self.config.indexing.batch_size
-        total_chunks = 0
-        processed_languages = set()
-
-        for i in range(0, len(files), batch_size):
-            batch_files = files[i : i + batch_size]
-            batch_chunks = []
-
-            for file_path in batch_files:
-                try:
-                    content = file_path.read_text(encoding="utf-8", errors="ignore")
-
-                    # Skip empty files (size check already done by FileFilter)
-                    if not content.strip():
-                        continue
-
-                    # Chunk the file using ast-grep
-                    chunks = self.chunker.chunk_file(file_path, content)
-                    batch_chunks.extend(chunks)
-
-                    # Track processed languages
-                    if chunks:
-                        processed_languages.add(chunks[0].language)
-
-                except Exception as e:
-                    logger.warning("Error processing %s: %s", file_path, e)
-                    continue
-
-            if batch_chunks:
-                await self._index_chunks(batch_chunks)
-                total_chunks += len(batch_chunks)
-                logger.info("Indexed batch %d: %d chunks", i // batch_size + 1, len(batch_chunks))
-
-        # Set up file watching if enabled
-        watcher_started = False
-        if self.config.indexing.enable_auto_reindex:
-            watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes
-            )
-
-        return {
-            "status": "success",
-            "files_processed": len(files),
-            "total_chunks": total_chunks,
-            "languages_found": list(processed_languages),
-            "collection": self.config.qdrant.collection_name,
-            "ast_grep_available": AST_GREP_AVAILABLE,
-            "filtering_stats": file_filter.get_filtering_stats(),
-            "file_watching": {
-                "enabled": self.config.indexing.enable_auto_reindex,
-                "started": watcher_started,
-            },
-        }
-
-    async def _handle_file_changes(self, changed_files: list[Path]):
-        """Handle file changes for auto-reindexing."""
-        logger.info("Handling changes for %d files", len(changed_files))
-        # This is a placeholder - implement actual reindexing logic as needed
-
-    async def _index_chunks(self, chunks: list[CodeChunk]):
-        """Index a batch of code chunks."""
-        if not chunks:
-            return
-
-        # Ensure collection exists (async)
-        await self._ensure_collection()
-
-        # Generate embeddings
-        texts = [chunk.content for chunk in chunks]
-        embeddings = await self.embedder.embed_documents(texts)
-
-        # Create vector points for backend abstraction
-        vector_points = []
-        for chunk, embedding in zip(chunks, embeddings, strict=False):
-            vector_point = VectorPoint(
-                id=hash(f"{chunk.file_path}:{chunk.start_line}:{chunk.hash}") & ((1 << 63) - 1),
-                vector=embedding,
-                payload=chunk.to_metadata(),
-            )
-            vector_points.append(vector_point)
-
-        # Upload using backend abstraction with fallback to legacy
-        def _raise_backend_error():
-            raise RuntimeError("Backend not available, using fallback")
-
-        # Use backend abstraction for vector upload
-        await self.backend.upsert_vectors(self.collection_name, vector_points)
-        logger.debug("Uploaded %d vectors using backend", len(vector_points))
-
-    async def search_code(
-        self,
-        query: str,
-        limit: int = 10,
-        *,
-        file_filter: str | None = None,
-        language_filter: str | None = None,
-        chunk_type_filter: str | None = None,
-        rerank: bool = True,
-        use_task_delegation: bool | None = None,
-    ) -> list[dict[str, Any]]:
-        """Search for code using semantic similarity with advanced filtering.
-
-        Automatically assesses query complexity and suggests Task tool delegation
-        for comprehensive or uncertain-scope searches.
-        """
-        # Check if task delegation should be used
-        task_recommendation = await self._assess_search_complexity(
-            query,
-            file_filter,
-            language_filter,
-            use_task_delegation,
-            limit,
-            chunk_type_filter,
-            rerank,
-        )
-        if task_recommendation:
-            return task_recommendation
-
-        # Generate query embedding
-        query_vector = await self.embedder.embed_query(query)
-
-        # Perform search with backend/legacy fallback
-        search_results = await self._perform_vector_search(
-            query_vector, file_filter, language_filter, chunk_type_filter, limit, rerank
-        )
-
-        # Process search results
-        results = self._process_search_results(search_results)
-
-        # Apply reranking if requested
-        if rerank and len(results) > 1:
-            results = await self._apply_reranking(query, results, limit)
-
-        return results[:limit]
-
-    async def _assess_search_complexity(
-        self,
-        query: str,
-        file_filter: str | None,
-        language_filter: str | None,
-        *,
-        use_task_delegation: bool | None,
-        limit: int,
-        chunk_type_filter: str | None,
-        rerank: bool,
-    ) -> list[dict[str, Any]] | None:
-        """Assess search complexity and return task recommendation if needed."""
-        estimated_files = self._estimate_file_count(file_filter, language_filter)
-        assessment = self.task_coordinator.assess_search_complexity(
-            query=query,
-            file_filter=file_filter,
-            language_filter=language_filter,
-            estimated_files=estimated_files,
-        )
-
-        # Log assessment for transparency
-        logger.info(
-            "Search assessment: %s complexity, confidence: %.2f, scope: %s",
-            assessment.complexity.value,
-            assessment.confidence,
-            assessment.estimated_scope,
-        )
-
-        # Return assessment info if task delegation should be used
-        if assessment.should_use_task and use_task_delegation is not False:
-            return [
-                {
-                    "type": "search_recommendation",
-                    "message": f"This search has {assessment.complexity.value} complexity. "
-                    f"Consider using Task tool for comprehensive results.",
-                    "assessment": {
-                        "complexity": assessment.complexity.value,
-                        "confidence": assessment.confidence,
-                        "scope": assessment.estimated_scope,
-                        "reasoning": assessment.reasoning,
-                        "task_prompt": self.task_coordinator.create_task_prompt_for_semantic_search(
-                            query=query,
-                            limit=limit,
-                            file_filter=file_filter,
-                            language_filter=language_filter,
-                            chunk_type_filter=chunk_type_filter,
-                            rerank=rerank,
-                        ),
-                    },
-                }
-            ]
-        return None
-
-    async def _perform_vector_search(
-        self,
-        query_vector: list[float],
-        file_filter: str | None,
-        language_filter: str | None,
-        chunk_type_filter: str | None,
-        limit: int,
-        *,
-        rerank: bool,
-    ) -> list:
-        """Perform vector search using backend abstraction with fallback to legacy."""
-        # Build universal search filters
-        from codeweaver.backends.base import FilterCondition, SearchFilter
-
-        filter_conditions = []
-        if file_filter:
-            filter_conditions.append(
-                FilterCondition(field="file_path", operator="eq", value=file_filter)
-            )
-        if language_filter:
-            filter_conditions.append(
-                FilterCondition(field="language", operator="eq", value=language_filter)
-            )
-        if chunk_type_filter:
-            filter_conditions.append(
-                FilterCondition(field="chunk_type", operator="eq", value=chunk_type_filter)
-            )
-
-        universal_filter = SearchFilter(conditions=filter_conditions) if filter_conditions else None
-
-        # Search using backend abstraction with fallback to legacy
-        def _raise_search_backend_error():
-            raise RuntimeError("Backend not available, using fallback")
-
-        try:
-            if self.backend is None:
-                _raise_search_backend_error()
-            search_result = await self.backend.search_vectors(
-                collection_name=self.collection_name,
-                query_vector=query_vector,
-                search_filter=universal_filter,
-                limit=limit * 2 if rerank else limit,  # Get more for reranking
-            )
-            logger.debug("Search using backend returned %d results", len(search_result))
-        except Exception as e:
-            logger.warning("Backend search failed, using legacy Qdrant client: %s", e)
-
-        return search_result
-
-    def _process_search_results(self, search_result: list) -> list[dict[str, Any]]:
-        """Process search results from backend or legacy client."""
-        results = []
-        for hit in search_result:
-            # Handle both backend abstraction SearchResult and legacy Qdrant hits
-            if hasattr(hit, "payload") and hit.payload is not None:
-                # Backend abstraction SearchResult or legacy Qdrant hit
-                payload = hit.payload
-                score = hit.score
-            else:
-                # This shouldn't happen, but handle gracefully
-                logger.warning("Unexpected search result format: %s", type(hit))
-                continue
-
-            result = {
-                "content": payload["content"],
-                "file_path": payload["file_path"],
-                "start_line": payload["start_line"],
-                "end_line": payload["end_line"],
-                "chunk_type": payload["chunk_type"],
-                "language": payload["language"],
-                "node_kind": payload.get("node_kind", ""),
-                "similarity_score": score,
-            }
-            results.append(result)
-        return results
-
-    async def _apply_reranking(
-        self, query: str, results: list[dict[str, Any]], limit: int
-    ) -> list[dict[str, Any]]:
-        """Apply reranking to search results."""
-        try:
-            documents = [r["content"] for r in results]
-            rerank_results = await self.reranker.rerank(query, documents, top_k=limit)
-
-            # Reorder results based on reranking
-            reranked = []
-            for rerank_item in rerank_results:
-                original_result = results[rerank_item["index"]]
-                original_result["rerank_score"] = rerank_item["relevance_score"]
-                reranked.append(original_result)
-
-        except Exception as e:
-            logger.warning("Reranking failed, using similarity search only: %s", e)
-            return results
-        else:
-            return reranked
-
-    async def ast_grep_search(
-        self,
-        pattern: str,
-        language: str,
-        root_path: str,
-        limit: int = 20,
-        *,
-        use_task_delegation: bool | None = None,
-    ) -> list[dict[str, Any]]:
-        """Perform structural search using ast-grep patterns.
-
-        Automatically assesses pattern complexity and suggests Task tool delegation
-        for comprehensive structural searches across large codebases.
-        """
-        if not AST_GREP_AVAILABLE:
-            raise ValueError("ast-grep not available, install with: pip install ast-grep-py")
-
-        # Assess if this is a comprehensive search
-        root = Path(root_path)
-        is_large_scope = root.is_dir() and len(list(root.rglob("*"))) > 100
-        is_complex_pattern = len(pattern) > 50 or pattern.count("$") > 3
-
-        if (is_large_scope or is_complex_pattern) and use_task_delegation is not False:
-            # Suggest Task tool for comprehensive structural search
-            return [
-                {
-                    "type": "search_recommendation",
-                    "message": "This structural search covers a large scope or complex pattern. "
-                    "Consider using Task tool for comprehensive results.",
-                    "assessment": {
-                        "pattern_complexity": "complex" if is_complex_pattern else "simple",
-                        "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
-                        "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit
-                        ),
-                    },
-                }
-            ]
-
-        results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path
-        )
-
-        return results[:limit]
-
-    async def get_supported_languages(self) -> dict[str, Any]:
-        """Get information about supported languages and capabilities."""
-        return {
-            "ast_grep_available": AST_GREP_AVAILABLE,
-            "supported_languages": list(set(self.chunker.SUPPORTED_LANGUAGES.values())),
-            "language_extensions": self.chunker.SUPPORTED_LANGUAGES,
-            "chunk_patterns": {
-                lang: [pattern[1] for pattern in patterns]
-                for lang, patterns in self.chunker.CHUNK_PATTERNS.items()
-            },
-            "voyage_models": {"embedding": "voyage-code-3", "reranker": "voyage-rerank-2"},
-        }
-
-    def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None
-    ) -> int:
-        """Estimate number of files that would be searched."""
-        try:
-            # Use backend abstraction for collection info
-            collection_info = self.backend.get_collection_info(self.collection_name)
-            total_points = collection_info.points_count
-
-            # Rough estimate based on average chunks per file
-            estimated_files = total_points // 5  # Assume ~5 chunks per file on average
-
-            # Adjust based on filters
-            if file_filter:
-                # Specific path reduces scope significantly
-                estimated_files = estimated_files // 10
-            if language_filter:
-                # Language filter typically reduces to ~20% of files
-                estimated_files = estimated_files // 5
-
-            return max(10, estimated_files)  # At least 10 files
-        except Exception:
-            # Default estimate if we can't get collection info
-            return 100
-
-
-class ExtensibleCodeEmbeddingsServer:
-    """Next-generation MCP server using the extensible factory architecture.
+class CleanCodeWeaverServer:
+    """Clean CodeWeaver server using plugin system and FastMCP middleware.
 
     Features:
-    - Factory-based component creation with dependency injection
-    - Plugin support for backends, providers, and data sources
-    - Advanced configuration with backward compatibility
-    - Graceful lifecycle management with proper cleanup
-    - Performance optimization through component caching
+    - FastMCP middleware integration for cross-cutting concerns
+    - Plugin system for extensible backends, providers, and sources
+    - Clean architecture with no legacy compatibility layers
+    - Configuration-driven initialization
+    - Factory pattern for component creation
     """
 
     def __init__(
@@ -578,386 +58,384 @@ class ExtensibleCodeEmbeddingsServer:
         config: "CodeWeaverConfig | None" = None,
         extensibility_config: ExtensibilityConfig | None = None,
     ):
-        """Initialize the extensible code embeddings server.
+        """Initialize the clean CodeWeaver server.
 
         Args:
-            config: Optional configuration object. If None, loads from default sources.
-            extensibility_config: Optional extensibility-specific configuration.
+            config: Main configuration object
+            extensibility_config: Extensibility configuration
         """
         # Load configuration - import at runtime to avoid circular import
         from codeweaver.config import get_config
-        
+
         self.config = config or get_config()
 
-        # Create extensibility manager
+        # Create FastMCP server instance
+        self.mcp = FastMCP("CodeWeaver")
+
+        # Initialize plugin system
         self.extensibility_manager = ExtensibilityManager(
-            config=self.config, extensibility_config=extensibility_config
+            config=self.config,
+            extensibility_config=extensibility_config,
         )
 
-        # Component instances (populated lazily)
+        # Component instances (populated during initialization)
         self._components: dict[str, Any] = {}
+        self._middleware_instances: dict[str, Any] = {}
         self._initialized = False
 
-        # Initialize components that don't depend on factories
-        self.chunker = AstGrepChunker(
-            max_chunk_size=self.config.chunking.max_chunk_size,
-            min_chunk_size=self.config.chunking.min_chunk_size,
-        )
-        self.structural_search = AstGrepStructuralSearch()
-        self.task_coordinator = TaskSearchCoordinator(task_tool_available=True)
-        self.file_watcher_manager = FileWatcherManager(self.config)
-
-    async def _ensure_initialized(self) -> None:
-        """Ensure the server is properly initialized."""
+    async def initialize(self) -> None:
+        """Initialize server with FastMCP middleware and plugin system."""
         if self._initialized:
+            logger.warning("Server already initialized")
             return
 
-        logger.info("Initializing extensible code embeddings server")
+        logger.info("Initializing clean CodeWeaver server")
 
-        # Initialize extensibility manager
+        # Initialize plugin system first
         await self.extensibility_manager.initialize()
+
+        # Setup FastMCP middleware stack
+        await self._setup_middleware()
+
+        # Get plugin system components
+        await self._initialize_components()
+
+        # Register MCP tools
+        self._register_tools()
+
+        self._initialized = True
+        logger.info("Clean CodeWeaver server initialization complete")
+
+    async def _setup_middleware(self) -> None:
+        """Setup FastMCP middleware stack."""
+        logger.info("Setting up FastMCP middleware stack")
+
+        # Error handling middleware (first in chain for proper error catching)
+        error_handler = ErrorHandlingMiddleware(
+            include_traceback=False,  # Don't expose internal details
+            transform_errors=True  # Convert to MCP errors
+        )
+        self.mcp.add_middleware(error_handler)
+        self._middleware_instances["error_handling"] = error_handler
+        logger.info("Added error handling middleware")
+
+        # Rate limiting middleware (using FastMCP built-in)
+        # Convert requests_per_minute to requests_per_second
+        requests_per_second = 60.0 / 60.0  # 60 req/min = 1 req/sec
+        rate_limiter = RateLimitingMiddleware(
+            max_requests_per_second=requests_per_second,
+            burst_capacity=10,  # Allow short bursts
+            global_limit=True  # Apply globally, not per-client
+        )
+        self.mcp.add_middleware(rate_limiter)
+        self._middleware_instances["rate_limiting"] = rate_limiter
+        logger.info("Added rate limiting middleware")
+
+        # Logging middleware (using FastMCP built-in)
+        import logging as logging_module
+        log_level = getattr(logging_module, self.config.server.log_level.upper(), logging_module.INFO)
+        log_middleware = LoggingMiddleware(
+            log_level=log_level,
+            include_payloads=self.config.server.enable_request_logging,
+            max_payload_length=1000,
+            methods=None  # Log all methods
+        )
+        self.mcp.add_middleware(log_middleware)
+        self._middleware_instances["logging"] = log_middleware
+        logger.info("Added logging middleware")
+
+        # Timing middleware (for performance monitoring)
+        timing_middleware = TimingMiddleware(log_level=log_level)
+        self.mcp.add_middleware(timing_middleware)
+        self._middleware_instances["timing"] = timing_middleware
+        logger.info("Added timing middleware")
+
+        # Chunking middleware (using existing chunking config)
+        chunking_config = {
+            "max_chunk_size": self.config.chunking.max_chunk_size,
+            "min_chunk_size": self.config.chunking.min_chunk_size,
+            "ast_grep_enabled": True,  # Enable by default
+        }
+        chunking_middleware = ChunkingMiddleware(chunking_config)
+        self.mcp.add_middleware(chunking_middleware)
+        self._middleware_instances["chunking"] = chunking_middleware
+        logger.info("Added chunking middleware")
+
+        # File filtering middleware (using existing indexing config)
+        filtering_config = {
+            "use_gitignore": self.config.indexing.use_gitignore,
+            "max_file_size": f"{self.config.chunking.max_file_size_mb}MB",
+            "excluded_dirs": self.config.indexing.additional_ignore_patterns,
+            "included_extensions": None,  # Allow all supported extensions
+        }
+        filtering_middleware = FileFilteringMiddleware(filtering_config)
+        self.mcp.add_middleware(filtering_middleware)
+        self._middleware_instances["filtering"] = filtering_middleware
+        logger.info("Added file filtering middleware")
+
+        logger.info("FastMCP middleware stack setup complete")
+
+    async def _initialize_components(self) -> None:
+        """Initialize plugin system components."""
+        logger.info("Initializing plugin system components")
 
         # Get components through the extensibility system
         self._components["backend"] = await self.extensibility_manager.get_backend()
-        self._components[
-            "embedding_provider"
-        ] = await self.extensibility_manager.get_embedding_provider()
-        self._components[
-            "reranking_provider"
-        ] = await self.extensibility_manager.get_reranking_provider()
+        self._components["embedding_provider"] = await self.extensibility_manager.get_embedding_provider()
+        self._components["reranking_provider"] = await self.extensibility_manager.get_reranking_provider()
         self._components["rate_limiter"] = self.extensibility_manager.get_rate_limiter()
 
-        # Ensure collection exists
+        # Get data sources and find filesystem source
+        data_sources = await self.extensibility_manager.get_data_sources()
+        filesystem_source = None
+        for source in data_sources:
+            if hasattr(source, 'provider') and source.provider.value == "filesystem":
+                filesystem_source = source
+                break
+
+        if not filesystem_source:
+            # Create a fallback filesystem source
+            from codeweaver.sources.filesystem import FileSystemSource
+            filesystem_source = FileSystemSource()
+
+        self._components["filesystem_source"] = filesystem_source
+
+        # Ensure vector collection exists
         await self._ensure_collection()
 
-        self._initialized = True
-        logger.info("Extensible server initialization complete")
+        logger.info("Plugin system components initialized")
 
-    # Delegate all the core methods to the legacy implementation for now
-    # This ensures 100% compatibility while using the new architecture under the hood
+    async def _ensure_collection(self) -> None:
+        """Ensure the vector collection exists."""
+        backend = self._components["backend"]
+        embedding_provider = self._components["embedding_provider"]
+        collection_name = self.config.backend.collection_name
 
-    async def index_codebase(
-        self, root_path: str, patterns: list[str] | None = None
-    ) -> dict[str, Any]:
-        """Index a codebase for semantic search using ast-grep."""
-        await self._ensure_initialized()
+        try:
+            collections = await backend.list_collections()
+            if collection_name not in collections:
+                logger.info("Creating collection: %s", collection_name)
+                await backend.create_collection(
+                    name=collection_name,
+                    dimension=embedding_provider.dimension,
+                    distance_metric="cosine",
+                )
+            else:
+                logger.info("Collection %s already exists", collection_name)
+        except Exception:
+            logger.exception("Error ensuring collection")
+            raise
 
-        root = Path(root_path)
-        if not root.exists():
-            raise ValueError(f"Path does not exist: {root_path}")
+    def _register_tools(self) -> None:
+        """Register MCP tools with FastMCP server."""
+        logger.info("Registering MCP tools")
 
-        # Use file filter for intelligent file discovery
-        file_filter = FileFilter(self.config, root)
-        files = file_filter.find_files(patterns)
+        @self.mcp.tool()
+        async def index_codebase(ctx: Context, path: str) -> dict[str, Any]:
+            """Index a codebase using middleware services and plugin system."""
 
-        logger.info("Found %d files to index after filtering", len(files))
+            # Get filesystem source from plugin system
+            filesystem_source = self._components["filesystem_source"]
+            backend = self._components["backend"]
+            embedding_provider = self._components["embedding_provider"]
 
-        # Process files in batches
-        batch_size = self.config.indexing.batch_size
-        total_chunks = 0
-        processed_languages = set()
+            # Create context with middleware services for source to use
+            source_context = {
+                "chunking_service": ctx.get_state_value("chunking_service"),
+                "filtering_service": ctx.get_state_value("filtering_service"),
+            }
 
-        for i in range(0, len(files), batch_size):
-            batch_files = files[i : i + batch_size]
-            batch_chunks = []
+            # Index using enhanced filesystem source
+            chunks = await filesystem_source.index_content(Path(path), source_context)
 
-            for file_path in batch_files:
-                try:
-                    content = file_path.read_text(encoding="utf-8", errors="ignore")
+            if chunks:
+                # Generate embeddings
+                embeddings = await embedding_provider.embed_batch([c.content for c in chunks])
 
-                    # Skip empty files (size check already done by FileFilter)
-                    if not content.strip():
-                        continue
+                # Store in backend
+                vector_points = []
+                for chunk, embedding in zip(chunks, embeddings, strict=False):
+                    vector_point = {
+                        "id": hash(chunk.unique_id) & ((1 << 63) - 1),
+                        "vector": embedding,
+                        "payload": chunk.to_metadata(),
+                    }
+                    vector_points.append(vector_point)
 
-                    # Chunk the file using ast-grep
-                    chunks = self.chunker.chunk_file(file_path, content)
-                    batch_chunks.extend(chunks)
+                await backend.upsert_vectors(self.config.backend.collection_name, vector_points)
 
-                    # Track processed languages
-                    if chunks:
-                        processed_languages.add(chunks[0].language)
+            return {
+                "status": "success",
+                "indexed_chunks": len(chunks),
+                "collection": self.config.backend.collection_name,
+                "middleware_services_used": {
+                    "chunking": ctx.get_state_value("chunking_service") is not None,
+                    "filtering": ctx.get_state_value("filtering_service") is not None,
+                },
+            }
 
-                except Exception as e:
-                    logger.warning("Error processing %s: %s", file_path, e)
-                    continue
+        @self.mcp.tool()
+        async def search_code(
+            ctx: Context,
+            query: str,
+            limit: int = 10,
+            file_filter: str | None = None,
+            language_filter: str | None = None,
+            chunk_type_filter: str | None = None,
+            rerank: bool = True,
+        ) -> list[dict[str, Any]]:
+            """Search code using plugin system components."""
 
-            if batch_chunks:
-                await self._index_chunks(batch_chunks)
-                total_chunks += len(batch_chunks)
-                logger.info("Indexed batch %d: %d chunks", i // batch_size + 1, len(batch_chunks))
+            # Get components
+            backend = self._components["backend"]
+            embedding_provider = self._components["embedding_provider"]
+            reranking_provider = self._components["reranking_provider"]
 
-        # Set up file watching if enabled
-        watcher_started = False
-        if self.config.indexing.enable_auto_reindex:
-            watcher_started = self.file_watcher_manager.add_watcher(
-                root_path=root, reindex_callback=self._handle_file_changes
+            # Generate query embedding
+            query_vector = await embedding_provider.embed_query(query)
+
+            # Build search filters
+            filter_conditions = []
+            if file_filter:
+                filter_conditions.append({"field": "file_path", "operator": "contains", "value": file_filter})
+            if language_filter:
+                filter_conditions.append({"field": "language", "operator": "eq", "value": language_filter})
+            if chunk_type_filter:
+                filter_conditions.append({"field": "chunk_type", "operator": "eq", "value": chunk_type_filter})
+
+            search_filter = {"conditions": filter_conditions} if filter_conditions else None
+
+            # Search vectors
+            search_results = await backend.search_vectors(
+                collection_name=self.config.backend.collection_name,
+                query_vector=query_vector,
+                search_filter=search_filter,
+                limit=limit * 2 if rerank else limit,  # Get more for reranking
             )
 
-        return {
-            "status": "success",
-            "files_processed": len(files),
-            "total_chunks": total_chunks,
-            "languages_found": list(processed_languages),
-            "collection": self.config.qdrant.collection_name,
-            "ast_grep_available": AST_GREP_AVAILABLE,
-            "filtering_stats": file_filter.get_filtering_stats(),
-            "file_watching": {
-                "enabled": self.config.indexing.enable_auto_reindex,
-                "started": watcher_started,
-            },
-            "extensibility_info": {
-                "server_type": "extensible",
-                "components_info": self.extensibility_manager.get_component_info(),
-            },
-        }
+            # Convert to SearchResult objects
+            results = []
+            for hit in search_results:
+                payload = hit.payload
+                search_result = SearchResult(
+                    content=payload["content"],
+                    file_path=payload["file_path"],
+                    start_line=payload["start_line"],
+                    end_line=payload["end_line"],
+                    chunk_type=payload["chunk_type"],
+                    language=payload["language"],
+                    node_kind=payload.get("node_kind", ""),
+                    similarity_score=hit.score,
+                )
+                results.append(search_result)
 
-    async def _handle_file_changes(self, changed_files: list[Path]):
-        """Handle file changes for auto-reindexing."""
-        logger.info("Handling changes for %d files", len(changed_files))
-        # This is a placeholder - implement actual reindexing logic as needed
-
-    async def search_code(
-        self,
-        query: str,
-        limit: int = 10,
-        *,
-        file_filter: str | None = None,
-        language_filter: str | None = None,
-        chunk_type_filter: str | None = None,
-        rerank: bool = True,
-        use_task_delegation: bool | None = None,
-    ) -> list[dict[str, Any]]:
-        """Search for code using semantic similarity with advanced filtering."""
-        await self._ensure_initialized()
-
-        # Assess search complexity
-        estimated_files = await self._estimate_file_count(file_filter, language_filter)
-        assessment = self.task_coordinator.assess_search_complexity(
-            query=query,
-            file_filter=file_filter,
-            language_filter=language_filter,
-            estimated_files=estimated_files,
-        )
-
-        # Log assessment for transparency
-        logger.info(
-            "Search assessment: %s complexity, confidence: %.2f, scope: %s",
-            assessment.complexity.value,
-            assessment.confidence,
-            assessment.estimated_scope,
-        )
-
-        # Return assessment info along with results
-        if assessment.should_use_task and use_task_delegation is not False:
-            # Include recommendation in results
-            return [
-                {
-                    "type": "search_recommendation",
-                    "message": f"This search has {assessment.complexity.value} complexity. "
-                    f"Consider using Task tool for comprehensive results.",
-                    "assessment": {
-                        "complexity": assessment.complexity.value,
-                        "confidence": assessment.confidence,
-                        "scope": assessment.estimated_scope,
-                        "reasoning": assessment.reasoning,
-                        "task_prompt": self.task_coordinator.create_task_prompt_for_semantic_search(
-                            query=query,
-                            limit=limit,
-                            file_filter=file_filter,
-                            language_filter=language_filter,
-                            chunk_type_filter=chunk_type_filter,
-                            rerank=rerank,
-                        ),
-                    },
-                }
-            ]
-        results = []
-        search_results = self.ast_grep_search(
-            pattern=query,
-            language=language_filter or "all",  # Use 'all' if no specific language
-            root_path=self.config.indexing.root_path,
-            limit=limit,
-            use_task_delegation=use_task_delegation,
-        )
-        for hit in search_results:
-            result = {
-                "content": hit.payload["content"],
-                "file_path": hit.payload["file_path"],
-                "start_line": hit.payload["start_line"],
-                "end_line": hit.payload["end_line"],
-                "chunk_type": hit.payload["chunk_type"],
-                "language": hit.payload["language"],
-                "node_kind": hit.payload.get("node_kind", ""),
-                "similarity_score": hit.score,
-            }
-            results.append(result)
-
-        # Rerank if requested
-        if rerank and len(results) > 1:
-            try:
-                if reranker := self._components["reranker"]:
-                    documents = [r["content"] for r in results]
-                    rerank_results = await reranker.rerank(query, documents, top_k=limit)
+            # Apply reranking if requested
+            if rerank and reranking_provider and len(results) > 1:
+                try:
+                    documents = [r.content for r in results]
+                    rerank_results = await reranking_provider.rerank(query, documents, top_k=limit)
 
                     # Reorder results based on reranking
                     reranked = []
-                    for rerank_item in rerank_results:
-                        original_result = results[rerank_item["index"]]
-                        original_result["rerank_score"] = rerank_item["relevance_score"]
+                    for rerank_result in rerank_results:
+                        original_result = results[rerank_result.index]
+                        original_result.rerank_score = rerank_result.relevance_score
                         reranked.append(original_result)
 
                     results = reranked
-            except Exception as e:
-                logger.warning("Reranking failed, using similarity search only: %s", e)
+                except Exception as e:
+                    logger.warning("Reranking failed: %s", e)
 
-        return results[:limit]
+            return [r.to_dict() for r in results[:limit]]
 
-    async def ast_grep_search(
-        self,
-        pattern: str,
-        language: str,
-        root_path: str,
-        limit: int = 20,
-        *,
-        use_task_delegation: bool | None = None,
-    ) -> list[dict[str, Any]]:
-        """Perform structural search using ast-grep patterns."""
-        if not AST_GREP_AVAILABLE:
-            raise ValueError("ast-grep not available, install with: pip install ast-grep-py")
+        @self.mcp.tool()
+        async def ast_grep_search(
+            ctx: Context,
+            pattern: str,
+            language: str,
+            root_path: str,
+            limit: int = 20
+        ) -> list[dict[str, Any]]:
+            """Perform structural search using ast-grep patterns."""
 
-        # Assess if this is a comprehensive search
-        root = Path(root_path)
-        is_large_scope = root.is_dir() and len(list(root.rglob("*"))) > 100
-        is_complex_pattern = len(pattern) > 50 or pattern.count("$") > 3
+            # Get filesystem source
+            filesystem_source = self._components["filesystem_source"]
 
-        if (is_large_scope or is_complex_pattern) and use_task_delegation is not False:
-            # Suggest Task tool for comprehensive structural search
-            return [
-                {
-                    "type": "search_recommendation",
-                    "message": "This structural search covers a large scope or complex pattern. "
-                    "Consider using Task tool for comprehensive results.",
-                    "assessment": {
-                        "pattern_complexity": "complex" if is_complex_pattern else "simple",
-                        "scope": f"{'large' if is_large_scope else 'moderate'} codebase at {root_path}",
-                        "task_prompt": self.task_coordinator.create_task_prompt_for_structural_search(
-                            pattern=pattern, language=language, root_path=root_path, limit=limit
-                        ),
-                    },
-                }
-            ]
+            # Create context with middleware services
+            source_context = {
+                "filtering_service": ctx.get_state_value("filtering_service"),
+            }
 
-        results = await self.structural_search.structural_search(
-            pattern=pattern, language=language, root_path=root_path
-        )
+            # Perform structural search using enhanced filesystem source
+            results = await filesystem_source.structural_search(
+                pattern=pattern,
+                language=language,
+                root_path=Path(root_path),
+                context=source_context,
+            )
 
-        return results[:limit]
+            return results[:limit]
 
-    async def get_supported_languages(self) -> dict[str, Any]:
-        """Get information about supported languages and capabilities."""
-        await self._ensure_initialized()
+        @self.mcp.tool()
+        async def get_supported_languages(ctx: Context) -> dict[str, Any]:
+            """Get information about supported languages and capabilities."""
 
-        # Get base capabilities
-        base_info = {
-            "ast_grep_available": AST_GREP_AVAILABLE,
-            "supported_languages": list(set(self.chunker.SUPPORTED_LANGUAGES.values())),
-            "language_extensions": self.chunker.SUPPORTED_LANGUAGES,
-            "chunk_patterns": {
-                lang: [pattern[1] for pattern in patterns]
-                for lang, patterns in self.chunker.CHUNK_PATTERNS.items()
-            },
-            "voyage_models": {"embedding": "voyage-code-3", "reranker": "voyage-rerank-2"},
-        }
+            # Get chunking middleware info
+            chunking_service = ctx.get_state_value("chunking_service")
+            chunking_info = {}
+            if chunking_service:
+                chunking_info = chunking_service.get_supported_languages()
 
-        # Add extensibility information
-        component_info = self.extensibility_manager.get_component_info()
-        base_info["extensibility"] = {
-            "server_type": "extensible",
-            "available_backends": component_info.get("backends", {}),
-            "available_providers": component_info.get("providers", {}),
-            "available_sources": component_info.get("sources", {}),
-            "plugin_support": component_info.get("plugin_discovery", {}).get("enabled", False),
-        }
+            # Get filtering middleware info
+            filtering_service = ctx.get_state_value("filtering_service")
+            filtering_info = {}
+            if filtering_service:
+                filtering_info = filtering_service.get_filtering_stats()
 
-        return base_info
+            # Get plugin system component info
+            component_info = self.extensibility_manager.get_component_info()
 
-    async def _estimate_file_count(
-        self, file_filter: str | None = None, language_filter: str | None = None
-    ) -> int:
-        """Estimate number of files that would be searched."""
-        try:
-            # Get collection statistics if available
-            qdrant = self._components["qdrant"]
-            collection_info = await qdrant.get_collection(self.config.qdrant.collection_name)
-            total_points = collection_info.points_count
+            return {
+                "server_type": "clean_plugin_system",
+                "chunking": chunking_info,
+                "filtering": filtering_info,
+                "extensibility": component_info,
+                "middleware_stack": list(self._middleware_instances.keys()),
+            }
 
-            # Rough estimate based on average chunks per file
-            estimated_files = total_points // 5  # Assume ~5 chunks per file on average
+        logger.info("MCP tools registered successfully")
 
-            # Adjust based on filters
-            if file_filter:
-                # Specific path reduces scope significantly
-                estimated_files = estimated_files // 10
-            if language_filter:
-                # Language filter typically reduces to ~20% of files
-                estimated_files = estimated_files // 5
-
-            return max(10, estimated_files)  # At least 10 files
-        except Exception:
-            # Default estimate if we can't get collection info
-            return 100
+    async def run(self) -> None:
+        """Run the server."""
+        await self.initialize()
+        await self.mcp.run()
 
     async def shutdown(self) -> None:
-        """Gracefully shutdown the server and cleanup resources."""
-        logger.info("Shutting down extensible code embeddings server")
+        """Gracefully shutdown the server."""
+        logger.info("Shutting down clean CodeWeaver server")
 
         # Shutdown extensibility manager
         await self.extensibility_manager.shutdown()
 
         # Clear component cache
         self._components.clear()
+        self._middleware_instances.clear()
         self._initialized = False
 
-        logger.info("Extensible server shutdown complete")
+        logger.info("Clean server shutdown complete")
 
 
-def create_server(
+def create_clean_server(
     config: "CodeWeaverConfig | None" = None,
-    server_type: str = "auto",
     extensibility_config: ExtensibilityConfig | None = None,
-) -> CodeEmbeddingsServer | ExtensibleCodeEmbeddingsServer:
-    """Create a CodeWeaver server instance with automatic type detection.
-
-    Args:
-        config: Optional configuration object
-        server_type: 'auto', 'legacy', or 'extensible'
-        extensibility_config: Optional extensibility configuration
-
-    Returns:
-        Appropriate server instance based on configuration
-    """
-    # Load config if not provided
-    if config is None:
-        # Import at runtime to avoid circular import
-        from codeweaver.config import get_config
-        
-        config = get_config()
-
-    # Create appropriate server instance
-    logger.info("Creating extensible server with factory architecture")
-    return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
-
-
-def create_extensible_server(
-    config: "CodeWeaverConfig | None" = None, extensibility_config: ExtensibilityConfig | None = None
-) -> ExtensibleCodeEmbeddingsServer:
-    """Create an ExtensibleCodeEmbeddingsServer instance.
+) -> CleanCodeWeaverServer:
+    """Create a clean CodeWeaver server instance.
 
     Args:
         config: Optional configuration object
         extensibility_config: Optional extensibility configuration
 
     Returns:
-        ExtensibleCodeEmbeddingsServer instance
+        Clean server instance
     """
-    return ExtensibleCodeEmbeddingsServer(config, extensibility_config)
+    return CleanCodeWeaverServer(config, extensibility_config)

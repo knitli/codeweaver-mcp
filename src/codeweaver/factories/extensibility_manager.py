@@ -19,13 +19,12 @@ from typing import TYPE_CHECKING, Any
 from codeweaver._types import ComponentInstances, ExtensibilityConfig
 from codeweaver.backends.base import VectorBackend
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
+from codeweaver.sources.base import DataSource
 
 
 if TYPE_CHECKING:
     from codeweaver.config import CodeWeaverConfig
     from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
-    from codeweaver.rate_limiter import RateLimiter
-    from codeweaver.sources.base import DataSource
 
 
 logger = logging.getLogger(__name__)
@@ -102,10 +101,6 @@ class ExtensibilityManager:
     async def _initialize_core_components(self) -> None:
         """Initialize core components (backend, providers, rate limiter)."""
         try:
-            # Initialize rate limiter
-            if hasattr(self.config, "rate_limiting"):
-                self._components.rate_limiter = RateLimiter(self.config.rate_limiting)
-
             # Initialize backend
             self._components.backend = await self._create_backend()
 
@@ -142,7 +137,7 @@ class ExtensibilityManager:
         if not self._factory:
             raise RuntimeError("Factory not initialized")
 
-        provider = self._factory.create_provider(self.config.embedding)
+        provider = self._factory.create_provider(self.config.providers.embedding)
 
         # Register shutdown handler
         if hasattr(provider, "close"):
@@ -216,12 +211,11 @@ class ExtensibilityManager:
 
         return self._components.data_sources
 
-    def get_rate_limiter(self) -> RateLimiter | None:
-        """Get the rate limiter instance."""
-        if self._components.rate_limiter is None and hasattr(self.config, "rate_limiting"):
-            self._components.rate_limiter = RateLimiter(self.config.rate_limiting)
-
-        return self._components.rate_limiter
+    def get_rate_limiter(self) -> None:
+        """Rate limiting is now handled directly by individual providers."""
+        # Rate limiting has been moved to individual providers
+        # This method is kept for backward compatibility but returns None
+        return
 
     def get_factory(self) -> "CodeWeaverFactory":
         """Get the factory instance.

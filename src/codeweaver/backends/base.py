@@ -11,7 +11,6 @@ Provides comprehensive abstractions for 15+ vector databases with hybrid search
 support, designed for runtime flexibility and extensibility.
 """
 
-
 from typing import Any, Literal, Protocol, runtime_checkable
 
 from codeweaver._types import (
@@ -297,5 +296,3 @@ class TransactionalBackend(Protocol):
     async def rollback_transaction(self, transaction_id: str) -> None:
         """Rollback the transaction."""
         ...
-
-

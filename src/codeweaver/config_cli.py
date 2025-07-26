@@ -208,7 +208,7 @@ def cmd_info(args: argparse.Namespace) -> None:
         ("CW_VECTOR_BACKEND_PROVIDER", "Backend provider (qdrant, pinecone, etc.)"),
         ("CW_VECTOR_BACKEND_URL", "Backend URL"),
         ("CW_VECTOR_BACKEND_API_KEY", "Backend API key"),
-        ("CW_EMBEDDING_PROVIDER", "Embedding provider (voyage, openai, etc.)"),
+        ("embedding_provider", "Embedding provider (voyage, openai, etc.)"),
         ("CW_EMBEDDING_API_KEY", "Embedding API key"),
         ("CW_VOYAGE_API_KEY", "Voyage AI API key"),
         ("CW_OPENAI_API_KEY", "OpenAI API key"),

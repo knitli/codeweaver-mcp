@@ -11,7 +11,9 @@ Provides VoyageAI's specialized code embeddings and reranking using the unified 
 Supports both embedding generation and document reranking with rate limiting.
 """
 
+import asyncio
 import logging
+import time
 
 from typing import Any
 
@@ -25,11 +27,6 @@ from codeweaver._types import (
 )
 from codeweaver.providers.base import CombinedProvider
 from codeweaver.providers.config import VoyageConfig
-from codeweaver.rate_limiter import (
-    calculate_embedding_tokens,
-    calculate_rerank_tokens,
-    rate_limited,
-)
 
 
 try:
@@ -59,7 +56,10 @@ class VoyageAIProvider(CombinedProvider):
             raise ImportError("VoyageAI library not available. Install with: uv add voyageai")
 
         self.client = voyageai.Client(api_key=self.config["api_key"])
-        self.rate_limiter = self.config.get("rate_limiter")
+
+        # Simple rate limiting for API calls
+        self._last_request_time = 0.0
+        self._min_request_interval = 0.1  # 100ms between requests
 
         # Get provider registry info
         self._registry_entry = get_provider_registry_entry(ProviderType.VOYAGE_AI)
@@ -72,7 +72,9 @@ class VoyageAIProvider(CombinedProvider):
             self._dimension = self._capabilities.native_dimensions.get(self._embedding_model, 1024)
 
         # Reranking configuration
-        self._rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
+        self._rerank_model = self.config.get(
+            "rerank_model", self._capabilities.default_reranking_model
+        )
 
     def _validate_config(self) -> None:
         """Validate VoyageAI configuration."""
@@ -120,9 +122,19 @@ class VoyageAIProvider(CombinedProvider):
         """VoyageAI has input length limits."""
         return 32000  # Characters limit for VoyageAI
 
-    @rate_limited("voyage_embed_documents", calculate_embedding_tokens)
+    async def _apply_rate_limit(self) -> None:
+        """Apply basic rate limiting between API requests."""
+        current_time = time.time()
+        time_since_last = current_time - self._last_request_time
+
+        if time_since_last < self._min_request_interval:
+            sleep_time = self._min_request_interval - time_since_last
+            await asyncio.sleep(sleep_time)
+
+        self._last_request_time = time.time()
+
     async def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for documents with rate limiting."""
+        """Generate embeddings for documents with basic rate limiting."""
         try:
             result = self.client.embed(
                 texts=texts,
@@ -137,9 +149,8 @@ class VoyageAIProvider(CombinedProvider):
         else:
             return result.embeddings
 
-    @rate_limited("voyage_embed_query", lambda self, text, **kwargs: max(1, len(text) // 4))
     async def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for search query with rate limiting."""
+        """Generate embedding for search query with basic rate limiting."""
         try:
             result = self.client.embed(
                 texts=[text],
@@ -164,13 +175,14 @@ class VoyageAIProvider(CombinedProvider):
         """VoyageAI has query length limits for reranking."""
         return 8000  # Characters limit for reranking queries
 
-    @rate_limited("voyage_rerank", calculate_rerank_tokens)
     async def rerank(
         self, query: str, documents: list[str], top_k: int | None = None
     ) -> list[RerankResult]:
-        """Rerank documents using VoyageAI with rate limiting."""
+        """Rerank documents using VoyageAI with basic rate limiting."""
+
         def _raise_value_error(msg: str) -> None:
             raise ValueError(msg)
+
         try:
             # Validate input limits
             if len(documents) > (self.max_documents or float("inf")):
@@ -217,12 +229,18 @@ class VoyageAIProvider(CombinedProvider):
                 ProviderCapability.CUSTOM_DIMENSIONS,
             ],
             capabilities=capabilities,
-            default_models={"embedding": capabilities.default_embedding_model, "reranking": capabilities.default_reranking_model},
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
+            },
             supported_models={
                 "embedding": capabilities.supported_embedding_models,
                 "reranking": capabilities.supported_reranking_models,
             },
-            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
             requires_api_key=capabilities.requires_api_key,
             max_batch_size=capabilities.max_batch_size,
             max_input_length=capabilities.max_input_length,
@@ -246,12 +264,18 @@ class VoyageAIProvider(CombinedProvider):
                 ProviderCapability.CUSTOM_DIMENSIONS,
             ],
             capabilities=capabilities,
-            default_models={"embedding": capabilities.default_embedding_model, "reranking": capabilities.default_reranking_model},
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
+            },
             supported_models={
                 "embedding": capabilities.supported_embedding_models,
                 "reranking": capabilities.supported_reranking_models,
             },
-            rate_limits={"requests_per_minute": capabilities.requests_per_minute, "tokens_per_minute": capabilities.tokens_per_minute},
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
             requires_api_key=capabilities.requires_api_key,
             max_batch_size=capabilities.max_batch_size,
             max_input_length=capabilities.max_input_length,

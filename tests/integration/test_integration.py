@@ -38,7 +38,7 @@ class TestTestConfiguration:
         config = TestConfiguration()
 
         assert config.backend_type == "mock"
-        assert config.CW_EMBEDDING_PROVIDER == "mock"
+        assert config.embedding_provider == "mock"
         assert config.rerank_provider == "mock"
         assert config.data_source_type == "mock"
         assert config.run_compliance_tests is True
@@ -54,7 +54,7 @@ class TestTestConfiguration:
         """Test creating configuration with custom values."""
         config = TestConfiguration(
             backend_type="qdrant",
-            CW_EMBEDDING_PROVIDER="voyage-ai",
+            embedding_provider="voyage-ai",
             rerank_provider=None,
             run_performance_tests=False,
             mock_latency_ms=50.0,
@@ -62,7 +62,7 @@ class TestTestConfiguration:
         )
 
         assert config.backend_type == "qdrant"
-        assert config.CW_EMBEDDING_PROVIDER == "voyage-ai"
+        assert config.embedding_provider == "voyage-ai"
         assert config.rerank_provider is None
         assert config.run_performance_tests is False
         assert config.mock_latency_ms == 50.0
@@ -71,11 +71,11 @@ class TestTestConfiguration:
     def test_create_test_configuration_helper(self) -> None:
         """Test the create_test_configuration helper function."""
         config = create_test_configuration(
-            backend_type="pinecone", CW_EMBEDDING_PROVIDER="openai", run_compliance_tests=False
+            backend_type="pinecone", embedding_provider="openai", run_compliance_tests=False
         )
 
         assert config.backend_type == "pinecone"
-        assert config.CW_EMBEDDING_PROVIDER == "openai"
+        assert config.embedding_provider == "openai"
         assert config.run_compliance_tests is False
 
 
@@ -91,7 +91,7 @@ class TestIntegrationTestSuite:
         assert suite.config == config
         assert suite.validator is not None
         assert suite.backend is None  # Not initialized yet
-        assert suite.CW_EMBEDDING_PROVIDER is None
+        assert suite.embedding_provider is None
         assert suite.rerank_provider is None
         assert suite.data_source is None
         assert suite.test_collection == "integration_test_collection"
@@ -101,7 +101,7 @@ class TestIntegrationTestSuite:
         """Test setting up test environment with mock components."""
         config = create_test_configuration(
             backend_type="mock",
-            CW_EMBEDDING_PROVIDER="mock",
+            embedding_provider="mock",
             rerank_provider="mock",
             data_source_type="mock",
         )
@@ -113,8 +113,8 @@ class TestIntegrationTestSuite:
             # Verify components are created
             assert suite.backend is not None
             assert isinstance(suite.backend, MockVectorBackend | MockHybridSearchBackend)
-            assert suite.CW_EMBEDDING_PROVIDER is not None
-            assert isinstance(suite.CW_EMBEDDING_PROVIDER, MockEmbeddingProvider)
+            assert suite.embedding_provider is not None
+            assert isinstance(suite.embedding_provider, MockEmbeddingProvider)
             assert suite.rerank_provider is not None
             assert isinstance(suite.rerank_provider, MockRerankProvider)
             assert suite.data_source is not None
@@ -136,7 +136,7 @@ class TestIntegrationTestSuite:
         try:
             assert suite.backend is not None
             assert isinstance(suite.backend, MockVectorBackend)  # Not hybrid without rerank
-            assert suite.CW_EMBEDDING_PROVIDER is not None
+            assert suite.embedding_provider is not None
             assert suite.rerank_provider is None
             assert suite.data_source is not None
 
@@ -351,7 +351,7 @@ class TestConvenienceFunctions:
         """Test run_integration_tests with custom configuration."""
         config = create_test_configuration(
             backend_type="mock",
-            CW_EMBEDDING_PROVIDER="mock",
+            embedding_provider="mock",
             run_performance_tests=False,
             mock_latency_ms=1.0,
         )
@@ -463,7 +463,7 @@ async def test_integration_with_different_component_combinations() -> None:
         # Hybrid search backend
         {"backend_type": "mock", "rerank_provider": "mock"},
         # Different embedding provider
-        {"CW_EMBEDDING_PROVIDER": "mock", "rerank_provider": None},
+        {"embedding_provider": "mock", "rerank_provider": None},
     ]
 
     for case in test_cases:

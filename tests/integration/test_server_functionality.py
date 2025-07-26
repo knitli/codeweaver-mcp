@@ -27,7 +27,7 @@ from typing import Literal
 # Add the server to path
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 
-from codeweaver.server import CodeChunker, CodeEmbeddingsServer
+from codeweaver.middleware.chunking import ChunkingMiddleware
 
 
 def test_environment() -> bool:
@@ -95,11 +95,11 @@ def _print_env_missing_vars_message(missing_vars):
     return False
 
 
-def test_chunker() -> bool:
+async def test_chunker() -> bool:
     """Test the code chunker with sample files."""
     print("\n🔧 Testing Code Chunker...")
 
-    chunker = CodeChunker()
+    chunker = ChunkingMiddleware()
 
     # Test Python chunking
     python_code = '''
@@ -143,7 +143,7 @@ CONFIG = {
         temp_path = Path(f.name)
 
     try:
-        chunks = chunker.chunk_file(temp_path, python_code)
+        chunks = await chunker.chunk_file(temp_path, python_code)
 
         print(f"✅ Python chunking: {len(chunks)} chunks created")
         for i, chunk in enumerate(chunks):
@@ -179,7 +179,7 @@ const userService = new UserService('https://api.example.com');
             f.write(js_code)
             js_temp_path = Path(f.name)
 
-        js_chunks = chunker.chunk_file(js_temp_path, js_code)
+        js_chunks = await chunker.chunk_file(js_temp_path, js_code)
         print(f"✅ JavaScript chunking: {len(js_chunks)} chunks created")
 
     finally:
@@ -356,21 +356,71 @@ module.exports = { debounce, ApiClient };
 
     # Initialize server
     try:
-        server = CodeEmbeddingsServer()
+        # For testing, we'll use the extensibility manager directly
+        from codeweaver.config import get_config
+        from codeweaver.factories.extensibility_manager import ExtensibilityManager
+
+        config = get_config()
+        extensibility_manager = ExtensibilityManager(config=config)
+        await extensibility_manager.initialize()
+
+        server = {
+            'extensibility_manager': extensibility_manager,
+            'config': config
+        }
         print("✅ Server initialized successfully")
     except Exception as e:
         print(f"❌ Server initialization failed: {e}")
         return False
 
-    # Index the codebase
+    # Index the codebase using components directly
     try:
         print("📚 Indexing codebase...")
-        result = await server.index_codebase(test_path)
+
+        # Get components
+        filesystem_source = None
+        data_sources = await server['extensibility_manager'].get_data_sources()
+        for source in data_sources:
+            if hasattr(source, 'provider') and source.provider.value == "filesystem":
+                filesystem_source = source
+                break
+
+        if not filesystem_source:
+            from codeweaver.sources.filesystem import FileSystemSource
+            filesystem_source = FileSystemSource()
+
+        backend = await server['extensibility_manager'].get_backend()
+        embedding_provider = await server['extensibility_manager'].get_embedding_provider()
+
+        # Index the codebase
+        chunks = await filesystem_source.index_content(Path(test_path))
+
+        # Generate embeddings and store
+        if chunks:
+            embeddings = await embedding_provider.embed_batch([c.content for c in chunks])
+            vector_points = []
+            for chunk, embedding in zip(chunks, embeddings, strict=False):
+                vector_point = {
+                    "id": hash(chunk.unique_id) & ((1 << 63) - 1),
+                    "vector": embedding,
+                    "payload": chunk.to_metadata(),
+                }
+                vector_points.append(vector_point)
+
+            await backend.upsert_vectors(server['config'].backend.collection_name, vector_points)
+
+        result = {
+            'total_chunks': len(chunks),
+            'files_processed': len(set(c.file_path for c in chunks))
+        }
+
         print(
             f"✅ Indexing completed: {result['total_chunks']} chunks from {result['files_processed']} files"
         )
     except Exception as e:
         print(f"❌ Indexing failed: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
     # Test searches
@@ -385,20 +435,42 @@ module.exports = { debounce, ApiClient };
     print("\n🔍 Testing search queries...")
     for query in test_queries:
         try:
-            results = await server.search_code(query, limit=3, rerank=True)
+            # Search using components directly
+            backend = await server['extensibility_manager'].get_backend()
+            embedding_provider = await server['extensibility_manager'].get_embedding_provider()
+            reranking_provider = await server['extensibility_manager'].get_reranking_provider()
+
+            # Generate query embedding
+            query_vector = await embedding_provider.embed_query(query)
+
+            # Search vectors
+            search_results = await backend.search_vectors(
+                collection_name=server['config'].backend.collection_name,
+                query_vector=query_vector,
+                limit=3
+            )
+
+            # Convert search results to expected format
+            results = []
+            for result in search_results:
+                result_dict = {
+                    'similarity_score': result.score,
+                    'file_path': result.payload.get('file_path', 'unknown'),
+                    'chunk_type': result.payload.get('chunk_type', 'unknown'),
+                    'content': result.payload.get('content', ''),
+                }
+                results.append(result_dict)
+
             print(f"✅ Query '{query}': {len(results)} results")
 
             if results:
                 top_result = results[0]
                 print(f"   Best match: {top_result['file_path']} ({top_result['chunk_type']})")
-                if "rerank_score" in top_result:
-                    print(
-                        f"   Scores: similarity={top_result['similarity_score']:.3f}, rerank={top_result['rerank_score']:.3f}"
-                    )
-                else:
-                    print(f"   Similarity: {top_result['similarity_score']:.3f}")
+                print(f"   Similarity: {top_result['similarity_score']:.3f}")
         except Exception as e:
             print(f"❌ Search failed for '{query}': {e}")
+            import traceback
+            traceback.print_exc()
 
     # Clean up test directory if we created it
     if not sys.argv[1:]:  # Only clean up if we created the test dir
@@ -416,7 +488,7 @@ async def main() -> Literal[0, 1]:
     print("=" * 60)
 
     # Test environment setup
-    if not await test_environment():
+    if not test_environment():
         print("\n❌ Environment test failed. Please fix the issues above.")
         return 1
 

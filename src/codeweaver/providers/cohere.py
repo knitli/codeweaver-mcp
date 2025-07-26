@@ -62,7 +62,9 @@ class CohereProvider(CombinedProvider):
 
         # Model configuration
         self._embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
-        self._rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
+        self._rerank_model = self.config.get(
+            "rerank_model", self._capabilities.default_reranking_model
+        )
         self._dimension = self._capabilities.native_dimensions.get(self._embedding_model, 1024)
 
     def _validate_config(self) -> None:

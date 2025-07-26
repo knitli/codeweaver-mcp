@@ -32,7 +32,7 @@ async def main():
     from codeweaver.testing.mocks import MockVectorBackend, MockEmbeddingProvider
     components = {
         "vector_backend": MockVectorBackend(),
-        "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
+        "embedding_provider": MockEmbeddingProvider(),
     }
     bench_results = await run_performance_benchmarks(components)
 
@@ -51,7 +51,7 @@ Validates that implementations conform to their protocol interfaces:
 ```python
 from codeweaver.testing import (
     validate_vector_backend_protocol,
-    validate_CW_EMBEDDING_PROVIDER_protocol,
+    validate_embedding_provider_protocol,
 )
 from codeweaver.testing.mocks import MockVectorBackend, MockEmbeddingProvider
 
@@ -69,7 +69,7 @@ async def test_compliance():
 
     # Test embedding provider compliance
     provider = MockEmbeddingProvider()
-    result = await validate_CW_EMBEDDING_PROVIDER_protocol(provider)
+    result = await validate_embedding_provider_protocol(provider)
 
     print(result.get_detailed_report())
 ```
@@ -122,7 +122,7 @@ from codeweaver.testing.integration import (
 # Create custom test configuration
 config = create_test_configuration(
     backend_type="mock",
-    CW_EMBEDDING_PROVIDER="mock",
+    embedding_provider="mock",
     rerank_provider="mock",
     run_performance_tests=False,
     mock_latency_ms=5.0
@@ -165,7 +165,7 @@ for result in results:
 # Benchmark multiple components
 components = {
     "vector_backend": MockVectorBackend(),
-    "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
+    "embedding_provider": MockEmbeddingProvider(),
 }
 
 all_results = await run_performance_benchmarks(components)
@@ -214,7 +214,7 @@ validator = ProtocolComplianceValidator(
 # Test multiple protocols
 implementations = {
     "vector_backend": MockVectorBackend(),
-    "CW_EMBEDDING_PROVIDER": MockEmbeddingProvider(),
+    "embedding_provider": MockEmbeddingProvider(),
     "rerank_provider": MockRerankProvider(),
     "data_source": MockDataSource(),
 }
@@ -281,7 +281,7 @@ from codeweaver.testing.integration import TestConfiguration
 config = TestConfiguration(
     # Component selection
     backend_type="mock",  # or "qdrant", "pinecone", etc.
-    CW_EMBEDDING_PROVIDER="mock",  # or "voyage", "openai", etc.
+    embedding_provider="mock",  # or "voyage", "openai", etc.
     rerank_provider="mock",  # or "voyage", "cohere", etc.
     data_source_type="mock",  # or "filesystem", "git", etc.
 

@@ -49,7 +49,7 @@ await manager.initialize()
 
 # Get components
 backend = await manager.get_backend()
-embedder = await manager.get_CW_EMBEDDING_PROVIDER()
+embedder = await manager.get_embedding_provider()
 reranker = await manager.get_reranking_provider()
 
 # Use components...
@@ -94,7 +94,7 @@ class CodeEmbeddingsServer:
     async def initialize(self):
         await self.manager.initialize()
         self.backend = await self.manager.get_backend()
-        self.embedder = await self.manager.get_CW_EMBEDDING_PROVIDER()
+        self.embedder = await self.manager.get_embedding_provider()
 ```
 
 ### Using Migration Helper
