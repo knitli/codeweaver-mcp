@@ -135,10 +135,6 @@ class DataSourcesConfig(BaseModel):
 
         return errors
 
-    # Manual to_dict/from_dict methods replaced by Pydantic's model_dump/model_validate
-
-    # Backwards compatibility extension methods removed as per improvement plan
-
     def to_toml(self) -> str:
         """Export to TOML with Pydantic serialization."""
         import tomlkit

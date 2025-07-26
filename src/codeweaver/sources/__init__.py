@@ -25,11 +25,6 @@ config: FileSystemSourceConfig = {
 source = factory.create_source("filesystem", config)
 content_items = await source.discover_content(config)
 ```
-
-## Migration Support
-
-Migration examples have been moved to `examples/migration/sources_migration.py`.
-See the examples directory for complete migration demonstrations.
 """
 
 # Import new types

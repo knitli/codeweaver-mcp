@@ -38,9 +38,15 @@ Configuration:
 import asyncio
 import logging
 
+from typing import TYPE_CHECKING
+
 from codeweaver.config import get_config_manager
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
 from codeweaver.server import create_clean_server
+
+
+if TYPE_CHECKING:
+    from codeweaver.server import CodeWeaverServer
 
 
 logger = logging.getLogger(__name__)
@@ -51,7 +57,7 @@ server_instance = None
 config_manager = None
 
 
-def get_server_instance():
+def get_server_instance() -> "CodeWeaverServer":
     """Get or create the clean server instance."""
     global server_instance, config_manager
     if server_instance is None:

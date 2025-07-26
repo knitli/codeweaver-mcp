@@ -1,4 +1,4 @@
-# sourcery skip: lambdas-should-be-short
+# sourcery skip: do-not-use-staticmethod, lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -270,7 +270,7 @@ class CodeWeaverConfig(BaseSettings):
     )
 
     @classmethod
-    def settings_customise_sources(
+    def settings_customize_sources(
         cls,
         settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
@@ -279,7 +279,7 @@ class CodeWeaverConfig(BaseSettings):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         """Customize configuration source priority and TOML file loading.
-        
+
         Priority order (highest to lowest):
         1. Init settings (direct instantiation parameters)
         2. Environment variables (CW_* with __ nested delimiter)
@@ -291,11 +291,11 @@ class CodeWeaverConfig(BaseSettings):
         toml_settings = CustomTomlSource(settings_cls)
 
         return (
-            init_settings,      # Highest priority: direct instantiation
-            env_settings,       # Environment variables with CW_ prefix
-            toml_settings,      # TOML configuration files
-            dotenv_settings,    # .env files
-            file_secret_settings, # Secret files (lowest priority)
+            init_settings,  # Highest priority: direct instantiation
+            env_settings,  # Environment variables with CW_ prefix
+            toml_settings,  # TOML configuration files
+            dotenv_settings,  # .env files
+            file_secret_settings,  # Secret files (lowest priority)
         )
 
     # Core configuration sections
@@ -373,7 +373,7 @@ class CustomTomlSource(TomlConfigSettingsSource):
 
     def __init__(self, settings_cls: type[BaseSettings], toml_file: str | Path | None = None):
         """Initialize with custom search paths or explicit file.
-        
+
         Args:
             settings_cls: The settings class
             toml_file: Optional specific TOML file path. If None, searches default locations.
@@ -394,17 +394,12 @@ class CustomTomlSource(TomlConfigSettingsSource):
         else:
             # Search for configuration files in priority order
             search_paths = [
-                Path(".local.codeweaver.toml"),     # Workspace local (highest priority)
-                Path(".codeweaver.toml"),           # Repository level
+                Path(".local.codeweaver.toml"),  # Workspace local (highest priority)
+                Path(".codeweaver.toml"),  # Repository level
                 Path.home() / ".config" / "codeweaver" / "config.toml",  # User level
             ]
 
-            found_file = None
-            for path in search_paths:
-                if path.exists():
-                    found_file = path
-                    break
-
+            found_file = next((path for path in search_paths if path.exists()), None)
             self.loaded_from = str(found_file) if found_file else "None"
             try:
                 super().__init__(settings_cls, toml_file=found_file)
@@ -417,20 +412,25 @@ class CustomTomlSource(TomlConfigSettingsSource):
         """Load TOML data with enhanced error handling and logging."""
         # If there was an initialization error, return empty dict
         if self.initialization_error:
-            logger.warning("Failed to load TOML configuration from %s: %s", self.loaded_from, self.initialization_error)
+            logger.warning(
+                "Failed to load TOML configuration from %s: %s",
+                self.loaded_from,
+                self.initialization_error,
+            )
             return {}
 
         try:
             data = super().__call__()
-            if data and hasattr(self, 'toml_file') and self.toml_file:
+            if data and hasattr(self, "toml_file") and self.toml_file:
                 logger.info("Loaded configuration from TOML: %s", self.loaded_from)
-            return data
         except FileNotFoundError:
             logger.debug("TOML configuration file not found: %s", self.loaded_from)
             return {}
         except Exception as e:
             logger.warning("Failed to load TOML configuration from %s: %s", self.loaded_from, e)
             return {}
+        else:
+            return data
 
 
 class ConfigManager:
@@ -459,12 +459,12 @@ class ConfigManager:
                 return CodeWeaverConfigWithFile(toml_file=self.config_path)
             # Load with default search paths
             return CodeWeaverConfig()
-        except Exception as e:
-            logger.error("Failed to load configuration: %s", e)
+        except Exception:
+            logger.exception("Failed to load configuration")
             logger.info("Using default configuration")
             # Return minimal working configuration
             return CodeWeaverConfig(
-                _env_file=None,  # Disable .env loading on fallback
+                _env_file=None  # Disable .env loading on fallback
             )
 
     def reload_config(self) -> CodeWeaverConfig:
@@ -501,10 +501,13 @@ class ConfigManager:
                 tomli_w.dump(config_data, f)
 
             logger.info("Saved configuration to: %s", save_path)
-            return save_path
         except ImportError:
-            logger.error("tomli_w is required for saving TOML files. Install with: pip install tomli_w")
+            logger.exception(
+                "tomli_w is required for saving TOML files. Install with: pip install tomli_w"
+            )
             raise
+        else:
+            return save_path
 
     def validate_config(self, config_path: str | Path) -> dict[str, Any]:
         """Validate a specific configuration file.
@@ -530,23 +533,28 @@ class ConfigManager:
             return result
 
         try:
-            # Try to load the config with the specific path
-            temp_manager = ConfigManager(config_path=path)
-            config = temp_manager.get_config()
-            result["valid"] = True
-            result["loaded_from"] = str(path)
-            result["warnings"].append("Configuration file loaded and validated successfully")
-
-            # Add configuration summary for validation feedback
-            result["summary"] = {
-                "backend_provider": config.get_effective_backend_provider(),
-                "embedding_provider": config.get_effective_embedding_provider(),
-                "data_sources_count": len(config.data_sources.sources),
-            }
+            self._load_from_default_path(path, result)
         except Exception as e:
             result["errors"].append(f"Configuration validation failed: {e}")
 
         return result
+
+    # TODO Rename this here and in `validate_config`
+    def _load_from_default_path(self, path, result) -> None:
+        """Load configuration from a specific path and validate it."""
+        # Try to load the config with the specific path
+        temp_manager = ConfigManager(config_path=path)
+        config = temp_manager.get_config()
+        result["valid"] = True
+        result["loaded_from"] = str(path)
+        result["warnings"].append("Configuration file loaded and validated successfully")
+
+        # Add configuration summary for validation feedback
+        result["summary"] = {
+            "backend_provider": config.get_effective_backend_provider(),
+            "embedding_provider": config.get_effective_embedding_provider(),
+            "data_sources_count": len(config.data_sources.sources),
+        }
 
 
 class CodeWeaverConfigWithFile(CodeWeaverConfig):
@@ -554,17 +562,17 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
 
     def __init__(self, toml_file: str | Path, **kwargs):
         """Initialize with explicit TOML file.
-        
+
         Args:
             toml_file: Path to specific TOML configuration file
             **kwargs: Additional configuration parameters
         """
-        # Store the toml_file as a class variable for the customise_sources method
+        # Store the toml_file as a class variable for the customize_sources method
         type(self)._current_toml_file = toml_file
         super().__init__(**kwargs)
 
     @classmethod
-    def settings_customise_sources(
+    def settings_customize_sources(
         cls,
         settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
@@ -574,16 +582,10 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         """Customize sources to use explicit TOML file."""
         # Use the specific TOML file if available
-        toml_file = getattr(cls, '_current_toml_file', None)
+        toml_file = getattr(cls, "_current_toml_file", None)
         toml_settings = CustomTomlSource(settings_cls, toml_file=toml_file)
 
-        return (
-            init_settings,
-            env_settings,
-            toml_settings,
-            dotenv_settings,
-            file_secret_settings,
-        )
+        return (init_settings, env_settings, toml_settings, dotenv_settings, file_secret_settings)
 
 
 # Configuration-related exceptions
@@ -595,16 +597,10 @@ class ConfigurationError(Exception):
 def setup_development_config() -> CodeWeaverConfig:
     """Set up development configuration with optimized settings for development work."""
     return CodeWeaverConfig(
-        server={
-            'log_level': 'DEBUG',
-            'enable_request_logging': True,
-        },
-        indexing={
-            'batch_size': 4,
-            'enable_auto_reindex': True,
-        },
+        server={"log_level": "DEBUG", "enable_request_logging": True},
+        indexing={"batch_size": 4, "enable_auto_reindex": True},
         chunking={
-            'max_chunk_size': 1000,  # Smaller for faster processing
+            "max_chunk_size": 1000  # Smaller for faster processing
         },
     )
 
@@ -612,43 +608,22 @@ def setup_development_config() -> CodeWeaverConfig:
 def setup_production_config(**kwargs) -> CodeWeaverConfig:
     """Set up production configuration with performance and security optimizations."""
     return CodeWeaverConfig(
-        server={
-            'log_level': 'WARNING',
-            'enable_request_logging': False,
-            'max_search_results': 200,
-        },
-        indexing={
-            'batch_size': 16,
-            'enable_auto_reindex': False,
-        },
-        chunking={
-            'max_chunk_size': 2000,
-        },
-        rate_limiting={
-            'max_retries': 3,
-            'initial_backoff_seconds': 2.0,
-        },
-        **kwargs
+        server={"log_level": "WARNING", "enable_request_logging": False, "max_search_results": 200},
+        indexing={"batch_size": 16, "enable_auto_reindex": False},
+        chunking={"max_chunk_size": 2000},
+        rate_limiting={"max_retries": 3, "initial_backoff_seconds": 2.0},
+        **kwargs,
     )
 
 
 def setup_testing_config() -> CodeWeaverConfig:
     """Set up testing configuration with minimal settings for unit tests."""
     return CodeWeaverConfig(
-        server={
-            'log_level': 'CRITICAL',
-            'enable_request_logging': False,
-        },
-        indexing={
-            'batch_size': 1,
-            'enable_auto_reindex': False,
-        },
-        chunking={
-            'max_chunk_size': 500,
-            'min_chunk_size': 25,
-        },
+        server={"log_level": "CRITICAL", "enable_request_logging": False},
+        indexing={"batch_size": 1, "enable_auto_reindex": False},
+        chunking={"max_chunk_size": 500, "min_chunk_size": 25},
         data_sources={
-            'enabled': False,  # Disable for testing unless explicitly needed
+            "enabled": False  # Disable for testing unless explicitly needed
         },
     )
 
@@ -663,30 +638,25 @@ class ConfigValidator:
 
     def validate(self) -> dict[str, Any]:
         """Validate the configuration and return results."""
-        results = {
-            'valid': True,
-            'errors': [],
-            'warnings': [],
-            'recommendations': [],
-        }
+        results = {"valid": True, "errors": [], "warnings": [], "recommendations": []}
 
         # Validate backend configuration
         backend_validation = self._validate_backend()
-        results['errors'].extend(backend_validation['errors'])
-        results['warnings'].extend(backend_validation['warnings'])
+        results["errors"].extend(backend_validation["errors"])
+        results["warnings"].extend(backend_validation["warnings"])
 
         # Validate provider configuration
         provider_validation = self._validate_providers()
-        results['errors'].extend(provider_validation['errors'])
-        results['warnings'].extend(provider_validation['warnings'])
+        results["errors"].extend(provider_validation["errors"])
+        results["warnings"].extend(provider_validation["warnings"])
 
         # Validate performance settings
         performance_validation = self._validate_performance()
-        results['warnings'].extend(performance_validation['warnings'])
-        results['recommendations'].extend(performance_validation['recommendations'])
+        results["warnings"].extend(performance_validation["warnings"])
+        results["recommendations"].extend(performance_validation["recommendations"])
 
         # Set overall validity
-        results['valid'] = len(results['errors']) == 0
+        results["valid"] = len(results["errors"]) == 0
 
         return results
 
@@ -701,14 +671,14 @@ class ConfigValidator:
         if not backend.url:
             errors.append("Backend URL is required")
 
-        if backend.provider == 'qdrant' and not backend.api_key:
+        if backend.provider == "qdrant" and not backend.api_key:
             warnings.append("Qdrant API key is not set - may be required for authentication")
 
         # Check collection configuration
         if not backend.collection_name:
             warnings.append("Backend collection name is not set")
 
-        return {'errors': errors, 'warnings': warnings}
+        return {"errors": errors, "warnings": warnings}
 
     def _validate_providers(self) -> dict[str, list[str]]:
         """Validate provider configuration."""
@@ -734,7 +704,7 @@ class ConfigValidator:
         if not any(provider_configs):
             errors.append("No provider configurations found")
 
-        return {'errors': errors, 'warnings': warnings}
+        return {"errors": errors, "warnings": warnings}
 
     def _validate_performance(self) -> dict[str, list[str]]:
         """Validate performance settings."""
@@ -758,7 +728,7 @@ class ConfigValidator:
         if indexing.batch_size < 4:
             recommendations.append("Consider increasing batch size for better performance")
 
-        return {'warnings': warnings, 'recommendations': recommendations}
+        return {"warnings": warnings, "recommendations": recommendations}
 
 
 # Configuration schema utilities
@@ -782,9 +752,10 @@ class ConfigSchema:
         """Validate a configuration dictionary against the schema."""
         try:
             CodeWeaverConfig(**config_dict)
-            return {'valid': True, 'errors': []}
         except Exception as e:
-            return {'valid': False, 'errors': [str(e)]}
+            return {"valid": False, "errors": [str(e)]}
+        else:
+            return {"valid": True, "errors": []}
 
 
 # Configuration builder classes
@@ -796,42 +767,39 @@ class BackendConfigBuilder:
         self.backend_type = backend_type.lower()
         self.config_data = {}
 
-    def url(self, url: str) -> 'BackendConfigBuilder':
+    def url(self, url: str) -> "BackendConfigBuilder":
         """Set backend URL."""
-        self.config_data['url'] = url
+        self.config_data["url"] = url
         return self
 
-    def api_key(self, api_key: str) -> 'BackendConfigBuilder':
+    def api_key(self, api_key: str) -> "BackendConfigBuilder":
         """Set backend API key."""
-        self.config_data['api_key'] = api_key
+        self.config_data["api_key"] = api_key
         return self
 
-    def collection_name(self, name: str) -> 'BackendConfigBuilder':
+    def collection_name(self, name: str) -> "BackendConfigBuilder":
         """Set collection name."""
-        self.config_data['collection_name'] = name
+        self.config_data["collection_name"] = name
         return self
 
-    def hybrid_search(self, enabled: bool = True) -> 'BackendConfigBuilder':
+    def hybrid_search(self, *, enabled: bool = True) -> "BackendConfigBuilder":
         """Enable/disable hybrid search."""
-        self.config_data['enable_hybrid_search'] = enabled
+        self.config_data["enable_hybrid_search"] = enabled
         return self
 
     def build(self) -> dict[str, Any]:
         """Build the backend configuration."""
-        config = {
-            'provider': self.backend_type,
-            **self.config_data
-        }
+        config = {"provider": self.backend_type, **self.config_data}
 
         # Set provider-specific defaults
-        if self.backend_type == 'qdrant':
-            config.setdefault('url', 'http://localhost:6333')
-            config.setdefault('collection_name', 'codeweaver-embeddings')
-        elif self.backend_type == 'pinecone':
-            config.setdefault('collection_name', 'codeweaver-index')
-        elif self.backend_type == 'weaviate':
-            config.setdefault('url', 'http://localhost:8080')
-            config.setdefault('collection_name', 'CodeWeaver')
+        if self.backend_type == "qdrant":
+            config.setdefault("url", "http://localhost:6333")
+            config.setdefault("collection_name", "codeweaver-embeddings")
+        elif self.backend_type == "pinecone":
+            config.setdefault("collection_name", "codeweaver-index")
+        elif self.backend_type == "weaviate":
+            config.setdefault("url", "http://localhost:8080")
+            config.setdefault("collection_name", "CodeWeaver")
 
         return config
 
@@ -844,34 +812,34 @@ class ProviderConfigBuilder:
         self.provider_type = provider_type.lower()
         self.config_data = {}
 
-    def api_key(self, api_key: str) -> 'ProviderConfigBuilder':
+    def api_key(self, api_key: str) -> "ProviderConfigBuilder":
         """Set provider API key."""
-        self.config_data['api_key'] = api_key
+        self.config_data["api_key"] = api_key
         return self
 
-    def model(self, model: str) -> 'ProviderConfigBuilder':
+    def model(self, model: str) -> "ProviderConfigBuilder":
         """Set model name."""
-        self.config_data['model'] = model
+        self.config_data["model"] = model
         return self
 
-    def embedding_model(self, model: str) -> 'ProviderConfigBuilder':
+    def embedding_model(self, model: str) -> "ProviderConfigBuilder":
         """Set embedding model."""
-        self.config_data['embedding_model'] = model
+        self.config_data["embedding_model"] = model
         return self
 
-    def reranking_model(self, model: str) -> 'ProviderConfigBuilder':
+    def reranking_model(self, model: str) -> "ProviderConfigBuilder":
         """Set reranking model."""
-        self.config_data['reranking_model'] = model
+        self.config_data["reranking_model"] = model
         return self
 
-    def enable_embeddings(self, enabled: bool = True) -> 'ProviderConfigBuilder':
+    def enable_embeddings(self, *, enabled: bool = True) -> "ProviderConfigBuilder":
         """Enable/disable embeddings."""
-        self.config_data['enable_embeddings'] = enabled
+        self.config_data["enable_embeddings"] = enabled
         return self
 
-    def enable_reranking(self, enabled: bool = True) -> 'ProviderConfigBuilder':
+    def enable_reranking(self, *, enabled: bool = True) -> "ProviderConfigBuilder":
         """Enable/disable reranking."""
-        self.config_data['enable_reranking'] = enabled
+        self.config_data["enable_reranking"] = enabled
         return self
 
     def build(self) -> dict[str, Any]:
@@ -879,22 +847,30 @@ class ProviderConfigBuilder:
         config = {**self.config_data}
 
         # Set provider-specific defaults
-        if self.provider_type == 'voyage':
-            config.setdefault('model', 'voyage-code-3')
-            config.setdefault('embedding_model', 'voyage-code-3')
-            config.setdefault('reranking_model', 'voyage-rerank-2')
-            config.setdefault('enable_embeddings', True)
-            config.setdefault('enable_reranking', True)
-        elif self.provider_type == 'openai':
-            config.setdefault('model', 'text-embedding-3-small')
-            config.setdefault('enable_embeddings', True)
-            config.setdefault('enable_reranking', False)
-        elif self.provider_type == 'cohere':
-            config.setdefault('model', 'embed-english-v3.0')
-            config.setdefault('reranking_model', 'rerank-english-v3.0')
-            config.setdefault('enable_embeddings', True)
-            config.setdefault('enable_reranking', True)
-
+        match self.provider_type:
+            case "voyage":
+                config.setdefault("model", "voyage-code-3")
+                config.setdefault("embedding_model", "voyage-code-3")
+                config.setdefault("reranking_model", "voyage-rerank-2")
+                config.setdefault("enable_embeddings", True)
+                config.setdefault("enable_reranking", True)
+            case "openai":
+                config.setdefault("model", "text-embedding-3-small")
+                config.setdefault("enable_embeddings", True)
+                config.setdefault("enable_reranking", False)
+            case "cohere":
+                config.setdefault("model", "embed-english-v3.0")
+                config.setdefault("reranking_model", "rerank-english-v3.0")
+                config.setdefault("enable_embeddings", True)
+                config.setdefault("enable_reranking", True)
+            case "huggingface":
+                config.setdefault("model", "sentence-transformers/all-MiniLM-L6-v2")
+                config.setdefault("enable_embeddings", True)
+                config.setdefault("enable_reranking", False)
+            case "sentence_transformers":
+                config.setdefault("model", "sentence-transformers/all-MiniLM-L6-v2")
+                config.setdefault("enable_embeddings", True)
+                config.setdefault("enable_reranking", False)
         return config
 
 

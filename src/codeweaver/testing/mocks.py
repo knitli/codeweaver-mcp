@@ -45,7 +45,12 @@ logger = logging.getLogger(__name__)
 class MockVectorBackend:
     """Mock implementation of VectorBackend protocol for testing."""
 
-    def __init__(self, latency_ms: float = 10.0, error_rate: float = 0.0, error_operations: list[str] | None = None):
+    def __init__(
+        self,
+        latency_ms: float = 10.0,
+        error_rate: float = 0.0,
+        error_operations: list[str] | None = None,
+    ):
         """Initialize mock vector backend.
 
         Args:
@@ -57,7 +62,11 @@ class MockVectorBackend:
         """
         self.latency_ms = latency_ms
         self.error_rate = error_rate
-        self.error_operations = error_operations or ["upsert_vectors", "search_vectors", "delete_vectors"]
+        self.error_operations = error_operations or [
+            "upsert_vectors",
+            "search_vectors",
+            "delete_vectors",
+        ]
         self.collections: dict[str, dict[str, Any]] = {}
         self.vectors: dict[str, dict[str, VectorPoint]] = {}
 
@@ -68,9 +77,11 @@ class MockVectorBackend:
 
     def _maybe_raise_error(self, operation: str) -> None:
         """Randomly raise errors based on error rate."""
-        if (self.error_rate > 0 and
-            operation in self.error_operations and
-            random.random() < self.error_rate):
+        if (
+            self.error_rate > 0
+            and operation in self.error_operations
+            and random.random() < self.error_rate
+        ):
             raise RuntimeError(f"Mock error in {operation}")
 
     async def create_collection(
@@ -90,7 +101,7 @@ class MockVectorBackend:
         self.collections[name] = {
             "dimension": dimension,
             "distance_metric": distance_metric,
-            "created_at": datetime.now(),
+            "created_at": datetime.now(datetime.timezone.utc),
             "points_count": 0,
             **kwargs,
         }
@@ -158,7 +169,7 @@ class MockVectorBackend:
 
             results.append(
                 SearchResult(
-                    iden=vector_point.id,
+                    id=vector_point.id,
                     score=score,
                     payload=vector_point.payload,
                     vector=vector_point.vector if kwargs.get("return_vectors") else None,
@@ -207,8 +218,8 @@ class MockVectorBackend:
             supports_filtering=True,
             supports_updates=True,
             storage_type="memory",
-            index_type="mock",
-            backend_info={"type": "mock", "created_at": collection["created_at"].isoformat()},
+            index_type="custom",
+            backend_info={"type": "enum", "created_at": collection["created_at"].isoformat()},
         )
 
     async def list_collections(self) -> list[str]:
@@ -281,7 +292,7 @@ class MockHybridSearchBackend(MockVectorBackend):
         self.sparse_indexes[collection_name] = {
             "fields": fields,
             "index_type": index_type,
-            "created_at": datetime.now(),
+            "created_at": datetime.now(datetime.timezone.utc),
             **kwargs,
         }
 
@@ -357,7 +368,7 @@ class MockHybridSearchBackend(MockVectorBackend):
 
             results.append(
                 SearchResult(
-                    iden=vector_point.id,
+                    id=vector_point.id,
                     score=score,
                     payload=vector_point.payload,
                     backend_metadata={"search_type": "sparse", "backend": "mock"},
@@ -833,7 +844,7 @@ class MockDataSource(AbstractDataSource):
                 path=path,
                 content_type="file",
                 metadata={"file_type": language, "repository": "mock_repo", "branch": "main"},
-                last_modified=datetime.now(),
+                last_modified=datetime.now(datetime.timezone.utc),
                 size=size,
                 language=language,
                 source_id=self.source_id,
@@ -964,7 +975,7 @@ export default Button;
         if watcher.is_active:
             # Simulate a content change
             changed_item = self._content_items[0]  # Change first item
-            changed_item.last_modified = datetime.now()
+            changed_item.last_modified = datetime.now(datetime.timezone.utc)
             changed_item.version = f"updated_{int(time.time())}"
 
             # Notify the watcher

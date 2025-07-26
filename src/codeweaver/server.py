@@ -26,7 +26,7 @@ from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver._types import ExtensibilityConfig, ContentSearchResult
+from codeweaver._types import ContentSearchResult, ExtensibilityConfig
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
 
 # CodeWeaver domain-specific middleware
@@ -118,7 +118,7 @@ class CodeWeaverServer:
 
         # Rate limiting middleware (using FastMCP built-in)
         # Convert requests_per_minute to requests_per_second
-        requests_per_second = 60.0 / 60.0  # 60 req/min = 1 req/sec
+        requests_per_second = 1.0
         rate_limiter = RateLimitingMiddleware(
             max_requests_per_second=requests_per_second,
             burst_capacity=10,  # Allow short bursts
@@ -187,16 +187,20 @@ class CodeWeaverServer:
         self._components[
             "reranking_provider"
         ] = await self.extensibility_manager.get_reranking_provider()
-        self._components["rate_limiter"] = self.extensibility_manager.get_rate_limiter()
+
+        # Note: Rate limiting is handled by FastMCP's RateLimitingMiddleware
+        # No need for a separate rate_limiter component
 
         # Get data sources and find filesystem source
         data_sources = await self.extensibility_manager.get_data_sources()
-        filesystem_source = None
-        for source in data_sources:
-            if hasattr(source, "provider") and source.provider.value == "filesystem":
-                filesystem_source = source
-                break
-
+        filesystem_source = next(
+            (
+                source
+                for source in data_sources
+                if hasattr(source, "provider") and source.provider.value == "filesystem"
+            ),
+            None,
+        )
         if not filesystem_source:
             # Create a fallback filesystem source
             from codeweaver.sources.filesystem import FileSystemSource
@@ -231,6 +235,48 @@ class CodeWeaverServer:
             logger.exception("Error ensuring collection")
             raise
 
+    async def _index_codebase_handler(self, ctx: Context, path: str) -> dict[str, Any]:
+        """Index a codebase using middleware services and plugin system."""
+        # Get filesystem source from plugin system
+        filesystem_source = self._components["filesystem_source"]
+        backend = self._components["backend"]
+        embedding_provider = self._components["embedding_provider"]
+
+        # Create context with middleware services for source to use
+        source_context = {
+            "chunking_service": ctx.get_state_value("chunking_service"),
+            "filtering_service": ctx.get_state_value("filtering_service"),
+        }
+
+        # Index using enhanced filesystem source
+        chunks = await filesystem_source.index_content(Path(path), source_context)
+
+        if chunks:
+            # Generate embeddings
+            embeddings = await embedding_provider.embed_batch([c.content for c in chunks])
+
+            # Store in backend
+            vector_points = []
+            for chunk, embedding in zip(chunks, embeddings, strict=False):
+                vector_point = {
+                    "id": hash(chunk.unique_id) & ((1 << 63) - 1),
+                    "vector": embedding,
+                    "payload": chunk.to_metadata(),
+                }
+                vector_points.append(vector_point)
+
+            await backend.upsert_vectors(self.config.backend.collection_name, vector_points)
+
+        return {
+            "status": "success",
+            "indexed_chunks": len(chunks),
+            "collection": self.config.backend.collection_name,
+            "middleware_services_used": {
+                "chunking": ctx.get_state_value("chunking_service") is not None,
+                "filtering": ctx.get_state_value("filtering_service") is not None,
+            },
+        }
+
     def _register_tools(self) -> None:
         """Register MCP tools with FastMCP server."""
         logger.info("Registering MCP tools")
@@ -238,45 +284,7 @@ class CodeWeaverServer:
         @self.mcp.tool()
         async def index_codebase(ctx: Context, path: str) -> dict[str, Any]:
             """Index a codebase using middleware services and plugin system."""
-            # Get filesystem source from plugin system
-            filesystem_source = self._components["filesystem_source"]
-            backend = self._components["backend"]
-            embedding_provider = self._components["embedding_provider"]
-
-            # Create context with middleware services for source to use
-            source_context = {
-                "chunking_service": ctx.get_state_value("chunking_service"),
-                "filtering_service": ctx.get_state_value("filtering_service"),
-            }
-
-            # Index using enhanced filesystem source
-            chunks = await filesystem_source.index_content(Path(path), source_context)
-
-            if chunks:
-                # Generate embeddings
-                embeddings = await embedding_provider.embed_batch([c.content for c in chunks])
-
-                # Store in backend
-                vector_points = []
-                for chunk, embedding in zip(chunks, embeddings, strict=False):
-                    vector_point = {
-                        "id": hash(chunk.unique_id) & ((1 << 63) - 1),
-                        "vector": embedding,
-                        "payload": chunk.to_metadata(),
-                    }
-                    vector_points.append(vector_point)
-
-                await backend.upsert_vectors(self.config.backend.collection_name, vector_points)
-
-            return {
-                "status": "success",
-                "indexed_chunks": len(chunks),
-                "collection": self.config.backend.collection_name,
-                "middleware_services_used": {
-                    "chunking": ctx.get_state_value("chunking_service") is not None,
-                    "filtering": ctx.get_state_value("filtering_service") is not None,
-                },
-            }
+            return await self._index_codebase_handler(ctx, path)
 
         @self.mcp.tool()
         async def search_code(
@@ -286,131 +294,175 @@ class CodeWeaverServer:
             file_filter: str | None = None,
             language_filter: str | None = None,
             chunk_type_filter: str | None = None,
+            *,
             rerank: bool = True,
         ) -> list[dict[str, Any]]:
             """Search code using plugin system components."""
-            # Get components
-            backend = self._components["backend"]
-            embedding_provider = self._components["embedding_provider"]
-            reranking_provider = self._components["reranking_provider"]
-
-            # Generate query embedding
-            query_vector = await embedding_provider.embed_query(query)
-
-            # Build search filters
-            filter_conditions = []
-            if file_filter:
-                filter_conditions.append({
-                    "field": "file_path",
-                    "operator": "contains",
-                    "value": file_filter,
-                })
-            if language_filter:
-                filter_conditions.append({
-                    "field": "language",
-                    "operator": "eq",
-                    "value": language_filter,
-                })
-            if chunk_type_filter:
-                filter_conditions.append({
-                    "field": "chunk_type",
-                    "operator": "eq",
-                    "value": chunk_type_filter,
-                })
-
-            search_filter = {"conditions": filter_conditions} if filter_conditions else None
-
-            # Search vectors
-            search_results = await backend.search_vectors(
-                collection_name=self.config.backend.collection_name,
-                query_vector=query_vector,
-                search_filter=search_filter,
-                limit=limit * 2 if rerank else limit,  # Get more for reranking
+            return await self._search_code_handler(
+                ctx, query, limit, file_filter, language_filter, chunk_type_filter, rerank=rerank
             )
-
-            # Convert to SearchResult objects
-            results = []
-            for hit in search_results:
-                payload = hit.payload
-                search_result = ContentSearchResult(
-                    content=payload["content"],
-                    file_path=payload["file_path"],
-                    start_line=payload["start_line"],
-                    end_line=payload["end_line"],
-                    chunk_type=payload["chunk_type"],
-                    language=payload["language"],
-                    node_kind=payload.get("node_kind", ""),
-                    similarity_score=hit.score,
-                )
-                results.append(search_result)
-
-            # Apply reranking if requested
-            if rerank and reranking_provider and len(results) > 1:
-                try:
-                    documents = [r.content for r in results]
-                    rerank_results = await reranking_provider.rerank(query, documents, top_k=limit)
-
-                    # Reorder results based on reranking
-                    reranked = []
-                    for rerank_result in rerank_results:
-                        original_result = results[rerank_result.index]
-                        original_result.rerank_score = rerank_result.relevance_score
-                        reranked.append(original_result)
-
-                    results = reranked
-                except Exception as e:
-                    logger.warning("Reranking failed: %s", e)
-
-            return [r.to_dict() for r in results[:limit]]
 
         @self.mcp.tool()
         async def ast_grep_search(
             ctx: Context, pattern: str, language: str, root_path: str, limit: int = 20
         ) -> list[dict[str, Any]]:
             """Perform structural search using ast-grep patterns."""
-            # Get filesystem source
-            filesystem_source = self._components["filesystem_source"]
-
-            # Create context with middleware services
-            source_context = {"filtering_service": ctx.get_state_value("filtering_service")}
-
-            # Perform structural search using enhanced filesystem source
-            results = await filesystem_source.structural_search(
-                pattern=pattern,
-                language=language,
-                root_path=Path(root_path),
-                context=source_context,
-            )
-
-            return results[:limit]
+            return await self._ast_grep_search_handler(ctx, pattern, language, root_path, limit)
 
         @self.mcp.tool()
         async def get_supported_languages(ctx: Context) -> dict[str, Any]:
             """Get information about supported languages and capabilities."""
-            # Get chunking middleware info
-            chunking_service = ctx.get_state_value("chunking_service")
-            chunking_info = {}
-            if chunking_service:
-                chunking_info = chunking_service.get_supported_languages()
-
-            # Get filtering middleware info
-            filtering_service = ctx.get_state_value("filtering_service")
-            filtering_info = {}
-            if filtering_service:
-                filtering_info = filtering_service.get_filtering_stats()
-
-            # Get plugin system component info
-            component_info = self.extensibility_manager.get_component_info()
-
-            return {
-                "server_type": "clean_plugin_system",
-                "chunking": chunking_info,
-                "filtering": filtering_info,
-                "extensibility": component_info,
-                "middleware_stack": list(self._middleware_instances.keys()),
-            }
+            return await self._get_supported_languages_handler(ctx)
 
         logger.info("MCP tools registered successfully")
+
+    async def _search_code_handler(
+        self,
+        ctx: Context,
+        query: str,
+        limit: int = 10,
+        file_filter: str | None = None,
+        language_filter: str | None = None,
+        chunk_type_filter: str | None = None,
+        *,
+        rerank: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Search code using plugin system components."""
+        # Get components
+        backend = self._components["backend"]
+        embedding_provider = self._components["embedding_provider"]
+        reranking_provider = self._components["reranking_provider"]
+
+        # Generate query embedding
+        query_vector = await embedding_provider.embed_query(query)
+
+        # Build search filters
+        search_filter = self._build_search_filters(file_filter, language_filter, chunk_type_filter)
+
+        # Search vectors
+        search_results = await backend.search_vectors(
+            collection_name=self.config.backend.collection_name,
+            query_vector=query_vector,
+            search_filter=search_filter,
+            limit=limit * 2 if rerank else limit,  # Get more for reranking
+        )
+
+        # Convert to SearchResult objects
+        results = self._convert_search_results(search_results)
+
+        # Apply reranking if requested
+        if rerank and reranking_provider and len(results) > 1:
+            results = await self._apply_reranking(query, results, reranking_provider, limit)
+
+        return [r.to_dict() for r in results[:limit]]
+
+    def _build_search_filters(
+        self, file_filter: str | None, language_filter: str | None, chunk_type_filter: str | None
+    ) -> dict[str, Any] | None:
+        """Build search filter conditions."""
+        filter_conditions = []
+
+        if file_filter:
+            filter_conditions.append({
+                "field": "file_path",
+                "operator": "contains",
+                "value": file_filter,
+            })
+        if language_filter:
+            filter_conditions.append({
+                "field": "language",
+                "operator": "eq",
+                "value": language_filter,
+            })
+        if chunk_type_filter:
+            filter_conditions.append({
+                "field": "chunk_type",
+                "operator": "eq",
+                "value": chunk_type_filter,
+            })
+
+        return {"conditions": filter_conditions} if filter_conditions else None
+
+    def _convert_search_results(self, search_results: list[Any]) -> list[ContentSearchResult]:
+        """Convert backend search results to ContentSearchResult objects."""
+        results = []
+        for hit in search_results:
+            payload = hit.payload
+            search_result = ContentSearchResult(
+                content=payload["content"],
+                file_path=payload["file_path"],
+                start_line=payload["start_line"],
+                end_line=payload["end_line"],
+                chunk_type=payload["chunk_type"],
+                language=payload["language"],
+                node_kind=payload.get("node_kind", ""),
+                similarity_score=hit.score,
+            )
+            results.append(search_result)
+        return results
+
+    async def _apply_reranking(
+        self, query: str, results: list[ContentSearchResult], reranking_provider: Any, limit: int
+    ) -> list[ContentSearchResult]:
+        """Apply reranking to search results."""
+        try:
+            documents = [r.content for r in results]
+            rerank_results = await reranking_provider.rerank(query, documents, top_k=limit)
+
+            # Reorder results based on reranking
+            reranked = []
+            for rerank_result in rerank_results:
+                original_result = results[rerank_result.index]
+                original_result.rerank_score = rerank_result.relevance_score
+                reranked.append(original_result)
+
+        except Exception as e:
+            logger.warning("Reranking failed: %s", e)
+            return results
+        else:
+            return reranked
+
+    async def _ast_grep_search_handler(
+        self, ctx: Context, pattern: str, language: str, root_path: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
+        """Perform structural search using ast-grep patterns."""
+        # Get filesystem source
+        filesystem_source = self._components["filesystem_source"]
+
+        # Create context with middleware services
+        source_context = {"filtering_service": ctx.get_state_value("filtering_service")}
+
+        # Perform structural search using enhanced filesystem source
+        results = await filesystem_source.structural_search(
+            pattern=pattern, language=language, root_path=Path(root_path), context=source_context
+        )
+
+        return results[:limit]
+
+    async def _get_supported_languages_handler(self, ctx: Context) -> dict[str, Any]:
+        """Get information about supported languages and capabilities."""
+        # Get chunking middleware info
+        chunking_service = ctx.get_state_value("chunking_service")
+        chunking_info = {}
+        if chunking_service:
+            chunking_info = chunking_service.get_supported_languages()
+
+        # Get filtering middleware info
+        filtering_service = ctx.get_state_value("filtering_service")
+        filtering_info = {}
+        if filtering_service:
+            filtering_info = filtering_service.get_filtering_stats()
+
+        # Get plugin system component info
+        component_info = self.extensibility_manager.get_component_info()
+
+        return {
+            "server_type": "clean_plugin_system",
+            "chunking": chunking_info,
+            "filtering": filtering_info,
+            "extensibility": component_info,
+            "middleware_stack": list(self._middleware_instances.keys()),
+        }
 
     async def run(self) -> None:
         """Run the server."""

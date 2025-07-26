@@ -212,8 +212,6 @@ class SourceFactory:
 
         return source_info
 
-    # Legacy implementation checking methods removed - use provider registry instead
-
     def get_source_registry(self) -> SourceRegistry:
         """Get the underlying source registry.
 

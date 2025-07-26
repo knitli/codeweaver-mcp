@@ -414,7 +414,7 @@ class ProtocolComplianceValidator:
 
             # Test vector deletion
             result.total_tests += 1
-            await backend.delete_vectors(test_collection, [test_vectors[0].iden])
+            await backend.delete_vectors(test_collection, [test_vectors[0].id])
             result.passed_tests += 1
 
             # Cleanup
@@ -756,7 +756,7 @@ class ProtocolComplianceValidator:
 
                 vectors.append(
                     VectorPoint(
-                        iden=f"test_vector_{i}",
+                        id=f"test_vector_{i}",
                         vector=vector,
                         payload={"content": f"Test content {i}", "category": "test"},
                     )

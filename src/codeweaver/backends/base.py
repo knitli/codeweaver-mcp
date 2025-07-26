@@ -72,7 +72,7 @@ class VectorBackend(Protocol):
 
         Backend Compatibility:
         - Qdrant: Converts to PointStruct format
-        - Pinecone: Uses upsert API with (iden, vector, metadata) tuples
+        - Pinecone: Uses upsert API with (id, vector, metadata) tuples
         - Chroma: Adds documents with embeddings and metadata
         - Weaviate: Creates objects with vector and properties
         - pgvector: Inserts/updates rows with vector data

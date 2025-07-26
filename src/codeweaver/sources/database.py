@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 # TODO: We're already built from Pydantic, so could we implement this with SqlModel with minimal effort? Maybe take a SQLModel object as a dependency injection to use for read/discover/watch?
 # The answer is 'yes', [see analysis](../../../plans/features/DATABASE_SQLMODEL_ANALYSIS.md) for details.
 
+
 class DatabaseSourceConfig(BaseModel):
     """Configuration specific to database data sources."""
 

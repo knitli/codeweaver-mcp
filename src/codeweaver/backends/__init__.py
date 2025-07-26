@@ -44,6 +44,7 @@ from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
 # Try to import DocArray backends (optional)
 try:
     from codeweaver.backends.docarray import factory as docarray_factory  # noqa: F401
+
     _DOCARRAY_AVAILABLE = True
 except ImportError:
     _DOCARRAY_AVAILABLE = False

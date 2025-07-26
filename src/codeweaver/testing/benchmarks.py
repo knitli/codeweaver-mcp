@@ -142,7 +142,7 @@ class BenchmarkSuite:
         for i, scenario in enumerate(test_scenarios):
             collection_name = f"benchmark_collection_{i}"
             dimension = scenario.get("dimension", 128)
-            
+
             try:
                 # Setup test collection with scenario-specific dimension
                 await backend.create_collection(
@@ -234,7 +234,7 @@ class BenchmarkSuite:
                 # First upsert some data for search
                 try:
                     await backend.upsert_vectors(collection_name, test_vectors[:50])
-                    
+
                     query_vector = test_vectors[0].vector
                     result = await self._benchmark_operation(
                         f"{scenario_name}_search",
@@ -513,7 +513,7 @@ class BenchmarkSuite:
 
             vectors.append(
                 VectorPoint(
-                    iden=f"test_vector_{i}",
+                    id=f"test_vector_{i}",
                     vector=vector,
                     payload={"content": f"Test content {i}", "index": i},
                 )

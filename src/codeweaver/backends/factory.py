@@ -245,13 +245,14 @@ class BackendFactory(CapabilityQueryMixin):
     @classmethod
     def _build_backend_args(cls, config: BackendConfig) -> dict[str, Any]:
         """Build backend-specific arguments from configuration."""
-        args = {"url": config.url, "api_key": config.api_key}
-
         # Handle both string and enum provider values
         if hasattr(config.provider, "value"):
             provider = config.provider.value.lower()
         else:
             provider = str(config.provider).lower()
+
+        # Mock backends don't use url/api_key
+        args = {} if provider.startswith("mock") else {"url": config.url, "api_key": config.api_key}
 
         # Add provider-specific settings
         if provider == "qdrant":

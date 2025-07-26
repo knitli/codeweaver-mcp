@@ -211,12 +211,6 @@ class ExtensibilityManager:
 
         return self._components.data_sources
 
-    def get_rate_limiter(self) -> None:
-        """Rate limiting is now handled directly by individual providers."""
-        # Rate limiting has been moved to individual providers
-        # This method is kept for backward compatibility but returns None
-        return
-
     def get_factory(self) -> "CodeWeaverFactory":
         """Get the factory instance.
 
@@ -256,7 +250,7 @@ class ExtensibilityManager:
                 "embedding_provider": self._components.embedding_provider is not None,
                 "reranking_provider": self._components.reranking_provider is not None,
                 "data_sources": self._components.data_sources is not None,
-                "rate_limiter": self._components.rate_limiter is not None,
+                # Note: Rate limiting handled by FastMCP middleware, not as component
             },
         })
 

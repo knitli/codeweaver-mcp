@@ -192,8 +192,9 @@ const userService = new UserService('https://api.example.com');
 
     return True
 
+
 @pytest.mark.asyncio
-async def test_full_workflow(test_path: str | None = None) -> bool:    # noqa: PT028
+async def test_full_workflow(test_path: str | None = None) -> bool:  # noqa: PT028
     # sourcery skip: avoid-global-variables, low-code-quality, no-long-functions
     """Test the complete indexing and search workflow."""
     print("\n🚀 Testing Full Workflow...")
@@ -367,10 +368,7 @@ module.exports = { debounce, ApiClient };
         extensibility_manager = ExtensibilityManager(config=config)
         await extensibility_manager.initialize()
 
-        server = {
-            'extensibility_manager': extensibility_manager,
-            'config': config
-        }
+        server = {"extensibility_manager": extensibility_manager, "config": config}
         print("✅ Server initialized successfully")
     except Exception as e:
         print(f"❌ Server initialization failed: {e}")
@@ -380,22 +378,22 @@ module.exports = { debounce, ApiClient };
     try:
         print("📚 Indexing codebase...")
 
-        data_sources = await server['extensibility_manager'].get_data_sources()
+        data_sources = await server["extensibility_manager"].get_data_sources()
         filesystem_source = next(
             (
                 source
                 for source in data_sources
-                if hasattr(source, 'provider')
-                and source.provider.value == "filesystem"
+                if hasattr(source, "provider") and source.provider.value == "filesystem"
             ),
             None,
         )
         if not filesystem_source:
             from codeweaver.sources.filesystem import FileSystemSource
+
             filesystem_source = FileSystemSource()
 
-        backend = await server['extensibility_manager'].get_backend()
-        embedding_provider = await server['extensibility_manager'].get_embedding_provider()
+        backend = await server["extensibility_manager"].get_backend()
+        embedding_provider = await server["extensibility_manager"].get_embedding_provider()
 
         # Index the codebase
         chunks = await filesystem_source.index_content(Path(test_path))
@@ -412,11 +410,11 @@ module.exports = { debounce, ApiClient };
                 }
                 vector_points.append(vector_point)
 
-            await backend.upsert_vectors(server['config'].backend.collection_name, vector_points)
+            await backend.upsert_vectors(server["config"].backend.collection_name, vector_points)
 
         result = {
-            'total_chunks': len(chunks),
-            'files_processed': len({c.file_path for c in chunks}),
+            "total_chunks": len(chunks),
+            "files_processed": len({c.file_path for c in chunks}),
         }
 
         print(
@@ -425,6 +423,7 @@ module.exports = { debounce, ApiClient };
     except Exception as e:
         print(f"❌ Indexing failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -441,28 +440,28 @@ module.exports = { debounce, ApiClient };
     for query in test_queries:
         try:
             # Search using components directly
-            backend = await server['extensibility_manager'].get_backend()
-            embedding_provider = await server['extensibility_manager'].get_embedding_provider()
-            reranking_provider = await server['extensibility_manager'].get_reranking_provider()
+            backend = await server["extensibility_manager"].get_backend()
+            embedding_provider = await server["extensibility_manager"].get_embedding_provider()
+            await server["extensibility_manager"].get_reranking_provider()
 
             # Generate query embedding
             query_vector = await embedding_provider.embed_query(query)
 
             # Search vectors
             search_results = await backend.search_vectors(
-                collection_name=server['config'].backend.collection_name,
+                collection_name=server["config"].backend.collection_name,
                 query_vector=query_vector,
-                limit=3
+                limit=3,
             )
 
             # Convert search results to expected format
             results = []
             for result in search_results:
                 result_data = {
-                    'similarity_score': result.score,
-                    'file_path': result.payload.get('file_path', 'unknown'),
-                    'chunk_type': result.payload.get('chunk_type', 'unknown'),
-                    'content': result.payload.get('content', ''),
+                    "similarity_score": result.score,
+                    "file_path": result.payload.get("file_path", "unknown"),
+                    "chunk_type": result.payload.get("chunk_type", "unknown"),
+                    "content": result.payload.get("content", ""),
                 }
                 results.append(result_data)
 
@@ -475,6 +474,7 @@ module.exports = { debounce, ApiClient };
         except Exception as e:
             print(f"❌ Search failed for '{query}': {e}")
             import traceback
+
             traceback.print_exc()
 
     # Clean up test directory if we created it

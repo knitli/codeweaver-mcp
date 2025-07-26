@@ -15,7 +15,7 @@ import contextlib
 import logging
 
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -87,7 +87,7 @@ class FileSystemSourceWatcher(SourceWatcher):
         self.root_path = root_path
         self.config = config
         self._watch_task: asyncio.Task | None = None
-        self._last_scan_time = datetime.now(timezone.utc)
+        self._last_scan_time = datetime.now(UTC)
 
     async def start(self) -> bool:
         """Start watching for file system changes."""
@@ -127,7 +127,7 @@ class FileSystemSourceWatcher(SourceWatcher):
 
     async def _watch_loop(self) -> None:
         """Main watching loop for detecting file changes."""
-        interval = self.config.get("change_check_interval_seconds", 60)
+        interval = getattr(self.config, "change_check_interval_seconds", 60)
 
         while self.is_active:
             try:
@@ -150,7 +150,7 @@ class FileSystemSourceWatcher(SourceWatcher):
     async def _detect_changes(self) -> list[ContentItem]:
         """Detect files that have changed since last scan."""
         changed_items = []
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(UTC)
 
         try:
             # Find files modified since last scan
@@ -250,19 +250,22 @@ class FileSystemSource(AbstractDataSource):
         """Get capabilities - no hardcoding needed."""
         return self.CAPABILITIES
 
-    async def discover_content(self, config: FileSystemSourceConfig) -> list[ContentItem]:
+    async def discover_content(
+        self, config: FileSystemSourceConfig, context: dict[str, Any] | None = None
+    ) -> list[ContentItem]:
         """Discover files from the file system.
 
         Args:
             config: File system source configuration
+            context: Optional context containing services
 
         Returns:
             List of discovered file content items
         """
-        if not config.get("enabled", True):
+        if not getattr(config, "enabled", True):
             return []
 
-        root = config.get("root_path", ".")
+        root = config.root_path
         root_path = Path(root).resolve()
 
         if not root_path.exists():
@@ -273,7 +276,11 @@ class FileSystemSource(AbstractDataSource):
 
         logger.info("Discovering content in: %s", root_path)
 
-        # Use existing FileFilter for intelligent filtering
+        # Inject filtering service if available in context
+        if context and "filtering_service" in context:
+            self._filtering_service = context["filtering_service"]
+
+        # Use services-based filtering
         files = await self._discover_files(root_path, config)
 
         # Convert to ContentItems
@@ -295,16 +302,14 @@ class FileSystemSource(AbstractDataSource):
         return filtered_items
 
     async def index_content(
-        self,
-        path: Path,
-        context: dict[str, Any] | None = None
+        self, path: Path, context: dict[str, Any] | None = None
     ) -> list[CodeChunk]:
         """Index content using middleware services from context.
-        
+
         Args:
             path: Path to index (file or directory)
             context: Optional context containing middleware services
-            
+
         Returns:
             List of CodeChunk objects representing indexed content
         """
@@ -329,7 +334,7 @@ class FileSystemSource(AbstractDataSource):
         all_chunks = []
         for file_path in files:
             try:
-                content = file_path.read_text(encoding='utf-8', errors='ignore')
+                content = file_path.read_text(encoding="utf-8", errors="ignore")
 
                 # Skip empty files
                 if not content.strip():
@@ -391,21 +396,21 @@ class FileSystemSource(AbstractDataSource):
         context: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """Perform structural search using ast-grep patterns.
-        
+
         Args:
             pattern: AST-grep pattern to search for
             language: Programming language to search in (optional)
             root_path: Root path to search in (optional, defaults to configured root)
             context: Optional context containing middleware services
-            
+
         Returns:
             List of search result dictionaries
         """
         # Import ast-grep here to check availability
         try:
             from ast_grep_py import SgRoot
-        except ImportError:
-            raise ValueError("ast-grep not available, install with: pip install ast-grep-py")
+        except ImportError as e:
+            raise ValueError("ast-grep not available, install with: pip install ast-grep-py") from e
 
         # Determine search root
         if root_path is None:
@@ -416,8 +421,12 @@ class FileSystemSource(AbstractDataSource):
         if not root_path.exists():
             raise ValueError(f"Root path does not exist: {root_path}")
 
-        logger.info("Performing structural search: pattern='%s', language=%s, root=%s",
-                   pattern, language, root_path)
+        logger.info(
+            "Performing structural search: pattern='%s', language=%s, root=%s",
+            pattern,
+            language,
+            root_path,
+        )
 
         # Get filtering service from context if available
         filtering_service = context.get("filtering_service") if context else None
@@ -503,9 +512,7 @@ class FileSystemSource(AbstractDataSource):
         return lang_extensions.get(language.lower(), [f"*.{language}"])
 
     async def _discover_files_for_language(
-        self,
-        root_path: Path,
-        language: str | None = None
+        self, root_path: Path, language: str | None = None
     ) -> list[Path]:
         """Discover files for a specific language using fallback method."""
         patterns = self._get_file_patterns_for_language(language)
@@ -521,6 +528,7 @@ class FileSystemSource(AbstractDataSource):
 
                     # Check if file matches any pattern
                     import fnmatch
+
                     for pattern in patterns:
                         if fnmatch.fnmatch(file_path.name, pattern):
                             files.append(file_path)
@@ -535,32 +543,55 @@ class FileSystemSource(AbstractDataSource):
 
     def _detect_language_from_extension(self, file_path: Path) -> str | None:
         """Detect language from file extension for structural search."""
-        extension = file_path.suffix.lower().lstrip('.')
+        extension = file_path.suffix.lower().lstrip(".")
 
         # Extension to language mapping
         ext_lang_map = {
-            'py': 'python', 'py3': 'python', 'pyi': 'python',
-            'js': 'javascript', 'mjs': 'javascript', 'cjs': 'javascript',
-            'ts': 'typescript', 'cts': 'typescript', 'mts': 'typescript',
-            'tsx': 'tsx',
-            'rs': 'rust',
-            'go': 'go',
-            'java': 'java',
-            'cpp': 'cpp', 'cc': 'cpp', 'cxx': 'cpp', 'hpp': 'cpp', 'hh': 'cpp',
-            'c': 'c', 'h': 'c',
-            'cs': 'csharp', 'csx': 'csharp',
-            'css': 'css', 'scss': 'css',
-            'html': 'html', 'htm': 'html', 'xhtml': 'html',
-            'json': 'json',
-            'yaml': 'yaml', 'yml': 'yaml',
-            'sh': 'bash', 'bash': 'bash',
-            'rb': 'ruby', 'gemspec': 'ruby',
-            'php': 'php',
-            'swift': 'swift',
-            'kt': 'kotlin', 'ktm': 'kotlin', 'kts': 'kotlin',
-            'scala': 'scala', 'sbt': 'scala', 'sc': 'scala',
-            'ex': 'elixir', 'exs': 'elixir',
-            'lua': 'lua',
+            "py": "python",
+            "py3": "python",
+            "pyi": "python",
+            "js": "javascript",
+            "mjs": "javascript",
+            "cjs": "javascript",
+            "ts": "typescript",
+            "cts": "typescript",
+            "mts": "typescript",
+            "tsx": "tsx",
+            "rs": "rust",
+            "go": "go",
+            "java": "java",
+            "cpp": "cpp",
+            "cc": "cpp",
+            "cxx": "cpp",
+            "hpp": "cpp",
+            "hh": "cpp",
+            "c": "c",
+            "h": "c",
+            "cs": "csharp",
+            "csx": "csharp",
+            "css": "css",
+            "scss": "css",
+            "html": "html",
+            "htm": "html",
+            "xhtml": "html",
+            "json": "json",
+            "yaml": "yaml",
+            "yml": "yaml",
+            "sh": "bash",
+            "bash": "bash",
+            "rb": "ruby",
+            "gemspec": "ruby",
+            "php": "php",
+            "swift": "swift",
+            "kt": "kotlin",
+            "ktm": "kotlin",
+            "kts": "kotlin",
+            "scala": "scala",
+            "sbt": "scala",
+            "sc": "scala",
+            "ex": "elixir",
+            "exs": "elixir",
+            "lua": "lua",
         }
 
         return ext_lang_map.get(extension)
@@ -604,10 +635,10 @@ class FileSystemSource(AbstractDataSource):
         Returns:
             File system watcher instance
         """
-        if not config.get("enable_change_watching", False):
+        if not getattr(config, "enable_change_watching", False):
             raise NotImplementedError("Change watching is disabled in configuration")
 
-        root = config.get("root_path", ".")
+        root = config.root_path
         root_path = Path(root).resolve()
 
         watcher = FileSystemSourceWatcher(
@@ -632,7 +663,7 @@ class FileSystemSource(AbstractDataSource):
                 return False
 
             # Check root path
-            root = config.get("root_path")
+            root = config.root_path
             if not root:
                 logger.warning("Missing root_path in file system source configuration")
                 return False
@@ -696,7 +727,7 @@ class FileSystemSource(AbstractDataSource):
         return metadata
 
     async def _discover_files(self, root_path: Path, config: FileSystemSourceConfig) -> list[Path]:
-        """Discover files using existing FileFilter logic.
+        """Discover files using services-based filtering.
 
         Args:
             root_path: Root directory to search
@@ -705,33 +736,72 @@ class FileSystemSource(AbstractDataSource):
         Returns:
             List of discovered file paths
         """
-        # Import here to avoid circular dependencies
-        from codeweaver.config import get_config
+        if filtering_service := getattr(self, "_filtering_service", None):
+            logger.info("Using FilteringService for file discovery")
+            return await self._discover_files_with_service(root_path, config, filtering_service)
+        logger.info("FilteringService not available, using fallback discovery")
+        return await self._discover_files_fallback(root_path, config)
 
-        # Convert source config to FileFilteringMiddleware-compatible config
-        app_config = get_config()
+    async def _discover_files_with_service(
+        self, root_path: Path, config: FileSystemSourceConfig, filtering_service
+    ) -> list[Path]:
+        """Discover files using the FilteringService."""
+        try:
+            # Convert source config to filtering service parameters
+            include_patterns = []
+            if config.file_extensions:
+                # Convert extensions to glob patterns
+                include_patterns.extend([f"*.{ext.lstrip('.')}" for ext in config.file_extensions])
 
-        # Update config with source-specific settings
-        if config.get("use_gitignore") is not None:
-            app_config.indexing.use_gitignore = config["use_gitignore"]
+            # Use default patterns if none specified
+            if not include_patterns:
+                include_patterns = ["*"]
 
-        if config.get("additional_ignore_patterns"):
-            app_config.indexing.additional_ignore_patterns.extend(
-                config["additional_ignore_patterns"]
+            exclude_patterns = config.additional_ignore_patterns or []
+            follow_symlinks = config.follow_symlinks
+
+            # Discover files using the service
+            files = await filtering_service.discover_files(
+                base_path=root_path,
+                include_patterns=include_patterns,
+                exclude_patterns=exclude_patterns,
+                follow_symlinks=follow_symlinks,
             )
 
-        if config.get("max_file_size_mb"):
-            app_config.chunking.max_file_size_mb = config["max_file_size_mb"]
+        except Exception as e:
+            logger.warning("FilteringService failed: %s, falling back to manual discovery", e)
+            return await self._discover_files_fallback(root_path, config)
+        else:
+            logger.info("Discovered %d files with FilteringService", len(files))
+            return files
 
-        # Create file filter and discover files
-        file_filter = FileFilter(app_config, root_path)
+    async def _discover_files_fallback(
+        self, root_path: Path, config: FileSystemSourceConfig
+    ) -> list[Path]:
+        """Fallback file discovery when FilteringService is not available."""
+        # Import here to avoid circular dependencies
+        from codeweaver.middleware.filtering import FileFilteringMiddleware
+
+        # Convert source config to FileFilteringMiddleware-compatible config
+        middleware_config = {
+            "use_gitignore": config.use_gitignore,
+            "max_file_size": 10 * 1024 * 1024,  # Default 10MB
+            "excluded_dirs": ["__pycache__", ".git", "node_modules", ".pytest_cache"],
+            "included_extensions": config.file_extensions or None,
+            "additional_ignore_patterns": config.additional_ignore_patterns,
+        }
+
+        # Create middleware and discover files
+        middleware = FileFilteringMiddleware(middleware_config)
 
         # Use patterns from config, with fallback to default
-        patterns = config.get("patterns") or config.get("file_extensions")
+        patterns = config.file_extensions or ["*"]
 
-        files = file_filter.find_files(patterns)
+        files = await middleware.find_files(
+            base_path=root_path, patterns=patterns, recursive=config.recursive_discovery
+        )
 
-        logger.info("Discovered %d files with file filter", len(files))
+        logger.info("Discovered %d files with fallback discovery", len(files))
         return files
 
     async def _file_to_content_item(self, file_path: Path, root_path: Path) -> ContentItem | None:
