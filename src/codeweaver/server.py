@@ -19,20 +19,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
+from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
+from fastmcp.server.middleware.logging import LoggingMiddleware
+
+# FastMCP built-in middleware
+from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.server.middleware.timing import TimingMiddleware
 
 from codeweaver._types import ExtensibilityConfig, SearchResult
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
-# FastMCP built-in middleware
-from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
-from fastmcp.server.middleware.logging import LoggingMiddleware
-from fastmcp.server.middleware.timing import TimingMiddleware
-from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 
 # CodeWeaver domain-specific middleware
-from codeweaver.middleware import (
-    ChunkingMiddleware,
-    FileFilteringMiddleware,
-)
+from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
 
 
 if TYPE_CHECKING:
@@ -42,7 +40,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class CleanCodeWeaverServer:
+class CodeWeaverServer:
     """Clean CodeWeaver server using plugin system and FastMCP middleware.
 
     Features:
@@ -74,8 +72,7 @@ class CleanCodeWeaverServer:
 
         # Initialize plugin system
         self.extensibility_manager = ExtensibilityManager(
-            config=self.config,
-            extensibility_config=extensibility_config,
+            config=self.config, extensibility_config=extensibility_config
         )
 
         # Component instances (populated during initialization)
@@ -113,7 +110,7 @@ class CleanCodeWeaverServer:
         # Error handling middleware (first in chain for proper error catching)
         error_handler = ErrorHandlingMiddleware(
             include_traceback=False,  # Don't expose internal details
-            transform_errors=True  # Convert to MCP errors
+            transform_errors=True,  # Convert to MCP errors
         )
         self.mcp.add_middleware(error_handler)
         self._middleware_instances["error_handling"] = error_handler
@@ -125,7 +122,7 @@ class CleanCodeWeaverServer:
         rate_limiter = RateLimitingMiddleware(
             max_requests_per_second=requests_per_second,
             burst_capacity=10,  # Allow short bursts
-            global_limit=True  # Apply globally, not per-client
+            global_limit=True,  # Apply globally, not per-client
         )
         self.mcp.add_middleware(rate_limiter)
         self._middleware_instances["rate_limiting"] = rate_limiter
@@ -133,12 +130,15 @@ class CleanCodeWeaverServer:
 
         # Logging middleware (using FastMCP built-in)
         import logging as logging_module
-        log_level = getattr(logging_module, self.config.server.log_level.upper(), logging_module.INFO)
+
+        log_level = getattr(
+            logging_module, self.config.server.log_level.upper(), logging_module.INFO
+        )
         log_middleware = LoggingMiddleware(
             log_level=log_level,
             include_payloads=self.config.server.enable_request_logging,
             max_payload_length=1000,
-            methods=None  # Log all methods
+            methods=None,  # Log all methods
         )
         self.mcp.add_middleware(log_middleware)
         self._middleware_instances["logging"] = log_middleware
@@ -181,21 +181,26 @@ class CleanCodeWeaverServer:
 
         # Get components through the extensibility system
         self._components["backend"] = await self.extensibility_manager.get_backend()
-        self._components["embedding_provider"] = await self.extensibility_manager.get_embedding_provider()
-        self._components["reranking_provider"] = await self.extensibility_manager.get_reranking_provider()
+        self._components[
+            "embedding_provider"
+        ] = await self.extensibility_manager.get_embedding_provider()
+        self._components[
+            "reranking_provider"
+        ] = await self.extensibility_manager.get_reranking_provider()
         self._components["rate_limiter"] = self.extensibility_manager.get_rate_limiter()
 
         # Get data sources and find filesystem source
         data_sources = await self.extensibility_manager.get_data_sources()
         filesystem_source = None
         for source in data_sources:
-            if hasattr(source, 'provider') and source.provider.value == "filesystem":
+            if hasattr(source, "provider") and source.provider.value == "filesystem":
                 filesystem_source = source
                 break
 
         if not filesystem_source:
             # Create a fallback filesystem source
             from codeweaver.sources.filesystem import FileSystemSource
+
             filesystem_source = FileSystemSource()
 
         self._components["filesystem_source"] = filesystem_source
@@ -233,7 +238,6 @@ class CleanCodeWeaverServer:
         @self.mcp.tool()
         async def index_codebase(ctx: Context, path: str) -> dict[str, Any]:
             """Index a codebase using middleware services and plugin system."""
-
             # Get filesystem source from plugin system
             filesystem_source = self._components["filesystem_source"]
             backend = self._components["backend"]
@@ -285,7 +289,6 @@ class CleanCodeWeaverServer:
             rerank: bool = True,
         ) -> list[dict[str, Any]]:
             """Search code using plugin system components."""
-
             # Get components
             backend = self._components["backend"]
             embedding_provider = self._components["embedding_provider"]
@@ -297,11 +300,23 @@ class CleanCodeWeaverServer:
             # Build search filters
             filter_conditions = []
             if file_filter:
-                filter_conditions.append({"field": "file_path", "operator": "contains", "value": file_filter})
+                filter_conditions.append({
+                    "field": "file_path",
+                    "operator": "contains",
+                    "value": file_filter,
+                })
             if language_filter:
-                filter_conditions.append({"field": "language", "operator": "eq", "value": language_filter})
+                filter_conditions.append({
+                    "field": "language",
+                    "operator": "eq",
+                    "value": language_filter,
+                })
             if chunk_type_filter:
-                filter_conditions.append({"field": "chunk_type", "operator": "eq", "value": chunk_type_filter})
+                filter_conditions.append({
+                    "field": "chunk_type",
+                    "operator": "eq",
+                    "value": chunk_type_filter,
+                })
 
             search_filter = {"conditions": filter_conditions} if filter_conditions else None
 
@@ -350,21 +365,14 @@ class CleanCodeWeaverServer:
 
         @self.mcp.tool()
         async def ast_grep_search(
-            ctx: Context,
-            pattern: str,
-            language: str,
-            root_path: str,
-            limit: int = 20
+            ctx: Context, pattern: str, language: str, root_path: str, limit: int = 20
         ) -> list[dict[str, Any]]:
             """Perform structural search using ast-grep patterns."""
-
             # Get filesystem source
             filesystem_source = self._components["filesystem_source"]
 
             # Create context with middleware services
-            source_context = {
-                "filtering_service": ctx.get_state_value("filtering_service"),
-            }
+            source_context = {"filtering_service": ctx.get_state_value("filtering_service")}
 
             # Perform structural search using enhanced filesystem source
             results = await filesystem_source.structural_search(
@@ -379,7 +387,6 @@ class CleanCodeWeaverServer:
         @self.mcp.tool()
         async def get_supported_languages(ctx: Context) -> dict[str, Any]:
             """Get information about supported languages and capabilities."""
-
             # Get chunking middleware info
             chunking_service = ctx.get_state_value("chunking_service")
             chunking_info = {}
@@ -428,7 +435,7 @@ class CleanCodeWeaverServer:
 def create_clean_server(
     config: "CodeWeaverConfig | None" = None,
     extensibility_config: ExtensibilityConfig | None = None,
-) -> CleanCodeWeaverServer:
+) -> CodeWeaverServer:
     """Create a clean CodeWeaver server instance.
 
     Args:
@@ -438,4 +445,4 @@ def create_clean_server(
     Returns:
         Clean server instance
     """
-    return CleanCodeWeaverServer(config, extensibility_config)
+    return CodeWeaverServer(config, extensibility_config)

@@ -38,13 +38,9 @@ Configuration:
 import asyncio
 import logging
 
-from typing import Any
-
-from fastmcp import Context, FastMCP
-
+from codeweaver.config import get_config_manager
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
 from codeweaver.server import create_clean_server
-from codeweaver.config import get_config_manager
 
 
 logger = logging.getLogger(__name__)
@@ -67,7 +63,7 @@ def get_server_instance():
         server_instance = create_clean_server(config)
 
         # Log server type
-        logger.info("Created CleanCodeWeaverServer with plugin system and FastMCP middleware")
+        logger.info("Created CodeWeaverServer with plugin system and FastMCP middleware")
 
     return server_instance
 

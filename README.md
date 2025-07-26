@@ -37,6 +37,27 @@ Hierarchical TOML configuration with environment variable overrides. No code cha
 🎯 **Production Ready**
 Smart batching, advanced filtering, robust error handling, and comprehensive testing framework.
 
+## Our Design Philosophy
+
+### **Developer Experience First**
+
+CodeWeaver is designed to be intuitive and easy to use. We prioritize developer experience with:
+- **Simple Configuration**: Hierarchical TOML files or environment variables
+- **Unified Interface**: Consistent API across all providers and backends
+- **Extensive Documentation**: Clear examples, tutorials, and best practices
+- **Community Driven**: Open source with active discussions and contributions
+- **MCP Integration**: Seamless compatibility with AI assistants like Claude.
+- **Make AI Useful for Your Codebase**: CodeWeaver is built to help AI assistants like Claude understand your codebase better, enabling them to answer questions, find patterns, and assist with development tasks. Less tokens. More context. Better results.
+
+### **Tools Designed For AI Assistants**
+
+- **Focus on AI Assistants**. CodeWeaver's MCP tool API is designed specifically for AI assistants, not humans. We want to make it easy for AI to understand and navigate your codebase without overwhelming it with unnecessary complexity.
+  - The problem with most AI tools today is that they are designed for humans. AIs need their own set of tools optimized for their unique capabilities and limitations.
+- **Deliver only what the assistant needs**. The best human APIs are actually terrible AI APIs. AI assistants get quickly overwhelmed by huge arrays of choices. CodeWeaver provides a clean, structured interface that AI can easily understand.
+- **Abstract away complexity**. CodeWeaver handles the heavy lifting of indexing, chunking, searching, parsing, reranking, and more. Our goal is to seamlessly bring together complex data sources into a single, easy-to-use interface for AI assistants with **a single MCP tool for assistants**: **search**.
+  - We will add a tool or two later, like `replace`, but we believe **three is the limit**. We want to keep the interface simple and focused.
+- **Focus on code understandings**. If you have used AI assistants like Claude for development, you see that they have to reconsume the same codebase over and over again. CodeWeaver is designed to end that cycle.
+
 ## 🚀 Quick Start
 
 ### Install with uv (Recommended)
@@ -229,7 +250,7 @@ query = "SELECT content, metadata FROM code_files"
 ## 📝 Example Searches
 
 ### Semantic Search (Natural Language)
-Ask Claude to search your code using plain English:
+Ask Claude (or any other AI assistant) to search your code using plain English:
 
 ```
 "Find authentication middleware functions"
@@ -291,6 +312,7 @@ Thanks to ast-grep's tree-sitter integration, CodeWeaver supports intelligent pa
 CodeWeaver automatically combines:
 1. **Provider embeddings** for semantic understanding (Voyage AI, OpenAI, etc.)
 2. **Provider reranking** for result quality (when available)
+3. **Hybrid search** for exact matches (e.g., `grep`-like functionality) if the embedding provider supports it
 3. **ast-grep parsing** for precise code structure
 
 ### Cost Optimization
@@ -310,9 +332,9 @@ Choose embedding dimensions based on your needs:
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               │
-         ┌─────────────────────┼─────────────────────┐
-         │                    │                     │
-         ▼                    ▼                     ▼
+        ┌─────────────────────┼─────────────────────┐
+        │                     │                     │
+        ▼                     ▼                     ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
 │ Embedding       │  │    ast-grep     │  │  Data Sources   │
 │ Providers       │  │   Tree-sitter   │  │  (Filesystem/   │
@@ -327,8 +349,11 @@ CodeWeaver uses a hierarchical configuration system that searches for config fil
 
 1. **Workspace local**: `.local.codeweaver.toml`
 2. **Repository**: `.codeweaver/.codeweaver.toml` or `.codeweaver.toml`
-3. **User config**: `~/.config/codeweaver/config.toml` (Linux/Mac) or `%LOCALAPPDATA%/codeweaver/config.toml` (Windows)
+3. **User config**: `~/.config/codeweaver/config.toml`[^1] (Linux/Mac) or `%LOCALAPPDATA%/codeweaver/config.toml`[^2] (Windows)
 4. **Environment variables**: `CW_*` prefixed variables
+
+[^1]: If `XDG_CONFIG_HOME` is set, it will use that directory instead of `~/.config/` (if it's not set to ~/.config...).
+[^2]: `%LOCALAPPDATA%` is usually `C:\Users\<YourUser>\AppData\Local`
 
 ### Complete Configuration Example
 ```toml
@@ -422,7 +447,7 @@ host = "localhost"
 
 ### Project Structure
 ```
-code-weaver-mcp/
+codeweaver/
 ├── src/codeweaver/           # Main source code
 │   ├── main.py              # MCP server entry point
 │   ├── server.py            # Core server implementation
@@ -485,7 +510,7 @@ We welcome contributions! Areas where help is especially appreciated:
 
 - **Provider Integrations**: Add more embedding providers and vector databases
 - **Data Sources**: Implement new data source types (S3, Azure Blob, etc.)
-- **Language Support**: Improve ast-grep patterns for better chunking
+- **Language Support**: Improve ast-grep patterns for better chunking. We have not yet implemented ast-grep patterns for all languages supported by ast-grep.
 - **Performance**: Optimization for large codebases
 - **Documentation**: More examples, tutorials, best practices
 
@@ -500,10 +525,6 @@ Based on published benchmarks and our testing:
 - **ast-grep parsing**: 10-100x faster than manual AST traversal
 - **Supports codebases** up to millions of lines with efficient batching
 - **Plugin architecture**: <10ms overhead for provider/backend switching
-
-## 🔄 Migration from v0.x
-
-If you're upgrading from an earlier version, see our [Migration Guide](docs/MIGRATION.md) for step-by-step instructions on updating your configuration and workflow.
 
 ## 🆚 Comparison
 
@@ -533,7 +554,7 @@ Set your embedding provider in config file or via `CW_EMBEDDING_API_KEY` environ
 Check your vector database URL and credentials. For Qdrant, ensure your cluster is accessible.
 
 **"No results found"**
-Ensure your codebase is indexed first using the `index_codebase` tool. Try broader search terms.
+Ensure your codebase is indexed first using the `index_codebase` tool. Try broader search terms. You can get some results using structural search patterns even without indexing.
 
 **"Configuration not found"**
 CodeWeaver looks for config files in several locations. Create a `.codeweaver.toml` file in your project root or use environment variables.
@@ -553,11 +574,13 @@ CodeWeaver was inspired by and builds upon the excellent work of several open-so
 
 **[RooCode](https://github.com/RooCodeInc/Roo-Code)** - Their sophisticated approach to codebase indexing and semantic chunking provided the foundation for our indexing strategy. RooCode's integration of multiple embedding providers and focus on developer experience shaped our design philosophy.
 
-**[ast-grep](https://ast-grep.github.io/)** - This incredible tool by Herrington Darkholme powers our structural search capabilities. ast-grep's tree-sitter integration and pattern matching system enables CodeWeaver to support 20+ languages with proper AST awareness.
+**[ast-grep](https://ast-grep.github.io/)** - This incredible tool by Herrington Darkholme powers our structural search capabilities. ast-grep's tree-sitter integration and pattern matching system enables CodeWeaver to support 20+ languages with proper AST awareness.[^1]
 
 **[Qdrant MCP Server](https://github.com/qdrant/mcp-server-qdrant)** - The official Qdrant MCP server provided the blueprint for MCP protocol implementation and vector database integration patterns.
 
 ### 🛠️ Technologies Used
+
+CodeWeaver is can be extended to use **any** *embedding provider*, *vector database*, *traditional search tool*, or *data source*. But if you just want to get started, the default configuration uses:
 
 - **[Voyage AI](https://www.voyageai.com/)** - Best-in-class code embeddings (`voyage-code-3`) and reranking (`voyage-rerank-2`)
 - **[ast-grep](https://ast-grep.github.io/)** - Tree-sitter based structural search and AST parsing
@@ -572,10 +595,14 @@ MIT OR Apache-2.0 License - see [LICENSE](LICENSE) for details.
 
 ## ⭐ Star History
 
-If CodeWeaver helps you navigate your codebase more effectively, please consider giving us a star! ⭐
+If CodeWeaver helps you navigate your codebase more effectively, give us a star! ⭐ If it doesn't, please open an issue or contribute to make it better.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=knitli/code-weaver-mcp&type=Date)](https://star-history.com/#knitli/code-weaver-mcp&Date) <-- look how sad it is! Please help us change that! 🙏
 
 ---
 
 **Built with 💚 for developers who want to understand their code better.**
 
 *CodeWeaver - Navigate your codebase with extensible semantic intelligence.*
+
+[^1]: What's AST? AST stands for Abstract Syntax Tree, a data structure that represents the structure of source code. In plain terms, it lets us create a map of your code, seeing how everything connects without getting lost in the details. This is crucial for understanding complex codebases, especially when searching for specific patterns or structures.

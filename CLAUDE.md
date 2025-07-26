@@ -79,7 +79,7 @@ Tests are organized by type and purpose:
 5. **`PluginDiscoveryEngine`**: Handles entry point scanning, directory scanning, and module introspection
 
 #### Core Server Components
-6. **`CleanCodeWeaverServer`**: Main MCP server using plugin system and FastMCP middleware
+6. **`CodeWeaverServer`**: Main MCP server using plugin system and FastMCP middleware
 7. **`ConfigManager`**: Hierarchical configuration system with TOML and environment variable support
 
 #### Protocol-Based Interfaces
