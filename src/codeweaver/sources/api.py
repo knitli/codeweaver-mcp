@@ -122,7 +122,7 @@ class APISourceConfig(BaseModel):
         "Use web crawler source for API documentation pages"
     ]
 )
-class APISource(AbstractDataSource):
+class APISourceProvider(AbstractDataSource):
     """API data source implementation.
 
     Treats API content as indexable text by extracting:
@@ -143,6 +143,36 @@ class APISource(AbstractDataSource):
             source_id: Unique identifier for this source instance
         """
         super().__init__("api", source_id)
+
+    @classmethod
+    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+        """Check if API source is available for the given capability."""
+        from codeweaver._types.source_enums import SourceCapability
+        
+        # API source supports most capabilities but requires HTTP libraries
+        supported_capabilities = {
+            SourceCapability.CONTENT_DISCOVERY,
+            SourceCapability.CONTENT_READING,
+            SourceCapability.METADATA_EXTRACTION,
+            SourceCapability.BATCH_PROCESSING,
+            SourceCapability.AUTHENTICATION,
+            SourceCapability.RATE_LIMITING,
+            SourceCapability.PAGINATION,
+        }
+        
+        if capability in supported_capabilities:
+            # Check for HTTP client dependencies
+            try:
+                import httpx  # noqa: F401
+                return True, None
+            except ImportError:
+                try:
+                    import requests  # noqa: F401
+                    return True, None
+                except ImportError:
+                    return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
+        
+        return False, f"Capability {capability.value} not supported by API source"
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by API source."""

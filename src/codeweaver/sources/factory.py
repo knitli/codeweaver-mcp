@@ -46,19 +46,19 @@ class SourceFactory:
         """Register all built-in source implementations."""
         try:
             # File system source (always available)
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.filesystem import FileSystemSourceProvider
 
             # Register with provider registry
             SOURCE_PROVIDERS[SourceProvider.FILESYSTEM] = SourceProviderInfo(
-                source_class=FileSystemSource,
-                capabilities=FileSystemSource.CAPABILITIES,
+                source_class=FileSystemSourceProvider,
+                capabilities=FileSystemSourceProvider.CAPABILITIES,
                 provider_type=SourceProvider.FILESYSTEM,
                 display_name="File System",
                 description="Local file system with gitignore support",
                 implemented=True,
             )
 
-            self._registry.register(SourceProvider.FILESYSTEM, FileSystemSource)
+            self._registry.register(SourceProvider.FILESYSTEM, FileSystemSourceProvider)
 
             logger.info(
                 "Registered %d built-in data sources", len(self._registry.list_available_sources())

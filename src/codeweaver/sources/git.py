@@ -88,7 +88,7 @@ class GitRepositorySourceConfig(BaseModel):
 
 
 @not_implemented
-class GitRepositorySource(AbstractDataSource):
+class GitRepositorySourceProvider(AbstractDataSource):
     """Git repository data source implementation.
 
     Provides content discovery from git repositories with support for
@@ -105,6 +105,32 @@ class GitRepositorySource(AbstractDataSource):
             source_id: Unique identifier for this source instance
         """
         super().__init__("git", source_id)
+
+    @classmethod
+    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+        """Check if git repository source is available for the given capability."""
+        from codeweaver._types.source_enums import SourceCapability
+        
+        # Git source supports most capabilities but requires git
+        supported_capabilities = {
+            SourceCapability.CONTENT_DISCOVERY,
+            SourceCapability.CONTENT_READING,
+            SourceCapability.CHANGE_WATCHING,
+            SourceCapability.INCREMENTAL_SYNC,
+            SourceCapability.VERSION_HISTORY,
+            SourceCapability.METADATA_EXTRACTION,
+            SourceCapability.BATCH_PROCESSING,
+            SourceCapability.AUTHENTICATION,
+        }
+        
+        if capability in supported_capabilities:
+            # Check for git availability
+            import shutil
+            if shutil.which("git") is None:
+                return False, "git command not found in PATH"
+            return True, None
+        
+        return False, f"Capability {capability.value} not supported by Git source"
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by git repository source."""

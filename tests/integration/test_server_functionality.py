@@ -388,9 +388,9 @@ module.exports = { debounce, ApiClient };
             None,
         )
         if not filesystem_source:
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.filesystem import FileSystemSourceProvider
 
-            filesystem_source = FileSystemSource()
+            filesystem_source = FileSystemSourceProvider()
 
         backend = await server["extensibility_manager"].get_backend()
         embedding_provider = await server["extensibility_manager"].get_embedding_provider()
