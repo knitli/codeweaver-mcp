@@ -11,7 +11,7 @@ native sparse vector support introduced in v1.10+.
 """
 
 import logging
-
+from datetime import datetime
 from typing import Any
 
 from qdrant_client import QdrantClient
@@ -43,6 +43,7 @@ from codeweaver._types.exceptions import (
     BackendConnectionError,
     BackendError,
 )
+from codeweaver._types.service_data import ServiceHealth, ServiceStatus
 
 
 logger = logging.getLogger(__name__)
@@ -453,3 +454,103 @@ class QdrantHybridBackend(QdrantBackend):
         when sparse_vector is provided in VectorPoint.
         """
         await self.upsert_vectors(collection_name, vectors)
+    
+    # Health Monitoring Methods
+    
+    async def health_check(self) -> ServiceHealth:
+        """Check backend health and connectivity."""
+        try:
+            # Test basic connectivity
+            health_info = self.client.get_cluster_info()
+            
+            if not health_info:
+                return ServiceHealth(
+                    status=ServiceStatus.UNHEALTHY,
+                    message="Unable to get cluster info from Qdrant",
+                    last_check=datetime.now()
+                )
+            
+            # Check if we can list collections
+            collections = self.client.get_collections()
+            collection_count = len(collections.collections) if collections else 0
+            
+            # Test basic operations
+            try:
+                # Try to get telemetry (lightweight operation)
+                telemetry = self.client.get_telemetry()
+                
+                return ServiceHealth(
+                    status=ServiceStatus.HEALTHY,
+                    message=f"Qdrant healthy: {collection_count} collections available",
+                    last_check=datetime.now(),
+                    metadata={
+                        "collection_count": collection_count,
+                        "cluster_info": str(health_info),
+                        "telemetry_available": telemetry is not None
+                    }
+                )
+                
+            except Exception as e:
+                # Connection works but some operations might be limited
+                return ServiceHealth(
+                    status=ServiceStatus.DEGRADED,
+                    message=f"Qdrant partially available: {e}",
+                    last_check=datetime.now(),
+                    metadata={"collection_count": collection_count}
+                )
+                
+        except Exception as e:
+            return ServiceHealth(
+                status=ServiceStatus.UNHEALTHY,
+                message=f"Qdrant connection failed: {e}",
+                last_check=datetime.now()
+            )
+    
+    def get_connection_info(self) -> dict[str, Any]:
+        """Get connection information for monitoring."""
+        try:
+            return {
+                "backend_type": "qdrant",
+                "url": getattr(self.client, '_client', {}).get('url', 'unknown'),
+                "sparse_vectors_enabled": self.enable_sparse_vectors,
+                "sparse_on_disk": getattr(self, 'sparse_on_disk', False)
+            }
+        except Exception:
+            return {
+                "backend_type": "qdrant",
+                "status": "connection_info_unavailable"
+            }
+    
+    async def get_performance_metrics(self) -> dict[str, Any]:
+        """Get performance metrics for monitoring."""
+        try:
+            collections = self.client.get_collections()
+            metrics = {
+                "total_collections": len(collections.collections) if collections else 0,
+                "collections": []
+            }
+            
+            # Get metrics for each collection
+            for collection in (collections.collections if collections else []):
+                try:
+                    collection_info = self.client.get_collection(collection.name)
+                    metrics["collections"].append({
+                        "name": collection.name,
+                        "points_count": collection_info.points_count if collection_info else 0,
+                        "vectors_count": collection_info.vectors_count if collection_info else 0,
+                        "status": collection_info.status if collection_info else "unknown"
+                    })
+                except Exception as e:
+                    metrics["collections"].append({
+                        "name": collection.name,
+                        "error": str(e)
+                    })
+            
+            return metrics
+            
+        except Exception as e:
+            return {
+                "error": f"Failed to get performance metrics: {e}",
+                "total_collections": 0,
+                "collections": []
+            }

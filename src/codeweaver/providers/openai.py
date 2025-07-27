@@ -219,9 +219,31 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         # Service-specific defaults based on base URL
         return 500000 if "openai.com" in self._base_url else 32000
 
-    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for documents with basic rate limiting."""
-        await self._apply_rate_limit()
+    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
+        """Generate embeddings for documents with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "openai",
+                "model": self._model,
+                "texts": texts,
+                "dimension": self._dimension
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug(f"Cache hit for {len(texts)} OpenAI embeddings")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("openai", len(texts))
+        else:
+            # Fallback to basic rate limiting
+            await self._apply_rate_limit()
 
         try:
             # Process in batches if needed
@@ -241,17 +263,43 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
 
                 batch_embeddings = [data.embedding for data in response.data]
                 embeddings.extend(batch_embeddings)
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
+                logger.debug(f"Cached {len(texts)} OpenAI embeddings")
+            
+            return embeddings
 
         except Exception:
             logger.exception("Error generating embeddings from %s", self._service_name)
             raise
 
+    async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
+        """Generate embedding for search query with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "openai",
+                "model": self._model,
+                "text": text,
+                "dimension": self._dimension
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug("Cache hit for OpenAI query embedding")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("openai", 1)
         else:
-            return embeddings
-
-    async def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for search query with basic rate limiting."""
-        await self._apply_rate_limit()
+            # Fallback to basic rate limiting
+            await self._apply_rate_limit()
 
         try:
             embedding_kwargs = {"input": [text], "model": self._model}
@@ -261,7 +309,14 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 embedding_kwargs["dimensions"] = self._dimension
 
             response = await self.client.embeddings.create(**embedding_kwargs)
-            return response.data[0].embedding
+            embedding = response.data[0].embedding
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
+                logger.debug("Cached OpenAI query embedding")
+            
+            return embedding
 
         except Exception:
             logger.exception("Error generating query embedding from %s", self._service_name)
