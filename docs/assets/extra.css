@@ -1,0 +1,295 @@
+/* SPDX-FileCopyrightText: 2025 Knitli Inc.
+ * SPDX-License-Identifier: MIT OR Apache-2.0
+ */
+
+/* CodeWeaver Documentation - Custom Styles */
+
+/* Root variables for consistent theming */
+:root {
+  --cw-primary: #1976d2;
+  --cw-primary-light: #42a5f5;
+  --cw-primary-dark: #1565c0;
+  --cw-accent: #ffc107;
+  --cw-accent-light: #ffecb3;
+  --cw-accent-dark: #ff8f00;
+  --cw-success: #4caf50;
+  --cw-warning: #ff9800;
+  --cw-error: #f44336;
+  --cw-info: #2196f3;
+  
+  /* Spacing */
+  --cw-spacing-xs: 0.25rem;
+  --cw-spacing-sm: 0.5rem;
+  --cw-spacing-md: 1rem;
+  --cw-spacing-lg: 1.5rem;
+  --cw-spacing-xl: 2rem;
+  
+  /* Shadows */
+  --cw-shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  --cw-shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+  --cw-shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+}
+
+/* Grid system for responsive cards */
+.grid {
+  display: grid;
+  gap: var(--cw-spacing-md);
+  margin: var(--cw-spacing-lg) 0;
+}
+
+.grid.cards {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Enhanced card styling */
+.md-typeset .card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  padding: var(--cw-spacing-lg);
+  box-shadow: var(--cw-shadow-sm);
+  transition: all 0.3s ease;
+  background: var(--md-default-bg-color);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.md-typeset .card:hover {
+  box-shadow: var(--cw-shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--cw-primary);
+}
+
+.md-typeset .card h3 {
+  margin-top: 0;
+  color: var(--cw-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--cw-spacing-sm);
+}
+
+.md-typeset .card p {
+  flex-grow: 1;
+  margin-bottom: 0;
+}
+
+/* Icon styling in cards */
+.md-typeset .card .twemoji {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Enhanced code blocks */
+.md-typeset .highlight {
+  margin: var(--cw-spacing-md) 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--cw-shadow-sm);
+}
+
+/* Copy button enhancement */
+.md-typeset .highlight .md-clipboard {
+  color: var(--md-default-fg-color--light);
+  transition: color 0.3s ease;
+}
+
+.md-typeset .highlight:hover .md-clipboard {
+  color: var(--cw-primary);
+}
+
+/* Enhanced admonitions */
+.md-typeset .admonition {
+  border-radius: 8px;
+  box-shadow: var(--cw-shadow-sm);
+  border: none;
+  margin: var(--cw-spacing-lg) 0;
+}
+
+.md-typeset .admonition.tip {
+  border-left: 4px solid var(--cw-success);
+}
+
+.md-typeset .admonition.warning {
+  border-left: 4px solid var(--cw-warning);
+}
+
+.md-typeset .admonition.note {
+  border-left: 4px solid var(--cw-info);
+}
+
+.md-typeset .admonition.danger {
+  border-left: 4px solid var(--cw-error);
+}
+
+/* Navigation enhancements */
+.md-nav__title {
+  font-weight: 600;
+}
+
+.md-nav__item--active > .md-nav__link {
+  color: var(--cw-primary);
+  font-weight: 600;
+}
+
+/* Table enhancements */
+.md-typeset table:not([class]) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--cw-shadow-sm);
+  margin: var(--cw-spacing-lg) 0;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: var(--md-default-fg-color--lightest);
+  font-weight: 600;
+}
+
+/* Success stories styling */
+.md-typeset .admonition.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  border-left: 4px solid var(--cw-success);
+}
+
+.md-typeset .admonition.success .admonition-title {
+  color: var(--cw-success);
+}
+
+/* Quote styling */
+.md-typeset .admonition.quote {
+  background-color: rgba(25, 118, 210, 0.05);
+  border-left: 4px solid var(--cw-primary);
+  font-style: italic;
+}
+
+.md-typeset .admonition.quote .admonition-title {
+  color: var(--cw-primary);
+}
+
+/* Command line styling */
+.md-typeset code {
+  background-color: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+}
+
+/* Enhanced button styling */
+.md-button {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.md-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--cw-shadow-md);
+}
+
+.md-button--primary {
+  background-color: var(--cw-primary);
+  color: white;
+  border: none;
+}
+
+.md-button--primary:hover {
+  background-color: var(--cw-primary-dark);
+}
+
+/* Mermaid diagram enhancements */
+.mermaid {
+  text-align: center;
+  margin: var(--cw-spacing-xl) 0;
+  background-color: var(--md-default-bg-color);
+  border-radius: 8px;
+  padding: var(--cw-spacing-lg);
+  box-shadow: var(--cw-shadow-sm);
+}
+
+/* Tab content enhancements */
+.md-typeset .tabbed-set {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--cw-shadow-sm);
+  margin: var(--cw-spacing-lg) 0;
+}
+
+.md-typeset .tabbed-labels > label {
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.md-typeset .tabbed-labels > label:hover {
+  background-color: var(--md-accent-fg-color--transparent);
+}
+
+/* Performance optimization for large pages */
+.md-content {
+  contain: layout style;
+}
+
+/* Print styles */
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-footer,
+  .md-nav,
+  .md-sidebar {
+    display: none !important;
+  }
+  
+  .md-main {
+    margin: 0 !important;
+  }
+  
+  .md-content {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+/* Responsive design enhancements */
+@media screen and (max-width: 768px) {
+  .grid.cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .md-typeset .card {
+    padding: var(--cw-spacing-md);
+  }
+  
+  .mermaid {
+    padding: var(--cw-spacing-md);
+    font-size: 0.8em;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .md-typeset .card {
+    border-width: 2px;
+  }
+  
+  .md-typeset .admonition {
+    border-left-width: 6px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .card,
+  .md-button,
+  .md-clipboard {
+    transition: none;
+  }
+  
+  .md-typeset .card:hover {
+    transform: none;
+  }
+  
+  .md-button:hover {
+    transform: none;
+  }
+}
