@@ -7,11 +7,17 @@
 FastMCP middleware components for CodeWeaver.
 
 Provides domain-specific middleware implementations for chunking and filtering.
-For rate limiting, logging, timing, and error handling, use FastMCP's built-in middleware.
+
+Also re-exports FastMCP's built-in middleware for convenience.
 """
+
+from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware, RetryMiddleware
+from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
+from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.server.middleware.timing import TimingMiddleware
 
 from codeweaver.middleware.chunking import ChunkingMiddleware
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 
 
-__all__ = ["ChunkingMiddleware", "FileFilteringMiddleware"]
+__all__ = ["ChunkingMiddleware", "ErrorHandlingMiddleware", "FileFilteringMiddleware", "LoggingMiddleware", "RateLimitingMiddleware", "RetryMiddleware", "StructuredLoggingMiddleware", "TimingMiddleware"]

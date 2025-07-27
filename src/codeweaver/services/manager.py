@@ -10,10 +10,14 @@ import contextlib
 import logging
 
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from fastmcp import FastMCP
 
 from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServicesConfig
+from codeweaver._types.service_config import ServiceConfig, ServicesConfig
 from codeweaver._types.service_data import HealthStatus, ServicesHealthReport
 from codeweaver._types.service_exceptions import (
     ServiceCreationError,
@@ -22,9 +26,13 @@ from codeweaver._types.service_exceptions import (
 )
 from codeweaver._types.services import (
     CacheService,
+    ErrorHandlingService,
+    LoggingService,
     MetricsService,
     MonitoringService,
+    RateLimitingService,
     ServiceProvider,
+    TimingService,
     ValidationService,
 )
 from codeweaver.factories.service_registry import ServiceRegistry
@@ -35,16 +43,26 @@ from codeweaver.services.providers.file_filtering import FilteringService
 class ServicesManager:
     """Manager for coordinating all service providers."""
 
-    def __init__(self, config: ServicesConfig, logger: logging.Logger | None = None):
-        """Initialize the services manager with configuration and logger."""
+    def __init__(
+        self,
+        config: ServicesConfig,
+        logger: logging.Logger | None = None,
+        fastmcp_server: "FastMCP | None" = None,  # NEW: FastMCP server reference
+    ):
+        """Initialize the services manager with configuration, logger, and FastMCP server."""
         self._config = config
         self._logger = logger or logging.getLogger("codeweaver.services.manager")
+        self._fastmcp_server = fastmcp_server  # NEW: Store FastMCP server reference
 
         # Service registry
         self._registry = ServiceRegistry(self._logger)
 
         # Service instances
         self._services: dict[ServiceType, ServiceProvider] = {}
+
+        # NEW: Middleware service tracking
+        self._middleware_services: dict[ServiceType, ServiceProvider] = {}
+        self._middleware_registration_order: list[ServiceType] = []
 
         # State management
         self._initialized = False
@@ -68,6 +86,9 @@ class ServicesManager:
 
             # Create optional services if enabled
             await self._create_optional_services()
+
+            # NEW: Create and register middleware services
+            await self._create_middleware_services()
 
             # Start health monitoring if enabled
             if self._config.health_check_enabled:
@@ -149,6 +170,30 @@ class ServicesManager:
         """List all active services."""
         return self._services.copy()
 
+    def get_logging_service(self) -> LoggingService | None:
+        """Get the logging middleware service."""
+        return self._middleware_services.get(ServiceType.LOGGING)
+
+    def get_timing_service(self) -> TimingService | None:
+        """Get the timing middleware service."""
+        return self._middleware_services.get(ServiceType.TIMING)
+
+    def get_error_handling_service(self) -> ErrorHandlingService | None:
+        """Get the error handling middleware service."""
+        return self._middleware_services.get(ServiceType.ERROR_HANDLING)
+
+    def get_rate_limiting_service(self) -> RateLimitingService | None:
+        """Get the rate limiting middleware service."""
+        return self._middleware_services.get(ServiceType.RATE_LIMITING)
+
+    def get_middleware_service(self, service_type: ServiceType) -> ServiceProvider | None:
+        """Get a middleware service by type."""
+        return self._middleware_services.get(service_type)
+
+    def list_middleware_services(self) -> dict[ServiceType, ServiceProvider]:
+        """Get all middleware services."""
+        return self._middleware_services.copy()
+
     async def get_health_report(self) -> ServicesHealthReport:
         """Get comprehensive health report for all services."""
         services_health = {}
@@ -176,7 +221,7 @@ class ServicesManager:
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
-                    last_check=datetime.now(datetime.timezone.utc),
+                    last_check=datetime.UTC,
                     response_time=0.0,
                     error_count=1,
                     success_rate=0.0,
@@ -196,7 +241,7 @@ class ServicesManager:
         return ServicesHealthReport(
             overall_status=overall_status,
             services=services_health,
-            check_time=datetime.now(datetime.timezone.utc),
+            check_time=datetime.UTC,
             metrics=metrics,
         )
 
@@ -221,18 +266,48 @@ class ServicesManager:
         self._logger.info("Service restarted successfully: %s", service_type.value)
 
     async def _register_builtin_providers(self) -> None:
-        """Register all built-in service providers."""
-        # Register chunking providers
-        self._registry.register_provider(ServiceType.CHUNKING, "fastmcp_chunking", ChunkingService)
+        """Register all built-in service providers including middleware providers."""
+        try:
+            # Register core service providers
+            self._registry.register_provider(
+                ServiceType.CHUNKING, "fastmcp_chunking", ChunkingService
+            )
+            self._registry.register_provider(
+                ServiceType.FILTERING, "fastmcp_filtering", FilteringService
+            )
 
-        # Register filtering providers
-        self._registry.register_provider(
-            ServiceType.FILTERING, "fastmcp_filtering", FilteringService
-        )
+            # NEW: Register middleware service providers
+            from codeweaver.services.providers.middleware import (
+                FastMCPErrorHandlingProvider,
+                FastMCPLoggingProvider,
+                FastMCPRateLimitingProvider,
+                FastMCPTimingProvider,
+            )
 
-        # TODO: Register other built-in providers when available
+            # Register middleware providers
+            self._registry.register_provider(
+                ServiceType.LOGGING, "fastmcp_logging", FastMCPLoggingProvider
+            )
+            self._registry.register_provider(
+                ServiceType.TIMING, "fastmcp_timing", FastMCPTimingProvider
+            )
+            self._registry.register_provider(
+                ServiceType.ERROR_HANDLING, "fastmcp_error_handling", FastMCPErrorHandlingProvider
+            )
+            self._registry.register_provider(
+                ServiceType.RATE_LIMITING, "fastmcp_rate_limiting", FastMCPRateLimitingProvider
+            )
 
-        self._logger.info("Built-in service providers registered")
+            self._logger.info("Middleware service providers registered")
+
+            # TODO: Register other built-in providers when available
+
+            self._logger.info("Built-in service providers registered")
+
+        except Exception as e:
+            error_msg = f"Failed to register builtin providers: {e}"
+            self._logger.exception(error_msg)
+            raise ServiceInitializationError(error_msg) from e
 
     async def _create_core_services(self) -> None:
         """Create and initialize core services."""
@@ -272,11 +347,108 @@ class ServicesManager:
                         "Failed to create optional service %s: %s", service_type.value, e
                     )
 
+    async def _create_middleware_services(self) -> None:
+        """Create and register middleware services with FastMCP server."""
+        if not self._fastmcp_server:
+            self._logger.warning(
+                "No FastMCP server provided, skipping middleware service registration"
+            )
+            return
+
+        try:
+            self._logger.info("Creating middleware services")
+
+            # Use configured initialization order
+            middleware_order = self._config.middleware_initialization_order or [
+                "error_handling",
+                "rate_limiting",
+                "logging",
+                "timing",
+            ]
+
+            for service_name in middleware_order:
+                service_type = ServiceType(service_name)
+
+                # Get service configuration
+                service_config = getattr(self._config, service_name, None)
+                if not service_config or not service_config.enabled:
+                    self._logger.debug("Middleware service %s disabled, skipping", service_name)
+                    continue
+
+                # Create middleware service
+                middleware_service = await self._create_middleware_service(
+                    service_type, service_config
+                )
+                if middleware_service:
+                    self._middleware_services[service_type] = middleware_service
+                    self._middleware_registration_order.append(service_type)
+
+                    # Register middleware with FastMCP server if auto-registration is enabled
+                    if self._config.middleware_auto_registration:
+                        await self._register_middleware_with_server(
+                            service_type, middleware_service
+                        )
+
+            self._logger.info("Middleware services created and registered")
+
+        except Exception as e:
+            error_msg = f"Failed to create middleware services: {e}"
+            self._logger.exception(error_msg)
+            raise ServiceInitializationError(error_msg) from e
+
+    async def _create_middleware_service(
+        self, service_type: ServiceType, config: "ServiceConfig"
+    ) -> ServiceProvider | None:
+        """Create a single middleware service."""
+        try:
+            # Create service using registry
+            service = await self._registry.create_service(service_type, config)
+
+            # Initialize the service
+            await service.initialize()
+
+        except Exception as e:
+            self._logger.exception("Failed to create middleware service %s", service_type.value)
+            if config.fail_fast:
+                raise ServiceCreationError(f"Failed to create {service_type.value} service") from e
+            return None
+        else:
+            self._logger.info("Created middleware service: %s", service_type.value)
+            return service
+
+    async def _register_middleware_with_server(
+        self, service_type: ServiceType, service: ServiceProvider
+    ) -> None:
+        """Register middleware service with FastMCP server."""
+        try:
+            if hasattr(service, "get_middleware_instance"):
+                middleware_instance = service.get_middleware_instance()
+                self._fastmcp_server.add_middleware(middleware_instance)
+                self._logger.info(
+                    "Registered %s middleware with FastMCP server", service_type.value
+                )
+            else:
+                self._logger.warning(
+                    "Service %s does not provide middleware instance", service_type.value
+                )
+        except Exception:
+            self._logger.exception(
+                "Failed to register %s middleware with server", service_type.value
+            )
+            raise
+
     def _get_service_config(self, service_type: ServiceType) -> Any:
         """Get configuration for a specific service type."""
         config_map = {
+            # Core services
             ServiceType.CHUNKING: self._config.chunking,
             ServiceType.FILTERING: self._config.filtering,
+            # Middleware services
+            ServiceType.LOGGING: self._config.logging,
+            ServiceType.TIMING: self._config.timing,
+            ServiceType.ERROR_HANDLING: self._config.error_handling,
+            ServiceType.RATE_LIMITING: self._config.rate_limiting,
+            # Optional services
             ServiceType.VALIDATION: self._config.validation,
             ServiceType.CACHE: self._config.cache,
             ServiceType.MONITORING: self._config.monitoring,

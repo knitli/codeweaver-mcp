@@ -19,11 +19,22 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
+from codeweaver.utils.decorators import not_implemented
 
 
 logger = logging.getLogger(__name__)
 
 
+@not_implemented(
+    message=None,
+    suggestions=[
+        "We haven't implemented API source yet",
+        "We'd love your help implementing it!",
+        "Consider contributing to the project",
+        "Or [open an issue](https://github.com/knitli/codeweaver-mcp/issues/) to discuss your use case",
+        "You can also implement your own source using the SourceData protocol",
+    ]
+    )
 class APISourceConfig(BaseModel):
     """Configuration specific to API data sources."""
 
@@ -101,6 +112,16 @@ class APISourceConfig(BaseModel):
     ]
 
 
+@not_implemented(
+    message="API source requires HTTP client dependencies like httpx or requests",
+    suggestions=[
+        "Install httpx: pip install httpx",
+        "Install requests: pip install requests",
+        "Use filesystem source for static API documentation",
+        "Consider implementing with aiohttp for async support",
+        "Use web crawler source for API documentation pages"
+    ]
+)
 class APISource(AbstractDataSource):
     """API data source implementation.
 

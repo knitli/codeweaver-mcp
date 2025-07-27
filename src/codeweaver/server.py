@@ -19,18 +19,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
-from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
-from fastmcp.server.middleware.logging import LoggingMiddleware
-
-# FastMCP built-in middleware
-from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
-from fastmcp.server.middleware.timing import TimingMiddleware
 
 from codeweaver._types import ContentSearchResult, ExtensibilityConfig
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
 
 # CodeWeaver domain-specific middleware
 from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
+from codeweaver.services.manager import ServicesManager
 
 
 if TYPE_CHECKING:
@@ -77,8 +72,10 @@ class CodeWeaverServer:
 
         # Component instances (populated during initialization)
         self._components: dict[str, Any] = {}
-        self._middleware_instances: dict[str, Any] = {}
         self._initialized = False
+
+        # Services manager (created during initialization)
+        self.services_manager: ServicesManager | None = None
 
     async def initialize(self) -> None:
         """Initialize server with FastMCP middleware and plugin system."""
@@ -91,8 +88,15 @@ class CodeWeaverServer:
         # Initialize plugin system first
         await self.extensibility_manager.initialize()
 
-        # Setup FastMCP middleware stack
-        await self._setup_middleware()
+        # NEW: Create and initialize services manager with FastMCP server reference
+        self.services_manager = ServicesManager(
+            config=self.config.services,
+            fastmcp_server=self.mcp
+        )
+        await self.services_manager.initialize()
+
+        # Setup domain-specific middleware (chunking, filtering)
+        await self._setup_domain_middleware()
 
         # Get plugin system components
         await self._initialize_components()
@@ -103,62 +107,21 @@ class CodeWeaverServer:
         self._initialized = True
         logger.info("Clean CodeWeaver server initialization complete")
 
-    async def _setup_middleware(self) -> None:
-        """Setup FastMCP middleware stack."""
-        logger.info("Setting up FastMCP middleware stack")
+    async def _setup_domain_middleware(self) -> None:
+        """Setup domain-specific middleware (chunking, filtering)."""
+        # NOTE: FastMCP builtin middleware now handled by ServicesManager
+        # Only setup domain-specific middleware here
 
-        # Error handling middleware (first in chain for proper error catching)
-        error_handler = ErrorHandlingMiddleware(
-            include_traceback=False,  # Don't expose internal details
-            transform_errors=True,  # Convert to MCP errors
-        )
-        self.mcp.add_middleware(error_handler)
-        self._middleware_instances["error_handling"] = error_handler
-        logger.info("Added error handling middleware")
-
-        # Rate limiting middleware (using FastMCP built-in)
-        # Convert requests_per_minute to requests_per_second
-        requests_per_second = 1.0
-        rate_limiter = RateLimitingMiddleware(
-            max_requests_per_second=requests_per_second,
-            burst_capacity=10,  # Allow short bursts
-            global_limit=True,  # Apply globally, not per-client
-        )
-        self.mcp.add_middleware(rate_limiter)
-        self._middleware_instances["rate_limiting"] = rate_limiter
-        logger.info("Added rate limiting middleware")
-
-        # Logging middleware (using FastMCP built-in)
-        import logging as logging_module
-
-        log_level = getattr(
-            logging_module, self.config.server.log_level.upper(), logging_module.INFO
-        )
-        log_middleware = LoggingMiddleware(
-            log_level=log_level,
-            include_payloads=self.config.server.enable_request_logging,
-            max_payload_length=1000,
-            methods=None,  # Log all methods
-        )
-        self.mcp.add_middleware(log_middleware)
-        self._middleware_instances["logging"] = log_middleware
-        logger.info("Added logging middleware")
-
-        # Timing middleware (for performance monitoring)
-        timing_middleware = TimingMiddleware(log_level=log_level)
-        self.mcp.add_middleware(timing_middleware)
-        self._middleware_instances["timing"] = timing_middleware
-        logger.info("Added timing middleware")
+        logger.info("Setting up domain-specific middleware")
 
         # Chunking middleware (using existing chunking config)
         chunking_config = {
             "max_chunk_size": self.config.chunking.max_chunk_size,
             "min_chunk_size": self.config.chunking.min_chunk_size,
-            "ast_grep_enabled": True,  # Enable by default
+            "ast_grep_enabled": True,
         }
         chunking_middleware = ChunkingMiddleware(chunking_config)
         self.mcp.add_middleware(chunking_middleware)
-        self._middleware_instances["chunking"] = chunking_middleware
         logger.info("Added chunking middleware")
 
         # File filtering middleware (using existing indexing config)
@@ -166,14 +129,13 @@ class CodeWeaverServer:
             "use_gitignore": self.config.indexing.use_gitignore,
             "max_file_size": f"{self.config.chunking.max_file_size_mb}MB",
             "excluded_dirs": self.config.indexing.additional_ignore_patterns,
-            "included_extensions": None,  # Allow all supported extensions
+            "included_extensions": None,
         }
         filtering_middleware = FileFilteringMiddleware(filtering_config)
         self.mcp.add_middleware(filtering_middleware)
-        self._middleware_instances["filtering"] = filtering_middleware
         logger.info("Added file filtering middleware")
 
-        logger.info("FastMCP middleware stack setup complete")
+        logger.info("Domain-specific middleware setup complete")
 
     async def _initialize_components(self) -> None:
         """Initialize plugin system components."""
@@ -242,10 +204,10 @@ class CodeWeaverServer:
         backend = self._components["backend"]
         embedding_provider = self._components["embedding_provider"]
 
-        # Create context with middleware services for source to use
+        # Create context with services for source to use
         source_context = {
-            "chunking_service": ctx.get_state_value("chunking_service"),
-            "filtering_service": ctx.get_state_value("filtering_service"),
+            "chunking_service": self.services_manager.get_chunking_service() if self.services_manager else None,
+            "filtering_service": self.services_manager.get_filtering_service() if self.services_manager else None,
         }
 
         # Index using enhanced filesystem source
@@ -271,9 +233,10 @@ class CodeWeaverServer:
             "status": "success",
             "indexed_chunks": len(chunks),
             "collection": self.config.backend.collection_name,
-            "middleware_services_used": {
-                "chunking": ctx.get_state_value("chunking_service") is not None,
-                "filtering": ctx.get_state_value("filtering_service") is not None,
+            "services_used": {
+                "chunking": source_context["chunking_service"] is not None,
+                "filtering": source_context["filtering_service"] is not None,
+                "middleware_services": list(self.services_manager.list_middleware_services().keys()) if self.services_manager else [],
             },
         }
 
@@ -429,8 +392,10 @@ class CodeWeaverServer:
         # Get filesystem source
         filesystem_source = self._components["filesystem_source"]
 
-        # Create context with middleware services
-        source_context = {"filtering_service": ctx.get_state_value("filtering_service")}
+        # Create context with services
+        source_context = {
+            "filtering_service": self.services_manager.get_filtering_service() if self.services_manager else None
+        }
 
         # Perform structural search using enhanced filesystem source
         results = await filesystem_source.structural_search(
@@ -441,27 +406,30 @@ class CodeWeaverServer:
 
     async def _get_supported_languages_handler(self, ctx: Context) -> dict[str, Any]:
         """Get information about supported languages and capabilities."""
-        # Get chunking middleware info
-        chunking_service = ctx.get_state_value("chunking_service")
         chunking_info = {}
-        if chunking_service:
-            chunking_info = chunking_service.get_supported_languages()
-
-        # Get filtering middleware info
-        filtering_service = ctx.get_state_value("filtering_service")
         filtering_info = {}
-        if filtering_service:
-            filtering_info = filtering_service.get_filtering_stats()
+        middleware_info = {}
+
+        if self.services_manager:
+            # Get service information
+            if chunking_service := self.services_manager.get_chunking_service():
+                chunking_info = chunking_service.get_supported_languages()
+            if filtering_service := self.services_manager.get_filtering_service():
+                filtering_info = await filtering_service.get_filtering_stats()
+
+            # Get middleware service information
+            middleware_services = self.services_manager.list_middleware_services()
+            middleware_info = {str(service_type): service.name for service_type, service in middleware_services.items()}
 
         # Get plugin system component info
         component_info = self.extensibility_manager.get_component_info()
 
         return {
-            "server_type": "clean_plugin_system",
+            "server_type": "services_integrated",
             "chunking": chunking_info,
             "filtering": filtering_info,
+            "middleware_services": middleware_info,
             "extensibility": component_info,
-            "middleware_stack": list(self._middleware_instances.keys()),
         }
 
     async def run(self) -> None:
@@ -473,12 +441,15 @@ class CodeWeaverServer:
         """Gracefully shutdown the server."""
         logger.info("Shutting down clean CodeWeaver server")
 
+        # Shutdown services manager
+        if self.services_manager:
+            await self.services_manager.shutdown()
+
         # Shutdown extensibility manager
         await self.extensibility_manager.shutdown()
 
         # Clear component cache
         self._components.clear()
-        self._middleware_instances.clear()
         self._initialized = False
 
         logger.info("Clean server shutdown complete")

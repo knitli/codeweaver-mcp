@@ -101,7 +101,7 @@ class MockVectorBackend:
         self.collections[name] = {
             "dimension": dimension,
             "distance_metric": distance_metric,
-            "created_at": datetime.now(datetime.timezone.utc),
+            "created_at": datetime.UTC,
             "points_count": 0,
             **kwargs,
         }
@@ -292,7 +292,7 @@ class MockHybridSearchBackend(MockVectorBackend):
         self.sparse_indexes[collection_name] = {
             "fields": fields,
             "index_type": index_type,
-            "created_at": datetime.now(datetime.timezone.utc),
+            "created_at": datetime.UTC,
             **kwargs,
         }
 
@@ -844,7 +844,7 @@ class MockDataSource(AbstractDataSource):
                 path=path,
                 content_type="file",
                 metadata={"file_type": language, "repository": "mock_repo", "branch": "main"},
-                last_modified=datetime.now(datetime.timezone.utc),
+                last_modified=datetime.UTC,
                 size=size,
                 language=language,
                 source_id=self.source_id,
@@ -975,7 +975,7 @@ export default Button;
         if watcher.is_active:
             # Simulate a content change
             changed_item = self._content_items[0]  # Change first item
-            changed_item.last_modified = datetime.now(datetime.timezone.utc)
+            changed_item.last_modified = datetime.UTC
             changed_item.version = f"updated_{int(time.time())}"
 
             # Notify the watcher

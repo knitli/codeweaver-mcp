@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
+from codeweaver.utils.decorators import not_implemented
 
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,7 @@ class GitRepositorySourceConfig(BaseModel):
     ]
 
 
+@not_implemented
 class GitRepositorySource(AbstractDataSource):
     """Git repository data source implementation.
 

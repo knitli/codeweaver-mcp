@@ -134,18 +134,3 @@ class DataSourcesConfig(BaseModel):
                 errors.append(f"Source {i}: priority must be a positive integer")
 
         return errors
-
-    def to_toml(self) -> str:
-        """Export to TOML with Pydantic serialization."""
-        import tomlkit
-
-        data = self.model_dump(exclude_unset=True)
-        return tomlkit.dumps(data)
-
-    @classmethod
-    def from_toml(cls, toml_str: str) -> "DataSourcesConfig":
-        """Load from TOML with validation."""
-        import tomlkit
-
-        data = tomlkit.parse(toml_str)
-        return cls.model_validate(data)

@@ -372,3 +372,105 @@ class MetricsService(Protocol):
     def get_collection_interval(self) -> float:
         """Get current collection interval."""
         ...
+
+
+# Middleware service protocols for FastMCP integration
+
+@runtime_checkable
+class LoggingService(Protocol):
+    """Protocol for logging middleware service."""
+
+    def set_log_level(self, level: str) -> None:
+        """Set the logging level."""
+        ...
+
+    def set_include_payloads(self, *, include: bool) -> None:
+        """Set whether to include payloads in logs."""
+        ...
+
+    def set_max_payload_length(self, length: int) -> None:
+        """Set maximum payload length to log."""
+        ...
+
+    async def log_request(self, method: str, params: dict[str, Any]) -> None:
+        """Log an incoming request."""
+        ...
+
+    async def log_response(self, method: str, result: Any, duration: float) -> None:
+        """Log an outgoing response."""
+        ...
+
+    def get_middleware_instance(self) -> Any:
+        """Get the FastMCP middleware instance."""
+        ...
+
+
+@runtime_checkable
+class TimingService(Protocol):
+    """Protocol for timing middleware service."""
+
+    def set_track_metrics(self, *, track: bool) -> None:
+        """Set whether to track performance metrics."""
+        ...
+
+    async def record_timing(self, method: str, duration: float) -> None:
+        """Record timing for a method call."""
+        ...
+
+    async def get_timing_stats(self) -> dict[str, Any]:
+        """Get timing statistics."""
+        ...
+
+    def get_middleware_instance(self) -> Any:
+        """Get the FastMCP middleware instance."""
+        ...
+
+
+@runtime_checkable
+class ErrorHandlingService(Protocol):
+    """Protocol for error handling middleware service."""
+
+    def set_include_traceback(self, *, include: bool) -> None:
+        """Set whether to include traceback in errors."""
+        ...
+
+    def set_transform_errors(self, *, transform: bool) -> None:
+        """Set whether to transform errors to MCP format."""
+        ...
+
+    async def handle_error(self, error: Exception, context: dict[str, Any]) -> Any:
+        """Handle an error with the middleware."""
+        ...
+
+    async def get_error_stats(self) -> dict[str, Any]:
+        """Get error handling statistics."""
+        ...
+
+    def get_middleware_instance(self) -> Any:
+        """Get the FastMCP middleware instance."""
+        ...
+
+
+@runtime_checkable
+class RateLimitingService(Protocol):
+    """Protocol for rate limiting middleware service."""
+
+    def set_rate_limit(self, requests_per_second: float) -> None:
+        """Set the rate limit."""
+        ...
+
+    def set_burst_capacity(self, capacity: int) -> None:
+        """Set the burst capacity."""
+        ...
+
+    async def check_rate_limit(self, client_id: str | None = None) -> bool:
+        """Check if request is within rate limit."""
+        ...
+
+    async def get_rate_limit_stats(self) -> dict[str, Any]:
+        """Get rate limiting statistics."""
+        ...
+
+    def get_middleware_instance(self) -> Any:
+        """Get the FastMCP middleware instance."""
+        ...

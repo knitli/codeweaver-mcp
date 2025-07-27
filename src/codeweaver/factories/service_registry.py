@@ -45,7 +45,7 @@ class ServiceRegistry:
 
         # Registry state
         self._initialized = False
-        self._created_at = datetime.now(datetime.timezone.utc)
+        self._created_at = datetime.now(datetime.UTC)
 
     def register_provider(
         self,
@@ -97,8 +97,8 @@ class ServiceRegistry:
                 capabilities=capabilities or ServiceCapabilities(),
                 configuration_schema=configuration_schema or {},
                 status=ProviderStatus.REGISTERED,
-                created_at=datetime.now(datetime.timezone.utc),
-                last_modified=datetime.now(datetime.timezone.utc),
+                created_at=datetime.UTC,
+                last_modified=datetime.UTC,
             )
 
             self._provider_info[service_type][provider_name] = provider_info
@@ -160,7 +160,7 @@ class ServiceRegistry:
                 provider_name=config.provider,
                 instance_id=f"{service_type.value}_{config.provider}_{id(service_instance)}",
                 status="ready",
-                created_at=datetime.now(datetime.timezone.utc),
+                created_at=datetime.UTC,
                 last_health_check=None,
                 config_hash=str(hash(str(config))),
             )
@@ -259,7 +259,7 @@ class ServiceRegistry:
             total_services=total_services,
             healthy_services=healthy_services,
             total_providers=total_providers,
-            last_check=datetime.now(datetime.timezone.utc),
+            last_check=datetime.UTC,
             issues=issues,
         )
 

@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
@@ -8,8 +9,7 @@ import logging
 from typing import Any
 
 from codeweaver.backends.factory import BackendFactory
-
-from .config import DocArrayBackendConfig, DocArrayConfigFactory
+from codeweaver.config import DocArrayBackendConfig, DocArrayConfigFactory
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ def create_docarray_backend(config: DocArrayBackendConfig) -> Any:
     provider = str(config.provider).lower()
 
     if provider == "docarray_qdrant":
-        from .qdrant import QdrantDocArrayBackend
+        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend
 
         return QdrantDocArrayBackend(config)
     if provider == "docarray_pinecone":
@@ -36,11 +36,15 @@ def register_docarray_backends() -> None:
     """Register DocArray backends with the main factory."""
     try:
         # Register Qdrant DocArray backend
-        from .qdrant import QdrantDocArrayBackend
+        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend
 
-        # Check if dependencies are available
-        missing_deps = QdrantDocArrayBackend._check_dependencies()
-        if not missing_deps:
+        if missing_deps := QdrantDocArrayBackend._check_dependencies():
+            logger.warning(
+                "DocArray Qdrant backend not available, missing dependencies: %s",
+                ", ".join(missing_deps),
+            )
+
+        else:
             BackendFactory.register_backend(
                 "docarray_qdrant",
                 lambda **kwargs: create_docarray_backend(
@@ -49,12 +53,6 @@ def register_docarray_backends() -> None:
                 supports_hybrid=True,
             )
             logger.info("Registered DocArray Qdrant backend")
-        else:
-            logger.warning(
-                "DocArray Qdrant backend not available, missing dependencies: %s",
-                ", ".join(missing_deps),
-            )
-
     except ImportError as e:
         logger.warning("Failed to register DocArray backends: %s", e)
 

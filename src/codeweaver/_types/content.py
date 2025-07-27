@@ -16,7 +16,8 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from codeweaver._types import ContentItem, ContentType, SearchResult
+from codeweaver._types.backends import SearchResult
+from codeweaver._types.data_structures import ContentItem, ContentType
 
 
 class CodeChunk(BaseModel):

@@ -37,8 +37,17 @@ class ComponentType(BaseEnum):
 class ServiceType(BaseEnum):
     """Types of services in the system."""
 
+    # Core services
     CHUNKING = "chunking"
     FILTERING = "filtering"
+
+    # Middleware services (FastMCP integration)
+    LOGGING = "logging"
+    TIMING = "timing"
+    ERROR_HANDLING = "error_handling"
+    RATE_LIMITING = "rate_limiting"
+
+    # Optional services
     VALIDATION = "validation"
     CACHE = "cache"
     MONITORING = "monitoring"
@@ -50,9 +59,19 @@ class ServiceType(BaseEnum):
         return [cls.CHUNKING, cls.FILTERING]
 
     @classmethod
+    def get_middleware_services(cls) -> list["ServiceType"]:
+        """Get middleware services for FastMCP integration."""
+        return [cls.LOGGING, cls.TIMING, cls.ERROR_HANDLING, cls.RATE_LIMITING]
+
+    @classmethod
     def get_optional_services(cls) -> list["ServiceType"]:
         """Get optional services for enhanced functionality."""
         return [cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS]
+
+    @classmethod
+    def get_all_services(cls) -> list["ServiceType"]:
+        """Get all available service types."""
+        return cls.get_core_services() + cls.get_middleware_services() + cls.get_optional_services()
 
 
 class ValidationLevel(BaseEnum):

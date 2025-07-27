@@ -23,6 +23,7 @@ from codeweaver._types import (
 )
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import HuggingFaceConfig
+from codeweaver.utils.decorators import feature_flag_required
 
 
 try:
@@ -47,6 +48,11 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+@feature_flag_required(
+    "huggingface",
+    dependencies=["torch", "transformers"],
+    note="HuggingFace provider requires the 'huggingface' feature flag to be enabled.",
+)
 class HuggingFaceProvider(EmbeddingProviderBase):
     """HuggingFace provider for embeddings with support for API and local models."""
 

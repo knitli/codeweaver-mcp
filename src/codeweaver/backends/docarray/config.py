@@ -3,7 +3,7 @@
 
 """Configuration classes for DocArray backend integration."""
 
-from typing import Annotated, Any, ClassVar, Literal
+from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -177,21 +177,27 @@ class DocArrayBackendKind(BaseEnum):
             case _:
                 raise ValueError(f"Unsupported DocArray backend kind: {self.value}")
 
+    @property
+    def member_to_class(self) -> tuple[Self, type[DocArrayBackendConfig]]:
+        """Convert enum member to (kind, config class) tuple."""
+        return (self, self.config_class)
+
+    @classmethod
+    def member_to_class_mapping(cls) -> dict[type["DocArrayBackendKind"], type[DocArrayBackendConfig]]:
+        """Get mapping of enum members to their configuration classes."""
+        return {member: member.config_class for member in cls.members()}
+
 
 # Configuration factory
 class DocArrayConfigFactory:
     """Factory for creating DocArray backend configurations."""
 
-    CONFIG_MAPPING: ClassVar[Literal] = {
-        "docarray_qdrant": QdrantDocArrayConfig,
-        "docarray_pinecone": PineconeDocArrayConfig,
-        "docarray_weaviate": WeaviateDocArrayConfig,
-    }
+    CONFIG_MAPPING: ClassVar[dict[DocArrayBackendKind, DocArrayBackendConfig]] = DocArrayBackendKind.member_to_class_mapping()
 
     @classmethod
     def create_config(cls, backend_type: str, **kwargs: Any) -> DocArrayBackendConfig:
         """Create configuration for specified backend type."""
-        config_class = cls.CONFIG_MAPPING.get(backend_type, DocArrayBackendConfig)
+        config_class = cls.CONFIG_MAPPING.get(DocArrayBackendKind.from_string(backend_type), DocArrayBackendConfig)
         return config_class(**kwargs)
 
     @classmethod

@@ -1,3 +1,4 @@
+# sourcery skip: lambdas-should-be-short
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -220,15 +221,77 @@ class MetricsServiceConfig(ServiceConfig):
     collect_business_metrics: Annotated[bool, Field(description="Collect business metrics")] = False
 
 
+class LoggingServiceConfig(ServiceConfig):
+    """Configuration for logging middleware service."""
+
+    provider: str = "fastmcp_logging"
+    log_level: Annotated[str, Field(description="Log level for requests")] = "INFO"
+    include_payloads: Annotated[bool, Field(description="Include request/response payloads")] = False
+    max_payload_length: Annotated[int, Field(gt=0, description="Max payload length to log")] = 1000
+    structured_logging: Annotated[bool, Field(description="Enable structured logging")] = False
+    log_performance_metrics: Annotated[bool, Field(description="Log performance metrics")] = True
+    log_to_service_bridge: Annotated[bool, Field(description="Log to service bridge")] = True
+    methods: Annotated[list[str] | None, Field(description="Methods to log (None = all)")] = None
+
+
+class TimingServiceConfig(ServiceConfig):
+    """Configuration for timing middleware service."""
+
+    provider: str = "fastmcp_timing"
+    log_level: Annotated[str, Field(description="Log level for timing info")] = "INFO"
+    track_performance_metrics: Annotated[bool, Field(description="Track performance metrics")] = True
+    expose_metrics_endpoint: Annotated[bool, Field(description="Expose metrics endpoint")] = True
+    metric_aggregation_window: Annotated[int, Field(gt=0, description="Metric aggregation window")] = 300
+
+
+class ErrorHandlingServiceConfig(ServiceConfig):
+    """Configuration for error handling middleware service."""
+
+    provider: str = "fastmcp_error_handling"
+    include_traceback: Annotated[bool, Field(description="Include traceback in errors")] = False
+    transform_errors: Annotated[bool, Field(description="Transform errors to MCP format")] = True
+    error_aggregation: Annotated[bool, Field(description="Enable error aggregation")] = True
+    error_notification_enabled: Annotated[bool, Field(description="Enable error notifications")] = False
+    max_error_history: Annotated[int, Field(gt=0, description="Max error history entries")] = 100
+
+
+class RateLimitingServiceConfig(ServiceConfig):
+    """Configuration for rate limiting middleware service."""
+
+    provider: str = "fastmcp_rate_limiting"
+    max_requests_per_second: Annotated[float, Field(gt=0, description="Max requests per second")] = 1.0
+    burst_capacity: Annotated[int, Field(gt=0, description="Burst capacity")] = 10
+    global_limit: Annotated[bool, Field(description="Apply limit globally")] = True
+    expose_rate_limit_status: Annotated[bool, Field(description="Expose rate limit status")] = True
+    rate_limit_metrics: Annotated[bool, Field(description="Track rate limit metrics")] = True
+
+
 class ServicesConfig(BaseModel):
     """Root configuration for all services."""
 
+    # Core services
     chunking: Annotated[ChunkingServiceConfig, Field(description="Chunking config")] = Field(
         default_factory=ChunkingServiceConfig
     )
     filtering: Annotated[FilteringServiceConfig, Field(description="Filtering config")] = Field(
         default_factory=FilteringServiceConfig
     )
+
+    # Middleware services
+    logging: Annotated[LoggingServiceConfig, Field(description="Logging middleware config")] = Field(
+        default_factory=LoggingServiceConfig
+    )
+    timing: Annotated[TimingServiceConfig, Field(description="Timing middleware config")] = Field(
+        default_factory=TimingServiceConfig
+    )
+    error_handling: Annotated[ErrorHandlingServiceConfig, Field(description="Error handling config")] = Field(
+        default_factory=ErrorHandlingServiceConfig
+    )
+    rate_limiting: Annotated[RateLimitingServiceConfig, Field(description="Rate limiting config")] = Field(
+        default_factory=RateLimitingServiceConfig
+    )
+
+    # Optional services
     validation: Annotated[ValidationServiceConfig, Field(description="Validation config")] = Field(
         default_factory=ValidationServiceConfig
     )
@@ -253,6 +316,14 @@ class ServicesConfig(BaseModel):
     service_discovery_interval: Annotated[float, Field(gt=0, description="Discovery interval")] = (
         60.0
     )
+
+    # Middleware management settings
+    middleware_auto_registration: Annotated[
+        bool, Field(description="Auto-register middleware with FastMCP server")
+    ] = True
+    middleware_initialization_order: Annotated[
+        list[str], Field(description="Order for initializing middleware services")
+    ] = Field(default_factory=lambda: ["error_handling", "rate_limiting", "logging", "timing"])
 
     # Performance settings
     max_concurrent_services: Annotated[int, Field(gt=0, description="Max concurrent services")] = 10

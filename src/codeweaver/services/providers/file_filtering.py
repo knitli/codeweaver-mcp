@@ -310,26 +310,20 @@ class FilteringService(BaseServiceProvider, FilteringService):
 
     def _matches_include_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if file matches any include patterns."""
-        import fnmatch
-
-        for pattern in patterns:
-            if fnmatch.fnmatch(file_path.name, pattern):
-                return True
-            if fnmatch.fnmatch(str(file_path), pattern):
-                return True
-
-        return False
+        return self._check_for_matches(patterns, file_path)
 
     def _matches_exclude_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if file matches any exclude patterns."""
-        import fnmatch
+        return self._check_for_matches(patterns, file_path)
 
+    def _check_for_matches(self, patterns, file_path):
+        """Check if file matches any patterns."""
+        import fnmatch
         for pattern in patterns:
             if fnmatch.fnmatch(file_path.name, pattern):
                 return True
             if fnmatch.fnmatch(str(file_path), pattern):
                 return True
-
         return False
 
     def _is_binary_file(self, file_path: Path) -> bool:

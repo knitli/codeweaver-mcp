@@ -16,16 +16,10 @@ import logging
 from pathlib import Path
 from typing import Any
 
+import rignore
+
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
-
-
-try:
-    import rignore
-
-    RIGNORE_AVAILABLE = True
-except ImportError:
-    RIGNORE_AVAILABLE = False
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +110,7 @@ class FileFilteringMiddleware(Middleware):
             return found_files
 
         try:
-            if RIGNORE_AVAILABLE and self.use_gitignore:
+            if self.use_gitignore:
                 # Use rignore.walk() for gitignore support
                 walker = rignore.walk(str(base_path))
 
@@ -229,31 +223,46 @@ class FileFilteringMiddleware(Middleware):
 
         return False
 
+    def _get_size_unit(self, parsed_size: str) -> str:
+        """Extract size unit from a string like '1MB'."""
+        if all(char.isdigit() for char in parsed_size) or (parsed_size.endswith("B") and len(parsed_size) > 1 and parsed_size[-2].isdigit()) or (len(parsed_size) == 1):
+            return "B"
+        match parsed_size.upper()[-2:]:
+            case "GB":
+                return "GB"
+            case "MB":
+                return "MB"
+            case "KB":
+                return "KB"
+            case _:
+                return "B"
+
     def _parse_size(self, parsed_size: str | int) -> int:
         """Parse size string like '1MB' to bytes."""
         if isinstance(parsed_size, int):
             return parsed_size
 
-        parsed_size = str(parsed_size).upper()
+        parsed_size = str(parsed_size).upper().replace(" ", "").replace("-", "").replace("_", "").replace(",", "").strip().split(".")[0]  # Remove decimals for size parsing
 
-        # Order matters! Check longer suffixes first to avoid 'B' matching 'MB'
-        multipliers = [("GB", 1024 * 1024 * 1024), ("MB", 1024 * 1024), ("KB", 1024), ("B", 1)]
-
-        for suffix, multiplier in multipliers:
-            if parsed_size.endswith(suffix):
-                try:
-                    numeric_part = parsed_size[: -len(suffix)]
-                    return int(float(numeric_part) * multiplier)
-                except ValueError:
-                    logger.warning("Invalid size format: %s", parsed_size)
-                    return 1024 * 1024  # Default to 1MB
-
-        # Assume bytes if no suffix
-        try:
-            return int(parsed_size)
-        except ValueError:
-            logger.warning("Invalid size format: %s", parsed_size)
-            return 1024 * 1024  # Default to 1MB
+        if not parsed_size:
+            logger.warning("Empty size string provided, defaulting to 0B")
+            return 0
+        size, unit = 0, "B"
+        if all(char.isdigit() for char in parsed_size):
+            return int(parsed_size)  # Purely numeric, assume bytes
+        if len(parsed_size) == 1:
+            return 0
+        if len(parsed_size) > 1 and parsed_size[-2] in ["K", "M", "G"]:
+            size, unit = parsed_size[:-2], parsed_size[-2:]
+        match unit:
+            case "GB":
+                return int(float(size) * 1024 * 1024 * 1024)
+            case "MB":
+                return int(float(size) * 1024 * 1024)
+            case "KB":
+                return int(float(size) * 1024)
+            case _:
+                return int(size)  # Default to bytes if no suffix
 
     def _format_size(self, size_bytes: int) -> str:
         """Format size in bytes to human-readable string."""
@@ -267,7 +276,7 @@ class FileFilteringMiddleware(Middleware):
         """Get statistics about filtering configuration."""
         return {
             "use_gitignore": self.use_gitignore,
-            "rignore_available": RIGNORE_AVAILABLE,
+            "rignore_available": True,
             "max_file_size": self.max_file_size,
             "max_file_size_formatted": self._format_size(self.max_file_size),
             "excluded_dirs": list(self.excluded_dirs),

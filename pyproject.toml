@@ -34,13 +34,10 @@ dependencies = [
     "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
     "watchdog>=6.0.0",
-    "tomli>=2.2.1",
-    "tomli-w>=1.1.0",
     "voyageai>=0.3.4",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
     "rich>=14.0.0",
-    "tomlkit>=0.13.3",
 ]
 
 

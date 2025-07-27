@@ -848,8 +848,9 @@ class FileSystemSource(AbstractDataSource):
     def _detect_language(self, file_path: Path) -> str | None:
         """Detect programming language from file extension."""
         # Import here to avoid circular dependencies
+        # Use language detection from chunking middleware
         from codeweaver.middleware.chunking import ChunkingMiddleware
 
-        # Use language detection from chunking middleware
+        # TODO: This doesn't seem right... I thought we got rid of direct dependencies on middleware...wasn't that the point of the services abstraction?
         suffix = file_path.suffix.lower()
         return ChunkingMiddleware.SUPPORTED_LANGUAGES.get(suffix)

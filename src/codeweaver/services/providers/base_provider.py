@@ -109,7 +109,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
                 await self._start_health_monitoring()
 
             self._initialized = True
-            self._started_at = datetime.now(datetime.timezone.utc)
+            self._started_at = datetime.UTC
             self._status = ProviderStatus.READY
 
             self._logger.info("Service provider initialized successfully: %s", self.name)
@@ -173,12 +173,12 @@ class BaseServiceProvider(ServiceProvider, ABC):
             # Calculate uptime
             uptime = 0.0
             if self._started_at:
-                uptime = (datetime.now(datetime.timezone.utc) - self._started_at).total_seconds()
+                uptime = (datetime.UTC - self._started_at).total_seconds()
 
             return ServiceHealth(
                 service_type=self._service_type,
                 status=status,
-                last_check=datetime.now(datetime.timezone.utc),
+                last_check=datetime.UTC,
                 response_time=response_time,
                 error_count=self._health_stats["errors"],
                 success_rate=success_rate,
@@ -200,7 +200,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
             return ServiceHealth(
                 service_type=self._service_type,
                 status=HealthStatus.UNHEALTHY,
-                last_check=datetime.now(datetime.timezone.utc),
+                last_check=datetime.UTC,
                 response_time=response_time,
                 error_count=self._health_stats["errors"],
                 success_rate=self._calculate_success_rate(),

@@ -25,6 +25,7 @@ from codeweaver._types import (
 )
 from codeweaver.providers.base import CombinedProvider
 from codeweaver.providers.config import CohereConfig
+from codeweaver.utils.decorators import feature_flag_required
 
 
 try:
@@ -39,6 +40,11 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+@feature_flag_required(
+    "cohere",
+    dependencies=["cohere"],
+    msg="Cohere provider needs the 'cohere' feature flag enabled.",
+)
 class CohereProvider(CombinedProvider):
     """Cohere provider supporting both embeddings and reranking."""
 
