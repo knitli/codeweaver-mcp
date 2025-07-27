@@ -121,7 +121,7 @@ class WebCrawlerSourceConfig(BaseModel):
     ]
 
 
-class WebCrawlerSource(AbstractDataSource):
+class WebCrawlerSourceProvider(AbstractDataSource):
     """Web crawler data source implementation.
 
     Crawls websites to extract indexable content with support for:
@@ -144,6 +144,44 @@ class WebCrawlerSource(AbstractDataSource):
             source_id: Unique identifier for this source instance
         """
         super().__init__("web", source_id)
+
+    @classmethod
+    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+        """Check if web crawler source is available for the given capability."""
+        from codeweaver._types.source_enums import SourceCapability
+        
+        # Web crawler supports most capabilities but requires HTTP and parsing libraries
+        supported_capabilities = {
+            SourceCapability.CONTENT_DISCOVERY,
+            SourceCapability.CONTENT_READING,
+            SourceCapability.METADATA_EXTRACTION,
+            SourceCapability.BATCH_PROCESSING,
+            SourceCapability.RATE_LIMITING,
+            SourceCapability.AUTHENTICATION,
+        }
+        
+        if capability in supported_capabilities:
+            # Check for HTTP client and parsing dependencies
+            try:
+                import httpx  # noqa: F401
+            except ImportError:
+                try:
+                    import requests  # noqa: F401
+                except ImportError:
+                    return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
+            
+            # Check for HTML parsing
+            try:
+                import bs4  # noqa: F401
+                return True, None
+            except ImportError:
+                return False, "HTML parser not available (install with: uv add beautifulsoup4)"
+        
+        # Change watching for web content is complex
+        if capability == SourceCapability.CHANGE_WATCHING:
+            return False, "Change watching for web content requires specialized monitoring setup"
+        
+        return False, f"Capability {capability.value} not supported by WebCrawler source"
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by web crawler source."""

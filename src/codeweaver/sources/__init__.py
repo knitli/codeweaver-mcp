@@ -50,7 +50,7 @@ from codeweaver.sources.base import (
 )
 from codeweaver.sources.config import DataSourcesConfig
 from codeweaver.sources.factory import SourceFactory, get_source_factory
-from codeweaver.sources.filesystem import FileSystemSource, FileSystemSourceConfig
+from codeweaver.sources.filesystem import FileSystemSourceProvider, FileSystemSourceConfig
 from codeweaver.sources.integration import DataSourceManager
 
 
@@ -66,7 +66,7 @@ __all__ = [
     "DataSourceManager",
     "DataSourcesConfig",
     "DatabaseType",
-    "FileSystemSource",
+    "FileSystemSourceProvider",
     "FileSystemSourceConfig",
     "SourceCapabilities",
     "SourceCapability",

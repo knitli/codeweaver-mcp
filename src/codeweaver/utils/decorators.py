@@ -118,7 +118,7 @@ def not_implemented(
             "Implement using subprocess calls",
         ],
     )
-    class GitRepositorySource(AbstractDataSource):
+    class GitRepositorySourceProvider(AbstractDataSource):
         def discover_content(self, config):
             pass  # Implementation details for documentation
     ```
@@ -135,10 +135,10 @@ def not_implemented(
 
     ```python
     # Check if a class is implemented
-    print(GitRepositorySource.is_implemented())  # False
+    print(GitRepositorySourceProvider.is_implemented())  # False
 
     # Get detailed implementation info
-    info = GitRepositorySource.get_implementation_info()
+    info = GitRepositorySourceProvider.get_implementation_info()
     print(info["message"])  # Custom error message
     print(info["suggestions"])  # List of suggestions
     print(info["implemented"])  # False
@@ -147,7 +147,7 @@ def not_implemented(
     ### 3. Subclassing Support
 
     ```python
-    class MyGitImplementation(GitRepositorySource):
+    class MyGitImplementation(GitRepositorySourceProvider):
         def __init__(self):
             super().__init__("git", "my-implementation")
 
@@ -169,8 +169,8 @@ def not_implemented(
 
     ```python
     # All methods are accessible for inspection
-    print(hasattr(GitRepositorySource, "discover_content"))  # True
-    print(GitRepositorySource.discover_content.__doc__)  # Method docstring
+    print(hasattr(GitRepositorySourceProvider, "discover_content"))  # True
+    print(GitRepositorySourceProvider.discover_content.__doc__)  # Method docstring
     ```
 
     ## Applied Examples
@@ -187,7 +187,7 @@ def not_implemented(
             "Or open an issue to discuss your use case"
         ]
     )
-    class GitRepositorySource(AbstractDataSource):
+    class GitRepositorySourceProvider(AbstractDataSource):
         # Class implementation with full method signatures...
     ```
 
@@ -199,7 +199,7 @@ def not_implemented(
     from codeweaver.sources.decorators import NotImplementedClassError
 
     try:
-        GitRepositorySource()
+        GitRepositorySourceProvider()
     except NotImplementedClassError as e:
         print(f"Class not implemented: {e.class_name}")
         print(f"Message: {e}")

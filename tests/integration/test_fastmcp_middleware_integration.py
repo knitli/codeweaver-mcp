@@ -11,7 +11,6 @@ import pytest
 
 from codeweaver._types.service_config import ServicesConfig
 from codeweaver.config import CodeWeaverConfig
-from codeweaver.config_migration import migrate_config
 from codeweaver.server import CodeWeaverServer
 from codeweaver.services.manager import ServicesManager
 
@@ -120,51 +119,7 @@ class TestFastMCPMiddlewareIntegration:
                 # Clean up
                 await server.shutdown()
 
-    def test_configuration_migration(self):
-        """Test that configuration migration works correctly."""
-        # Old-style configuration
-        old_config = {
-            "server": {
-                "log_level": "DEBUG",
-                "enable_request_logging": True
-            },
-            "chunking": {
-                "max_chunk_size": 2000,
-                "min_chunk_size": 100
-            },
-            "indexing": {
-                "use_gitignore": True,
-                "additional_ignore_patterns": ["build", "dist"]
-            }
-        }
 
-        # Apply migration
-        migrated_config = migrate_config(old_config)
-
-        # Verify migration results
-        assert "services" in migrated_config
-        services = migrated_config["services"]
-
-        # Check logging migration
-        assert "logging" in services
-        assert services["logging"]["log_level"] == "DEBUG"
-        assert services["logging"]["include_payloads"] is True
-
-        # Check chunking migration
-        assert "chunking" in services
-        assert services["chunking"]["max_chunk_size"] == 2000
-        assert services["chunking"]["provider"] == "fastmcp_chunking"
-
-        # Check filtering migration
-        assert "filtering" in services
-        assert services["filtering"]["use_gitignore"] is True
-        assert services["filtering"]["provider"] == "fastmcp_filtering"
-
-        # Verify middleware services were added
-        middleware_services = ["timing", "error_handling", "rate_limiting"]
-        for service in middleware_services:
-            assert service in services
-            assert services[service]["enabled"] is True
 
     @pytest.mark.asyncio
     async def test_middleware_service_health_checks(self, mock_fastmcp_server, services_config):

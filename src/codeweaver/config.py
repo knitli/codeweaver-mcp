@@ -914,9 +914,6 @@ class CustomTomlSource(TomlConfigSettingsSource):
             if data and hasattr(self, "toml_file") and self.toml_file:
                 logger.info("Loaded configuration from TOML: %s", self.loaded_from)
 
-                # Apply configuration migration for backward compatibility
-                data = self._apply_migration(data)
-
         except FileNotFoundError:
             logger.debug("TOML configuration file not found: %s", self.loaded_from)
             return {}
@@ -926,54 +923,7 @@ class CustomTomlSource(TomlConfigSettingsSource):
         else:
             return data
 
-    def _apply_migration(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Apply configuration migration if needed."""
-        try:
-            # Check if migration is needed (services section missing or incomplete)
-            if self._needs_migration(data):
-                logger.info("Applying configuration migration for backward compatibility")
 
-                # Import migration function
-                from codeweaver.config_migration import migrate_config
-
-                # Apply migration
-                migrated_data = migrate_config(data)
-
-                logger.info("Configuration migration completed successfully")
-                return migrated_data
-
-        except ImportError:
-            logger.warning("Configuration migration module not available, skipping migration")
-            return data
-        except Exception as e:
-            logger.warning("Configuration migration failed: %s", e)
-            return data
-        else:
-            return data
-
-    def _needs_migration(self, data: dict[str, Any]) -> bool:
-        """Check if configuration needs migration."""
-        # Check if services section is missing or incomplete
-        if "services" not in data:
-            return True
-
-        services = data["services"]
-
-        # Check if middleware services are missing
-        middleware_services = ["logging", "timing", "error_handling", "rate_limiting"]
-        if missing_middleware := [
-            service for service in middleware_services if service not in services
-        ]:
-            logger.debug("Missing middleware services detected: %s", missing_middleware)
-            return True
-
-        # Check if old server configuration exists that should be migrated
-        if "server" in data:
-            server_config = data["server"]
-            if "log_level" in server_config or "enable_request_logging" in server_config:
-                return True
-
-        return False
 
 
 class ConfigManager:

@@ -121,7 +121,7 @@ class DatabaseSourceConfig(BaseModel):
     ]
 
 
-class DatabaseSource(AbstractDataSource):
+class DatabaseSourceProvider(AbstractDataSource):
     """Database data source implementation.
 
     Treats database content as indexable text by extracting:
@@ -142,6 +142,35 @@ class DatabaseSource(AbstractDataSource):
             source_id: Unique identifier for this source instance
         """
         super().__init__("database", source_id)
+
+    @classmethod
+    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+        """Check if database source is available for the given capability."""
+        from codeweaver._types.source_enums import SourceCapability
+        
+        # Database source supports most capabilities but requires database drivers
+        supported_capabilities = {
+            SourceCapability.CONTENT_DISCOVERY,
+            SourceCapability.CONTENT_READING,
+            SourceCapability.METADATA_EXTRACTION,
+            SourceCapability.BATCH_PROCESSING,
+            SourceCapability.AUTHENTICATION,
+            SourceCapability.PAGINATION,
+        }
+        
+        if capability in supported_capabilities:
+            # Check for database driver dependencies (basic check)
+            try:
+                import sqlite3  # Built-in, always available
+                return True, None
+            except ImportError:
+                return False, "No database drivers available"
+        
+        # Change watching requires additional setup
+        if capability == SourceCapability.CHANGE_WATCHING:
+            return False, "Change watching requires database-specific triggers or polling setup"
+        
+        return False, f"Capability {capability.value} not supported by Database source"
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by database source."""
