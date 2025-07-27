@@ -119,31 +119,83 @@ class CohereProvider(CombinedProvider):
         """Cohere has input length limits."""
         return 500000  # Estimated character limit
 
-    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for documents."""
+    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
+        """Generate embeddings for documents with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "cohere",
+                "model": self._embedding_model,
+                "texts": texts,
+                "input_type": "search_document"
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug(f"Cache hit for {len(texts)} Cohere embeddings")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("cohere", len(texts))
+        
         try:
-            # Note: This is a placeholder implementation
-            # In a real implementation, you would:
-            # 1. Handle rate limiting
-            # 2. Process in batches
-            # 3. Use appropriate input_type
-
             response = self.client.embed(
                 texts=texts, model=self._embedding_model, input_type="search_document"
             )
+            
+            embeddings = response.embeddings
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
+                logger.debug(f"Cached {len(texts)} Cohere embeddings")
+            
+            return embeddings
+            
         except Exception:
             logger.exception("Error generating Cohere embeddings")
             raise
-        else:
-            return response.embeddings
 
-    async def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for search query."""
+    async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
+        """Generate embedding for search query with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "cohere",
+                "model": self._embedding_model,
+                "text": text,
+                "input_type": "search_query"
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug("Cache hit for Cohere query embedding")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("cohere", 1)
+        
         try:
             response = self.client.embed(
                 texts=[text], model=self._embedding_model, input_type="search_query"
             )
-            return response.embeddings[0]
+            
+            embedding = response.embeddings[0]
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
+                logger.debug("Cached Cohere query embedding")
+            
+            return embedding
 
         except Exception:
             logger.exception("Error generating Cohere query embedding")

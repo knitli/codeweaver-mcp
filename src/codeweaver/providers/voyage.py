@@ -133,8 +133,33 @@ class VoyageAIProvider(CombinedProvider):
 
         self._last_request_time = time.time()
 
-    async def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Generate embeddings for documents with basic rate limiting."""
+    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
+        """Generate embeddings for documents with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "voyage_ai",
+                "model": self._embedding_model,
+                "texts": texts,
+                "input_type": "document",
+                "dimension": self._dimension
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug(f"Cache hit for {len(texts)} VoyageAI embeddings")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("voyage_ai", len(texts))
+        else:
+            # Fallback to basic rate limiting
+            await self._rate_limit()
+        
         try:
             result = self.client.embed(
                 texts=texts,
@@ -142,15 +167,47 @@ class VoyageAIProvider(CombinedProvider):
                 input_type="document",
                 output_dimension=self._dimension,
             )
+            
+            embeddings = result.embeddings
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
+                logger.debug(f"Cached {len(texts)} VoyageAI embeddings")
+            
+            return embeddings
+            
         except Exception:
             logger.exception("Error generating VoyageAI embeddings")
             raise
 
+    async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
+        """Generate embedding for search query with service layer integration."""
+        context = context or {}
+        
+        # Check cache service first
+        cache_service = context.get("caching_service")
+        if cache_service:
+            cache_key = {
+                "provider": "voyage_ai",
+                "model": self._embedding_model,
+                "text": text,
+                "input_type": "query",
+                "dimension": self._dimension
+            }
+            cached_result = await cache_service.get(cache_key)
+            if cached_result:
+                logger.debug("Cache hit for VoyageAI query embedding")
+                return cached_result
+        
+        # Apply rate limiting
+        rate_limiter = context.get("rate_limiting_service")
+        if rate_limiter:
+            await rate_limiter.acquire("voyage_ai", 1)
         else:
-            return result.embeddings
-
-    async def embed_query(self, text: str) -> list[float]:
-        """Generate embedding for search query with basic rate limiting."""
+            # Fallback to basic rate limiting
+            await self._rate_limit()
+        
         try:
             result = self.client.embed(
                 texts=[text],
@@ -158,7 +215,16 @@ class VoyageAIProvider(CombinedProvider):
                 input_type="query",
                 output_dimension=self._dimension,
             )
-            return result.embeddings[0]
+            
+            embedding = result.embeddings[0]
+            
+            # Cache the result
+            if cache_service:
+                await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
+                logger.debug("Cached VoyageAI query embedding")
+            
+            return embedding
+            
         except Exception:
             logger.exception("Error generating VoyageAI query embedding")
             raise
