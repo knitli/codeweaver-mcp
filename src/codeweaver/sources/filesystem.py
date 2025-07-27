@@ -209,59 +209,65 @@ class FileSystemSourceWatcher(SourceWatcher):
 
     def _detect_language(self, file_path: Path) -> str | None:
         """Detect programming language from file extension."""
-        # Local language mapping to avoid middleware dependencies
-        # This should be kept in sync with supported languages
-        SUPPORTED_LANGUAGES = {
-            # Web technologies
-            ".html": "html",
-            ".htm": "html",
-            ".js": "javascript",
-            ".ts": "typescript",
-            ".tsx": "tsx",
-            ".jsx": "jsx",
-            ".css": "css",
-            ".scss": "scss",
-            ".sass": "sass",
-            ".less": "less",
-            ".vue": "vue",
-            ".svelte": "svelte",
-            # Systems programming
-            ".rs": "rust",
-            ".go": "go",
-            ".c": "c",
-            ".cpp": "cpp",
-            ".cc": "cpp",
-            ".cxx": "cpp",
-            ".h": "c",
-            ".hpp": "cpp",
-            ".cs": "csharp",
-            ".zig": "zig",
-            # High-level languages
-            ".py": "python",
-            ".java": "java",
-            ".kt": "kotlin",
-            ".scala": "scala",
-            ".rb": "ruby",
-            ".php": "php",
-            ".swift": "swift",
-            # Functional languages
-            ".ex": "elixir",
-            ".exs": "elixir",
-            # Data/config
-            ".json": "json",
-            ".yaml": "yaml",
-            ".yml": "yaml",
-            # Scripts
-            ".sh": "bash",
-            ".bash": "bash",
-            ".zsh": "bash",
+        # Local language detection without middleware dependency
+        suffix = file_path.suffix.lower()
+        
+        # Common programming language mappings
+        language_map = {
+            '.py': 'python',
+            '.js': 'javascript', 
+            '.ts': 'typescript',
+            '.jsx': 'javascript',
+            '.tsx': 'typescript',
+            '.java': 'java',
+            '.cpp': 'cpp',
+            '.c': 'c',
+            '.h': 'c',
+            '.hpp': 'cpp',
+            '.cs': 'csharp',
+            '.php': 'php',
+            '.rb': 'ruby',
+            '.go': 'go',
+            '.rs': 'rust',
+            '.swift': 'swift',
+            '.kt': 'kotlin',
+            '.scala': 'scala',
+            '.sh': 'bash',
+            '.bash': 'bash',
+            '.zsh': 'zsh',
+            '.fish': 'fish',
+            '.ps1': 'powershell',
+            '.html': 'html',
+            '.css': 'css',
+            '.scss': 'scss',
+            '.sass': 'sass',
+            '.less': 'less',
+            '.xml': 'xml',
+            '.json': 'json',
+            '.yaml': 'yaml',
+            '.yml': 'yaml',
+            '.toml': 'toml',
+            '.ini': 'ini',
+            '.cfg': 'ini',
+            '.conf': 'ini',
+            '.md': 'markdown',
+            '.rst': 'rst',
+            '.tex': 'latex',
+            '.sql': 'sql',
+            '.r': 'r',
+            '.R': 'r',
+            '.m': 'matlab',
+            '.pl': 'perl',
+            '.lua': 'lua',
+            '.vim': 'vim',
+            '.dockerfile': 'dockerfile',
+            '.makefile': 'makefile',
         }
         
-        suffix = file_path.suffix.lower()
-        return SUPPORTED_LANGUAGES.get(suffix)
+        return language_map.get(suffix)
 
 
-class FileSystemSourceProvider(AbstractDataSource):
+class FileSystemSource(AbstractDataSource):
     """File system data source implementation.
 
     Provides content discovery from local file systems with intelligent
@@ -275,34 +281,6 @@ class FileSystemSourceProvider(AbstractDataSource):
             source_id: Unique identifier for this source instance
         """
         super().__init__(SourceProvider.FILESYSTEM, source_id)
-
-    @classmethod
-    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
-        """Check if filesystem source is available for the given capability."""
-        from codeweaver._types.source_enums import SourceCapability
-        
-        # FileSystem source supports most capabilities
-        supported_capabilities = {
-            SourceCapability.CONTENT_DISCOVERY,
-            SourceCapability.CONTENT_READING,
-            SourceCapability.CHANGE_WATCHING,
-            SourceCapability.METADATA_EXTRACTION,
-            SourceCapability.BATCH_PROCESSING,
-            SourceCapability.CONTENT_DEDUPLICATION,
-        }
-        
-        if capability in supported_capabilities:
-            return True, None
-        
-        # Check for optional capabilities that require dependencies
-        if capability == SourceCapability.REAL_TIME_UPDATES:
-            try:
-                import watchdog  # noqa: F401
-                return True, None
-            except ImportError:
-                return False, "watchdog package not installed (install with: uv add watchdog)"
-        
-        return False, f"Capability {capability.value} not supported by FileSystem source"
 
     # Define capabilities as class attribute
     CAPABILITIES = SourceCapabilities(
@@ -435,62 +413,30 @@ class FileSystemSourceProvider(AbstractDataSource):
 
     async def _fallback_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
         """Fallback chunking when chunking service is not available."""
-        # Simple line-based chunking as fallback
-        max_chunk_size = 1500
-        min_chunk_size = 50
-        
-        lines = content.split('\n')
-        chunks = []
-        current_chunk_lines = []
-        current_chunk_size = 0
-        start_line = 1
-        
-        language = self._detect_language(file_path)
-        
-        for i, line in enumerate(lines, 1):
-            line_size = len(line) + 1  # +1 for newline
-            
-            # If adding this line would exceed max size and we have content, create chunk
-            if (current_chunk_size + line_size > max_chunk_size and 
-                current_chunk_lines and current_chunk_size >= min_chunk_size):
-                
-                chunk_content = '\n'.join(current_chunk_lines)
-                chunk = CodeChunk.create_with_hash(
-                    content=chunk_content,
-                    file_path=str(file_path),
-                    start_line=start_line,
-                    end_line=i - 1,
-                    chunk_type="text",
-                    language=language,
-                    node_kind=None,
-                    metadata={"fallback_chunking": True, "chunking_method": "line_based"},
-                )
-                chunks.append(chunk)
-                
-                # Reset for next chunk
-                current_chunk_lines = [line]
-                current_chunk_size = line_size
-                start_line = i
-            else:
-                current_chunk_lines.append(line)
-                current_chunk_size += line_size
-        
-        # Add final chunk if we have content
-        if current_chunk_lines and current_chunk_size >= min_chunk_size:
-            chunk_content = '\n'.join(current_chunk_lines)
-            chunk = CodeChunk.create_with_hash(
-                content=chunk_content,
-                file_path=str(file_path),
-                start_line=start_line,
-                end_line=len(lines),
-                chunk_type="text",
-                language=language,
-                node_kind=None,
-                metadata={"fallback_chunking": True, "chunking_method": "line_based"},
+        # Import chunking logic as fallback
+        from codeweaver.middleware.chunking import ChunkingMiddleware
+
+        # Create temporary chunking middleware for fallback
+        config = {"max_chunk_size": 1500, "min_chunk_size": 50, "ast_grep_enabled": True}
+        chunker = ChunkingMiddleware(config)
+        legacy_chunks = await chunker.chunk_file(file_path, content)
+
+        # Convert legacy models to new Pydantic models
+        pydantic_chunks = []
+        for legacy_chunk in legacy_chunks:
+            pydantic_chunk = CodeChunk.create_with_hash(
+                content=legacy_chunk.content,
+                file_path=legacy_chunk.file_path,
+                start_line=legacy_chunk.start_line,
+                end_line=legacy_chunk.end_line,
+                chunk_type=legacy_chunk.chunk_type,
+                language=legacy_chunk.language,
+                node_kind=legacy_chunk.node_kind,
+                metadata={"fallback_chunking": True},
             )
-            chunks.append(chunk)
-        
-        return chunks
+            pydantic_chunks.append(pydantic_chunk)
+
+        return pydantic_chunks
 
     async def structural_search(
         self,
@@ -883,56 +829,28 @@ class FileSystemSourceProvider(AbstractDataSource):
         self, root_path: Path, config: FileSystemSourceConfig
     ) -> list[Path]:
         """Fallback file discovery when FilteringService is not available."""
-        # Simple file discovery without middleware dependencies
-        files = []
-        max_file_size = 10 * 1024 * 1024  # 10MB default
-        
-        # Default excluded directories
-        excluded_dirs = {"__pycache__", ".git", "node_modules", ".pytest_cache", ".venv", "venv"}
-        if config.additional_ignore_patterns:
-            excluded_dirs.update(config.additional_ignore_patterns)
-        
-        # Convert file extensions to set for faster lookup
-        allowed_extensions = None
-        if config.file_extensions:
-            allowed_extensions = {ext.lower().lstrip('.') for ext in config.file_extensions}
-        
-        def should_include_file(file_path: Path) -> bool:
-            """Check if file should be included based on config."""
-            # Check file size
-            try:
-                if file_path.stat().st_size > max_file_size:
-                    return False
-            except (OSError, IOError):
-                return False
-            
-            # Check extension if specified
-            if allowed_extensions:
-                file_ext = file_path.suffix.lower().lstrip('.')
-                if file_ext not in allowed_extensions:
-                    return False
-            
-            return True
-        
-        def should_exclude_dir(dir_path: Path) -> bool:
-            """Check if directory should be excluded."""
-            dir_name = dir_path.name
-            return dir_name in excluded_dirs or dir_name.startswith('.')
-        
-        # Walk directory tree
-        if config.recursive_discovery:
-            for item in root_path.rglob("*"):
-                if item.is_file():
-                    # Check if any parent directory should be excluded
-                    if any(should_exclude_dir(parent) for parent in item.parents if parent != root_path):
-                        continue
-                    if should_include_file(item):
-                        files.append(item)
-        else:
-            for item in root_path.iterdir():
-                if item.is_file() and should_include_file(item):
-                    files.append(item)
-        
+        # Import here to avoid circular dependencies
+        from codeweaver.middleware.filtering import FileFilteringMiddleware
+
+        # Convert source config to FileFilteringMiddleware-compatible config
+        middleware_config = {
+            "use_gitignore": config.use_gitignore,
+            "max_file_size": 10 * 1024 * 1024,  # Default 10MB
+            "excluded_dirs": ["__pycache__", ".git", "node_modules", ".pytest_cache"],
+            "included_extensions": config.file_extensions or None,
+            "additional_ignore_patterns": config.additional_ignore_patterns,
+        }
+
+        # Create middleware and discover files
+        middleware = FileFilteringMiddleware(middleware_config)
+
+        # Use patterns from config, with fallback to default
+        patterns = config.file_extensions or ["*"]
+
+        files = await middleware.find_files(
+            base_path=root_path, patterns=patterns, recursive=config.recursive_discovery
+        )
+
         logger.info("Discovered %d files with fallback discovery", len(files))
         return files
 
@@ -976,3 +894,62 @@ class FileSystemSourceProvider(AbstractDataSource):
         except Exception:
             logger.debug("Failed to create ContentItem for %s", file_path)
             return None
+
+    def _detect_language(self, file_path: Path) -> str | None:
+        """Detect programming language from file extension."""
+        # Local language detection without middleware dependency
+        suffix = file_path.suffix.lower()
+        
+        # Common programming language mappings
+        language_map = {
+            '.py': 'python',
+            '.js': 'javascript', 
+            '.ts': 'typescript',
+            '.jsx': 'javascript',
+            '.tsx': 'typescript',
+            '.java': 'java',
+            '.cpp': 'cpp',
+            '.c': 'c',
+            '.h': 'c',
+            '.hpp': 'cpp',
+            '.cs': 'csharp',
+            '.php': 'php',
+            '.rb': 'ruby',
+            '.go': 'go',
+            '.rs': 'rust',
+            '.swift': 'swift',
+            '.kt': 'kotlin',
+            '.scala': 'scala',
+            '.sh': 'bash',
+            '.bash': 'bash',
+            '.zsh': 'zsh',
+            '.fish': 'fish',
+            '.ps1': 'powershell',
+            '.html': 'html',
+            '.css': 'css',
+            '.scss': 'scss',
+            '.sass': 'sass',
+            '.less': 'less',
+            '.xml': 'xml',
+            '.json': 'json',
+            '.yaml': 'yaml',
+            '.yml': 'yaml',
+            '.toml': 'toml',
+            '.ini': 'ini',
+            '.cfg': 'ini',
+            '.conf': 'ini',
+            '.md': 'markdown',
+            '.rst': 'rst',
+            '.tex': 'latex',
+            '.sql': 'sql',
+            '.r': 'r',
+            '.R': 'r',
+            '.m': 'matlab',
+            '.pl': 'perl',
+            '.lua': 'lua',
+            '.vim': 'vim',
+            '.dockerfile': 'dockerfile',
+            '.makefile': 'makefile',
+        }
+        
+        return language_map.get(suffix)
