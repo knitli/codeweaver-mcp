@@ -43,7 +43,7 @@ from codeweaver._types.exceptions import (
     BackendConnectionError,
     BackendError,
 )
-from codeweaver._types.service_data import ServiceHealth, ServiceStatus
+from codeweaver._types.service_data import HealthStatus, ServiceHealth
 
 
 logger = logging.getLogger(__name__)
@@ -465,7 +465,7 @@ class QdrantHybridBackend(QdrantBackend):
             
             if not health_info:
                 return ServiceHealth(
-                    status=ServiceStatus.UNHEALTHY,
+                    status=HealthStatus.UNHEALTHY,
                     message="Unable to get cluster info from Qdrant",
                     last_check=datetime.now()
                 )
@@ -480,7 +480,7 @@ class QdrantHybridBackend(QdrantBackend):
                 telemetry = self.client.get_telemetry()
                 
                 return ServiceHealth(
-                    status=ServiceStatus.HEALTHY,
+                    status=HealthStatus.HEALTHY,
                     message=f"Qdrant healthy: {collection_count} collections available",
                     last_check=datetime.now(),
                     metadata={
@@ -493,7 +493,7 @@ class QdrantHybridBackend(QdrantBackend):
             except Exception as e:
                 # Connection works but some operations might be limited
                 return ServiceHealth(
-                    status=ServiceStatus.DEGRADED,
+                    status=HealthStatus.DEGRADED,
                     message=f"Qdrant partially available: {e}",
                     last_check=datetime.now(),
                     metadata={"collection_count": collection_count}
@@ -501,7 +501,7 @@ class QdrantHybridBackend(QdrantBackend):
                 
         except Exception as e:
             return ServiceHealth(
-                status=ServiceStatus.UNHEALTHY,
+                status=HealthStatus.UNHEALTHY,
                 message=f"Qdrant connection failed: {e}",
                 last_check=datetime.now()
             )

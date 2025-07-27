@@ -41,7 +41,6 @@ logger = logging.getLogger(__name__)
 @feature_flag_required(
     "sentence-transformers",
     dependencies=["sentence-transformers"],
-    note="SentenceTransformers provider requires the 'sentence-transformers' feature flag to be enabled.",
 )
 class SentenceTransformersProvider(LocalEmbeddingProvider):
     """SentenceTransformers provider for local embeddings."""

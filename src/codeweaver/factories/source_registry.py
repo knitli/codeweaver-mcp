@@ -318,7 +318,7 @@ class SourceRegistry:
 
         try:
             # Register filesystem source
-            from codeweaver.sources.filesystem import FileSystemSourceProvider
+            from codeweaver.sources.filesystem import FileSystemSource
 
             filesystem_capabilities = SourceCapabilities(
                 supports_content_discovery=True,
@@ -349,7 +349,7 @@ class SourceRegistry:
 
             cls.register_source(
                 name="filesystem",
-                source_class=FileSystemSourceProvider,
+                source_class=FileSystemSource,
                 capabilities=filesystem_capabilities,
                 source_info=filesystem_info,
             )

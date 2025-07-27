@@ -165,9 +165,9 @@ class CodeWeaverServer:
         )
         if not filesystem_source:
             # Create a fallback filesystem source
-            from codeweaver.sources.filesystem import FileSystemSourceProvider
+            from codeweaver.sources.filesystem import FileSystemSource
 
-            filesystem_source = FileSystemSourceProvider()
+            filesystem_source = FileSystemSource()
 
         self._components["filesystem_source"] = filesystem_source
 

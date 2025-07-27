@@ -19,7 +19,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-from codeweaver._types.service_data import ServiceCapabilities, ServiceHealth, ServiceStatus
+from codeweaver._types.service_data import HealthStatus, ServiceCapabilities, ServiceHealth
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 logger = logging.getLogger(__name__)
@@ -298,25 +298,25 @@ class CachingService(BaseServiceProvider):
             
             if memory_usage_pct > 95:
                 return ServiceHealth(
-                    status=ServiceStatus.DEGRADED,
+                    status=HealthStatus.DEGRADED,
                     message=f"High memory usage: {memory_usage_pct:.1f}%"
                 )
             
             # Check if cleanup task is running
             if self._cleanup_task and self._cleanup_task.done():
                 return ServiceHealth(
-                    status=ServiceStatus.DEGRADED,
+                    status=HealthStatus.DEGRADED,
                     message="Cleanup task stopped"
                 )
             
             return ServiceHealth(
-                status=ServiceStatus.HEALTHY,
+                status=HealthStatus.HEALTHY,
                 message=f"Cache active: {stats['total_entries']} entries, {stats['hit_rate']:.2f} hit rate"
             )
             
         except Exception as e:
             return ServiceHealth(
-                status=ServiceStatus.UNHEALTHY,
+                status=HealthStatus.UNHEALTHY,
                 message=f"Cache health check failed: {e}"
             )
     
@@ -328,4 +328,3 @@ class CachingService(BaseServiceProvider):
             max_batch_size=self.config.max_size,
             supports_async=True
         )
-
