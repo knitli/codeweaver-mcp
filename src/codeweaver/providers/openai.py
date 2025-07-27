@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 @feature_flag_required(
     "openai",
     dependencies=["openai"],
-    note="OpenAI-compatible provider requires the 'openai' feature flag to be enabled.",
 )
 class OpenAICompatibleProvider(EmbeddingProviderBase):
     """OpenAI-compatible provider for embeddings.

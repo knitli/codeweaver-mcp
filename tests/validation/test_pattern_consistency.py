@@ -21,9 +21,9 @@ from unittest.mock import MagicMock
 from codeweaver._types import (
     ProviderCapability,
     ProviderType,
-    BackendType,
-    SourceType,
     EmbeddingProviderInfo,
+)
+from codeweaver.factories import (
     BackendInfo,
     SourceInfo,
 )

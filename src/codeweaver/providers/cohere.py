@@ -43,7 +43,6 @@ logger = logging.getLogger(__name__)
 @feature_flag_required(
     "cohere",
     dependencies=["cohere"],
-    msg="Cohere provider needs the 'cohere' feature flag enabled.",
 )
 class CohereProvider(CombinedProvider):
     """Cohere provider supporting both embeddings and reranking."""

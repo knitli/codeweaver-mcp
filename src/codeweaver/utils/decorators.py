@@ -429,6 +429,7 @@ def feature_flag_required(feature_name: str, dependencies: tuple[str] | None) ->
                 msg=f"{class_name} requires the '{feature_name}' feature flag to be enabled.",
             )
 
-        return wrapper
+        cls.__init__ = wrapper
+        return cls
 
     return decorator

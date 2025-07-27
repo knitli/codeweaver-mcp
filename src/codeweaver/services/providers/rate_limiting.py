@@ -17,7 +17,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict
 
-from codeweaver._types.service_data import ServiceCapabilities, ServiceHealth, ServiceStatus
+from codeweaver._types.service_data import HealthStatus, ServiceCapabilities, ServiceHealth
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 logger = logging.getLogger(__name__)
@@ -205,7 +205,7 @@ class RateLimitingService(BaseServiceProvider):
             bucket_count = len(self._buckets)
             if bucket_count == 0:
                 return ServiceHealth(
-                    status=ServiceStatus.UNHEALTHY,
+                    status=HealthStatus.UNHEALTHY,
                     message="No rate limiting buckets configured"
                 )
             
@@ -218,18 +218,18 @@ class RateLimitingService(BaseServiceProvider):
             
             if len(depleted_buckets) > len(self._buckets) * 0.5:  # More than 50% depleted
                 return ServiceHealth(
-                    status=ServiceStatus.DEGRADED,
+                    status=HealthStatus.DEGRADED,
                     message=f"Many buckets depleted: {depleted_buckets}"
                 )
             
             return ServiceHealth(
-                status=ServiceStatus.HEALTHY,
+                status=HealthStatus.HEALTHY,
                 message=f"Rate limiting active with {bucket_count} buckets"
             )
             
         except Exception as e:
             return ServiceHealth(
-                status=ServiceStatus.UNHEALTHY,
+                status=HealthStatus.UNHEALTHY,
                 message=f"Rate limiting health check failed: {e}"
             )
     
@@ -241,4 +241,3 @@ class RateLimitingService(BaseServiceProvider):
             max_batch_size=1000,
             supports_async=True
         )
-

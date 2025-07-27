@@ -17,7 +17,7 @@ import pytest
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock
 
-from codeweaver._types import ServiceHealth, ServiceStatus
+from codeweaver._types import HealthStatus, ServiceHealth
 
 
 class MockService:
@@ -95,7 +95,7 @@ class MockServicesManager:
     async def get_service_health(self, service_name: str) -> ServiceHealth:
         """Get mock service health."""
         return ServiceHealth(
-            status=ServiceStatus.HEALTHY,
+            status=HealthStatus.HEALTHY,
             message="Mock service healthy",
             last_check=None
         )
@@ -578,4 +578,3 @@ if __name__ == "__main__":
     """Run services integration validation as a script."""
     success = validate_services_integration()
     exit(0 if success else 1)
-
