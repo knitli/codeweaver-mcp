@@ -11,7 +11,7 @@ import logging
 import time
 
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import UTC, datetime
 
 from codeweaver._types.config import ServiceType
 from codeweaver._types.service_config import ServiceConfig
@@ -109,7 +109,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
                 await self._start_health_monitoring()
 
             self._initialized = True
-            self._started_at = datetime.UTC
+            self._started_at = UTC
             self._status = ProviderStatus.READY
 
             self._logger.info("Service provider initialized successfully: %s", self.name)
@@ -173,12 +173,12 @@ class BaseServiceProvider(ServiceProvider, ABC):
             # Calculate uptime
             uptime = 0.0
             if self._started_at:
-                uptime = (datetime.UTC - self._started_at).total_seconds()
+                uptime = (UTC - self._started_at).total_seconds()
 
             return ServiceHealth(
                 service_type=self._service_type,
                 status=status,
-                last_check=datetime.UTC,
+                last_check=UTC,
                 response_time=response_time,
                 error_count=self._health_stats["errors"],
                 success_rate=success_rate,
@@ -200,7 +200,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
             return ServiceHealth(
                 service_type=self._service_type,
                 status=HealthStatus.UNHEALTHY,
-                last_check=datetime.UTC,
+                last_check=UTC,
                 response_time=response_time,
                 error_count=self._health_stats["errors"],
                 success_rate=self._calculate_success_rate(),

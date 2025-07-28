@@ -149,7 +149,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if web crawler source is available for the given capability."""
         from codeweaver._types.source_enums import SourceCapability
-        
+
         # Web crawler supports most capabilities but requires HTTP and parsing libraries
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -159,7 +159,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             SourceCapability.RATE_LIMITING,
             SourceCapability.AUTHENTICATION,
         }
-        
+
         if capability in supported_capabilities:
             # Check for HTTP client and parsing dependencies
             try:
@@ -169,18 +169,18 @@ class WebCrawlerSourceProvider(AbstractDataSource):
                     import requests  # noqa: F401
                 except ImportError:
                     return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
-            
+
             # Check for HTML parsing
             try:
                 import bs4  # noqa: F401
                 return True, None
             except ImportError:
                 return False, "HTML parser not available (install with: uv add beautifulsoup4)"
-        
+
         # Change watching for web content is complex
         if capability == SourceCapability.CHANGE_WATCHING:
             return False, "Change watching for web content requires specialized monitoring setup"
-        
+
         return False, f"Capability {capability.value} not supported by WebCrawler source"
 
     def get_capabilities(self) -> SourceCapabilities:

@@ -211,11 +211,11 @@ class FileSystemSourceWatcher(SourceWatcher):
         """Detect programming language from file extension."""
         # Local language detection without middleware dependency
         suffix = file_path.suffix.lower()
-        
+
         # Common programming language mappings
         language_map = {
             '.py': 'python',
-            '.js': 'javascript', 
+            '.js': 'javascript',
             '.ts': 'typescript',
             '.jsx': 'javascript',
             '.tsx': 'typescript',
@@ -263,7 +263,7 @@ class FileSystemSourceWatcher(SourceWatcher):
             '.dockerfile': 'dockerfile',
             '.makefile': 'makefile',
         }
-        
+
         return language_map.get(suffix)
 
 
@@ -899,11 +899,11 @@ class FileSystemSource(AbstractDataSource):
         """Detect programming language from file extension."""
         # Local language detection without middleware dependency
         suffix = file_path.suffix.lower()
-        
+
         # Common programming language mappings
         language_map = {
             '.py': 'python',
-            '.js': 'javascript', 
+            '.js': 'javascript',
             '.ts': 'typescript',
             '.jsx': 'javascript',
             '.tsx': 'typescript',
@@ -951,5 +951,5 @@ class FileSystemSource(AbstractDataSource):
             '.dockerfile': 'dockerfile',
             '.makefile': 'makefile',
         }
-        
+
         return language_map.get(suffix)

@@ -405,8 +405,8 @@ class ServiceRegistry:
             capabilities=capabilities or ServiceCapabilities(),
             configuration_schema=self._extract_config_schema(provider_class),
             status="registered",
-            created_at=datetime.UTC,
-            last_modified=datetime.UTC
+            created_at=UTC,
+            last_modified=UTC
         )
         self._provider_info[service_type][provider_name] = info
 
@@ -630,7 +630,7 @@ class BaseServiceProvider(ABC):
             health = ServiceHealth(
                 service_type=self._get_service_type(),
                 status=health_status,
-                last_check=datetime.UTC,
+                last_check=UTC,
                 response_time=0.0,  # Implement timing
                 error_count=self._get_error_count(),
                 success_rate=self._get_success_rate(),
@@ -646,7 +646,7 @@ class BaseServiceProvider(ABC):
             return ServiceHealth(
                 service_type=self._get_service_type(),
                 status=HealthStatus.UNHEALTHY,
-                last_check=datetime.UTC,
+                last_check=UTC,
                 response_time=0.0,
                 error_count=self._get_error_count() + 1,
                 last_error=str(e)
@@ -1198,7 +1198,7 @@ class ServicesManager:
         logger.info("Starting services...")
 
         try:
-            self._startup_time = datetime.UTC
+            self._startup_time = UTC
 
             # Start services in initialization order
             for service_type in self._initialization_order:
@@ -1323,7 +1323,7 @@ class ServicesManager:
                     health = ServiceHealth(
                         service_type=service_type,
                         status=status,
-                        last_check=datetime.UTC,
+                        last_check=UTC,
                         response_time=0.0
                     )
 
@@ -1340,7 +1340,7 @@ class ServicesManager:
                 service_healths[service_type] = ServiceHealth(
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
-                    last_check=datetime.UTC,
+                    last_check=UTC,
                     response_time=0.0,
                     last_error=str(e)
                 )
@@ -1349,7 +1349,7 @@ class ServicesManager:
         return ServicesHealthReport(
             overall_status=overall_status,
             services=service_healths,
-            check_time=datetime.UTC,
+            check_time=UTC,
             metrics=self._get_system_metrics()
         )
 
@@ -1479,7 +1479,7 @@ class ServicesManager:
             "total_services": len(self._services),
             "running_services": len([s for s in self._service_states.values() if s == "running"]),
             "failed_services": len([s for s in self._service_states.values() if s == "failed"]),
-            "uptime": (datetime.UTC - self._startup_time).total_seconds() if self._startup_time else 0
+            "uptime": (UTC - self._startup_time).total_seconds() if self._startup_time else 0
         }
 
     async def _cleanup_partial_initialization(self) -> None:

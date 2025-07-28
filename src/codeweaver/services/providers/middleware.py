@@ -291,7 +291,7 @@ class FastMCPErrorHandlingProvider(BaseServiceProvider, ErrorHandlingService):
         """Get current timestamp as string."""
         from datetime import datetime
 
-        return datetime.utcnow().isoformat()
+        return datetime.().isoformat()
 
 
 class FastMCPRateLimitingProvider(BaseServiceProvider, RateLimitingService):

@@ -1,7 +1,7 @@
 # Services Layer Usage Guide
 
-**Date:** January 27, 2025  
-**Author:** CodeWeaver Development Team  
+**Date:** January 27, 2025
+**Author:** CodeWeaver Development Team
 **Version:** 1.0
 
 ## Overview
@@ -43,19 +43,19 @@ from codeweaver._types import ServiceHealth, ServiceStatus
 class ExamplePlugin:
     async def process_content(self, content: str, context: dict) -> ProcessedContent:
         """Process content using services layer."""
-        
+
         # Get service from context
         chunking_service = context.get("chunking_service")
-        
+
         # Use service if available with fallback
         if chunking_service and await chunking_service.is_healthy():
             chunks = await chunking_service.chunk_content(content)
         else:
             # Fallback logic without service dependency
             chunks = self._simple_chunk_fallback(content)
-        
+
         return ProcessedContent(chunks=chunks)
-    
+
     def _simple_chunk_fallback(self, content: str) -> list[str]:
         """Simple chunking fallback without external dependencies."""
         chunk_size = 1500
@@ -110,15 +110,15 @@ Always design plugins to work with or without services:
 ```python
 class FileSystemSourceProvider:
     """Example of proper services layer integration."""
-    
+
     async def discover_content(self, context: dict[str, Any]) -> AsyncIterator[ContentItem]:
         """Discover content using services layer."""
-        
+
         # Get services from context
         filtering_service = context.get("filtering_service")
         chunking_service = context.get("chunking_service")
         validation_service = context.get("validation_service")
-        
+
         for file_path in self._scan_files():
             # Use filtering service if available
             if filtering_service:
@@ -128,18 +128,18 @@ class FileSystemSourceProvider:
                 # Fallback logic without service dependency
                 if self._should_skip_file(file_path):
                     continue
-            
+
             # Read and validate content
             content = await self._read_file(file_path)
             if validation_service:
                 content = await validation_service.validate_content(content)
-            
+
             # Chunk content using service
             if chunking_service:
                 chunks = await chunking_service.chunk_content(content, str(file_path))
             else:
                 chunks = self._simple_chunk_fallback(content, file_path)
-            
+
             for chunk in chunks:
                 yield ContentItem.from_chunk(chunk, file_path)
 ```
@@ -151,12 +151,12 @@ Monitor service health and handle degraded states:
 ```python
 async def process_with_health_check(self, data: Any, context: dict) -> Any:
     """Process data with service health monitoring."""
-    
+
     services_manager = context.get("services_manager")
     if services_manager:
         # Check service health
         health_status = await services_manager.get_service_health("chunking")
-        
+
         if health_status.status == ServiceStatus.HEALTHY:
             chunking_service = context.get("chunking_service")
             return await chunking_service.process(data)
@@ -168,7 +168,7 @@ async def process_with_health_check(self, data: Any, context: dict) -> Any:
             logger.error(f"Service unhealthy: {health_status.message}")
             # Use fallback
             return await self._fallback_processing(data)
-    
+
     # No services manager available
     return await self._fallback_processing(data)
 ```
@@ -180,9 +180,9 @@ Check service capabilities before use:
 ```python
 async def smart_processing(self, content: str, language: str, context: dict) -> ProcessedContent:
     """Use service capabilities intelligently."""
-    
+
     chunking_service = context.get("chunking_service")
-    
+
     if chunking_service:
         # Check if service supports the specific language
         if hasattr(chunking_service, 'supports_language') and \
@@ -190,7 +190,7 @@ async def smart_processing(self, content: str, language: str, context: dict) -> 
             return await chunking_service.chunk_code(content, language)
         elif hasattr(chunking_service, 'chunk_content'):
             return await chunking_service.chunk_content(content)
-    
+
     # Fallback to generic processing
     return self._generic_processing(content)
 ```
@@ -207,22 +207,22 @@ from codeweaver._types import ServiceHealth, ServiceStatus
 
 class CustomCacheService(BaseServiceProvider):
     """Custom caching service implementation."""
-    
+
     def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self._cache = {}
         self._max_size = config.get("max_size", 1000)
-    
+
     async def start(self) -> None:
         """Start the cache service."""
         self._cache.clear()
         logger.info("Cache service started")
-    
+
     async def stop(self) -> None:
         """Stop the cache service."""
         self._cache.clear()
         logger.info("Cache service stopped")
-    
+
     async def health_check(self) -> ServiceHealth:
         """Check cache service health."""
         try:
@@ -231,32 +231,32 @@ class CustomCacheService(BaseServiceProvider):
                 return ServiceHealth(
                     status=ServiceStatus.DEGRADED,
                     message=f"Cache nearly full: {cache_size}/{self._max_size}",
-                    last_check=datetime.utcnow()
+                    last_check=datetime.now(UTC)
                 )
             else:
                 return ServiceHealth(
                     status=ServiceStatus.HEALTHY,
                     message=f"Cache healthy: {cache_size}/{self._max_size}",
-                    last_check=datetime.utcnow()
+                    last_check=datetime.now(UTC)
                 )
         except Exception as e:
             return ServiceHealth(
                 status=ServiceStatus.UNHEALTHY,
                 message=f"Cache error: {e}",
-                last_check=datetime.utcnow()
+                last_check=datetime.now(UTC)
             )
-    
+
     async def get(self, key: str) -> Any | None:
         """Get value from cache."""
         return self._cache.get(key)
-    
+
     async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
         """Set value in cache with TTL."""
         if len(self._cache) >= self._max_size:
             # Simple LRU eviction
             oldest_key = next(iter(self._cache))
             del self._cache[oldest_key]
-        
+
         self._cache[key] = {
             "value": value,
             "expires": time.time() + ttl
@@ -358,12 +358,12 @@ async def test_processing(self):
 ```python
 async def embed_documents(self, texts: list[str], context: dict) -> list[list[float]]:
     """Generate embeddings with rate limiting."""
-    
+
     # Check rate limiting service
     rate_limiter = context.get("rate_limiting_service")
     if rate_limiter:
         await rate_limiter.acquire("embedding_provider", len(texts))
-    
+
     try:
         result = await self._generate_embeddings(texts)
     except Exception:
@@ -378,7 +378,7 @@ async def embed_documents(self, texts: list[str], context: dict) -> list[list[fl
 ```python
 async def embed_documents(self, texts: list[str], context: dict) -> list[list[float]]:
     """Generate embeddings with caching."""
-    
+
     # Check cache service
     cache_service = context.get("caching_service")
     if cache_service:
@@ -386,14 +386,14 @@ async def embed_documents(self, texts: list[str], context: dict) -> list[list[fl
         cached_result = await cache_service.get(cache_key)
         if cached_result:
             return cached_result
-    
+
     # Generate embeddings
     result = await self._generate_embeddings(texts)
-    
+
     # Cache result
     if cache_service:
         await cache_service.set(cache_key, result, ttl=3600)
-    
+
     return result
 ```
 
@@ -408,13 +408,13 @@ class QdrantBackend:
             return ServiceHealth(
                 status=ServiceStatus.HEALTHY,
                 message="Qdrant connection healthy",
-                last_check=datetime.utcnow()
+                last_check=datetime.now(UTC)
             )
         except Exception as e:
             return ServiceHealth(
                 status=ServiceStatus.UNHEALTHY,
                 message=f"Qdrant connection failed: {e}",
-                last_check=datetime.utcnow()
+                last_check=datetime.now(UTC)
             )
 
 # Register with services manager
@@ -429,7 +429,7 @@ services_manager.register_health_check("qdrant_backend", backend.health_check)
    ```python
    # Problem: Service not found in context
    service = context.get("missing_service")  # Returns None
-   
+
    # Solution: Always check and provide fallback
    service = context.get("missing_service")
    if service:
@@ -443,7 +443,7 @@ services_manager.register_health_check("qdrant_backend", backend.health_check)
    # Problem: Service is unhealthy but still being used
    service = context.get("service")
    result = await service.process(data)  # May fail
-   
+
    # Solution: Check health before use
    service = context.get("service")
    if service and await service.is_healthy():
@@ -457,7 +457,7 @@ services_manager.register_health_check("qdrant_backend", backend.health_check)
    # Problem: Service not enabled
    [services.chunking]
    enabled = false  # Service won't be available
-   
+
    # Solution: Enable required services
    [services.chunking]
    enabled = true
@@ -484,7 +484,7 @@ services_manager.register_health_check("qdrant_backend", backend.health_check)
 3. **Validate Service Configuration**
    ```python
    from codeweaver.config import CodeWeaverConfig
-   
+
    config = CodeWeaverConfig.from_file("config.toml")
    print(f"Services config: {config.services}")
    ```
@@ -514,7 +514,7 @@ class NewPlugin:
             # Fallback without external dependency
             chunks = self._simple_chunk_fallback(content)
         return ProcessedContent(chunks=chunks)
-    
+
     def _simple_chunk_fallback(self, content: str) -> list[str]:
         """Simple chunking without middleware dependency."""
         chunk_size = 1500
@@ -529,4 +529,3 @@ For more information, see:
 - [Development Patterns Guide](DEVELOPMENT_PATTERNS.md)
 - [Migration Guide](MIGRATION_GUIDE.md)
 - [Factory System Documentation](FACTORY_SYSTEM.md)
-

@@ -136,7 +136,7 @@ class VoyageAIProvider(CombinedProvider):
     async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
         """Generate embeddings for documents with service layer integration."""
         context = context or {}
-        
+
         # Check cache service first
         cache_service = context.get("caching_service")
         if cache_service:
@@ -151,7 +151,7 @@ class VoyageAIProvider(CombinedProvider):
             if cached_result:
                 logger.debug(f"Cache hit for {len(texts)} VoyageAI embeddings")
                 return cached_result
-        
+
         # Apply rate limiting
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
@@ -159,7 +159,7 @@ class VoyageAIProvider(CombinedProvider):
         else:
             # Fallback to basic rate limiting
             await self._rate_limit()
-        
+
         try:
             result = self.client.embed(
                 texts=texts,
@@ -167,16 +167,16 @@ class VoyageAIProvider(CombinedProvider):
                 input_type="document",
                 output_dimension=self._dimension,
             )
-            
+
             embeddings = result.embeddings
-            
+
             # Cache the result
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
                 logger.debug(f"Cached {len(texts)} VoyageAI embeddings")
-            
+
             return embeddings
-            
+
         except Exception:
             logger.exception("Error generating VoyageAI embeddings")
             raise
@@ -184,7 +184,7 @@ class VoyageAIProvider(CombinedProvider):
     async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
         """Generate embedding for search query with service layer integration."""
         context = context or {}
-        
+
         # Check cache service first
         cache_service = context.get("caching_service")
         if cache_service:
@@ -199,7 +199,7 @@ class VoyageAIProvider(CombinedProvider):
             if cached_result:
                 logger.debug("Cache hit for VoyageAI query embedding")
                 return cached_result
-        
+
         # Apply rate limiting
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
@@ -207,7 +207,7 @@ class VoyageAIProvider(CombinedProvider):
         else:
             # Fallback to basic rate limiting
             await self._rate_limit()
-        
+
         try:
             result = self.client.embed(
                 texts=[text],
@@ -215,16 +215,16 @@ class VoyageAIProvider(CombinedProvider):
                 input_type="query",
                 output_dimension=self._dimension,
             )
-            
+
             embedding = result.embeddings[0]
-            
+
             # Cache the result
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
                 logger.debug("Cached VoyageAI query embedding")
-            
+
             return embedding
-            
+
         except Exception:
             logger.exception("Error generating VoyageAI query embedding")
             raise

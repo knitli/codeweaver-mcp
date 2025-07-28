@@ -221,7 +221,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
     async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
         """Generate embeddings for documents with service layer integration."""
         context = context or {}
-        
+
         # Check cache service first
         cache_service = context.get("caching_service")
         if cache_service:
@@ -235,7 +235,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cached_result:
                 logger.debug(f"Cache hit for {len(texts)} OpenAI embeddings")
                 return cached_result
-        
+
         # Apply rate limiting
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
@@ -262,12 +262,12 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
 
                 batch_embeddings = [data.embedding for data in response.data]
                 embeddings.extend(batch_embeddings)
-            
+
             # Cache the result
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
                 logger.debug(f"Cached {len(texts)} OpenAI embeddings")
-            
+
             return embeddings
 
         except Exception:
@@ -277,7 +277,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
     async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
         """Generate embedding for search query with service layer integration."""
         context = context or {}
-        
+
         # Check cache service first
         cache_service = context.get("caching_service")
         if cache_service:
@@ -291,7 +291,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cached_result:
                 logger.debug("Cache hit for OpenAI query embedding")
                 return cached_result
-        
+
         # Apply rate limiting
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
@@ -309,12 +309,12 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
 
             response = await self.client.embeddings.create(**embedding_kwargs)
             embedding = response.data[0].embedding
-            
+
             # Cache the result
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
                 logger.debug("Cached OpenAI query embedding")
-            
+
             return embedding
 
         except Exception:

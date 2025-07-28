@@ -110,7 +110,7 @@ class GitRepositorySourceProvider(AbstractDataSource):
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if git repository source is available for the given capability."""
         from codeweaver._types.source_enums import SourceCapability
-        
+
         # Git source supports most capabilities but requires git
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -122,14 +122,14 @@ class GitRepositorySourceProvider(AbstractDataSource):
             SourceCapability.BATCH_PROCESSING,
             SourceCapability.AUTHENTICATION,
         }
-        
+
         if capability in supported_capabilities:
             # Check for git availability
             import shutil
             if shutil.which("git") is None:
                 return False, "git command not found in PATH"
             return True, None
-        
+
         return False, f"Capability {capability.value} not supported by Git source"
 
     def get_capabilities(self) -> SourceCapabilities:

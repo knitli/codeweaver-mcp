@@ -9,7 +9,7 @@ import asyncio
 import contextlib
 import logging
 
-from datetime import datetime
+from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
 
@@ -221,7 +221,7 @@ class ServicesManager:
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
-                    last_check=datetime.UTC,
+                    last_check=UTC,
                     response_time=0.0,
                     error_count=1,
                     success_rate=0.0,
@@ -239,10 +239,7 @@ class ServicesManager:
         }
 
         return ServicesHealthReport(
-            overall_status=overall_status,
-            services=services_health,
-            check_time=datetime.UTC,
-            metrics=metrics,
+            overall_status=overall_status, services=services_health, check_time=UTC, metrics=metrics
         )
 
     async def restart_service(self, service_type: ServiceType) -> None:

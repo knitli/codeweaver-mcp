@@ -25,8 +25,8 @@ class ServicesManager:
     """Manager for coordinating all service providers."""
 
     def __init__(
-        self, 
-        config: ServicesConfig, 
+        self,
+        config: ServicesConfig,
         logger: logging.Logger | None = None,
         fastmcp_server: FastMCP | None = None  # NEW: FastMCP server reference
     ):
@@ -40,7 +40,7 @@ class ServicesManager:
 
         # Service instances
         self._services: dict[ServiceType, ServiceProvider] = {}
-        
+
         # NEW: Middleware service tracking
         self._middleware_services: dict[ServiceType, ServiceProvider] = {}
         self._middleware_registration_order: list[ServiceType] = []
@@ -60,15 +60,15 @@ async def _register_builtin_providers(self) -> None:
     """Register built-in service providers including middleware providers."""
     try:
         # Existing provider registrations...
-        
+
         # NEW: Register middleware service providers
         from codeweaver.services.providers.middleware import (
             FastMCPLoggingProvider,
-            FastMCPTimingProvider, 
+            FastMCPTimingProvider,
             FastMCPErrorHandlingProvider,
             FastMCPRateLimitingProvider,
         )
-        
+
         # Register middleware providers
         self._registry.register_provider(
             ServiceType.LOGGING, "fastmcp_logging", FastMCPLoggingProvider
@@ -82,9 +82,9 @@ async def _register_builtin_providers(self) -> None:
         self._registry.register_provider(
             ServiceType.RATE_LIMITING, "fastmcp_rate_limiting", FastMCPRateLimitingProvider
         )
-        
+
         self._logger.info("Middleware service providers registered")
-        
+
     except Exception as e:
         error_msg = f"Failed to register builtin providers: {e}"
         self._logger.exception(error_msg)
@@ -101,36 +101,36 @@ async def _create_middleware_services(self) -> None:
     if not self._fastmcp_server:
         self._logger.warning("No FastMCP server provided, skipping middleware service registration")
         return
-        
+
     try:
         self._logger.info("Creating middleware services")
-        
+
         # Use configured initialization order
         middleware_order = self._config.middleware_initialization_order or [
             "error_handling", "rate_limiting", "logging", "timing"
         ]
-        
+
         for service_name in middleware_order:
             service_type = ServiceType(service_name)
-            
+
             # Get service configuration
             service_config = getattr(self._config, service_name, None)
             if not service_config or not service_config.enabled:
                 self._logger.debug("Middleware service %s disabled, skipping", service_name)
                 continue
-            
+
             # Create middleware service
             middleware_service = await self._create_middleware_service(service_type, service_config)
             if middleware_service:
                 self._middleware_services[service_type] = middleware_service
                 self._middleware_registration_order.append(service_type)
-                
+
                 # Register middleware with FastMCP server if auto-registration is enabled
                 if self._config.middleware_auto_registration:
                     await self._register_middleware_with_server(service_type, middleware_service)
-        
+
         self._logger.info("Middleware services created and registered")
-        
+
     except Exception as e:
         error_msg = f"Failed to create middleware services: {e}"
         self._logger.exception(error_msg)
@@ -143,13 +143,13 @@ async def _create_middleware_service(
     try:
         # Create service using registry
         service = await self._registry.create_service(service_type, config)
-        
+
         # Initialize the service
         await service.initialize()
-        
+
         self._logger.info("Created middleware service: %s", service_type.value)
         return service
-        
+
     except Exception as e:
         self._logger.exception("Failed to create middleware service %s: %s", service_type.value, e)
         if config.fail_fast:
@@ -198,7 +198,7 @@ async def initialize(self) -> None:
 
         # Create optional services if enabled
         await self._create_optional_services()
-        
+
         # NEW: Create and register middleware services
         await self._create_middleware_services()
 
@@ -254,7 +254,7 @@ async def get_health_report(self) -> ServicesHealthReport:
     """Get comprehensive health report for all services."""
     try:
         service_health = {}
-        
+
         # Check core and optional services
         for service_type, service in self._services.items():
             try:
@@ -266,9 +266,9 @@ async def get_health_report(self) -> ServicesHealthReport:
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
                     message=f"Health check failed: {e}",
-                    last_check=datetime.utcnow(),
+                    last_check=datetime.now(UTC),
                 )
-        
+
         # NEW: Check middleware services
         middleware_health = {}
         for service_type, service in self._middleware_services.items():
@@ -281,35 +281,35 @@ async def get_health_report(self) -> ServicesHealthReport:
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
                     message=f"Health check failed: {e}",
-                    last_check=datetime.utcnow(),
+                    last_check=datetime.now(UTC),
                 )
-        
+
         # Determine overall status
         all_health = {**service_health, **middleware_health}
         overall_status = HealthStatus.HEALTHY
-        
+
         for health in all_health.values():
             if health.status == HealthStatus.UNHEALTHY:
                 overall_status = HealthStatus.UNHEALTHY
                 break
             elif health.status == HealthStatus.DEGRADED:
                 overall_status = HealthStatus.DEGRADED
-        
+
         return ServicesHealthReport(
             overall_status=overall_status,
             service_health=service_health,
             middleware_health=middleware_health,  # NEW: Include middleware health
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             manager_initialized=self._initialized,
         )
-        
+
     except Exception as e:
         self._logger.exception("Failed to generate health report")
         return ServicesHealthReport(
             overall_status=HealthStatus.UNHEALTHY,
             service_health={},
             middleware_health={},
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             manager_initialized=self._initialized,
             error=str(e),
         )
@@ -406,7 +406,7 @@ async def _inject_services(self, context: MiddlewareContext) -> None:
                     self._services_manager.get_service(service_type) or
                     self._services_manager.get_middleware_service(service_type)
                 )
-                
+
                 if service:
                     context.fastmcp_context.set_state_value(context_key, service)
                     self._logger.debug("Injected %s service into context", service_type.value)
@@ -426,9 +426,9 @@ Update health report structure to include middleware services:
 ```python
 class ServicesHealthReport(BaseModel):
     """Comprehensive health report for all services."""
-    
+
     model_config = ConfigDict(extra="allow")
-    
+
     overall_status: HealthStatus
     service_health: dict[str, ServiceHealth]
     middleware_health: dict[str, ServiceHealth] = Field(default_factory=dict)  # NEW
@@ -451,10 +451,10 @@ class CodeWeaverServer:
         extensibility_config: ExtensibilityConfig | None = None,
     ):
         # ... existing initialization ...
-        
+
         # Create FastMCP server instance
         self.mcp = FastMCP("CodeWeaver")
-        
+
         # NEW: Pass FastMCP server to services manager
         # Note: This will be done during initialization to avoid circular dependencies
 
@@ -493,7 +493,7 @@ class CodeWeaverServer:
         """Setup domain-specific middleware (chunking, filtering)."""
         # NOTE: FastMCP builtin middleware now handled by ServicesManager
         # Only setup domain-specific middleware here
-        
+
         logger.info("Setting up domain-specific middleware")
 
         # Chunking middleware (using existing chunking config)
@@ -527,9 +527,9 @@ Add services configuration to main CodeWeaver config:
 ```python
 class CodeWeaverConfig(BaseSettings):
     """Main configuration for CodeWeaver."""
-    
+
     # ... existing configuration sections ...
-    
+
     # NEW: Services configuration
     services: ServicesConfig = Field(default_factory=ServicesConfig)
 ```

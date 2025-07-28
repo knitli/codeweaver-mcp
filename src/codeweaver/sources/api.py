@@ -148,7 +148,7 @@ class APISourceProvider(AbstractDataSource):
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if API source is available for the given capability."""
         from codeweaver._types.source_enums import SourceCapability
-        
+
         # API source supports most capabilities but requires HTTP libraries
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -159,7 +159,7 @@ class APISourceProvider(AbstractDataSource):
             SourceCapability.RATE_LIMITING,
             SourceCapability.PAGINATION,
         }
-        
+
         if capability in supported_capabilities:
             # Check for HTTP client dependencies
             try:
@@ -171,7 +171,7 @@ class APISourceProvider(AbstractDataSource):
                     return True, None
                 except ImportError:
                     return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
-        
+
         return False, f"Capability {capability.value} not supported by API source"
 
     def get_capabilities(self) -> SourceCapabilities:

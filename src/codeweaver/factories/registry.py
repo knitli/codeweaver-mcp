@@ -11,25 +11,22 @@ the specific functionality and patterns from the original separate registries.
 """
 
 import logging
-from datetime import datetime
-from typing import Any, ClassVar, TypeVar
+
+from datetime import UTC, datetime
+from typing import Annotated, Any, ClassVar, TypeVar
 
 from pydantic import Field
-from typing_extensions import Annotated
 
 from codeweaver._types import (
     BackendCapabilities,
     BaseComponentInfo,
-    ComponentNotFoundError,
     ComponentRegistration,
     ComponentType,
-    ComponentUnavailableError,
     RegistrationResult,
     SourceCapabilities,
     ValidationResult,
 )
 from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServiceConfig
 from codeweaver._types.service_data import (
     ProviderStatus,
     ServiceCapabilities,
@@ -41,15 +38,13 @@ from codeweaver._types.service_exceptions import (
     DuplicateProviderError,
     ProviderNotFoundError,
     ProviderRegistrationError,
-    ServiceCreationError,
     ServiceNotFoundError,
 )
 from codeweaver._types.services import ServiceProvider
 from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.config import BackendConfig
-from codeweaver.factories.base import BaseRegistry, ComponentRegistration as BaseComponentRegistration
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.sources.base import DataSource
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +54,9 @@ T = TypeVar('T')
 # Component-specific info classes
 class BackendInfo(BaseComponentInfo):
     """Backend-specific information."""
-    
+
     component_type: ComponentType = ComponentType.BACKEND
-    
+
     backend_type: Annotated[
         str, Field(description="Type of vector backend (e.g., 'qdrant', 'pinecone')")
     ]
@@ -75,9 +70,9 @@ class BackendInfo(BaseComponentInfo):
 
 class SourceInfo(BaseComponentInfo):
     """Source-specific information."""
-    
+
     component_type: ComponentType = ComponentType.SOURCE
-    
+
     source_type: Annotated[
         str, Field(description="Type of data source (e.g., 'filesystem', 'database')")
     ]
@@ -93,25 +88,26 @@ class SourceInfo(BaseComponentInfo):
 
 class ComponentRegistry:
     """Unified registry for all component types (backends, sources, services)."""
-    
+
     # Class-level storage for different component types
     _backends: ClassVar[dict[str, ComponentRegistration[VectorBackend]]] = {}
     _sources: ClassVar[dict[str, ComponentRegistration[DataSource]]] = {}
     _services: ClassVar[dict[ServiceType, dict[str, type[ServiceProvider]]]] = {}
-    
+
     # Service-specific storage (from original ServiceRegistry)
     _service_provider_info: ClassVar[dict[ServiceType, dict[str, ServiceProviderInfo]]] = {}
     _service_instances: ClassVar[dict[ServiceType, ServiceProvider | None]] = {}
     _service_instance_info: ClassVar[dict[ServiceType, ServiceInstanceInfo | None]] = {}
-    
+
     _initialized: ClassVar[bool] = False
-    _created_at: ClassVar[datetime] = datetime.now()
-    
+    _created_at: ClassVar[datetime] = datetime.now(UTC)
+
     def __init__(self, logger: logging.Logger | None = None):
+        """Initialize the component registry."""
         self._logger = logger or logging.getLogger(__name__)
         if not self._initialized:
             self._initialize_registries()
-    
+
     @classmethod
     def _initialize_registries(cls) -> None:
         """Initialize all registry storage."""
@@ -123,8 +119,8 @@ class ComponentRegistry:
             cls._service_instances = {}
             cls._service_instance_info = {}
             cls._initialized = True
-            cls._created_at = datetime.now()
-    
+            cls._created_at = datetime.now(UTC)
+
     # Backend Registry Methods
     def register_backend(
         self,
@@ -143,7 +139,7 @@ class ComponentRegistry:
                 return RegistrationResult(
                     success=False, component_name=name, errors=validation_result.errors
                 )
-        
+
         if check_availability:
             is_available, reason = self._check_backend_availability(backend_class)
             if not is_available:
@@ -152,7 +148,7 @@ class ComponentRegistry:
                     component_name=name,
                     errors=[f"Backend not available: {reason}"]
                 )
-        
+
         # Create registration
         registration = ComponentRegistration(
             component_class=backend_class,
@@ -161,24 +157,24 @@ class ComponentRegistry:
             is_available=True,
             availability_reason=None
         )
-        
+
         self._backends[name] = registration
-        self._logger.info(f"Registered backend: {name}")
-        
+        self._logger.info("Registered backend: %s", name)
+
         return RegistrationResult(success=True, component_name=name)
-    
+
     def get_backend(self, name: str) -> ComponentRegistration[VectorBackend] | None:
         """Get a registered backend."""
         return self._backends.get(name)
-    
+
     def list_backends(self) -> list[str]:
         """List all registered backend names."""
         return list(self._backends.keys())
-    
+
     def is_backend_registered(self, name: str) -> bool:
         """Check if a backend is registered."""
         return name in self._backends
-    
+
     # Source Registry Methods
     def register_source(
         self,
@@ -197,7 +193,7 @@ class ComponentRegistry:
                 return RegistrationResult(
                     success=False, component_name=name, errors=validation_result.errors
                 )
-        
+
         if check_availability:
             is_available, reason = self._check_source_availability(source_class)
             if not is_available:
@@ -206,7 +202,7 @@ class ComponentRegistry:
                     component_name=name,
                     errors=[f"Source not available: {reason}"]
                 )
-        
+
         # Create registration
         registration = ComponentRegistration(
             component_class=source_class,
@@ -215,24 +211,24 @@ class ComponentRegistry:
             is_available=True,
             availability_reason=None
         )
-        
+
         self._sources[name] = registration
         self._logger.info(f"Registered source: {name}")
-        
+
         return RegistrationResult(success=True, component_name=name)
-    
+
     def get_source(self, name: str) -> ComponentRegistration[DataSource] | None:
         """Get a registered source."""
         return self._sources.get(name)
-    
+
     def list_sources(self) -> list[str]:
         """List all registered source names."""
         return list(self._sources.keys())
-    
+
     def is_source_registered(self, name: str) -> bool:
         """Check if a source is registered."""
         return name in self._sources
-    
+
     # Service Registry Methods
     def register_service_provider(
         self,
@@ -248,20 +244,20 @@ class ComponentRegistry:
             if service_type not in self._services:
                 self._services[service_type] = {}
                 self._service_provider_info[service_type] = {}
-            
+
             # Check for duplicates
             if provider_name in self._services[service_type]:
                 raise DuplicateProviderError(service_type.value, provider_name)
-            
+
             # Validate provider class
             if not issubclass(provider_class, BaseServiceProvider):
                 raise ProviderRegistrationError(
                     f"Provider {provider_name} must inherit from BaseServiceProvider"
                 )
-            
+
             # Register provider
             self._services[service_type][provider_name] = provider_class
-            
+
             # Store provider info
             provider_info = ServiceProviderInfo(
                 name=provider_name,
@@ -270,38 +266,38 @@ class ComponentRegistry:
                 capabilities=capabilities or ServiceCapabilities(),
                 configuration_schema=configuration_schema or {},
                 status=ProviderStatus.REGISTERED,
-                registered_at=datetime.now()
+                registered_at=datetime.now(UTC)
             )
             self._service_provider_info[service_type][provider_name] = provider_info
-            
+
             self._logger.info(f"Registered service provider: {service_type.value}.{provider_name}")
-            
+
         except Exception as e:
             raise ProviderRegistrationError(f"Failed to register provider {provider_name}: {e}") from e
-    
+
     def get_service_provider_class(
         self, service_type: ServiceType, provider_name: str
     ) -> type[ServiceProvider]:
         """Get a registered service provider class."""
         if service_type not in self._services:
             raise ServiceNotFoundError(f"Service type {service_type.value} not found")
-        
+
         if provider_name not in self._services[service_type]:
             raise ProviderNotFoundError(service_type.value, provider_name)
-        
+
         return self._services[service_type][provider_name]
-    
+
     def list_service_providers(self, service_type: ServiceType) -> list[str]:
         """List all registered providers for a service type."""
         return list(self._services.get(service_type, {}).keys())
-    
+
     def is_service_provider_registered(self, service_type: ServiceType, provider_name: str) -> bool:
         """Check if a service provider is registered."""
         return (
             service_type in self._services and
             provider_name in self._services[service_type]
         )
-    
+
     # Unified Registry Methods
     def get_component_count(self) -> dict[str, int]:
         """Get count of registered components by type."""
@@ -310,7 +306,7 @@ class ComponentRegistry:
             "sources": len(self._sources),
             "services": sum(len(providers) for providers in self._services.values())
         }
-    
+
     def clear_registry(self, component_type: ComponentType | None = None) -> None:
         """Clear registry (mainly for testing)."""
         if component_type is None:
@@ -334,89 +330,84 @@ class ComponentRegistry:
             self._service_instances.clear()
             self._service_instance_info.clear()
             self._logger.debug("Cleared service registry")
-    
+
     def get_registry_health(self) -> ServiceRegistryHealth:
         """Get overall registry health status."""
         total_providers = sum(len(providers) for providers in self._services.values())
         healthy_providers = 0
-        
-        for service_type, providers in self._service_provider_info.items():
+
+        for providers in self._service_provider_info.values():
             for provider_info in providers.values():
                 if provider_info.status == ProviderStatus.HEALTHY:
                     healthy_providers += 1
-        
+
         return ServiceRegistryHealth(
             total_providers=total_providers,
             healthy_providers=healthy_providers,
             service_types=list(self._services.keys()),
-            last_check=datetime.now(),
-            uptime_seconds=(datetime.now() - self._created_at).total_seconds()
+            last_check=datetime.now(UTC),
+            uptime_seconds=(datetime.now(UTC) - self._created_at).total_seconds()
         )
-    
+
     # Validation methods
     def _validate_backend_class(self, backend_class: type[VectorBackend]) -> ValidationResult:
         """Validate backend class implementation."""
         errors = []
         warnings = []
-        
+
         # Check if it's a subclass of VectorBackend
         if not issubclass(backend_class, VectorBackend):
-            errors.append(f"Backend class must inherit from VectorBackend")
-        
+            errors.append("Backend class must inherit from VectorBackend")
+
         # Check for required methods
         required_methods = ['store_vectors', 'search_vectors', 'delete_vectors']
         for method in required_methods:
             if not hasattr(backend_class, method):
                 errors.append(f"Backend class missing required method: {method}")
-        
+
         return ValidationResult(
             is_valid=len(errors) == 0,
             errors=errors,
             warnings=warnings
         )
-    
+
     def _validate_source_class(self, source_class: type[DataSource]) -> ValidationResult:
         """Validate source class implementation."""
         errors = []
         warnings = []
-        
+
         # Check if it's a subclass of DataSource
         if not issubclass(source_class, DataSource):
-            errors.append(f"Source class must inherit from DataSource")
-        
+            errors.append("Source class must inherit from DataSource")
+
         # Check for required methods
         required_methods = ['discover_content', 'get_content']
-        for method in required_methods:
-            if not hasattr(source_class, method):
-                errors.append(f"Source class missing required method: {method}")
-        
-        return ValidationResult(
-            is_valid=len(errors) == 0,
-            errors=errors,
-            warnings=warnings
+        errors.extend(
+            f"Source class missing required method: {method}"
+            for method in required_methods
+            if not hasattr(source_class, method)
         )
-    
+        return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
+
     def _check_backend_availability(self, backend_class: type[VectorBackend]) -> tuple[bool, str | None]:
         """Check if backend is available."""
         try:
             # Try to call check_availability if it exists
             if hasattr(backend_class, 'check_availability'):
                 return backend_class.check_availability()
-            else:
-                # Default to available if no check method
-                return True, None
+            # Default to available if no check method
+            return True, None
         except Exception as e:
             return False, str(e)
-    
+
     def _check_source_availability(self, source_class: type[DataSource]) -> tuple[bool, str | None]:
         """Check if source is available."""
         try:
             # Try to call check_availability if it exists
             if hasattr(source_class, 'check_availability'):
                 return source_class.check_availability()
-            else:
-                # Default to available if no check method
-                return True, None
+            # Default to available if no check method
+            return True, None
         except Exception as e:
             return False, str(e)
 
@@ -437,4 +428,3 @@ def reset_global_registry() -> None:
     """Reset the global registry (mainly for testing)."""
     global _global_registry
     _global_registry = None
-

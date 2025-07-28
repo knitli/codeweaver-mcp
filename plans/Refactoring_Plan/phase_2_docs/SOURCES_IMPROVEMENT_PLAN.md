@@ -640,7 +640,7 @@ class ExtensibleSourceCapabilities(SourceCapabilities):
         self.custom_capabilities[name] = {
             "value": value,
             "description": description,
-            "added_at": datetime.now(datetime.UTC).isoformat()
+            "added_at": datetime.now(UTC).isoformat()
         }
 
     def supports_custom(self, capability_name: str) -> bool:

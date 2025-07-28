@@ -11,7 +11,8 @@ native sparse vector support introduced in v1.10+.
 """
 
 import logging
-from datetime import datetime
+
+from datetime import UTC, datetime
 from typing import Any
 
 from qdrant_client import QdrantClient
@@ -454,58 +455,58 @@ class QdrantHybridBackend(QdrantBackend):
         when sparse_vector is provided in VectorPoint.
         """
         await self.upsert_vectors(collection_name, vectors)
-    
+
     # Health Monitoring Methods
-    
+
     async def health_check(self) -> ServiceHealth:
         """Check backend health and connectivity."""
         try:
             # Test basic connectivity
             health_info = self.client.get_cluster_info()
-            
+
             if not health_info:
                 return ServiceHealth(
                     status=HealthStatus.UNHEALTHY,
                     message="Unable to get cluster info from Qdrant",
-                    last_check=datetime.now()
+                    last_check=datetime.now(UTC)
                 )
-            
+
             # Check if we can list collections
             collections = self.client.get_collections()
             collection_count = len(collections.collections) if collections else 0
-            
+
             # Test basic operations
             try:
                 # Try to get telemetry (lightweight operation)
                 telemetry = self.client.get_telemetry()
-                
+
                 return ServiceHealth(
                     status=HealthStatus.HEALTHY,
                     message=f"Qdrant healthy: {collection_count} collections available",
-                    last_check=datetime.now(),
+                    last_check=datetime.now(UTC),
                     metadata={
                         "collection_count": collection_count,
                         "cluster_info": str(health_info),
                         "telemetry_available": telemetry is not None
                     }
                 )
-                
+
             except Exception as e:
                 # Connection works but some operations might be limited
                 return ServiceHealth(
                     status=HealthStatus.DEGRADED,
                     message=f"Qdrant partially available: {e}",
-                    last_check=datetime.now(),
+                    last_check=datetime.now(UTC),
                     metadata={"collection_count": collection_count}
                 )
-                
+
         except Exception as e:
             return ServiceHealth(
                 status=HealthStatus.UNHEALTHY,
                 message=f"Qdrant connection failed: {e}",
-                last_check=datetime.now()
+                last_check=datetime.now(UTC),
             )
-    
+
     def get_connection_info(self) -> dict[str, Any]:
         """Get connection information for monitoring."""
         try:
@@ -520,7 +521,7 @@ class QdrantHybridBackend(QdrantBackend):
                 "backend_type": "qdrant",
                 "status": "connection_info_unavailable"
             }
-    
+
     async def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for monitoring."""
         try:
@@ -529,7 +530,7 @@ class QdrantHybridBackend(QdrantBackend):
                 "total_collections": len(collections.collections) if collections else 0,
                 "collections": []
             }
-            
+
             # Get metrics for each collection
             for collection in (collections.collections if collections else []):
                 try:
@@ -545,12 +546,13 @@ class QdrantHybridBackend(QdrantBackend):
                         "name": collection.name,
                         "error": str(e)
                     })
-            
-            return metrics
-            
+
         except Exception as e:
             return {
                 "error": f"Failed to get performance metrics: {e}",
                 "total_collections": 0,
                 "collections": []
             }
+
+        else:
+            return metrics
