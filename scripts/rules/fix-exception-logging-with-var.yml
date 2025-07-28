@@ -1,0 +1,15 @@
+# TRY401: Remove redundant exception in logging.exception calls
+id: fix-exception-logging-with-var
+message: "Remove redundant exception reference from logging.exception"
+severity: info
+language: python
+rule:
+  pattern: |
+    $LOGGER.exception($MSG, $EXC)
+  constraints:
+    LOGGER:
+      regex: "^(logger|logging|log)$"
+    EXC:
+      regex: "^(e|exc|exception)$"
+fix: |
+  $LOGGER.exception($MSG)

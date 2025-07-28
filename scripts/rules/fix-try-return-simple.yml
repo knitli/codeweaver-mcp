@@ -1,0 +1,19 @@
+# TRY300: Move return from try to else block - simple case
+id: fix-try-return-simple
+message: "Move return statement from try to else block"
+severity: info
+language: python
+rule:
+  pattern: |
+    try:
+        $$BODY
+        return $RET
+    except $EXC:
+        $$HANDLER
+fix: |
+  try:
+      $$BODY
+  except $EXC:
+      $$HANDLER
+  else:
+      return $RET

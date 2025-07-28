@@ -1,0 +1,23 @@
+# TRY300: Multiple except blocks
+id: fix-try-return-multiple
+message: "Move return statement from try to else block (multiple except)"
+severity: info
+language: python
+rule:
+    pattern: |
+    try:
+        $$BODY
+        return $RET
+    except $EXC1:
+        $$HANDLER1
+    except $EXC2:
+        $$HANDLER2
+fix: |
+    try:
+        $$BODY
+    except $EXC1:
+        $$HANDLER1
+    except $EXC2:
+        $$HANDLER2
+    else:
+        return $RET

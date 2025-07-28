@@ -1,0 +1,19 @@
+# Additional pattern for bare except
+id: fix-try-return-bare-except
+message: "Move return statement from try to else block (bare except)"
+severity: info
+language: python
+rule:
+    pattern: |
+      try:
+          $$BODY
+          return $RET
+      except:
+          $$HANDLER
+fix: |
+  try:
+      $$BODY
+  except:
+      $$HANDLER
+  else:
+      return $RET

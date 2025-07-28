@@ -1,0 +1,12 @@
+id: fix-exception-logging-fstring-simple
+message: "Remove redundant exception from f-string logging"
+severity: info
+language: python
+rule:
+  pattern: |
+    $LOGGER.exception(f"$PREFIX{e}$SUFFIX")
+    constraints:
+    LOGGER:
+      regex: "^(logger|logging|log)$"
+fix: |
+  $LOGGER.exception(f"$PREFIX$SUFFIX")
