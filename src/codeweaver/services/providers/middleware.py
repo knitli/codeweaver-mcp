@@ -289,9 +289,9 @@ class FastMCPErrorHandlingProvider(BaseServiceProvider, ErrorHandlingService):
 
     def _get_current_timestamp(self) -> str:
         """Get current timestamp as string."""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
-        return datetime.().isoformat()
+        return datetime.now(UTC).isoformat()
 
 
 class FastMCPRateLimitingProvider(BaseServiceProvider, RateLimitingService):

@@ -173,9 +173,10 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             # Check for HTML parsing
             try:
                 import bs4  # noqa: F401
-                return True, None
             except ImportError:
                 return False, "HTML parser not available (install with: uv add beautifulsoup4)"
+            else:
+                return True, None
 
         # Change watching for web content is complex
         if capability == SourceCapability.CHANGE_WATCHING:

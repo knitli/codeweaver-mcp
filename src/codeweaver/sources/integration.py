@@ -79,7 +79,8 @@ class DataSourceManager:
                 else:
                     logger.warning("Validation failed for data source: %s", source_type)
             except Exception:
-                logger.exception("Failed to initialize data source %s.", source_config)
+                logger.exception("Failed to initialize data source %s.")
+
 
         logger.info("Initialized %d data sources", len(self._active_sources))
 
@@ -108,7 +109,8 @@ class DataSourceManager:
                 )
 
             except Exception:
-                logger.exception("Error discovering content from source %s", source.source_id)
+                logger.exception("Error discovering content from source %s")
+
 
         # Apply deduplication if enabled
         if self.config.enable_content_deduplication:
@@ -158,7 +160,8 @@ class DataSourceManager:
             except NotImplementedError:
                 logger.debug("Change watching not supported by source: %s", source.source_id)
             except Exception:
-                logger.exception("Failed to setup change watching for source %s", source.source_id)
+                logger.exception("Failed to setup change watching for source %s")
+
 
     async def cleanup(self) -> None:
         """Clean up all sources and watchers."""
@@ -167,7 +170,8 @@ class DataSourceManager:
             try:
                 await watcher.stop()
             except Exception:
-                logger.exception("Error stopping watcher: %s", watcher)
+                logger.exception("Error stopping watcher: %s")
+
 
         # Clean up sources
         for source in self._active_sources:
@@ -175,7 +179,8 @@ class DataSourceManager:
                 if hasattr(source, "cleanup"):
                     await source.cleanup()
             except Exception:
-                logger.exception("Error cleaning up source %s", source.source_id)
+                logger.exception("Error cleaning up source %s")
+
 
         self._watchers.clear()
         self._active_sources.clear()

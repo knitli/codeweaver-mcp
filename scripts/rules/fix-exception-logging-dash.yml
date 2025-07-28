@@ -1,0 +1,7 @@
+id: fix-exception-logging-dash
+message: "Remove redundant exception and trailing dash from logging"
+severity: info
+language: python
+rule:
+  pattern: '$LOGGER.exception("$PREFIX - %s", $EXC)'
+fix: '$LOGGER.exception("$PREFIX")'

@@ -526,7 +526,8 @@ class EnhancedProviderRegistry:
                     cls._discover_plugins_in_directory(plugin_dir, auto_register=auto_register)
                 )
             except Exception:
-                logger.exception("Failed to discover plugins in %s", plugin_dir)
+                logger.exception("Failed to discover plugins in %s")
+
 
         return discovered
 
@@ -583,7 +584,8 @@ class EnhancedProviderRegistry:
                     "Applied validation rule '%s' to %s", rule_name, provider_class.__name__
                 )
             except Exception:
-                logger.exception("Validation rule '%s' failed", rule_name)
+                logger.exception("Validation rule '%s' failed")
+
 
         # Combine all results
         combined_result = ValidationResult(is_valid=True)
@@ -646,7 +648,8 @@ class EnhancedProviderRegistry:
                             discovered.append(name.lower().replace("provider", ""))
 
             except Exception:
-                logger.exception("Failed to process plugin file %s", py_file)
+                logger.exception("Failed to process plugin file %s")
+
 
         return discovered
 

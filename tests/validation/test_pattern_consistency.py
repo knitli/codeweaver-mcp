@@ -1,3 +1,4 @@
+# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -12,6 +13,8 @@ required methods, properties, and architectural patterns are consistent
 across all modules.
 """
 
+
+import contextlib
 import inspect
 
 from pathlib import Path
@@ -24,36 +27,21 @@ def get_all_provider_classes():
     """Get all provider classes for validation."""
     provider_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.voyage import VoyageAIProvider
         provider_classes.append(VoyageAIProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.openai import OpenAIProvider
         provider_classes.append(OpenAIProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.cohere import CohereProvider
         provider_classes.append(CohereProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.huggingface import HuggingFaceProvider
         provider_classes.append(HuggingFaceProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.sentence_transformers import SentenceTransformersProvider
         provider_classes.append(SentenceTransformersProvider)
-    except ImportError:
-        pass
-
     return provider_classes
 
 
@@ -61,12 +49,9 @@ def get_all_backend_classes():
     """Get all backend classes for validation."""
     backend_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.backends.qdrant import QdrantBackend
         backend_classes.append(QdrantBackend)
-    except ImportError:
-        pass
-
     return backend_classes
 
 
@@ -74,24 +59,15 @@ def get_all_source_classes():
     """Get all source classes for validation."""
     source_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.sources.filesystem import FileSystemSource
         source_classes.append(FileSystemSource)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.sources.api import APISource
         source_classes.append(APISource)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.sources.git import GitSource
         source_classes.append(GitSource)
-    except ImportError:
-        pass
-
     return source_classes
 
 
@@ -109,24 +85,18 @@ def get_plugin_modules():
     ]
 
     for module_name in provider_modules:
-        try:
+        with contextlib.suppress(ImportError):
             module = __import__(module_name, fromlist=[''])
             modules.append(module)
-        except ImportError:
-            pass
-
     # Backend modules
     backend_modules = [
         "codeweaver.backends.qdrant",
     ]
 
     for module_name in backend_modules:
-        try:
+        with contextlib.suppress(ImportError):
             module = __import__(module_name, fromlist=[''])
             modules.append(module)
-        except ImportError:
-            pass
-
     # Source modules
     source_modules = [
         "codeweaver.sources.filesystem",
@@ -135,12 +105,9 @@ def get_plugin_modules():
     ]
 
     for module_name in source_modules:
-        try:
+        with contextlib.suppress(ImportError):
             module = __import__(module_name, fromlist=[''])
             modules.append(module)
-        except ImportError:
-            pass
-
     return modules
 
 
@@ -173,6 +140,7 @@ class TestProviderPatternConsistency:
             # Try to create instance with mock config
             instance = provider_class(mock_config)
 
+# sourcery skip: no-loop-in-tests
             for prop_name in required_properties:
                 assert hasattr(instance, prop_name), \
                     f"Provider {provider_class.__name__} missing property: {prop_name}"
@@ -193,6 +161,7 @@ class TestProviderPatternConsistency:
             "get_static_provider_info"
         ]
 
+# sourcery skip: no-loop-in-tests
         for method_name in required_methods:
             assert hasattr(provider_class, method_name), \
                 f"Provider {provider_class.__name__} missing class method: {method_name}"
@@ -224,6 +193,7 @@ class TestProviderPatternConsistency:
 
         # Check return type annotation
         return_annotation = sig.return_annotation
+# sourcery skip: no-conditionals-in-tests
         if return_annotation != inspect.Signature.empty:
             # Should return tuple[bool, str | None]
             assert "tuple" in str(return_annotation).lower(), \
@@ -245,6 +215,7 @@ class TestProviderPatternConsistency:
 
         # Check return type annotation
         return_annotation = sig.return_annotation
+# sourcery skip: no-conditionals-in-tests
         if return_annotation != inspect.Signature.empty:
             assert "EmbeddingProviderInfo" in str(return_annotation), \
                 f"get_static_provider_info should return EmbeddingProviderInfo, got {return_annotation}"
@@ -290,6 +261,7 @@ class TestBackendPatternConsistency:
             # Try to create instance with mock config
             instance = backend_class(mock_config)
 
+# sourcery skip: no-loop-in-tests
             for prop_name in required_properties:
                 assert hasattr(instance, prop_name), \
                     f"Backend {backend_class.__name__} missing property: {prop_name}"
@@ -306,12 +278,12 @@ class TestBackendPatternConsistency:
             "get_static_backend_info"
         ]
 
-        missing_methods = []
-        for method_name in recommended_methods:
-            if not hasattr(backend_class, method_name):
-                missing_methods.append(method_name)
-
-        if missing_methods:
+# sourcery skip: no-conditionals-in-tests
+        if missing_methods := [
+            method_name
+            for method_name in recommended_methods
+            if not hasattr(backend_class, method_name)
+        ]:
             pytest.skip(
                 f"Backend {backend_class.__name__} missing recommended methods: {missing_methods}. "
                 f"This is expected during migration phase."
@@ -331,6 +303,7 @@ class TestSourcePatternConsistency:
             f"Source class {class_name} should end with 'Source' or 'SourceProvider'"
 
         # Ideally should end with SourceProvider
+# sourcery skip: no-conditionals-in-tests
         if not class_name.endswith("SourceProvider"):
             pytest.skip(
                 f"Source {class_name} should be renamed to {class_name}Provider. "
@@ -354,12 +327,12 @@ class TestSourcePatternConsistency:
             # Try to create instance with mock config
             instance = source_class(mock_config)
 
-            missing_properties = []
-            for prop_name in recommended_properties:
-                if not hasattr(instance, prop_name):
-                    missing_properties.append(prop_name)
-
-            if missing_properties:
+# sourcery skip: no-conditionals-in-tests
+            if missing_properties := [
+                prop_name
+                for prop_name in recommended_properties
+                if not hasattr(instance, prop_name)
+            ]:
                 pytest.skip(
                     f"Source {source_class.__name__} missing recommended properties: {missing_properties}. "
                     f"This is expected during migration phase."
@@ -377,12 +350,12 @@ class TestSourcePatternConsistency:
             "get_static_source_info"
         ]
 
-        missing_methods = []
-        for method_name in recommended_methods:
-            if not hasattr(source_class, method_name):
-                missing_methods.append(method_name)
-
-        if missing_methods:
+# sourcery skip: no-conditionals-in-tests
+        if missing_methods := [
+            method_name
+            for method_name in recommended_methods
+            if not hasattr(source_class, method_name)
+        ]:
             pytest.skip(
                 f"Source {source_class.__name__} missing recommended methods: {missing_methods}. "
                 f"This is expected during migration phase."
@@ -403,6 +376,7 @@ class TestAntiPatternDetection:
             "import codeweaver.middleware",
         ]
 
+# sourcery skip: no-loop-in-tests
         for forbidden_import in forbidden_imports:
             assert forbidden_import not in module_source, \
                 f"Module {module.__name__} contains forbidden import: {forbidden_import}"
@@ -417,6 +391,7 @@ class TestAntiPatternDetection:
     def test_providers_use_services_context(self, provider_class):
         """Test that provider methods accept context parameter."""
         # Check main embedding method
+# sourcery skip: no-conditionals-in-tests
         if hasattr(provider_class, "embed_documents"):
             method = provider_class.embed_documents
             sig = inspect.signature(method)
@@ -444,7 +419,7 @@ class TestConfigurationPatterns:
         """Test that provider configuration classes follow naming conventions."""
         config_classes = []
 
-        try:
+        with contextlib.suppress(ImportError):
             from codeweaver.providers.config import (
                 CohereConfig,
                 HuggingFaceConfig,
@@ -459,23 +434,21 @@ class TestConfigurationPatterns:
                 HuggingFaceConfig,
                 SentenceTransformersConfig,
             ])
-        except ImportError:
-            pass
-
+# sourcery skip: no-loop-in-tests
         for config_class in config_classes:
             class_name = config_class.__name__
             assert class_name.endswith("Config"), \
-                f"Configuration class {class_name} should end with 'Config'"
+                    f"Configuration class {class_name} should end with 'Config'"
 
             # Should not have redundant Provider in name
             assert "Provider" not in class_name, \
-                f"Configuration class {class_name} should not contain 'Provider'"
+                    f"Configuration class {class_name} should not contain 'Provider'"
 
     def test_config_classes_inherit_from_base(self):
         """Test that configuration classes inherit from appropriate base."""
         config_classes = []
 
-        try:
+        with contextlib.suppress(ImportError):
             from codeweaver.providers.config import (
                 CohereConfig,
                 HuggingFaceConfig,
@@ -490,15 +463,13 @@ class TestConfigurationPatterns:
                 HuggingFaceConfig,
                 SentenceTransformersConfig,
             ])
-        except ImportError:
-            pass
-
+# sourcery skip: no-loop-in-tests
         for config_class in config_classes:
             # Should inherit from BaseModel (Pydantic)
             mro = config_class.__mro__
             base_model_found = any("BaseModel" in str(base) for base in mro)
             assert base_model_found, \
-                f"Configuration class {config_class.__name__} should inherit from BaseModel"
+                    f"Configuration class {config_class.__name__} should inherit from BaseModel"
 
 
 class TestServicesIntegration:
@@ -516,6 +487,7 @@ class TestServicesIntegration:
             "get_service_health",
         ]
 
+# sourcery skip: no-loop-in-tests
         for method_name in required_methods:
             assert hasattr(ServicesManager, method_name), \
                 f"ServicesManager missing method: {method_name}"
@@ -536,6 +508,7 @@ class TestServicesIntegration:
             "codeweaver.services.providers.base_provider",
         ]
 
+# sourcery skip: no-loop-in-tests
         for provider_module in service_providers:
             try:
                 __import__(provider_module)
@@ -543,7 +516,7 @@ class TestServicesIntegration:
                 pytest.fail(f"Service provider module {provider_module} not found: {e}")
 
 
-def validate_pattern_consistency() -> bool:
+def validate_pattern_consistency() -> bool:  # sourcery skip: low-code-quality, no-long-functions
     """Main validation function for pattern consistency.
 
     Returns:
@@ -585,7 +558,7 @@ def validate_pattern_consistency() -> bool:
                         in_fallback_method = False
 
                         # Look backwards to find the method definition
-                        for j in range(i-1, max(0, i-20), -1):
+                        for j in range(i - 1, max(0, i - 20), -1):
                             if "_fallback" in lines[j] or "fallback" in lines[j]:
                                 in_fallback_method = True
                                 break
@@ -594,7 +567,7 @@ def validate_pattern_consistency() -> bool:
 
                         # Also allow imports in services providers
                         if not in_fallback_method and "services/providers" not in module.__file__:
-                            violations.append(f"{module.__name__}:{i+1}")
+                            violations.append(f"{module.__name__}:{i + 1}")
             except Exception as e:
                 print(f"   ⚠️  Could not check module {module.__name__}: {e}")
 
@@ -613,11 +586,12 @@ def validate_pattern_consistency() -> bool:
         print("   ✅ Migration code has been removed")
 
         print("   ✅ Pattern consistency validation complete")
-        return True
 
     except Exception as e:
         print(f"   ❌ Pattern validation error: {e}")
         return False
+    else:
+        return True
 
 
 if __name__ == "__main__":

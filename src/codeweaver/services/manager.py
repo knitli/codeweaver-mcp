@@ -405,7 +405,8 @@ class ServicesManager:
             await service.initialize()
 
         except Exception as e:
-            self._logger.exception("Failed to create middleware service %s", service_type.value)
+            self._logger.exception("Failed to create middleware service %s")
+
             if config.fail_fast:
                 raise ServiceCreationError(f"Failed to create {service_type.value} service") from e
             return None
@@ -429,9 +430,8 @@ class ServicesManager:
                     "Service %s does not provide middleware instance", service_type.value
                 )
         except Exception:
-            self._logger.exception(
-                "Failed to register %s middleware with server", service_type.value
-            )
+            self._logger.exception("Failed to register %s middleware with server")
+
             raise
 
     def _get_service_config(self, service_type: ServiceType) -> Any:
@@ -507,6 +507,5 @@ class ServicesManager:
                     )
 
                 except Exception:
-                    self._logger.exception(
-                        "Auto-recovery failed for service %s", service_type.value
-                    )
+                    self._logger.exception("Auto-recovery failed for service %s")
+

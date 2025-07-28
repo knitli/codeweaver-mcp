@@ -37,9 +37,8 @@ class ServiceBridge(Middleware):
             return await call_next(context)
 
         except Exception:
-            self._logger.exception(
-                "Service bridge error for tool %s", getattr(context.message, "name", "unknown")
-            )
+            self._logger.exception("Service bridge error for tool %s")
+
             # Continue execution even if service injection fails
             return await call_next(context)
 

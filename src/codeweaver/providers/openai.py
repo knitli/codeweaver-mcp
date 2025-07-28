@@ -1,9 +1,3 @@
-# sourcery skip: avoid-global-variables
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 OpenAI-compatible provider implementation for embeddings.
 
@@ -11,7 +5,6 @@ Provides a flexible provider that works with any OpenAI-compatible API endpoint,
 including OpenAI, OpenRouter, Together AI, local deployments, and custom services.
 Supports arbitrary models, dynamic capability discovery, and service-agnostic configuration.
 """
-
 import asyncio
 import logging
 import time
@@ -30,21 +23,14 @@ from codeweaver.utils.decorators import feature_flag_required
 
 
 try:
-    import openai  # type: ignore
-
+    import openai
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
     openai = None
-
-
 logger = logging.getLogger(__name__)
 
-
-@feature_flag_required(
-    "openai",
-    dependencies=["openai"],
-)
+@feature_flag_required('openai', dependencies=['openai'])
 class OpenAICompatibleProvider(EmbeddingProviderBase):
     """OpenAI-compatible provider for embeddings.
 
@@ -60,85 +46,48 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             config: OpenAICompatibleConfig instance or configuration dictionary
         """
         super().__init__(config)
-
         if not OPENAI_AVAILABLE:
-            raise ImportError("OpenAI library not available. Install with: uv add openai")
-
-        # Service configuration
-        self._service_name = self.config.get("service_name", "OpenAI-Compatible Service")
-        self._base_url = self.config.get("base_url", "https://api.openai.com/v1")
-
-        # Initialize OpenAI client
-        client_kwargs = {"api_key": self.config["api_key"], "base_url": self._base_url}
-        if self.config.get("custom_headers"):
-            client_kwargs["default_headers"] = self.config["custom_headers"]
-
+            raise ImportError('OpenAI library not available. Install with: uv add openai')
+        self._service_name = self.config.get('service_name', 'OpenAI-Compatible Service')
+        self._base_url = self.config.get('base_url', 'https://api.openai.com/v1')
+        client_kwargs = {'api_key': self.config['api_key'], 'base_url': self._base_url}
+        if self.config.get('custom_headers'):
+            client_kwargs['default_headers'] = self.config['custom_headers']
         self.client = openai.AsyncOpenAI(**client_kwargs)
-
-        # Simple rate limiting for API calls
         self._last_request_time = 0.0
-        self._min_request_interval = 0.1  # 100ms between requests
-
-        # Model configuration
-        self._model = self.config.get("model", "text-embedding-3-small")
-        self._dimension = self.config.get("dimension")
-        self._auto_discover_dimensions = self.config.get("auto_discover_dimensions", True)
-
-        # Override service-specific limits if provided
-        self._max_batch_size = self.config.get("max_batch_size")
-        self._max_input_length = self.config.get("max_input_length")
-
-        # Initialize dimensions
+        self._min_request_interval = 0.1
+        self._model = self.config.get('model', 'text-embedding-3-small')
+        self._dimension = self.config.get('dimension')
+        self._auto_discover_dimensions = self.config.get('auto_discover_dimensions', True)
+        self._max_batch_size = self.config.get('max_batch_size')
+        self._max_input_length = self.config.get('max_input_length')
         self._initialize_dimensions()
 
     def _validate_config(self) -> None:
         """Validate OpenAI-compatible configuration."""
-        if not self.config.get("api_key"):
-            raise ValueError("API key is required for OpenAI-compatible provider")
-
-        # Log service information for debugging
-        logger.info(
-            "Initializing %s with model '%s' at %s", self._service_name, self._model, self._base_url
-        )
+        if not self.config.get('api_key'):
+            raise ValueError('API key is required for OpenAI-compatible provider')
+        logger.info("Initializing %s with model '%s' at %s", self._service_name, self._model, self._base_url)
 
     def _initialize_dimensions(self) -> None:
         """Initialize embedding dimensions for the configured model."""
         if self._dimension is not None:
-            # User explicitly set dimension
             return
-
-        # Try to get dimension from config or known models
-        # For now, use a simplified lookup - this could be enhanced with a registry
-        known_dimensions = {
-            "text-embedding-3-small": 1536,
-            "text-embedding-3-large": 3072,
-            "text-embedding-ada-002": 1536,
-        }
+        known_dimensions = {'text-embedding-3-small': 1536, 'text-embedding-3-large': 3072, 'text-embedding-ada-002': 1536}
         if self._model in known_dimensions:
             self._dimension = known_dimensions[self._model]
             logger.info("Using known dimensions for model '%s': %d", self._model, self._dimension)
             return
-
-        # Auto-discover dimensions if enabled
         if self._auto_discover_dimensions:
             try:
                 self._dimension = self._discover_model_dimensions()
-                logger.info(
-                    "Auto-discovered dimensions for model '%s': %d", self._model, self._dimension
-                )
+                logger.info("Auto-discovered dimensions for model '%s': %d", self._model, self._dimension)
             except Exception as e:
-                logger.warning(
-                    "Failed to auto-discover dimensions for model '%s': %s. Using default 1536.",
-                    self._model,
-                    e,
-                )
+                logger.warning("Failed to auto-discover dimensions for model '%s': %s. Using default 1536.", self._model, e)
                 self._dimension = 1536
         else:
-            # Default fallback
             self._dimension = 1536
-            logger.info(
-                "Using default dimensions for unknown model '%s': %d", self._model, self._dimension
-            )
+            logger.info("Using default dimensions for unknown model '%s': %d", self._model, self._dimension)
 
     def _discover_model_dimensions(self) -> int:
         """Attempt to discover model dimensions by making a test embedding call.
@@ -152,34 +101,24 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         import asyncio
 
         async def _discover():
-            response = await self.client.embeddings.create(input=["test"], model=self._model)
+            response = await self.client.embeddings.create(input=['test'], model=self._model)
             return len(response.data[0].embedding)
-
-        # Run the async discovery in a sync context
         import contextlib
-
         loop = None
         with contextlib.suppress(RuntimeError):
             loop = asyncio.get_event_loop()
-
         if loop and loop.is_running():
-            # If we're already in an async context, this is tricky
-            # For now, just return a reasonable default
-            raise RuntimeError("Cannot auto-discover dimensions in async context")
+            raise RuntimeError('Cannot auto-discover dimensions in async context')
         return asyncio.run(_discover())
 
     async def _apply_rate_limit(self) -> None:
         """Apply basic rate limiting between API requests."""
         current_time = time.time()
         time_since_last = current_time - self._last_request_time
-
         if time_since_last < self._min_request_interval:
             sleep_time = self._min_request_interval - time_since_last
             await asyncio.sleep(sleep_time)
-
         self._last_request_time = time.time()
-
-    # EmbeddingProvider implementation
 
     @property
     def provider_name(self) -> str:
@@ -201,125 +140,85 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         """Get maximum batch size for this service."""
         if self._max_batch_size is not None:
             return self._max_batch_size
-
-        # Service-specific defaults based on base URL
-        if "openai.com" in self._base_url:
-            return 2048  # OpenAI's maximum
-        if "openrouter.ai" in self._base_url:
-            return 128  # OpenRouter's typical limit
-        return 256 if "together.ai" in self._base_url else 128
+        if 'openai.com' in self._base_url:
+            return 2048
+        if 'openrouter.ai' in self._base_url:
+            return 128
+        return 256 if 'together.ai' in self._base_url else 128
 
     @property
     def max_input_length(self) -> int | None:
         """Get maximum input length for this service."""
         if self._max_input_length is not None:
             return self._max_input_length
+        return 500000 if 'openai.com' in self._base_url else 32000
 
-        # Service-specific defaults based on base URL
-        return 500000 if "openai.com" in self._base_url else 32000
-
-    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
+    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None=None) -> list[list[float]]:
         """Generate embeddings for documents with service layer integration."""
         context = context or {}
-
-        # Check cache service first
-        cache_service = context.get("caching_service")
+        cache_service = context.get('caching_service')
         if cache_service:
-            cache_key = {
-                "provider": "openai",
-                "model": self._model,
-                "texts": texts,
-                "dimension": self._dimension
-            }
+            cache_key = {'provider': 'openai', 'model': self._model, 'texts': texts, 'dimension': self._dimension}
             cached_result = await cache_service.get(cache_key)
             if cached_result:
-                logger.debug(f"Cache hit for {len(texts)} OpenAI embeddings")
+                logger.debug('Cache hit for %s OpenAI embeddings', len(texts))
                 return cached_result
-
-        # Apply rate limiting
-        rate_limiter = context.get("rate_limiting_service")
+        rate_limiter = context.get('rate_limiting_service')
         if rate_limiter:
-            await rate_limiter.acquire("openai", len(texts))
+            await rate_limiter.acquire('openai', len(texts))
         else:
-            # Fallback to basic rate limiting
             await self._apply_rate_limit()
-
         try:
-            # Process in batches if needed
             batch_size = min(self.max_batch_size or len(texts), len(texts))
             embeddings = []
-
             for i in range(0, len(texts), batch_size):
-                batch_texts = texts[i : i + batch_size]
-
-                embedding_kwargs = {"input": batch_texts, "model": self._model}
-
-                # Add dimensions parameter if custom dimension specified and different from discovered
+                batch_texts = texts[i:i + batch_size]
+                embedding_kwargs = {'input': batch_texts, 'model': self._model}
                 if self._dimension and self._supports_custom_dimensions():
-                    embedding_kwargs["dimensions"] = self._dimension
-
+                    embedding_kwargs['dimensions'] = self._dimension
                 response = await self.client.embeddings.create(**embedding_kwargs)
-
                 batch_embeddings = [data.embedding for data in response.data]
                 embeddings.extend(batch_embeddings)
-
-            # Cache the result
             if cache_service:
-                await cache_service.set(cache_key, embeddings, ttl=3600)  # Cache for 1 hour
-                logger.debug(f"Cached {len(texts)} OpenAI embeddings")
+                await cache_service.set(cache_key, embeddings, ttl=3600)
+                logger.debug('Cached %s OpenAI embeddings', len(texts))
+        except Exception:
+            logger.exception('Error generating embeddings from %s')
 
+            raise
+        else:
             return embeddings
 
-        except Exception:
-            logger.exception("Error generating embeddings from %s", self._service_name)
-            raise
-
-    async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
+    async def embed_query(self, text: str, context: dict[str, Any] | None=None) -> list[float]:
         """Generate embedding for search query with service layer integration."""
         context = context or {}
-
-        # Check cache service first
-        cache_service = context.get("caching_service")
+        cache_service = context.get('caching_service')
         if cache_service:
-            cache_key = {
-                "provider": "openai",
-                "model": self._model,
-                "text": text,
-                "dimension": self._dimension
-            }
+            cache_key = {'provider': 'openai', 'model': self._model, 'text': text, 'dimension': self._dimension}
             cached_result = await cache_service.get(cache_key)
             if cached_result:
-                logger.debug("Cache hit for OpenAI query embedding")
+                logger.debug('Cache hit for OpenAI query embedding')
                 return cached_result
-
-        # Apply rate limiting
-        rate_limiter = context.get("rate_limiting_service")
+        rate_limiter = context.get('rate_limiting_service')
         if rate_limiter:
-            await rate_limiter.acquire("openai", 1)
+            await rate_limiter.acquire('openai', 1)
         else:
-            # Fallback to basic rate limiting
             await self._apply_rate_limit()
-
         try:
-            embedding_kwargs = {"input": [text], "model": self._model}
-
-            # Add dimensions parameter if custom dimension specified and different from discovered
+            embedding_kwargs = {'input': [text], 'model': self._model}
             if self._dimension and self._supports_custom_dimensions():
-                embedding_kwargs["dimensions"] = self._dimension
-
+                embedding_kwargs['dimensions'] = self._dimension
             response = await self.client.embeddings.create(**embedding_kwargs)
             embedding = response.data[0].embedding
-
-            # Cache the result
             if cache_service:
-                await cache_service.set(cache_key, embedding, ttl=3600)  # Cache for 1 hour
-                logger.debug("Cached OpenAI query embedding")
-
-            return embedding
-
+                await cache_service.set(cache_key, embedding, ttl=3600)
+                logger.debug('Cached OpenAI query embedding')
         except Exception:
-            logger.exception("Error generating query embedding from %s", self._service_name)
+            logger.exception('Error generating query embedding from %s')
+
             raise
+        else:
+            return embedding
 
     def _supports_custom_dimensions(self) -> bool:
         """Check if the current model/service supports custom dimensions.
@@ -327,68 +226,26 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         Returns:
             True if custom dimensions are supported
         """
-        # OpenAI's v3 models support custom dimensions
-        # Most other services don't support custom dimensions
-        # This could be made configurable in the future
-        return self._model.startswith("text-embedding-3-")
-
-    # Provider info methods
+        return self._model.startswith('text-embedding-3-')
 
     def get_provider_info(self) -> EmbeddingProviderInfo:
         """Get information about this OpenAI-compatible provider instance."""
-        return EmbeddingProviderInfo(
-            name=ProviderType.OPENAI_COMPATIBLE.value,
-            display_name=f"{self._service_name} (OpenAI-Compatible)",
-            description=f"OpenAI-compatible embeddings via {self._service_name} at {self._base_url}",
-            supported_capabilities=[
-                ProviderCapability.EMBEDDING,
-                ProviderCapability.BATCH_PROCESSING,
-            ],
-            capabilities=None,  # Dynamic capabilities
-            default_models={"embedding": self._model},
-            supported_models={"embedding": [self._model]},  # Only the configured model
-            rate_limits=None,  # Service-specific, not known generically
-            requires_api_key=True,
-            max_batch_size=self.max_batch_size,
-            max_input_length=self.max_input_length,
-            native_dimensions={self._model: self._dimension},
-        )
+        return EmbeddingProviderInfo(name=ProviderType.OPENAI_COMPATIBLE.value, display_name=f'{self._service_name} (OpenAI-Compatible)', description=f'OpenAI-compatible embeddings via {self._service_name} at {self._base_url}', supported_capabilities=[ProviderCapability.EMBEDDING, ProviderCapability.BATCH_PROCESSING], capabilities=None, default_models={'embedding': self._model}, supported_models={'embedding': [self._model]}, rate_limits=None, requires_api_key=True, max_batch_size=self.max_batch_size, max_input_length=self.max_input_length, native_dimensions={self._model: self._dimension})
 
     @classmethod
     def get_static_provider_info(cls) -> EmbeddingProviderInfo:
         """Get static provider information for OpenAI-compatible providers."""
-        return EmbeddingProviderInfo(
-            name=ProviderType.OPENAI_COMPATIBLE.value,
-            display_name="OpenAI-Compatible Provider",
-            description="Flexible provider for any OpenAI-compatible embedding API",
-            supported_capabilities=[
-                ProviderCapability.EMBEDDING,
-                ProviderCapability.BATCH_PROCESSING,
-            ],
-            capabilities=None,  # Dynamic capabilities
-            default_models={"embedding": "text-embedding-3-small"},
-            supported_models={"embedding": []},  # Any model supported by the endpoint
-            rate_limits=None,  # Service-specific
-            requires_api_key=True,
-            max_batch_size=None,  # Service-specific
-            max_input_length=None,  # Service-specific
-            native_dimensions={},  # Dynamic discovery
-        )
+        return EmbeddingProviderInfo(name=ProviderType.OPENAI_COMPATIBLE.value, display_name='OpenAI-Compatible Provider', description='Flexible provider for any OpenAI-compatible embedding API', supported_capabilities=[ProviderCapability.EMBEDDING, ProviderCapability.BATCH_PROCESSING], capabilities=None, default_models={'embedding': 'text-embedding-3-small'}, supported_models={'embedding': []}, rate_limits=None, requires_api_key=True, max_batch_size=None, max_input_length=None, native_dimensions={})
 
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if OpenAI-compatible provider is available for the given capability."""
         if not OPENAI_AVAILABLE:
-            return False, "openai package not installed (install with: uv add openai)"
-
-        # Only embedding is supported
+            return (False, 'openai package not installed (install with: uv add openai)')
         if capability == ProviderCapability.EMBEDDING:
-            return True, None
+            return (True, None)
+        return (False, f'Capability {capability.value} not supported by OpenAI-compatible provider')
 
-        return False, f"Capability {capability.value} not supported by OpenAI-compatible provider"
-
-
-# OpenAI provider (configured for official OpenAI service)
 class OpenAIProvider(OpenAICompatibleProvider):
     """OpenAI provider preconfigured for the official OpenAI API.
 
@@ -397,12 +254,7 @@ class OpenAIProvider(OpenAICompatibleProvider):
 
     def __init__(self, config: OpenAIConfig | dict[str, Any]):
         """Initialize OpenAI provider with OpenAI-specific defaults."""
-        # Ensure we use OpenAI defaults if not specified
-        openai_config = {
-            "base_url": "https://api.openai.com/v1",
-            "service_name": "OpenAI",
-            **config,
-        }
+        openai_config = {'base_url': 'https://api.openai.com/v1', 'service_name': 'OpenAI', **config}
         super().__init__(openai_config)
 
     @property
@@ -411,6 +263,5 @@ class OpenAIProvider(OpenAICompatibleProvider):
         return ProviderType.OPENAI.value
 
 
-# Register both providers in the registry
 register_provider_class(ProviderType.OPENAI, OpenAIProvider)
 register_provider_class(ProviderType.OPENAI_COMPATIBLE, OpenAICompatibleProvider)

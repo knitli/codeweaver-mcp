@@ -104,7 +104,8 @@ class SourceFactory:
             logger.info("Created %s data source: %s", source_type.value, source.source_id)
 
         except Exception:
-            logger.exception("Failed to create %s data source", source_type.value)
+            logger.exception("Failed to create %s data source")
+
             raise
 
         else:
@@ -152,7 +153,8 @@ class SourceFactory:
                 sources.append(source)
 
             except Exception:
-                logger.exception("Failed to create source from config %s.", config)
+                logger.exception("Failed to create source from config %s.")
+
                 continue
 
         logger.info("Created %d data sources", len(sources))
@@ -179,7 +181,8 @@ class SourceFactory:
                 await source.cleanup()
 
         except Exception:
-            logger.exception("Error validating %s source config", source_type.value)
+            logger.exception("Error validating %s source config")
+
             return False
 
         else:

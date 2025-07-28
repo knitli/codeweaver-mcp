@@ -124,7 +124,8 @@ class FilteringService(BaseServiceProvider, FilteringService):
 
             error_msg = f"File discovery failed: {e}"
             self.record_operation(False, error_msg)
-            self._logger.exception("File discovery failed for %s", base_path)
+            self._logger.exception("File discovery failed for %s")
+
 
             raise FilteringError(base_path, str(e)) from e
         else:

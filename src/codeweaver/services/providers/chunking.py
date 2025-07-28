@@ -137,7 +137,8 @@ class ChunkingService(BaseServiceProvider, ChunkingService):
 
             error_msg = f"Chunking failed: {e}"
             self.record_operation(False, error_msg)
-            self._logger.exception("Chunking failed for %s", file_path)
+            self._logger.exception("Chunking failed for %s")
+
 
             raise ChunkingError(file_path, str(e)) from e
         else:

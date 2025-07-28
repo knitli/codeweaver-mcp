@@ -13,7 +13,7 @@ the specific functionality and patterns from the original separate registries.
 import logging
 
 from datetime import UTC, datetime
-from typing import Annotated, Any, ClassVar, TypeVar
+from typing import Annotated, Any, ClassVar, Literal, TypeVar
 
 from pydantic import Field
 
@@ -213,7 +213,7 @@ class ComponentRegistry:
         )
 
         self._sources[name] = registration
-        self._logger.info(f"Registered source: {name}")
+        self._logger.info("Registered source: %s", name)
 
         return RegistrationResult(success=True, component_name=name)
 
@@ -239,6 +239,10 @@ class ComponentRegistry:
         configuration_schema: dict[str, Any] | None = None,
     ) -> None:
         """Register a service provider class."""
+        def _raise_provider_error(msg: str, typ: Literal["duplicate", "registration"], duplicates: tuple[str, str] | None = None) -> None:
+            if typ == "registration":
+                raise ProviderRegistrationError(msg)
+            raise DuplicateProviderError(*duplicates)
         try:
             # Initialize service type registry if needed
             if service_type not in self._services:
@@ -247,12 +251,12 @@ class ComponentRegistry:
 
             # Check for duplicates
             if provider_name in self._services[service_type]:
-                raise DuplicateProviderError(service_type.value, provider_name)
+                _raise_provider_error("", "duplicate", (service_type.value, provider_name))
 
             # Validate provider class
             if not issubclass(provider_class, BaseServiceProvider):
-                raise ProviderRegistrationError(
-                    f"Provider {provider_name} must inherit from BaseServiceProvider"
+                _raise_provider_error(
+                    ("Provider %s must inherit from BaseServiceProvider", provider_name), "registration"
                 )
 
             # Register provider
@@ -361,15 +365,12 @@ class ComponentRegistry:
 
         # Check for required methods
         required_methods = ['store_vectors', 'search_vectors', 'delete_vectors']
-        for method in required_methods:
-            if not hasattr(backend_class, method):
-                errors.append(f"Backend class missing required method: {method}")
-
-        return ValidationResult(
-            is_valid=len(errors) == 0,
-            errors=errors,
-            warnings=warnings
+        errors.extend(
+            f"Backend class missing required method: {method}"
+            for method in required_methods
+            if not hasattr(backend_class, method)
         )
+        return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_source_class(self, source_class: type[DataSource]) -> ValidationResult:
         """Validate source class implementation."""
@@ -395,10 +396,11 @@ class ComponentRegistry:
             # Try to call check_availability if it exists
             if hasattr(backend_class, 'check_availability'):
                 return backend_class.check_availability()
-            # Default to available if no check method
-            return True, None
         except Exception as e:
             return False, str(e)
+        else:
+            # Default to available if no check method
+            return True, None
 
     def _check_source_availability(self, source_class: type[DataSource]) -> tuple[bool, str | None]:
         """Check if source is available."""

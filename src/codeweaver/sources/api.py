@@ -164,13 +164,16 @@ class APISourceProvider(AbstractDataSource):
             # Check for HTTP client dependencies
             try:
                 import httpx  # noqa: F401
-                return True, None
             except ImportError:
                 try:
                     import requests  # noqa: F401
-                    return True, None
                 except ImportError:
                     return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
+                else:
+                    # Requests is available, so API source can be used
+                    return True, None
+            else:
+                return True, None
 
         return False, f"Capability {capability.value} not supported by API source"
 

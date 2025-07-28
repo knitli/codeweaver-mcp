@@ -65,9 +65,8 @@ class SourceWatcher:
             try:
                 await self.callback(changed_items)
             except Exception:
-                logger.exception(
-                    "Error in change notification callback for source %s", self.source_id
-                )
+                logger.exception("Error in change notification callback for source %s")
+
 
 
 class SourceConfig(BaseModel):

@@ -7,8 +7,8 @@ Handles G004 violations that ast-grep can't easily transform.
 
 import ast
 import sys
+
 from pathlib import Path
-from typing import List, Optional
 
 
 class FStringConverter(ast.NodeTransformer):
@@ -41,7 +41,7 @@ class FStringConverter(ast.NodeTransformer):
 
         return node
 
-    def _convert_fstring(self, fstring: ast.JoinedStr) -> tuple[str, List[ast.expr]]:
+    def _convert_fstring(self, fstring: ast.JoinedStr) -> tuple[str, list[ast.expr]]:
         """Convert JoinedStr (f-string) to format string and argument list."""
         format_parts = []
         args = []

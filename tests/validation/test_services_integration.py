@@ -1,8 +1,9 @@
+# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
+# sourcery skip: raise-specific-error
 """
 Services integration validation tests for CodeWeaver components.
 
@@ -11,6 +12,8 @@ layer, including context parameter usage, fallback behavior, and service
 health monitoring.
 """
 
+
+import contextlib
 import inspect
 
 from typing import Any
@@ -35,36 +38,36 @@ class MockService:
     async def process(self, *args, **kwargs) -> Any:
         """Mock processing method."""
         if not self._available:
-            raise Exception("Service unavailable")
+            raise Exception("Service unavailable")  # noqa: TRY002
         return "mock_result"
 
     async def chunk_content(self, content: str, file_path: str | None = None) -> list[str]:
         """Mock chunking method."""
         if not self._available:
-            raise Exception("Chunking service unavailable")
-        return [content[i:i+100] for i in range(0, len(content), 100)]
+            raise Exception("Chunking service unavailable")  # noqa: TRY002
+        return [content[i:i + 100] for i in range(0, len(content), 100)]
 
     async def filter_files(self, files: list) -> list:
         """Mock filtering method."""
         if not self._available:
-            raise Exception("Filtering service unavailable")
+            raise Exception("Filtering service unavailable")  # noqa: TRY002
         return files[:5]  # Return first 5 files
 
     async def acquire(self, provider: str, count: int) -> None:
         """Mock rate limiting acquire."""
         if not self._available:
-            raise Exception("Rate limiter unavailable")
+            raise Exception("Rate limiter unavailable")  # noqa: TRY002
 
     async def get(self, key: str) -> Any:
         """Mock cache get."""
         if not self._available:
-            raise Exception("Cache unavailable")
+            raise Exception("Cache unavailable")  # noqa: TRY002
         return None  # Cache miss
 
     async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
         """Mock cache set."""
         if not self._available:
-            raise Exception("Cache unavailable")
+            raise Exception("Cache unavailable")  # noqa: TRY002
 
 
 class MockServicesManager:
@@ -113,24 +116,15 @@ def get_testable_provider_classes():
     """Get provider classes that can be tested."""
     provider_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.voyage import VoyageAIProvider
         provider_classes.append(VoyageAIProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.openai import OpenAIProvider
         provider_classes.append(OpenAIProvider)
-    except ImportError:
-        pass
-
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.providers.cohere import CohereProvider
         provider_classes.append(CohereProvider)
-    except ImportError:
-        pass
-
     return provider_classes
 
 
@@ -138,12 +132,9 @@ def get_testable_backend_classes():
     """Get backend classes that can be tested."""
     backend_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.backends.qdrant import QdrantBackend
         backend_classes.append(QdrantBackend)
-    except ImportError:
-        pass
-
     return backend_classes
 
 
@@ -151,12 +142,9 @@ def get_testable_source_classes():
     """Get source classes that can be tested."""
     source_classes = []
 
-    try:
+    with contextlib.suppress(ImportError):
         from codeweaver.sources.filesystem import FileSystemSource
         source_classes.append(FileSystemSource)
-    except ImportError:
-        pass
-
     return source_classes
 
 
@@ -167,20 +155,20 @@ class TestProviderServicesIntegration:
     def test_provider_methods_accept_context(self, provider_class):
         """Test that provider methods accept context parameter."""
         # Check embed_documents method
+# sourcery skip: no-conditionals-in-tests
         if hasattr(provider_class, "embed_documents"):
             method = provider_class.embed_documents
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
             assert "context" in params, \
-                f"Provider {provider_class.__name__}.embed_documents should accept 'context' parameter"
+                    f"Provider {provider_class.__name__}.embed_documents should accept 'context' parameter"
 
-            # Context should be optional (have default value)
-            context_param = sig.parameters.get("context")
-            if context_param:
+# sourcery skip: no-conditionals-in-tests
+            if context_param := sig.parameters.get("context"):
                 assert context_param.default is not inspect.Parameter.empty or \
-                       "None" in str(context_param.annotation), \
-                    f"Provider {provider_class.__name__}.embed_documents context parameter should be optional"
+                           "None" in str(context_param.annotation), \
+                        f"Provider {provider_class.__name__}.embed_documents context parameter should be optional"
 
         # Check rerank_documents method if exists
         if hasattr(provider_class, "rerank_documents"):
@@ -189,7 +177,7 @@ class TestProviderServicesIntegration:
             params = list(sig.parameters.keys())
 
             assert "context" in params, \
-                f"Provider {provider_class.__name__}.rerank_documents should accept 'context' parameter"
+                    f"Provider {provider_class.__name__}.rerank_documents should accept 'context' parameter"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("provider_class", get_testable_provider_classes())
@@ -216,15 +204,15 @@ class TestProviderServicesIntegration:
                     provider.client.embed.return_value = MagicMock()
                     provider.client.embed.return_value.embeddings = [[0.1, 0.2, 0.3]]
 
-            # Test with empty context (no services)
-            empty_context = {}
-
             if hasattr(provider, "embed_documents"):
+                # Test with empty context (no services)
+                empty_context = {}
+
                 result = await provider.embed_documents(["test text"], empty_context)
                 assert result is not None, \
-                    f"Provider {provider_class.__name__} should work without services"
+                        f"Provider {provider_class.__name__} should work without services"
                 assert len(result) > 0, \
-                    f"Provider {provider_class.__name__} should return results without services"
+                        f"Provider {provider_class.__name__} should return results without services"
 
         except Exception as e:
             pytest.skip(f"Could not test {provider_class.__name__} without external dependencies: {e}")
@@ -317,6 +305,7 @@ class TestBackendServicesIntegration:
     def test_backend_should_have_health_check(self, backend_class):
         """Test that backends should have health check methods."""
         # This is aspirational - backends may not have this yet
+# sourcery skip: no-conditionals-in-tests
         if not hasattr(backend_class, "health_check"):
             pytest.skip(
                 f"Backend {backend_class.__name__} missing health_check method. "
@@ -374,15 +363,19 @@ class TestSourceServicesIntegration:
         main_methods = ["discover_content", "get_content_item"]
 
         missing_context = []
+        # sourcery skip: no-loop-in-tests
         for method_name in main_methods:
+            # sourcery skip: no-conditionals-in-tests
             if hasattr(source_class, method_name):
                 method = getattr(source_class, method_name)
                 sig = inspect.signature(method)
                 params = list(sig.parameters.keys())
 
+                # sourcery skip: no-conditionals-in-tests
                 if "context" not in params:
                     missing_context.append(method_name)
 
+        # sourcery skip: no-conditionals-in-tests
         if missing_context:
             pytest.skip(
                 f"Source {source_class.__name__} methods {missing_context} missing context parameter. "
@@ -452,6 +445,7 @@ class TestServicesManagerIntegration:
             "get_all_service_health",
         ]
 
+        # sourcery skip: no-loop-in-tests
         for method_name in required_methods:
             assert hasattr(ServicesManager, method_name), \
                 f"ServicesManager missing method: {method_name}"
@@ -566,11 +560,12 @@ def validate_services_integration() -> bool:
         print(f"   ✅ {context_support_count}/{len(provider_classes)} providers support context parameter")
 
         print("   ✅ Services integration validation complete")
-        return True
 
     except Exception as e:
         print(f"   ❌ Services integration validation error: {e}")
         return False
+    else:
+        return True
 
 
 if __name__ == "__main__":

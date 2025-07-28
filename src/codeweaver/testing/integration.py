@@ -379,7 +379,8 @@ class IntegrationTestSuite:
                 result.workflow_results[workflow_name] = False
                 result.success = False
                 result.errors.append(f"Workflow {workflow_name} error: {e}")
-                logger.exception("Workflow %s failed", workflow_name)
+                logger.exception("Workflow %s failed")
+
 
     async def _run_end_to_end_tests(self, result: IntegrationTestResult) -> None:
         """Run comprehensive end-to-end integration tests."""

@@ -4,9 +4,6 @@ severity: info
 language: python
 rule:
   pattern: |
-    $LOGGER.exception(f"$PREFIX{e}$SUFFIX")
-    constraints:
-    LOGGER:
-      regex: "^(logger|logging|log)$"
+    $LOGGER.exception(f"$PREFIX{e}")
 fix: |
-  $LOGGER.exception(f"$PREFIX$SUFFIX")
+  $LOGGER.exception("$PREFIX")

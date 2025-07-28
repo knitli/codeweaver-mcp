@@ -222,7 +222,8 @@ class BackendFactory(CapabilityQueryMixin):
             return backend_class(**backend_args)
 
         except Exception as e:
-            logger.exception("Failed to create %s backend", provider)
+            logger.exception("Failed to create %s backend")
+
             raise BackendConnectionError(
                 f"Failed to create {provider} backend", backend_type=provider
             ) from e

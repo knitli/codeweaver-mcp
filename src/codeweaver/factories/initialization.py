@@ -293,7 +293,8 @@ class FactoryInitializer:
                 )
 
             except Exception as e:
-                logger.exception("Initialization stage '%s' crashed", stage.get_stage_name())
+                logger.exception("Initialization stage '%s' crashed")
+
                 stage_results.append(
                     InitializationResult(
                         success=False,

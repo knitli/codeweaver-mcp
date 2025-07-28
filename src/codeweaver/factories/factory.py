@@ -267,7 +267,8 @@ class CodeWeaverFactory:
 
             logger.info("Created backend: %s", backend_type)
         except Exception as e:
-            logger.exception("Failed to create backend %s", backend_type)
+            logger.exception("Failed to create backend %s")
+
             raise ComponentCreationError("Backend creation failed") from e
 
         else:

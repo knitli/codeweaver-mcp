@@ -488,7 +488,8 @@ class CodeWeaverFactory:
             logger.error("Unknown component type: %s", plugin_info.component_type)
 
         except Exception:
-            logger.exception("Plugin registration failed for %s", plugin_info.name)
+            logger.exception("Plugin registration failed for %s")
+
 
         else:
             return False
