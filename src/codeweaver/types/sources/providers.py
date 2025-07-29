@@ -13,8 +13,8 @@ and validation support for custom source providers.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from codeweaver.types.source_capabilities import SourceCapabilities
-from codeweaver.types.source_enums import SourceProvider
+from codeweaver.types.sources.capabilities import SourceCapabilities
+from codeweaver.types.sources.enums import SourceProvider
 
 
 if TYPE_CHECKING:

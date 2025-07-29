@@ -14,19 +14,17 @@ import asyncio
 
 import pytest
 
-from codeweaver.testing.integration import (
+from codeweaver.testing import (
     IntegrationTestSuite,
-    TestConfiguration,
-    create_test_configuration,
-    run_integration_tests,
-    run_quick_integration_test,
-)
-from codeweaver.testing.mocks import (
     MockDataSource,
     MockEmbeddingProvider,
     MockHybridSearchBackend,
     MockRerankProvider,
     MockVectorBackend,
+    TestConfiguration,
+    create_test_configuration,
+    run_integration_tests,
+    run_quick_integration_test,
 )
 
 

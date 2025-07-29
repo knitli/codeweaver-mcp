@@ -21,9 +21,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver.backends.base import DistanceMetric, VectorBackend, VectorPoint
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.backends import VectorBackend
+from codeweaver.providers import EmbeddingProvider, RerankProvider
+from codeweaver.sources import DataSource, SourceConfig
+from codeweaver.types import DistanceMetric, VectorPoint
 
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,9 @@ from codeweaver.types.factories.core import (
     ComponentRegistry,
     ComponentType,
     CreationResult,
+    DimensionSize,
     RegistrationResult,
+    T,
     ValidationResult,
 )
 from codeweaver.types.factories.data_structures import (
@@ -38,11 +40,13 @@ __all__ = (
     "ComponentType",
     "ContentItem",
     "CreationResult",
+    "DimensionSize",
     "ExtensibilityConfig",
     "InitializationContext",
     "InitializationResult",
     "PluginInfo",
     "ProviderRegistration",
     "RegistrationResult",
+    "T",
     "ValidationResult",
 )

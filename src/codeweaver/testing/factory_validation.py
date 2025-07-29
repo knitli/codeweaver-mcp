@@ -16,14 +16,16 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.factory import BackendConfig, BackendFactory
+from codeweaver.backends import BackendConfig, BackendFactory, VectorBackend
 from codeweaver.config import CodeWeaverConfig
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.providers.factory import ProviderFactory, ProviderRegistry
-from codeweaver.sources.base import DataSource
-from codeweaver.sources.factory import SourceFactory
-from codeweaver.testing.mocks import (
+from codeweaver.providers import (
+    EmbeddingProvider,
+    ProviderFactory,
+    ProviderRegistry,
+    RerankProvider,
+)
+from codeweaver.sources import DataSource, SourceFactory
+from codeweaver.testing import (
     MockDataSource,
     MockEmbeddingProvider,
     MockHybridSearchBackend,

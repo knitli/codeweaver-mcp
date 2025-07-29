@@ -14,17 +14,18 @@ import time
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Annotated, Any, NewType, Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from codeweaver.types.base_enum import BaseEnum
 
 
 # Type variable for generic component types
 T = TypeVar("T")
 
 
-class ComponentType(Enum):
+class ComponentType(BaseEnum):
     """Types of components in the system."""
 
     BACKEND = "backend"

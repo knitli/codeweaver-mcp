@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from codeweaver.types.content import CodeChunk
 from codeweaver.types.enums import ChunkingStrategy, Language
-from codeweaver.types.factories.data_structures import ContentItem
-from codeweaver.types.service_data import (
+from codeweaver.types.factories import ContentItem
+from codeweaver.types.services.data import (
     CacheStats,
     ChunkingStats,
     DirectoryStats,

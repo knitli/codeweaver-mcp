@@ -19,18 +19,19 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver.backends.base import (
+from codeweaver.backends import HybridSearchBackend, VectorBackend
+from codeweaver.providers import EmbeddingProvider, RerankProvider
+from codeweaver.sources import DataSource, SourceCapability, SourceConfig
+from codeweaver.types import (
     CollectionInfo,
+    ContentItem,
     DistanceMetric,
-    HybridSearchBackend,
     HybridStrategy,
+    ProviderInfo,
+    RerankResult,
     SearchResult,
-    VectorBackend,
     VectorPoint,
 )
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.sources.base import DataSource, SourceCapability, SourceConfig
-from codeweaver.types import ContentItem, ProviderInfo, RerankResult
 
 
 logger = logging.getLogger(__name__)

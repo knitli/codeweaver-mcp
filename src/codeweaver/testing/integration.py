@@ -20,13 +20,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from codeweaver.backends.base import HybridSearchBackend, VectorBackend
-from codeweaver.backends.factory import BackendFactory
+from codeweaver.backends import BackendFactory, HybridSearchBackend, VectorBackend
 from codeweaver.config import CodeWeaverConfig
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.providers.factory import get_provider_factory
-from codeweaver.sources.base import DataSource
-from codeweaver.sources.factory import SourceFactory
+from codeweaver.providers import EmbeddingProvider, RerankProvider, get_provider_factory
+from codeweaver.sources import DataSource, SourceFactory
 from codeweaver.testing.mocks import (
     MockDataSource,
     MockEmbeddingProvider,

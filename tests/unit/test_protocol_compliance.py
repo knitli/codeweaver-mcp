@@ -261,7 +261,7 @@ class TestDataSourceCompliance:
 
         assert len(capabilities) > 0
         # Check that all capabilities are valid SourceCapability enum values
-        from codeweaver.sources.base import SourceCapability
+        from codeweaver.types import SourceCapability
 
         assert all(isinstance(cap, SourceCapability) for cap in capabilities)
 

@@ -14,18 +14,16 @@ import asyncio
 
 import pytest
 
-from codeweaver.testing.benchmarks import (
+from codeweaver.testing import (
     BenchmarkResult,
     BenchmarkSuite,
-    print_benchmark_results,
-    run_performance_benchmarks,
-    save_benchmark_results,
-)
-from codeweaver.testing.mocks import (
     MockDataSource,
     MockEmbeddingProvider,
     MockRerankProvider,
     MockVectorBackend,
+    print_benchmark_results,
+    run_performance_benchmarks,
+    save_benchmark_results,
 )
 
 

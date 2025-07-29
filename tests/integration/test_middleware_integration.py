@@ -16,8 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from codeweaver.middleware.chunking import ChunkingMiddleware
-from codeweaver.middleware.filtering import FileFilteringMiddleware
+from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
 
 
 class TestChunkingMiddleware:

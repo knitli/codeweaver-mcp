@@ -318,7 +318,7 @@ class TestEnhancedCodeWeaverConfig:
         # Should not apply profile configuration
         # This test verifies the structure exists, actual application testing
         # would require more complex setup
-        assert config.defaults.auto_configure is False
+        assert not config.defaults.auto_configure
 
     def test_original_defaults_setup(self):
         """Test original defaults setup."""
@@ -330,9 +330,6 @@ class TestEnhancedCodeWeaverConfig:
 
         # Verify original defaults are applied
         assert config.indexing.enable_auto_reindex is True
-        if config.services.chunking.provider == "fastmcp_chunking":
-            # This would be changed by the setup method
-            pass
 
     def test_services_integration(self):
         """Test that services are properly integrated."""

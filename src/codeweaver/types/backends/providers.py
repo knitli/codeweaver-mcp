@@ -11,13 +11,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from codeweaver.types.providers.enums import (
-    BackendProvider,
-    DistanceMetric,
-    HybridFusionStrategy,
-    ProviderCapability,
-    RerankResult,
-)
+from codeweaver.types.backends.enums import BackendProvider, DistanceMetric, HybridFusionStrategy
+from codeweaver.types.providers import ProviderCapability, RerankResult
 
 
 @dataclass

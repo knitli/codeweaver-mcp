@@ -11,7 +11,7 @@ from codeweaver.types.backends.base import (
     SearchResult,
     VectorPoint,
 )
-from codeweaver.types.backends.capabilities import BackendCapabilities
+from codeweaver.types.backends.capabilities import BackendCapabilities, get_all_backend_capabilities
 from codeweaver.types.backends.enums import (
     BackendProvider,
     DistanceMetric,
@@ -49,4 +49,5 @@ __all__ = [
     "SparseIndexType",
     "StorageType",
     "VectorPoint",
+    "get_all_backend_capabilities",
 ]

@@ -13,8 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from codeweaver.services.manager import ServicesManager
-from codeweaver.services.middleware_bridge import ServiceBridge, ServiceCoordinator
+from codeweaver.services import ServiceBridge, ServiceCoordinator, ServicesManager
 from codeweaver.types import ServicesConfig, ServiceType
 
 

@@ -21,22 +21,20 @@ from collections.abc import Callable
 from datetime import UTC
 from typing import Any
 
-from codeweaver.backends.base import (
+from codeweaver.sources import AbstractDataSource, SourceConfig, SourceWatcher
+from codeweaver.types import (
     CollectionInfo,
+    ContentItem,
     DistanceMetric,
     HybridStrategy,
+    ProviderCapability,
+    ProviderInfo,
+    RerankResult,
     SearchFilter,
     SearchResult,
+    SourceCapability,
     VectorPoint,
 )
-from codeweaver.sources.base import (
-    AbstractDataSource,
-    ContentItem,
-    SourceCapability,
-    SourceConfig,
-    SourceWatcher,
-)
-from codeweaver.types import ProviderCapability, ProviderInfo, RerankResult
 
 
 logger = logging.getLogger(__name__)

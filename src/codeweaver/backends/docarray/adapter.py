@@ -12,7 +12,7 @@ from typing import Any
 from docarray import BaseDoc, DocList
 from docarray.index.abstract import BaseDocIndex
 
-from codeweaver.backends.base import HybridSearchBackend, VectorBackend
+from codeweaver.backends import HybridSearchBackend, VectorBackend
 from codeweaver.types import CollectionInfo, DistanceMetric, SearchFilter, SearchResult, VectorPoint
 
 

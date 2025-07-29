@@ -45,38 +45,6 @@ from codeweaver.types import ComponentType, ServicesConfig
 logger = logging.getLogger(__name__)
 
 
-def _get_default_user_config_location() -> Path:
-    """Get the default user configuration location."""
-    import os
-    import platform
-
-    if platform.system() == "Windows":
-        return (
-            Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-            / "codeweaver"
-            / "config.toml"
-        )
-    return (
-        Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-        / "codeweaver"
-        / "config.toml"
-    )
-
-
-def _get_default_system_config_location() -> Path:
-    """Get the default system-wide configuration location."""
-    import os
-    import platform
-
-    if platform.system() == "Windows":
-        return (
-            Path(os.environ.get("PROGRAMDATA", Path.home() / "ProgramData"))
-            / "codeweaver"
-            / "config.toml"
-        )
-    return Path("/etc/codeweaver/config.toml")  # Common Linux system config path
-
-
 class ChunkingConfig(BaseModel):
     """Configuration for code chunking."""
 
@@ -889,8 +857,9 @@ class ConfigManager:
         self.config_path = config_path
         self._config: CodeWeaverConfig | None = None
         self._default_user_config_location = self._get_default_user_config_location()
+        self._default_system_config_location = self._get_default_system_config_location()
 
-    def _get_default_user_config_location() -> Path:
+    def _get_default_user_config_location(self) -> Path:
         """Get the default user configuration location."""
         import os
         import platform
@@ -906,6 +875,19 @@ class ConfigManager:
             / "codeweaver"
             / "config.toml"
         )
+
+    def _get_default_system_config_location(self) -> Path:
+        """Get the default system-wide configuration location."""
+        import os
+        import platform
+
+        if platform.system() == "Windows":
+            return (
+                Path(os.environ.get("PROGRAMDATA", Path.home() / "ProgramData"))
+                / "codeweaver"
+                / "config.toml"
+            )
+        return Path("/etc/codeweaver/config.toml")  # Common Linux system config path
 
     def get_config(self) -> CodeWeaverConfig:
         """Get the current configuration, loading it if necessary."""
@@ -1001,7 +983,6 @@ class ConfigManager:
 
         return result
 
-    # TODO Rename this here and in `validate_config`
     def _load_from_default_path(self, path, result) -> None:
         """Load configuration from a specific path and validate it."""
         # Try to load the config with the specific path

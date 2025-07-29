@@ -30,7 +30,6 @@ content_items = await source.discover_content(config)
 # Import new types
 from codeweaver.sources.base import (
     AbstractDataSource,
-    ContentItem,
     DataSource,
     SourceConfig,
     SourceRegistry,
@@ -60,7 +59,6 @@ __all__ = [
     # Core protocols and data structures
     "AbstractDataSource",
     "AuthType",
-    "ContentItem",
     "ContentType",
     "DataSource",
     "DataSourceManager",

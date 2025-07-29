@@ -9,7 +9,7 @@ from typing import Any
 
 from codeweaver.config import QdrantDocArrayConfig
 from codeweaver.schema import DocumentSchemaGenerator, SchemaTemplates
-from codeweaver.sources.adapter import DocArrayHybridAdapter
+from codeweaver.sources import DocArrayHybridAdapter
 
 
 logger = logging.getLogger(__name__)

@@ -13,8 +13,8 @@ attributes scattered across provider implementations.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from codeweaver.types.providers.provider_capabilities import ProviderCapabilities
-from codeweaver.types.providers.provider_enums import ModelFamily, ProviderCapability, ProviderType
+from codeweaver.types.providers.capabilities import ProviderCapabilities
+from codeweaver.types.providers.enums import ModelFamily, ProviderCapability, ProviderType
 
 
 if TYPE_CHECKING:
