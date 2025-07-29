@@ -5,17 +5,18 @@
 
 """Telemetry middleware for automatic event tracking."""
 
-import asyncio
 import logging
 import time
-from typing import Any, Awaitable, Callable
 
-from fastmcp import FastMCP, Request, Response
+from typing import Any
+
+from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.server.middleware.middleware import CallNext
 
 from codeweaver.types import TelemetryService
 
 
-class TelemetryMiddleware:
+class TelemetryMiddleware(Middleware):
     """FastMCP middleware for automatic telemetry tracking."""
 
     def __init__(self, telemetry_service: TelemetryService, logger: logging.Logger | None = None):
@@ -25,37 +26,37 @@ class TelemetryMiddleware:
 
     async def __call__(
         self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
+        context: MiddlewareContext,
+        call_next: CallNext,
+    ) -> Any:
         """Process request and track telemetry data."""
         start_time = time.time()
-        method = request.method
-        
+        method = getattr(context.request, 'method', 'unknown')
+
         try:
             # Call the actual handler
-            response = await call_next(request)
+            response = await call_next(context)
             duration = time.time() - start_time
-            
+
             # Track successful operation
-            await self._track_operation_success(method, request.params, response, duration)
-            
-            return response
-            
+            await self._track_operation_success(method, context.request.params, response, duration)
+
         except Exception as e:
             duration = time.time() - start_time
-            
+
             # Track operation error
-            await self._track_operation_error(method, request.params, e, duration)
-            
+            await self._track_operation_error(method, getattr(context.request, 'params', None), e, duration)
+
             # Re-raise the exception
             raise
+        else:
+            return response
 
     async def _track_operation_success(
-        self, 
-        method: str, 
+        self,
+        method: str,
         params: dict[str, Any] | None,
-        response: Response,
+        response: Any,
         duration: float,
     ) -> None:
         """Track successful operations."""
@@ -73,7 +74,7 @@ class TelemetryMiddleware:
                     duration=duration,
                     metadata={"success": True},
                 )
-                
+
         except Exception as e:
             self.logger.warning("Failed to track operation success: %s", e)
 
@@ -95,28 +96,28 @@ class TelemetryMiddleware:
                     "has_params": params is not None,
                 },
             )
-            
+
         except Exception as e:
             self.logger.warning("Failed to track operation error: %s", e)
 
     async def _track_indexing_success(
         self,
         params: dict[str, Any] | None,
-        response: Response,
+        response: Any,
         duration: float,
     ) -> None:
         """Track successful indexing operations."""
         if not params:
             return
-            
+
         # Extract safe information from parameters
         repository_path = params.get("path", "unknown")
-        
+
         # Try to extract results from response
-        result_data = getattr(response, "result", {}) or {}
+        result_data = response if isinstance(response, dict) else {}
         file_count = result_data.get("files_processed", 0)
         language_distribution = result_data.get("languages", {})
-        
+
         await self.telemetry_service.track_indexing(
             repository_path=repository_path,
             file_count=file_count,
@@ -128,26 +129,25 @@ class TelemetryMiddleware:
     async def _track_search_success(
         self,
         params: dict[str, Any] | None,
-        response: Response,
+        response: Any,
         duration: float,
     ) -> None:
         """Track successful search operations."""
         if not params:
             return
-            
+
         # Extract safe information from parameters
         query = params.get("query", "")
         filters = params.get("filters", [])
-        max_results = params.get("max_results", 50)
-        
+
         # Try to extract results from response
-        result_data = getattr(response, "result", {}) or {}
+        result_data = response if isinstance(response, dict) else {}
         results = result_data.get("results", [])
         result_count = len(results) if isinstance(results, list) else 0
-        
+
         # Determine query complexity
         query_complexity = self._assess_query_complexity(query)
-        
+
         await self.telemetry_service.track_search(
             query_type="semantic",
             result_count=result_count,
@@ -160,29 +160,29 @@ class TelemetryMiddleware:
     async def _track_ast_grep_success(
         self,
         params: dict[str, Any] | None,
-        response: Response,
+        response: Any,
         duration: float,
     ) -> None:
         """Track successful AST grep search operations."""
         if not params:
             return
-            
+
         # Extract safe information from parameters
         pattern = params.get("pattern", "")
         language = params.get("language")
-        
+
         # Try to extract results from response
-        result_data = getattr(response, "result", {}) or {}
+        result_data = response if isinstance(response, dict) else {}
         results = result_data.get("results", [])
         result_count = len(results) if isinstance(results, list) else 0
-        
+
         # Determine pattern complexity
         query_complexity = self._assess_pattern_complexity(pattern)
-        
+
         filters_used = []
         if language:
             filters_used.append(f"language:{language}")
-        
+
         await self.telemetry_service.track_search(
             query_type="ast_grep",
             result_count=result_count,
@@ -196,36 +196,34 @@ class TelemetryMiddleware:
         """Assess the complexity of a search query."""
         if not query:
             return "empty"
-        
+
         word_count = len(query.split())
         has_operators = any(op in query for op in ["AND", "OR", "NOT", "+", "-"])
         has_quotes = '"' in query or "'" in query
         has_wildcards = "*" in query or "?" in query
-        
+
         if word_count > 10 or has_operators:
             return "complex"
-        elif word_count > 3 or has_quotes or has_wildcards:
+        if word_count > 3 or has_quotes or has_wildcards:
             return "medium"
-        else:
-            return "simple"
+        return "simple"
 
     def _assess_pattern_complexity(self, pattern: str) -> str:
         """Assess the complexity of an AST grep pattern."""
         if not pattern:
             return "empty"
-        
+
         # Count special AST grep constructs
         ast_constructs = ["$_", "$A", "$B", "$C", "kind:", "has:", "inside:", "follows:"]
         construct_count = sum(1 for construct in ast_constructs if construct in pattern)
-        
+
         line_count = len(pattern.split('\n'))
-        
+
         if construct_count > 3 or line_count > 10:
             return "complex"
-        elif construct_count > 1 or line_count > 3:
+        if construct_count > 1 or line_count > 3:
             return "medium"
-        else:
-            return "simple"
+        return "simple"
 
 
 class TelemetryMiddlewareProvider:
@@ -243,7 +241,6 @@ class TelemetryMiddlewareProvider:
     async def initialize(self) -> None:
         """Initialize the middleware provider."""
         # No special initialization needed
-        pass
 
     async def shutdown(self) -> None:
         """Shutdown the middleware provider."""
