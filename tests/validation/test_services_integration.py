@@ -486,20 +486,20 @@ class TestServicesManagerIntegration:
             pytest.skip(f"Could not test ServicesManager health monitoring: {e}")
 
 
-class TestMiddlewareBridgeIntegration:
-    """Test MiddlewareBridge integration."""
+class TestServiceBridgeIntegration:
+    """Test ServiceBridge integration."""
 
     def test_middleware_bridge_exists(self):
-        """Test that MiddlewareBridge exists."""
-        from codeweaver.services.middleware_bridge import MiddlewareBridge
+        """Test that ServiceBridge exists."""
+        from codeweaver.services.middleware_bridge import ServiceBridge
 
-        assert MiddlewareBridge is not None
+        assert ServiceBridge is not None
 
     def test_middleware_bridge_is_class(self):
-        """Test that MiddlewareBridge is a proper class."""
-        from codeweaver.services.middleware_bridge import MiddlewareBridge
+        """Test that ServiceBridge is a proper class."""
+        from codeweaver.services.middleware_bridge import ServiceBridge
 
-        assert inspect.isclass(MiddlewareBridge), "MiddlewareBridge should be a class"
+        assert inspect.isclass(ServiceBridge), "ServiceBridge should be a class"
 
 
 def validate_services_integration() -> bool:
@@ -514,8 +514,8 @@ def validate_services_integration() -> bool:
         # Test ServicesManager exists
         print("   ✅ ServicesManager exists")
 
-        # Test MiddlewareBridge exists
-        print("   ✅ MiddlewareBridge exists")
+        # Test ServiceBridge exists
+        print("   ✅ ServiceBridge exists")
 
         # Test service providers exist
         service_providers = [

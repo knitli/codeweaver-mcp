@@ -526,7 +526,7 @@ Add to `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "code-weaver": {
+    "codeweaver": {
       "command": "uv",
       "args": ["run", "codeweaver"],
       "env": {

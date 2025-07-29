@@ -34,7 +34,7 @@ This guide provides step-by-step instructions for implementing CodeWeaver's serv
 
 ```bash
 # Ensure you have the latest CodeWeaver development environment
-cd /path/to/code-weaver-mcp
+cd /path/to/codeweaver-mcp
 
 # Install development dependencies
 uv sync --group dev

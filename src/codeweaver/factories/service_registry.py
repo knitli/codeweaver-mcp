@@ -95,8 +95,8 @@ class ServiceRegistry:
                 capabilities=capabilities or ServiceCapabilities(),
                 configuration_schema=configuration_schema or {},
                 status=ProviderStatus.REGISTERED,
-                created_at=UTC,
-                last_modified=UTC,
+                created_at=datetime.now(UTC),
+                last_modified=datetime.now(UTC),
             )
 
             self._provider_info[service_type][provider_name] = provider_info
@@ -158,7 +158,7 @@ class ServiceRegistry:
                 provider_name=config.provider,
                 instance_id=f"{service_type.value}_{config.provider}_{id(service_instance)}",
                 status="ready",
-                created_at=UTC,
+                created_at=datetime.now(UTC),
                 last_health_check=None,
                 config_hash=str(hash(str(config))),
             )
@@ -255,7 +255,7 @@ class ServiceRegistry:
             total_services=total_services,
             healthy_services=healthy_services,
             total_providers=total_providers,
-            last_check=UTC,
+            last_check=datetime.now(UTC),
             issues=issues,
         )
 

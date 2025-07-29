@@ -254,30 +254,29 @@ class FileFilteringMiddleware(Middleware):
             .replace("_", "")
             .replace(",", ".")
             .strip()
-            .split(".")[0]
-        )  # Remove decimals for size parsing
-
+        )
         if not parsed_size:
             logger.warning("Empty size string provided, defaulting to 0B")
             return 0
-        size, unit = 0, "B"
-        if all(char.isdigit() for char in parsed_size):
-            return int(parsed_size)  # All numbers, assume bytes
-        if len(parsed_size) == 1:
-            return 0  # Single character, not a number (because it would have been caught above)
-        if len(parsed_size) > 1 and parsed_size[-2] in ["K", "M", "G", "T"]:
-            size, unit = parsed_size[:-2], parsed_size[-2:]
-        match unit:
-            case "TB":
-                return int(float(size) * 1024 * 1024 * 1024 * 1024)
-            case "GB":
-                return int(float(size) * 1024 * 1024 * 1024)
-            case "MB":
-                return int(float(size) * 1024 * 1024)
-            case "KB":
-                return int(float(size) * 1024)
-            case _:
-                return int(size)  # Default to bytes if no suffix
+        if any(char.isalpha() for char in parsed_size):
+            if len(parsed_size) == 1:
+                return 0  # only one character, not a number
+            if parsed_size[-1] == "B" and parsed_size[-2].isdigit():
+                parsed_size = int(parsed_size[:-1])
+            match parsed_size[-2:]:
+                case "TB":
+                    parsed_size = int(float(parsed_size[:-2]) * 1024 * 1024 * 1024 * 1024)
+                case "GB":
+                    parsed_size = int(float(parsed_size[:-2]) * 1024 * 1024 * 1024)
+                case "MB":
+                    parsed_size = int(float(parsed_size[:-2]) * 1024 * 1024)
+                case "KB":
+                    parsed_size = int(float(parsed_size[:-2]) * 1024)
+                case _:
+                    parsed_size = int(parsed_size[:-1])  # Default to bytes if no suffix
+        else:
+            parsed_size = int(float(parsed_size))
+        return parsed_size
 
     def _format_size(self, size_bytes: int) -> str:
         """Format size in bytes to human-readable string."""

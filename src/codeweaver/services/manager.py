@@ -9,7 +9,7 @@ import asyncio
 import contextlib
 import logging
 
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 
@@ -227,7 +227,7 @@ class ServicesManager:
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,
                     status=HealthStatus.UNHEALTHY,
-                    last_check=UTC,
+                    last_check=datetime.now(UTC),
                     response_time=0.0,
                     error_count=1,
                     success_rate=0.0,

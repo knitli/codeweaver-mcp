@@ -166,6 +166,7 @@ we get proper chunking behavior.
             temp_path.unlink(missing_ok=True)
 
     def test_get_supported_languages(self) -> None:
+        # sourcery skip: extract-duplicate-method
         """Test getting supported languages information."""
         middleware = ChunkingMiddleware()
 

@@ -3,6 +3,14 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
+# local configs
+.claude/*.local.*
+**/*.local.*
+**/*.local.*.license
+mise.local.toml
+mise.local.toml.license
+hk.local.pkl.license
+
 # non-public working files
 .workbench/*
 .workbench/
@@ -26,6 +34,7 @@ _.log
 report.[0-9]_[0-9]_[0-9]_[0-9]_.json
 out
 dist
+dist/
 *.tgz
 coverage
 *.lcov
@@ -38,6 +47,7 @@ coverage
 .cache
 !.cache/uv/
 *.tsbuildinfo
+**/dist/
 
 # venv
 **/.venv

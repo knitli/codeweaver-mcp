@@ -18,7 +18,7 @@ import random
 import time
 
 from collections.abc import Callable
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from codeweaver.sources import AbstractDataSource, SourceConfig, SourceWatcher
@@ -99,7 +99,7 @@ class MockVectorBackend:
         self.collections[name] = {
             "dimension": dimension,
             "distance_metric": distance_metric,
-            "created_at": UTC,
+            "created_at": datetime.now(UTC),
             "points_count": 0,
             **kwargs,
         }
@@ -290,7 +290,7 @@ class MockHybridSearchBackend(MockVectorBackend):
         self.sparse_indexes[collection_name] = {
             "fields": fields,
             "index_type": index_type,
-            "created_at": UTC,
+            "created_at": datetime.now(UTC),
             **kwargs,
         }
 
@@ -842,7 +842,7 @@ class MockDataSource(AbstractDataSource):
                 path=path,
                 content_type="file",
                 metadata={"file_type": language, "repository": "mock_repo", "branch": "main"},
-                last_modified=UTC,
+                last_modified=datetime.now(UTC),
                 size=size,
                 language=language,
                 source_id=self.source_id,
@@ -860,9 +860,9 @@ class MockDataSource(AbstractDataSource):
 
 import os
 import sys
-from typing import List, Dict, Any
+from typing import Any
 
-def mock_function(param: str) -> Dict[str, Any]:
+def mock_function(param: str) -> dict[str, Any]:
     """Mock function for testing."""
     return {"result": param, "status": "ok"}
 

@@ -28,7 +28,7 @@ Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of th
     ```bash
     # Install CodeWeaver
     uv add codeweaver
-    
+
     # Verify installation
     uv run codeweaver --version
     ```
@@ -37,7 +37,7 @@ Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of th
     ```bash
     # Install CodeWeaver
     pip install codeweaver
-    
+
     # Verify installation
     codeweaver --version
     ```
@@ -46,11 +46,11 @@ Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of th
     ```bash
     # Clone repository
     git clone https://github.com/knitli/code-weaver-mcp.git
-    cd code-weaver-mcp
-    
+    cd codeweaver-mcp
+
     # Install with uv
     uv sync
-    
+
     # Verify installation
     uv run codeweaver --version
     ```
@@ -103,11 +103,11 @@ Add CodeWeaver to your Claude Desktop configuration:
 
 === "macOS"
     Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
-    
+
     ```json
     {
       "mcpServers": {
-        "code-weaver": {
+        "codeweaver": {
           "command": "uv",
           "args": ["run", "codeweaver"],
           "env": {
@@ -122,11 +122,11 @@ Add CodeWeaver to your Claude Desktop configuration:
 
 === "Windows"
     Edit `%APPDATA%\Claude\claude_desktop_config.json`:
-    
+
     ```json
     {
       "mcpServers": {
-        "code-weaver": {
+        "codeweaver": {
           "command": "uv",
           "args": ["run", "codeweaver"],
           "env": {
@@ -150,7 +150,7 @@ Add CodeWeaver to your Claude Desktop configuration:
 
 You should see CodeWeaver tools listed:
 - `index_codebase`
-- `search_code` 
+- `search_code`
 - `ast_grep_search`
 - `get_supported_languages`
 
@@ -203,19 +203,19 @@ Congratulations! You now have CodeWeaver running with Claude Desktop. Here's wha
 <div class="grid cards" markdown>
 
 -   :material-search-web: **[Master Search Strategies](../user-guide/search-strategies.md)**
-    
+
     Learn advanced semantic and structural search techniques
 
 -   :material-tune: **[Optimize Performance](../user-guide/performance.md)**
-    
+
     Tune indexing and search for large codebases
 
 -   :material-cog: **[Advanced Configuration](../configuration/config-file.md)**
-    
+
     Explore configuration options and alternative providers
 
 -   :material-school: **[Try Tutorials](../tutorials/index.md)**
-    
+
     Step-by-step guides for specific use cases
 
 </div>

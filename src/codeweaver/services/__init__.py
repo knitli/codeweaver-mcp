@@ -6,7 +6,7 @@
 """Service layer for CodeWeaver - connecting middleware with factory patterns."""
 
 from codeweaver.services.manager import ServicesManager
-from codeweaver.services.middleware_bridge import ServiceBridge
+from codeweaver.services.middleware_bridge import ServiceBridge, ServiceCoordinator
 from codeweaver.services.providers import (
     BaseServiceProvider,
     CacheConfig,
@@ -24,4 +24,4 @@ from codeweaver.services.providers import (
 )
 
 
-__all__ = ["BaseServiceProvider", "CacheConfig", "CacheEntry", "CachingService", "ChunkingService", "FastMCPErrorHandlingProvider", "FastMCPLoggingProvider", "FastMCPRateLimitingProvider", "FastMCPTimingProvider", "FilteringService", "RateLimitConfig", "RateLimitingService", "ServiceBridge", "ServicesManager", "TokenBucket"]
+__all__ = ["BaseServiceProvider", "CacheConfig", "CacheEntry", "CachingService", "ChunkingService", "FastMCPErrorHandlingProvider", "FastMCPLoggingProvider", "FastMCPRateLimitingProvider", "FastMCPTimingProvider", "FilteringService", "RateLimitConfig", "RateLimitingService", "ServiceBridge", "ServiceCoordinator", "ServicesManager", "TokenBucket"]

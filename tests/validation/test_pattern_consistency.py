@@ -506,11 +506,11 @@ class TestServicesIntegration:
             )
 
     def test_middleware_bridge_exists(self):
-        """Test that MiddlewareBridge exists."""
-        from codeweaver.services.middleware_bridge import MiddlewareBridge
+        """Test that ServiceBridge exists."""
+        from codeweaver.services.middleware_bridge import ServiceBridge
 
         # Should be a class
-        assert inspect.isclass(MiddlewareBridge), "MiddlewareBridge should be a class"
+        assert inspect.isclass(ServiceBridge), "ServiceBridge should be a class"
 
     def test_service_providers_exist(self):
         """Test that service providers exist."""

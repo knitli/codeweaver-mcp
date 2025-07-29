@@ -181,7 +181,7 @@ class CodeWeaverConfig:
 python -m codeweaver.main  # Detects and migrates legacy config
 
 # Manual migration
-python -m codeweaver.config_cli migrate .code-weaver.toml
+python -m codeweaver.config_cli migrate .codeweaver.toml
 ```
 
 ### New Configuration
