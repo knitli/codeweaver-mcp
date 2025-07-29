@@ -35,6 +35,7 @@ from codeweaver.types import (
     ServicesConfig,
     ServicesHealthReport,
     ServiceType,
+    TelemetryService,
     TimingService,
     ValidationService,
 )
@@ -160,6 +161,11 @@ class ServicesManager:
     def get_metrics_service(self) -> MetricsService | None:
         """Get the metrics service if available."""
         service = self._services.get(ServiceType.METRICS)
+        return service or None
+
+    def get_telemetry_service(self) -> "TelemetryService | None":
+        """Get the telemetry service if available."""
+        service = self._services.get(ServiceType.TELEMETRY)
         return service or None
 
     def get_service(self, service_type: ServiceType) -> ServiceProvider | None:
@@ -297,6 +303,15 @@ class ServicesManager:
 
             self._logger.info("Middleware service providers registered")
 
+            # Register telemetry service provider
+            from codeweaver.services.providers.telemetry import PostHogTelemetryProvider
+
+            self._registry.register_provider(
+                ServiceType.TELEMETRY, "posthog_telemetry", PostHogTelemetryProvider
+            )
+
+            self._logger.info("Telemetry service provider registered")
+
             # TODO: Register other built-in providers when available
 
             self._logger.info("Built-in service providers registered")
@@ -333,10 +348,16 @@ class ServicesManager:
             config = self._get_service_config(service_type)
             if config.enabled:
                 try:
-                    # TODO: Implement optional service providers
-                    self._logger.info(
-                        "Optional service %s enabled but not implemented yet", service_type.value
-                    )
+                    # Create telemetry service if it's available
+                    if service_type == ServiceType.TELEMETRY:
+                        service = await self._registry.create_service(service_type, config)
+                        self._services[service_type] = service
+                        self._logger.info("Optional service created: %s", service_type.value)
+                    else:
+                        # TODO: Implement other optional service providers
+                        self._logger.info(
+                            "Optional service %s enabled but not implemented yet", service_type.value
+                        )
 
                 except Exception as e:
                     # Optional services failures are not fatal
@@ -450,6 +471,7 @@ class ServicesManager:
             ServiceType.CACHE: self._config.cache,
             ServiceType.MONITORING: self._config.monitoring,
             ServiceType.METRICS: self._config.metrics,
+            ServiceType.TELEMETRY: self._config.telemetry,
         }
 
         return config_map.get(service_type)

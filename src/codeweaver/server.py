@@ -134,6 +134,15 @@ class CodeWeaverServer:
         self.mcp.add_middleware(filtering_middleware)
         logger.info("Added file filtering middleware")
 
+        # Telemetry middleware (if telemetry service is enabled)
+        telemetry_service = self.services_manager.get_telemetry_service()
+        if telemetry_service:
+            from codeweaver.middleware.telemetry import TelemetryMiddleware
+
+            telemetry_middleware = TelemetryMiddleware(telemetry_service)
+            self.mcp.add_middleware(telemetry_middleware)
+            logger.info("Added telemetry middleware")
+
         logger.info("Domain-specific middleware setup complete")
 
     async def _initialize_components(self) -> None:

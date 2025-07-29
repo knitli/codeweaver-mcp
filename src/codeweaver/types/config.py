@@ -55,6 +55,7 @@ class ServiceType(BaseEnum):
     CACHE = "cache"
     MONITORING = "monitoring"
     METRICS = "metrics"
+    TELEMETRY = "telemetry"
 
     @classmethod
     def get_core_services(cls) -> tuple["ServiceType"]:
@@ -69,7 +70,7 @@ class ServiceType(BaseEnum):
     @classmethod
     def get_optional_services(cls) -> tuple["ServiceType"]:
         """Get optional services for enhanced functionality."""
-        return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS)
+        return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS, cls.TELEMETRY)
 
     @classmethod
     def get_all_services(cls) -> tuple["ServiceType"]:
