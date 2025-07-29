@@ -38,6 +38,7 @@ dependencies = [
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
     "rich>=14.0.0",
+    "posthog>=6.3.0",
 ]
 
 

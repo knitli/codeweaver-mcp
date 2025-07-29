@@ -15,13 +15,15 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from codeweaver.services.manager import ServicesManager
+
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.config import BackendConfig
 from codeweaver.factories.base import create_factory_context
 from codeweaver.factories.registry import ComponentRegistry, get_global_registry
 from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
-from codeweaver.services.manager import ServicesManager
 from codeweaver.sources.base import DataSource, SourceConfig
 from codeweaver.types import (
     BaseComponentConfig,
@@ -47,7 +49,7 @@ class CodeWeaverFactory:
         self,
         config: "CodeWeaverConfig | None" = None,
         registry: ComponentRegistry | None = None,
-        services_manager: ServicesManager | None = None,
+        services_manager: "ServicesManager | None" = None,
     ):
         """Initialize the CodeWeaver factory.
 
@@ -58,6 +60,7 @@ class CodeWeaverFactory:
         """
         # Import at runtime to avoid circular import
         from codeweaver.config import CodeWeaverConfig
+        from codeweaver.services.manager import ServicesManager
 
         self._config = config or CodeWeaverConfig()
         self.registry = registry or get_global_registry()

@@ -276,6 +276,46 @@ class RateLimitingServiceConfig(ServiceConfig):
     rate_limit_metrics: Annotated[bool, Field(description="Track rate limit metrics")] = True
 
 
+class TelemetryServiceConfig(ServiceConfig):
+    """Configuration for telemetry services."""
+
+    provider: str = "posthog_telemetry"
+    
+    # Privacy and opt-out settings
+    enabled: bool = True
+    anonymous_tracking: Annotated[bool, Field(description="Use anonymous tracking")] = True
+    collect_sensitive_data: Annotated[bool, Field(description="Allow sensitive data collection")] = False
+    user_consent_required: Annotated[bool, Field(description="Require explicit user consent")] = False
+    
+    # PostHog configuration
+    api_key: Annotated[str | None, Field(description="PostHog API key")] = None
+    host: Annotated[str, Field(description="PostHog instance host")] = "https://app.posthog.com"
+    
+    # Testing and development
+    mock_mode: Annotated[bool, Field(description="Enable mock mode for testing")] = False
+    
+    # Data collection settings
+    batch_size: Annotated[int, Field(ge=1, le=1000, description="Event batch size")] = 50
+    flush_interval: Annotated[float, Field(gt=0, description="Flush interval in seconds")] = 30.0
+    max_queue_size: Annotated[int, Field(ge=1, description="Maximum queue size")] = 1000
+    
+    # Event filtering
+    track_indexing: Annotated[bool, Field(description="Track indexing operations")] = True
+    track_search: Annotated[bool, Field(description="Track search operations")] = True
+    track_errors: Annotated[bool, Field(description="Track error events")] = True
+    track_performance: Annotated[bool, Field(description="Track performance metrics")] = True
+    
+    # Data sanitization
+    hash_file_paths: Annotated[bool, Field(description="Hash file paths")] = True
+    hash_repository_names: Annotated[bool, Field(description="Hash repository names")] = True
+    sanitize_queries: Annotated[bool, Field(description="Sanitize search queries")] = True
+    
+    # Local storage
+    local_storage_enabled: Annotated[bool, Field(description="Enable local event storage")] = True
+    local_storage_path: Annotated[Path | None, Field(description="Local storage path")] = None
+    max_local_events: Annotated[int, Field(ge=0, description="Max local events to store")] = 10000
+
+
 class ServicesConfig(BaseModel):
     """Root configuration for all services."""
 
@@ -313,6 +353,9 @@ class ServicesConfig(BaseModel):
     )
     metrics: Annotated[MetricsServiceConfig, Field(description="Metrics config")] = Field(
         default_factory=MetricsServiceConfig
+    )
+    telemetry: Annotated[TelemetryServiceConfig, Field(description="Telemetry config")] = Field(
+        default_factory=TelemetryServiceConfig
     )
 
     # Global service settings

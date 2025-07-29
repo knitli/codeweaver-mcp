@@ -15,6 +15,7 @@ from codeweaver.types.services.config import (
     RateLimitingServiceConfig,
     ServiceConfig,
     ServicesConfig,
+    TelemetryServiceConfig,
     TimingServiceConfig,
     ValidationServiceConfig,
 )
@@ -72,6 +73,7 @@ from codeweaver.types.services.services import (
     MonitoringService,
     RateLimitingService,
     ServiceProvider,
+    TelemetryService,
     TimingService,
     ValidationService,
 )
@@ -130,6 +132,8 @@ __all__ = [
     "ServiceStopError",
     "ServicesConfig",
     "ServicesHealthReport",
+    "TelemetryService",
+    "TelemetryServiceConfig",
     "TimingService",
     "TimingServiceConfig",
     "UnsupportedLanguageError",
