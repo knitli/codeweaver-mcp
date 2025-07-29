@@ -259,7 +259,7 @@ class IntegrationTestSuite:
                 "priority": 1,
                 "config": self.config.config_overrides.get("data_source_config", {}),
             }
-            from codeweaver._types import SourceProvider
+            from codeweaver.types import SourceProvider
 
             source_factory = SourceFactory()
             # Map string type to SourceProvider enum
@@ -380,7 +380,6 @@ class IntegrationTestSuite:
                 result.success = False
                 result.errors.append(f"Workflow {workflow_name} error: {e}")
                 logger.exception("Workflow %s failed")
-
 
     async def _run_end_to_end_tests(self, result: IntegrationTestResult) -> None:
         """Run comprehensive end-to-end integration tests."""

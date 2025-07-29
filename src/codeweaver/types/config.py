@@ -8,7 +8,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types.base_enum import BaseEnum
+from codeweaver.types.base_enum import BaseEnum
 
 
 class ConfigFormat(BaseEnum):
@@ -28,8 +28,11 @@ class ComponentType(BaseEnum):
     BACKEND = "backend"
     PROVIDER = "provider"
     SOURCE = "source"
-    SERVICE = "service"  # NEW: For service providers
-    MIDDLEWARE = "middleware"  # NEW: For middleware components
+    SERVICE = "service"
+    # For middleware components (part of services layer)
+    # But distinguished by also implementing `fastmcp.MiddleWare`
+    MIDDLEWARE = "middleware"
+
     FACTORY = "factory"
     PLUGIN = "plugin"
 
@@ -54,32 +57,41 @@ class ServiceType(BaseEnum):
     METRICS = "metrics"
 
     @classmethod
-    def get_core_services(cls) -> list["ServiceType"]:
+    def get_core_services(cls) -> tuple["ServiceType"]:
         """Get core services required for basic operation."""
-        return [cls.CHUNKING, cls.FILTERING]
+        return (cls.CHUNKING, cls.FILTERING)
 
     @classmethod
-    def get_middleware_services(cls) -> list["ServiceType"]:
+    def get_middleware_services(cls) -> tuple["ServiceType"]:
         """Get middleware services for FastMCP integration."""
-        return [cls.LOGGING, cls.TIMING, cls.ERROR_HANDLING, cls.RATE_LIMITING]
+        return (cls.LOGGING, cls.TIMING, cls.ERROR_HANDLING, cls.RATE_LIMITING)
 
     @classmethod
-    def get_optional_services(cls) -> list["ServiceType"]:
+    def get_optional_services(cls) -> tuple["ServiceType"]:
         """Get optional services for enhanced functionality."""
-        return [cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS]
+        return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS)
 
     @classmethod
-    def get_all_services(cls) -> list["ServiceType"]:
+    def get_all_services(cls) -> tuple["ServiceType"]:
         """Get all available service types."""
-        return cls.get_core_services() + cls.get_middleware_services() + cls.get_optional_services()
+        return (
+            *cls.get_core_services(),
+            *cls.get_middleware_services(),
+            *cls.get_optional_services(),
+        )
 
 
 class ValidationLevel(BaseEnum):
-    """Configuration validation levels."""
+    """Validation levels for configuration and data validation."""
 
-    STRICT = "strict"  # Fail on any validation error
-    STANDARD = "standard"  # Warn on non-critical errors
-    PERMISSIVE = "permissive"  # Allow most configurations
+    STRICT = "strict"
+    """STRICT: Fail on any error."""
+    STANDARD = "standard"
+    """STANDARD: Warn on non-critical errors"""
+    RELAXED = "relaxed"
+    """RELAXED: Allow most configurations and fail gracefully"""
+    DISABLED = "disabled"
+    """DISABLED: No validation; it's the wild west :gun: :cowboy_hat_face: 🔫"""
 
 
 class ConfigurationError(Exception):

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Content Organization Strategy
 
 This document outlines the comprehensive content strategy for CodeWeaver's Material for MkDocs documentation, designed to create a world-class documentation experience.

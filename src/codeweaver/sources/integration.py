@@ -15,9 +15,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from codeweaver._types import ContentItem
 from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.types import ContentItem
 
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,6 @@ class DataSourceManager:
             except Exception:
                 logger.exception("Failed to initialize data source %s.")
 
-
         logger.info("Initialized %d data sources", len(self._active_sources))
 
     async def discover_all_content(self) -> list[ContentItem]:
@@ -110,7 +109,6 @@ class DataSourceManager:
 
             except Exception:
                 logger.exception("Error discovering content from source %s")
-
 
         # Apply deduplication if enabled
         if self.config.enable_content_deduplication:
@@ -162,7 +160,6 @@ class DataSourceManager:
             except Exception:
                 logger.exception("Failed to setup change watching for source %s")
 
-
     async def cleanup(self) -> None:
         """Clean up all sources and watchers."""
         # Stop all watchers
@@ -172,7 +169,6 @@ class DataSourceManager:
             except Exception:
                 logger.exception("Error stopping watcher: %s")
 
-
         # Clean up sources
         for source in self._active_sources:
             try:
@@ -180,7 +176,6 @@ class DataSourceManager:
                     await source.cleanup()
             except Exception:
                 logger.exception("Error cleaning up source %s")
-
 
         self._watchers.clear()
         self._active_sources.clear()

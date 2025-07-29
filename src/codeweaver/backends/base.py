@@ -13,7 +13,7 @@ support, designed for runtime flexibility and extensibility.
 
 from typing import Any, Literal, Protocol, runtime_checkable
 
-from codeweaver._types import (
+from codeweaver.types import (
     CollectionInfo,
     DistanceMetric,
     HybridStrategy,

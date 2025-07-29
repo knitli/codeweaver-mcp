@@ -17,8 +17,8 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 from codeweaver.utils.decorators import not_implemented
 
 
@@ -107,10 +107,8 @@ class GitRepositorySourceProvider(AbstractDataSource):
         super().__init__("git", source_id)
 
     @classmethod
-    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+    def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if git repository source is available for the given capability."""
-        from codeweaver._types.source_enums import SourceCapability
-
         # Git source supports most capabilities but requires git
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -126,6 +124,7 @@ class GitRepositorySourceProvider(AbstractDataSource):
         if capability in supported_capabilities:
             # Check for git availability
             import shutil
+
             if shutil.which("git") is None:
                 return False, "git command not found in PATH"
             return True, None

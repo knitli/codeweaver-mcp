@@ -9,10 +9,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from codeweaver._types.service_config import ServicesConfig
 from codeweaver.config import CodeWeaverConfig
 from codeweaver.server import CodeWeaverServer
 from codeweaver.services.manager import ServicesManager
+from codeweaver.types import ServicesConfig
 
 
 class TestFastMCPMiddlewareIntegration:
@@ -40,12 +40,13 @@ class TestFastMCPMiddlewareIntegration:
         )
 
     @pytest.mark.asyncio
-    async def test_services_manager_middleware_integration(self, mock_fastmcp_server, services_config):
+    async def test_services_manager_middleware_integration(
+        self, mock_fastmcp_server, services_config
+    ):
         """Test that ServicesManager properly integrates middleware services."""
         # Create services manager with mock FastMCP server
         services_manager = ServicesManager(
-            config=services_config,
-            fastmcp_server=mock_fastmcp_server
+            config=services_config, fastmcp_server=mock_fastmcp_server
         )
 
         # Initialize services manager
@@ -59,19 +60,19 @@ class TestFastMCPMiddlewareIntegration:
             # Check specific middleware services
             logging_service = services_manager.get_logging_service()
             assert logging_service is not None
-            assert hasattr(logging_service, 'get_middleware_instance')
+            assert hasattr(logging_service, "get_middleware_instance")
 
             timing_service = services_manager.get_timing_service()
             assert timing_service is not None
-            assert hasattr(timing_service, 'get_middleware_instance')
+            assert hasattr(timing_service, "get_middleware_instance")
 
             error_handling_service = services_manager.get_error_handling_service()
             assert error_handling_service is not None
-            assert hasattr(error_handling_service, 'get_middleware_instance')
+            assert hasattr(error_handling_service, "get_middleware_instance")
 
             rate_limiting_service = services_manager.get_rate_limiting_service()
             assert rate_limiting_service is not None
-            assert hasattr(rate_limiting_service, 'get_middleware_instance')
+            assert hasattr(rate_limiting_service, "get_middleware_instance")
 
             # Verify middleware was registered with FastMCP server
             assert mock_fastmcp_server.add_middleware.call_count >= 4
@@ -92,11 +93,15 @@ class TestFastMCPMiddlewareIntegration:
         )
 
         # Mock the extensibility manager to avoid complex initialization
-        with patch('codeweaver.server.ExtensibilityManager') as mock_ext_manager:
+        with patch("codeweaver.server.ExtensibilityManager") as mock_ext_manager:
             mock_ext_manager.return_value.initialize = AsyncMock()
             mock_ext_manager.return_value.get_backend = AsyncMock(return_value=MagicMock())
-            mock_ext_manager.return_value.get_embedding_provider = AsyncMock(return_value=MagicMock())
-            mock_ext_manager.return_value.get_reranking_provider = AsyncMock(return_value=MagicMock())
+            mock_ext_manager.return_value.get_embedding_provider = AsyncMock(
+                return_value=MagicMock()
+            )
+            mock_ext_manager.return_value.get_reranking_provider = AsyncMock(
+                return_value=MagicMock()
+            )
             mock_ext_manager.return_value.get_data_sources = AsyncMock(return_value=[])
             mock_ext_manager.return_value.get_component_info = MagicMock(return_value={})
 
@@ -119,14 +124,11 @@ class TestFastMCPMiddlewareIntegration:
                 # Clean up
                 await server.shutdown()
 
-
-
     @pytest.mark.asyncio
     async def test_middleware_service_health_checks(self, mock_fastmcp_server, services_config):
         """Test that middleware services support health checks."""
         services_manager = ServicesManager(
-            config=services_config,
-            fastmcp_server=mock_fastmcp_server
+            config=services_config, fastmcp_server=mock_fastmcp_server
         )
 
         await services_manager.initialize()
@@ -144,7 +146,7 @@ class TestFastMCPMiddlewareIntegration:
                 # Each service should support health checks
                 health = await service.health_check()
                 assert health is not None
-                assert hasattr(health, 'status')
+                assert hasattr(health, "status")
 
         finally:
             await services_manager.shutdown()
@@ -156,7 +158,11 @@ class TestFastMCPMiddlewareIntegration:
             logging={"enabled": True, "provider": "fastmcp_logging", "log_level": "INFO"},
             timing={"enabled": True, "provider": "fastmcp_timing"},
             error_handling={"enabled": True, "provider": "fastmcp_error_handling"},
-            rate_limiting={"enabled": True, "provider": "fastmcp_rate_limiting", "max_requests_per_second": 1.0},
+            rate_limiting={
+                "enabled": True,
+                "provider": "fastmcp_rate_limiting",
+                "max_requests_per_second": 1.0,
+            },
         )
 
         # Configuration should be created successfully
@@ -174,14 +180,9 @@ class TestFastMCPMiddlewareIntegration:
     @pytest.mark.asyncio
     async def test_middleware_service_lifecycle(self, mock_fastmcp_server):
         """Test middleware service lifecycle management."""
-        config = ServicesConfig(
-            logging={"enabled": True, "provider": "fastmcp_logging"},
-        )
+        config = ServicesConfig(logging={"enabled": True, "provider": "fastmcp_logging"})
 
-        services_manager = ServicesManager(
-            config=config,
-            fastmcp_server=mock_fastmcp_server
-        )
+        services_manager = ServicesManager(config=config, fastmcp_server=mock_fastmcp_server)
 
         # Test initialization
         await services_manager.initialize()

@@ -19,7 +19,7 @@ from typing import Annotated, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
 
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,6 @@ class SourceWatcher:
                 await self.callback(changed_items)
             except Exception:
                 logger.exception("Error in change notification callback for source %s")
-
 
 
 class SourceConfig(BaseModel):

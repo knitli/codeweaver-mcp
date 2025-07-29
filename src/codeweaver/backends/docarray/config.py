@@ -7,8 +7,8 @@ from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver._types import BaseEnum
 from codeweaver.backends.factory import BackendConfig
+from codeweaver.types import BaseEnum
 
 
 class DocArraySchemaConfig(BaseModel):
@@ -183,7 +183,9 @@ class DocArrayBackendKind(BaseEnum):
         return (self, self.config_class)
 
     @classmethod
-    def member_to_class_mapping(cls) -> dict[type["DocArrayBackendKind"], type[DocArrayBackendConfig]]:
+    def member_to_class_mapping(
+        cls,
+    ) -> dict[type["DocArrayBackendKind"], type[DocArrayBackendConfig]]:
         """Get mapping of enum members to their configuration classes."""
         return {member: member.config_class for member in cls.members()}
 
@@ -192,12 +194,16 @@ class DocArrayBackendKind(BaseEnum):
 class DocArrayConfigFactory:
     """Factory for creating DocArray backend configurations."""
 
-    CONFIG_MAPPING: ClassVar[dict[DocArrayBackendKind, DocArrayBackendConfig]] = DocArrayBackendKind.member_to_class_mapping()
+    CONFIG_MAPPING: ClassVar[dict[DocArrayBackendKind, DocArrayBackendConfig]] = (
+        DocArrayBackendKind.member_to_class_mapping()
+    )
 
     @classmethod
     def create_config(cls, backend_type: str, **kwargs: Any) -> DocArrayBackendConfig:
         """Create configuration for specified backend type."""
-        config_class = cls.CONFIG_MAPPING.get(DocArrayBackendKind.from_string(backend_type), DocArrayBackendConfig)
+        config_class = cls.CONFIG_MAPPING.get(
+            DocArrayBackendKind.from_string(backend_type), DocArrayBackendConfig
+        )
         return config_class(**kwargs)
 
     @classmethod

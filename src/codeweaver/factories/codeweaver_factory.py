@@ -14,34 +14,32 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-from codeweaver._types import BaseComponentConfig, ComponentType, ServiceType, ValidationResult
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.config import BackendConfig
+from codeweaver.factories.backend_registry import BackendRegistry
+from codeweaver.factories.error_handling import ErrorHandler, GracefulDegradationManager
+from codeweaver.factories.initialization import FactoryInitializer
+from codeweaver.factories.plugin_protocols import PluginDiscoveryEngine
+from codeweaver.factories.source_registry import SourceRegistry
+from codeweaver.providers.base import EmbeddingProvider
+from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
+from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.types import (
+    BaseComponentConfig,
+    ComponentCreationError,
+    ComponentNotFoundError,
+    ComponentType,
+    ConfigurationError,
+    PluginInfo,
+    ServiceType,
+    ValidationResult,
+)
 
 
 if TYPE_CHECKING:
     from codeweaver.config import CodeWeaverConfig
     from codeweaver.factories.service_registry import ServiceRegistry
-from codeweaver._types import (
-    ComponentCreationError,
-    ComponentNotFoundError,
-    ConfigurationError,
-    PluginInfo,
-)
-from codeweaver.factories.backend_registry import BackendRegistry
-from codeweaver.factories.error_handling import ErrorHandler, GracefulDegradationManager
-from codeweaver.factories.initialization import FactoryInitializer
-from codeweaver.factories.plugin_protocols import PluginDiscoveryEngine
-
-# ServiceRegistry imported lazily to avoid circular imports
-from codeweaver.factories.source_registry import SourceRegistry
-from codeweaver.providers.base import EmbeddingProvider
-from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
-
-
-if TYPE_CHECKING:
     from codeweaver.server import CodeWeaverServer
-from codeweaver.sources.base import DataSource, SourceConfig
 
 
 logger = logging.getLogger(__name__)
@@ -490,7 +488,6 @@ class CodeWeaverFactory:
         except Exception:
             logger.exception("Plugin registration failed for %s")
 
-
         else:
             return False
 
@@ -558,9 +555,9 @@ class CodeWeaverFactory:
 
     def _initialize_builtin_services(self) -> None:
         """Initialize built-in service provider registrations."""
-        from codeweaver._types.service_data import ServiceCapabilities
         from codeweaver.services.providers.chunking import ChunkingService
         from codeweaver.services.providers.file_filtering import FilteringService
+        from codeweaver.types import ServiceCapabilities
 
         # Register chunking service providers
         self._service_registry.register_provider(

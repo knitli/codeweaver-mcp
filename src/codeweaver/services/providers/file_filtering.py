@@ -12,18 +12,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import FilteringServiceConfig
-from codeweaver._types.service_data import (
-    DirectoryStats,
-    FileMetadata,
-    FilteringStats,
-    ServiceCapabilities,
-)
-from codeweaver._types.service_exceptions import DirectoryNotFoundError, FilteringError
-from codeweaver._types.services import FilteringService
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
+from codeweaver.types import (
+    DirectoryNotFoundError,
+    DirectoryStats,
+    FileMetadata,
+    FilteringError,
+    FilteringService,
+    FilteringServiceConfig,
+    FilteringStats,
+    ServiceCapabilities,
+    ServiceType,
+)
 
 
 class FilteringService(BaseServiceProvider, FilteringService):
@@ -125,7 +126,6 @@ class FilteringService(BaseServiceProvider, FilteringService):
             error_msg = f"File discovery failed: {e}"
             self.record_operation(False, error_msg)
             self._logger.exception("File discovery failed for %s")
-
 
             raise FilteringError(base_path, str(e)) from e
         else:
@@ -320,6 +320,7 @@ class FilteringService(BaseServiceProvider, FilteringService):
     def _check_for_matches(self, patterns, file_path):
         """Check if file matches any patterns."""
         import fnmatch
+
         for pattern in patterns:
             if fnmatch.fnmatch(file_path.name, pattern):
                 return True

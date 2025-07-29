@@ -1,7 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Code Style & Pattern Analysis Report
 
-**Analysis Date:** December 28, 2024  
-**Scope:** System-wide coding style, patterns, and architectural alignment  
+**Analysis Date:** December 28, 2024
+**Scope:** System-wide coding style, patterns, and architectural alignment
 **Focus:** Alignment with providers/* "gold standard" patterns
 
 ## Executive Summary
@@ -44,7 +50,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 # 3. Internal imports - organized by layer
-from codeweaver._types import (  # Types first
+from codeweaver.types import (  # Types first
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -61,7 +67,7 @@ class ProviderConfig(BaseModel):
         validate_assignment=True,   # Validate on attribute assignment
         frozen=False,              # Allow mutation for runtime updates
     )
-    
+
     # Multi-stage config validation
     def __init__(self, config: VoyageConfig | dict[str, Any]):
         if isinstance(config, dict):
@@ -126,11 +132,11 @@ class FileSystemSourceProvider(AbstractDataSource):
     @property
     def source_name(self) -> str:
         return SourceType.FILESYSTEM.value
-    
+
     @property
     def capabilities(self) -> SourceCapabilities:
         return self._capabilities
-    
+
     @classmethod
     def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         return True, None
@@ -199,7 +205,7 @@ except Exception as e:
 ```python
 # Current → Recommended
 FileSystemSource → FileSystemSourceProvider
-APISource → APISourceProvider  
+APISource → APISourceProvider
 GitSource → GitSourceProvider
 DatabaseSource → DatabaseSourceProvider
 WebSource → WebSourceProvider
@@ -245,7 +251,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field
 
 # Internal imports (organized by layer)
-from codeweaver._types import (
+from codeweaver.types import (
     # Type imports first, alphabetical
     ConfigType,
     ProviderInfo,
@@ -261,13 +267,13 @@ from codeweaver.providers.config import Config     # Config classes third
 ```python
 class StandardConfig(BaseModel):
     """Standard configuration pattern."""
-    
+
     model_config = ConfigDict(
         extra="allow",              # Allow extensions
         validate_assignment=True,   # Validate on assignment
         frozen=False,              # Allow mutation
     )
-    
+
     # Annotated fields with descriptions
     api_key: Annotated[
         str | None,
@@ -330,7 +336,7 @@ def provider_name(self) -> str:
     """Get the provider name."""
     return ProviderType.SERVICE_NAME.value
 
-@property  
+@property
 def capabilities(self) -> ProviderCapabilities:
     """Get provider capabilities."""
     return self._capabilities
@@ -344,7 +350,7 @@ def get_static_provider_info(cls) -> ProviderInfo:
     registry_entry = get_provider_registry_entry(ProviderType.SERVICE_NAME)
     return ProviderInfo(name=ProviderType.SERVICE_NAME.value, ...)
 
-@classmethod  
+@classmethod
 def check_availability(cls, capability: Capability) -> tuple[bool, str | None]:
     """Check if provider is available."""
     if not DEPENDENCY_AVAILABLE:
@@ -385,7 +391,7 @@ Integrates with [other components] through [interface].
 class ProviderClass:
     """
     Provider for [service] with [capabilities].
-    
+
     Supports [features] and integrates with [systems].
     Requires [dependencies] for operation.
     """
@@ -396,13 +402,13 @@ class ProviderClass:
 def method(self, param: Type) -> Type:
     """
     Brief description of method purpose.
-    
+
     Args:
         param: Description of parameter purpose and constraints.
-        
+
     Returns:
         Description of return value and format.
-        
+
     Raises:
         SpecificError: When specific condition occurs.
     """

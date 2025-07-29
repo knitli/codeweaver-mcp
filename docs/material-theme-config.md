@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Material for MkDocs Theme Configuration
 
 This document details the Material theme configuration recommendations for CodeWeaver's documentation, providing a comprehensive guide for maintaining and extending the theme.

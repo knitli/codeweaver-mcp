@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Testing Framework
 
 Comprehensive testing framework for protocol compliance validation, mock implementations, and integration testing of CodeWeaver's extensible architecture.

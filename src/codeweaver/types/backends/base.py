@@ -11,7 +11,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types.provider_enums import DistanceMetric, FilterOperator, IndexType, StorageType
+from codeweaver.types.backends.enums import DistanceMetric, FilterOperator, IndexType, StorageType
 
 
 class VectorPoint(BaseModel):

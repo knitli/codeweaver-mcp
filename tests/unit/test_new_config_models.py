@@ -16,7 +16,7 @@ import pytest
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from codeweaver._types import ComponentType
+from codeweaver.types import ComponentType
 
 
 # Recreate the classes inline to test them without import issues
@@ -25,22 +25,18 @@ class DefaultsConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    profile: Annotated[str, Field(
-        default="codeweaver_original",
-        description="Configuration profile to use"
-    )]
-    auto_configure: Annotated[bool, Field(
-        default=True,
-        description="Automatically configure based on profile"
-    )]
-    validate_setup: Annotated[bool, Field(
-        default=True,
-        description="Validate configuration during startup"
-    )]
-    strict_validation: Annotated[bool, Field(
-        default=False,
-        description="Use strict validation mode"
-    )]
+    profile: Annotated[
+        str, Field(default="codeweaver_original", description="Configuration profile to use")
+    ]
+    auto_configure: Annotated[
+        bool, Field(default=True, description="Automatically configure based on profile")
+    ]
+    validate_setup: Annotated[
+        bool, Field(default=True, description="Validate configuration during startup")
+    ]
+    strict_validation: Annotated[
+        bool, Field(default=False, description="Use strict validation mode")
+    ]
 
 
 class PluginRegistryConfig(BaseModel):
@@ -48,26 +44,22 @@ class PluginRegistryConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    enabled_plugins: Annotated[list[str], Field(
-        default=["*"],
-        description="List of enabled plugins (* means all discovered)"
-    )]
-    disabled_plugins: Annotated[list[str], Field(
-        default_factory=list,
-        description="List of disabled plugins"
-    )]
-    plugin_priority_order: Annotated[list[str], Field(
-        default_factory=list,
-        description="Priority order for plugin resolution"
-    )]
-    auto_resolve_conflicts: Annotated[bool, Field(
-        default=True,
-        description="Automatically resolve plugin conflicts"
-    )]
-    require_explicit_enable: Annotated[bool, Field(
-        default=False,
-        description="Require explicit enabling of all plugins"
-    )]
+    enabled_plugins: Annotated[
+        list[str],
+        Field(default=["*"], description="List of enabled plugins (* means all discovered)"),
+    ]
+    disabled_plugins: Annotated[
+        list[str], Field(default_factory=list, description="List of disabled plugins")
+    ]
+    plugin_priority_order: Annotated[
+        list[str], Field(default_factory=list, description="Priority order for plugin resolution")
+    ]
+    auto_resolve_conflicts: Annotated[
+        bool, Field(default=True, description="Automatically resolve plugin conflicts")
+    ]
+    require_explicit_enable: Annotated[
+        bool, Field(default=False, description="Require explicit enabling of all plugins")
+    ]
 
 
 class CustomPluginConfig(BaseModel):
@@ -79,28 +71,22 @@ class CustomPluginConfig(BaseModel):
     plugin_type: Annotated[ComponentType, Field(description="Type of plugin")]
     module_path: Annotated[str, Field(description="Python module path")]
     class_name: Annotated[str, Field(description="Plugin class name")]
-    entry_point: Annotated[str | None, Field(
-        default=None,
-        description="Entry point name (alternative to module_path/class_name)"
-    )]
-    priority: Annotated[int, Field(
-        default=50,
-        ge=0,
-        le=100,
-        description="Plugin priority (0=lowest, 100=highest)"
-    )]
-    config: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Plugin-specific configuration"
-    )]
-    dependencies: Annotated[list[str], Field(
-        default_factory=list,
-        description="Required dependencies"
-    )]
-    tags: Annotated[list[str], Field(
-        default_factory=list,
-        description="Plugin tags for categorization"
-    )]
+    entry_point: Annotated[
+        str | None,
+        Field(default=None, description="Entry point name (alternative to module_path/class_name)"),
+    ]
+    priority: Annotated[
+        int, Field(default=50, ge=0, le=100, description="Plugin priority (0=lowest, 100=highest)")
+    ]
+    config: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Plugin-specific configuration")
+    ]
+    dependencies: Annotated[
+        list[str], Field(default_factory=list, description="Required dependencies")
+    ]
+    tags: Annotated[
+        list[str], Field(default_factory=list, description="Plugin tags for categorization")
+    ]
 
 
 class PluginsConfig(BaseModel):
@@ -109,43 +95,42 @@ class PluginsConfig(BaseModel):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     enabled: Annotated[bool, Field(default=True, description="Enable plugin system")]
-    auto_discover: Annotated[bool, Field(
-        default=True,
-        description="Automatically discover plugins"
-    )]
-    plugin_directories: Annotated[list[str], Field(
-        default_factory=lambda: [
-            "~/.codeweaver/plugins",
-            "./plugins",
-            "./codeweaver_plugins"
-        ],
-        description="Directories to search for plugins"
-    )]
-    entry_point_groups: Annotated[list[str], Field(
-        default_factory=lambda: [
-            "codeweaver.backends",
-            "codeweaver.providers",
-            "codeweaver.sources",
-            "codeweaver.services"
-        ],
-        description="Entry point groups to scan"
-    )]
-    registry: Annotated[PluginRegistryConfig, Field(
-        default_factory=PluginRegistryConfig,
-        description="Plugin registry configuration"
-    )]
-    custom: Annotated[dict[str, CustomPluginConfig], Field(
-        default_factory=dict,
-        description="Custom plugin configurations"
-    )]
-    development_mode: Annotated[bool, Field(
-        default=False,
-        description="Enable development mode for plugin debugging"
-    )]
-    validation_strict: Annotated[bool, Field(
-        default=True,
-        description="Use strict validation for plugins"
-    )]
+    auto_discover: Annotated[
+        bool, Field(default=True, description="Automatically discover plugins")
+    ]
+    plugin_directories: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: ["~/.codeweaver/plugins", "./plugins", "./codeweaver_plugins"],
+            description="Directories to search for plugins",
+        ),
+    ]
+    entry_point_groups: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: [
+                "codeweaver.backends",
+                "codeweaver.providers",
+                "codeweaver.sources",
+                "codeweaver.services",
+            ],
+            description="Entry point groups to scan",
+        ),
+    ]
+    registry: Annotated[
+        PluginRegistryConfig,
+        Field(default_factory=PluginRegistryConfig, description="Plugin registry configuration"),
+    ]
+    custom: Annotated[
+        dict[str, CustomPluginConfig],
+        Field(default_factory=dict, description="Custom plugin configurations"),
+    ]
+    development_mode: Annotated[
+        bool, Field(default=False, description="Enable development mode for plugin debugging")
+    ]
+    validation_strict: Annotated[
+        bool, Field(default=True, description="Use strict validation for plugins")
+    ]
 
 
 class ProfileConfig(BaseModel):
@@ -155,34 +140,28 @@ class ProfileConfig(BaseModel):
 
     name: Annotated[str, Field(description="Profile name")]
     description: Annotated[str, Field(description="Profile description")]
-    data_sources: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Data sources configuration overrides"
-    )]
-    services: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Services configuration overrides"
-    )]
-    providers: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Providers configuration overrides"
-    )]
-    backend: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Backend configuration overrides"
-    )]
-    indexing: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Indexing configuration overrides"
-    )]
-    plugins: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Plugin configuration overrides"
-    )]
-    factory: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Factory configuration overrides"
-    )]
+    data_sources: Annotated[
+        dict[str, Any],
+        Field(default_factory=dict, description="Data sources configuration overrides"),
+    ]
+    services: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Services configuration overrides")
+    ]
+    providers: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Providers configuration overrides")
+    ]
+    backend: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Backend configuration overrides")
+    ]
+    indexing: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Indexing configuration overrides")
+    ]
+    plugins: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Plugin configuration overrides")
+    ]
+    factory: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Factory configuration overrides")
+    ]
 
 
 class FactoryConfig(BaseModel):
@@ -190,44 +169,33 @@ class FactoryConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    enable_dependency_injection: Annotated[bool, Field(
-        default=True,
-        description="Enable dependency injection"
-    )]
-    enable_plugin_discovery: Annotated[bool, Field(
-        default=True,
-        description="Enable plugin discovery"
-    )]
-    validate_configurations: Annotated[bool, Field(
-        default=True,
-        description="Validate configurations during creation"
-    )]
-    lazy_initialization: Annotated[bool, Field(
-        default=False,
-        description="Use lazy initialization for components"
-    )]
-    enable_graceful_shutdown: Annotated[bool, Field(
-        default=True,
-        description="Enable graceful shutdown handling"
-    )]
-    shutdown_timeout: Annotated[float, Field(
-        default=30.0,
-        gt=0,
-        description="Shutdown timeout in seconds"
-    )]
-    enable_health_checks: Annotated[bool, Field(
-        default=True,
-        description="Enable component health checks"
-    )]
-    health_check_interval: Annotated[float, Field(
-        default=60.0,
-        gt=0,
-        description="Health check interval in seconds"
-    )]
-    enable_metrics: Annotated[bool, Field(
-        default=True,
-        description="Enable factory metrics collection"
-    )]
+    enable_dependency_injection: Annotated[
+        bool, Field(default=True, description="Enable dependency injection")
+    ]
+    enable_plugin_discovery: Annotated[
+        bool, Field(default=True, description="Enable plugin discovery")
+    ]
+    validate_configurations: Annotated[
+        bool, Field(default=True, description="Validate configurations during creation")
+    ]
+    lazy_initialization: Annotated[
+        bool, Field(default=False, description="Use lazy initialization for components")
+    ]
+    enable_graceful_shutdown: Annotated[
+        bool, Field(default=True, description="Enable graceful shutdown handling")
+    ]
+    shutdown_timeout: Annotated[
+        float, Field(default=30.0, gt=0, description="Shutdown timeout in seconds")
+    ]
+    enable_health_checks: Annotated[
+        bool, Field(default=True, description="Enable component health checks")
+    ]
+    health_check_interval: Annotated[
+        float, Field(default=60.0, gt=0, description="Health check interval in seconds")
+    ]
+    enable_metrics: Annotated[
+        bool, Field(default=True, description="Enable factory metrics collection")
+    ]
 
 
 # Tests
@@ -246,10 +214,7 @@ class TestNewConfigModels:
     def test_defaults_config_custom_values(self):
         """Test DefaultsConfig with custom values."""
         config = DefaultsConfig(
-            profile="minimal",
-            auto_configure=False,
-            validate_setup=False,
-            strict_validation=True
+            profile="minimal", auto_configure=False, validate_setup=False, strict_validation=True
         )
 
         assert config.profile == "minimal"
@@ -276,7 +241,7 @@ class TestNewConfigModels:
             priority=75,
             config={"connection_url": "mydb://localhost"},
             dependencies=["numpy"],
-            tags=["database", "custom"]
+            tags=["database", "custom"],
         )
 
         assert config.enabled is True
@@ -296,7 +261,7 @@ class TestNewConfigModels:
             plugin_type=ComponentType.SOURCE,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=100
+            priority=100,
         )
         assert config.priority == 100
 
@@ -305,7 +270,7 @@ class TestNewConfigModels:
             plugin_type=ComponentType.SOURCE,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=0
+            priority=0,
         )
         assert config_min.priority == 0
 
@@ -315,7 +280,7 @@ class TestNewConfigModels:
                 plugin_type=ComponentType.SOURCE,
                 module_path="test.plugin",
                 class_name="TestPlugin",
-                priority=101  # > 100
+                priority=101,  # > 100
             )
 
         with pytest.raises(ValidationError):
@@ -323,7 +288,7 @@ class TestNewConfigModels:
                 plugin_type=ComponentType.SOURCE,
                 module_path="test.plugin",
                 class_name="TestPlugin",
-                priority=-1  # < 0
+                priority=-1,  # < 0
             )
 
     def test_plugins_config_defaults(self):
@@ -344,12 +309,10 @@ class TestNewConfigModels:
         custom_plugin = CustomPluginConfig(
             plugin_type=ComponentType.BACKEND,
             module_path="custom.plugin",
-            class_name="CustomBackend"
+            class_name="CustomBackend",
         )
 
-        config = PluginsConfig(
-            custom={"my_backend": custom_plugin}
-        )
+        config = PluginsConfig(custom={"my_backend": custom_plugin})
 
         assert "my_backend" in config.custom
         assert config.custom["my_backend"].plugin_type == ComponentType.BACKEND
@@ -359,17 +322,9 @@ class TestNewConfigModels:
         profile = ProfileConfig(
             name="test_profile",
             description="Test profile for development",
-            data_sources={
-                "default_source_type": "filesystem"
-            },
-            services={
-                "chunking": {
-                    "max_chunk_size": 1000
-                }
-            },
-            backend={
-                "provider": "memory"
-            }
+            data_sources={"default_source_type": "filesystem"},
+            services={"chunking": {"max_chunk_size": 1000}},
+            backend={"provider": "memory"},
         )
 
         assert profile.name == "test_profile"

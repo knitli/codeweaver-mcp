@@ -1,10 +1,16 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Services Registry & Abstraction Layer Architecture Specification
 
 **CodeWeaver MCP Server - Services Architecture Design**
 
-*Document Version: 1.0*  
-*Design Date: 2025-07-26*  
-*Architecture Type: Clean Implementation (Pre-Release)*  
+*Document Version: 1.0*
+*Design Date: 2025-07-26*
+*Architecture Type: Clean Implementation (Pre-Release)*
 *Focus Areas: Services Registry, Dependency Injection, Factory Integration*
 
 ---
@@ -38,34 +44,34 @@ graph TB
         Server[CodeWeaver Server]
         MCP[FastMCP Framework]
     end
-    
+
     subgraph "Services Layer"
         SR[Services Registry]
         SM[Services Manager]
         SC[Service Contracts]
     end
-    
+
     subgraph "Factory Layer"
         CF[CodeWeaver Factory]
         BR[Backend Registry]
         PR[Provider Registry]
         SoR[Source Registry]
-        SeR[Service Registry] 
+        SeR[Service Registry]
     end
-    
+
     subgraph "Plugin Layer"
         FS[FileSystem Source]
         GS[Git Source]
         DS[Database Source]
     end
-    
+
     subgraph "Service Implementations"
         CS[Chunking Service]
         FiS[Filtering Service]
         VS[Validation Service]
         MS[Monitoring Service]
     end
-    
+
     Server --> SR
     SR --> SM
     SM --> SC
@@ -93,19 +99,19 @@ Service contracts define the interface between plugins and service implementatio
 ```python
 from typing import Protocol, runtime_checkable
 from pathlib import Path
-from codeweaver._types.data_structures import CodeChunk, ContentItem
+from codeweaver.types import CodeChunk, ContentItem
 
 @runtime_checkable
 class ChunkingService(Protocol):
     """Protocol for content chunking services."""
-    
+
     async def chunk_content(
-        self, 
-        content: str, 
-        file_path: Path, 
+        self,
+        content: str,
+        file_path: Path,
         metadata: dict[str, Any] = None
     ) -> list[CodeChunk]: ...
-    
+
     def get_supported_languages(self) -> dict[str, LanguageCapabilities]: ...
     def detect_language(self, file_path: Path) -> str | None: ...
     def get_language_config(self, language: str) -> LanguageConfig | None: ...
@@ -113,14 +119,14 @@ class ChunkingService(Protocol):
 @runtime_checkable
 class FilteringService(Protocol):
     """Protocol for content filtering and discovery services."""
-    
+
     async def discover_files(
-        self, 
-        base_path: Path, 
+        self,
+        base_path: Path,
         patterns: list[str] = None,
         exclude_patterns: list[str] = None
     ) -> list[Path]: ...
-    
+
     def should_include_file(self, file_path: Path) -> bool: ...
     def get_file_metadata(self, file_path: Path) -> FileMetadata: ...
     def get_filtering_stats(self) -> FilteringStats: ...
@@ -128,7 +134,7 @@ class FilteringService(Protocol):
 @runtime_checkable
 class ValidationService(Protocol):
     """Protocol for content validation services."""
-    
+
     async def validate_content(self, content: ContentItem) -> ValidationResult: ...
     async def validate_chunk(self, chunk: CodeChunk) -> ValidationResult: ...
     def get_validation_rules(self) -> list[ValidationRule]: ...
@@ -136,7 +142,7 @@ class ValidationService(Protocol):
 @runtime_checkable
 class CacheService(Protocol):
     """Protocol for caching services."""
-    
+
     async def get(self, key: str) -> Any | None: ...
     async def set(self, key: str, value: Any, ttl: int = None) -> None: ...
     async def invalidate(self, pattern: str) -> None: ...
@@ -152,31 +158,31 @@ The service registry manages service providers, configurations, and instance cre
 ```python
 class ServiceRegistry:
     """Registry for service providers and instance management."""
-    
+
     def __init__(self, factory: 'CodeWeaverFactory'):
         self._factory = factory
         self._providers: dict[ServiceType, dict[str, ServiceProvider]] = {}
         self._instances: dict[str, Any] = {}
         self._configs: dict[ServiceType, ServiceConfig] = {}
-    
+
     def register_provider(
-        self, 
-        service_type: ServiceType, 
-        provider_name: str, 
+        self,
+        service_type: ServiceType,
+        provider_name: str,
         provider_class: type[ServiceProvider]
     ) -> None: ...
-    
+
     def get_service(self, service_type: ServiceType) -> Any: ...
-    
+
     def create_service(
-        self, 
-        service_type: ServiceType, 
+        self,
+        service_type: ServiceType,
         config: ServiceConfig = None
     ) -> Any: ...
-    
+
     def configure_service(
-        self, 
-        service_type: ServiceType, 
+        self,
+        service_type: ServiceType,
         config: ServiceConfig
     ) -> None: ...
 ```
@@ -190,20 +196,20 @@ The services manager orchestrates service lifecycle, dependency resolution, and 
 ```python
 class ServicesManager:
     """Central manager for service lifecycle and dependencies."""
-    
+
     def __init__(self, registry: ServiceRegistry, config: ServicesConfig):
         self._registry = registry
         self._config = config
         self._health_monitor = ServiceHealthMonitor()
         self._dependency_resolver = ServiceDependencyResolver()
-    
+
     async def initialize_services(self) -> None: ...
     async def start_services(self) -> None: ...
     async def stop_services(self) -> None: ...
-    
+
     def get_service(self, service_type: ServiceType) -> Any: ...
     def inject_dependencies(self, target: Any) -> None: ...
-    
+
     async def health_check(self) -> ServicesHealthReport: ...
 ```
 
@@ -216,15 +222,15 @@ Service providers implement the actual service functionality while conforming to
 ```python
 class ChunkingServiceProvider(ServiceProvider):
     """FastMCP middleware-based chunking service provider."""
-    
+
     def __init__(self, config: ChunkingServiceConfig):
         self._middleware = ChunkingMiddleware(config.middleware_config)
         self._config = config
-    
+
     async def chunk_content(
-        self, 
-        content: str, 
-        file_path: Path, 
+        self,
+        content: str,
+        file_path: Path,
         metadata: dict[str, Any] = None
     ) -> list[CodeChunk]:
         # Implementation using FastMCP middleware
@@ -232,14 +238,14 @@ class ChunkingServiceProvider(ServiceProvider):
 
 class FilteringServiceProvider(ServiceProvider):
     """FastMCP middleware-based filtering service provider."""
-    
+
     def __init__(self, config: FilteringServiceConfig):
         self._middleware = FilteringMiddleware(config.middleware_config)
         self._config = config
-    
+
     async def discover_files(
-        self, 
-        base_path: Path, 
+        self,
+        base_path: Path,
         patterns: list[str] = None,
         exclude_patterns: list[str] = None
     ) -> list[Path]:
@@ -258,7 +264,7 @@ class FilteringServiceProvider(ServiceProvider):
 ```python
 class ComponentType(BaseEnum):
     BACKEND = "backend"
-    PROVIDER = "provider" 
+    PROVIDER = "provider"
     SOURCE = "source"
     SERVICE = "service"      # NEW: For service providers
     MIDDLEWARE = "middleware" # NEW: For middleware components
@@ -273,34 +279,34 @@ class ComponentType(BaseEnum):
 ```python
 class CodeWeaverFactory:
     """Extended factory with service management capabilities."""
-    
+
     def __init__(self):
         # Existing registries
         self._backend_registry = BackendRegistry(self)
         self._provider_registry = ProviderRegistry(self)
         self._source_registry = SourceRegistry(self)
-        
+
         # NEW: Service registry
         self._service_registry = ServiceRegistry(self)
         self._services_manager = None
-    
+
     def create_service(
-        self, 
-        service_type: ServiceType, 
+        self,
+        service_type: ServiceType,
         config: ServiceConfig = None
     ) -> Any:
         """Create service instance through registry."""
         return self._service_registry.create_service(service_type, config)
-    
+
     def get_services_manager(self) -> ServicesManager:
         """Get or create services manager."""
         if not self._services_manager:
             self._services_manager = ServicesManager(
-                self._service_registry, 
+                self._service_registry,
                 self._config.services
             )
         return self._services_manager
-    
+
     async def initialize_services(self) -> None:
         """Initialize all configured services."""
         manager = self.get_services_manager()
@@ -318,7 +324,7 @@ class CodeWeaverFactory:
 ```python
 class ServiceConfig(BaseModel):
     """Base configuration for all services."""
-    
+
     enabled: Annotated[bool, Field(description="Whether service is enabled")] = True
     provider: Annotated[str, Field(description="Service provider implementation")]
     priority: Annotated[int, Field(ge=0, le=100, description="Service priority")] = 50
@@ -328,7 +334,7 @@ class ServiceConfig(BaseModel):
 
 class ChunkingServiceConfig(ServiceConfig):
     """Configuration for chunking services."""
-    
+
     provider: str = "fastmcp_chunking"
     max_chunk_size: Annotated[int, Field(gt=0, le=10000)] = 1500
     min_chunk_size: Annotated[int, Field(gt=0, le=1000)] = 50
@@ -337,7 +343,7 @@ class ChunkingServiceConfig(ServiceConfig):
 
 class FilteringServiceConfig(ServiceConfig):
     """Configuration for filtering services."""
-    
+
     provider: str = "fastmcp_filtering"
     include_patterns: Annotated[list[str], Field(description="File patterns to include")] = Field(default_factory=list)
     exclude_patterns: Annotated[list[str], Field(description="File patterns to exclude")] = Field(default_factory=list)
@@ -346,7 +352,7 @@ class FilteringServiceConfig(ServiceConfig):
 
 class ServicesConfig(BaseModel):
     """Root configuration for all services."""
-    
+
     chunking: Annotated[ChunkingServiceConfig, Field(description="Chunking service config")] = Field(default_factory=ChunkingServiceConfig)
     filtering: Annotated[FilteringServiceConfig, Field(description="Filtering service config")] = Field(default_factory=FilteringServiceConfig)
     validation: Annotated[ValidationServiceConfig, Field(description="Validation service config")] = Field(default_factory=ValidationServiceConfig)
@@ -360,14 +366,14 @@ class ServicesConfig(BaseModel):
 ```python
 class CodeWeaverConfig(BaseModel):
     """Extended root configuration with services."""
-    
+
     # Existing configurations
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)
     vector_backend: VectorBackendConfig = Field(default_factory=VectorBackendConfig)
-    
+
     # NEW: Services configuration
     services: ServicesConfig = Field(default_factory=ServicesConfig)
-    
+
     # Factory configuration
     factory: FactoryConfig = Field(default_factory=FactoryConfig)
 ```
@@ -383,7 +389,7 @@ class CodeWeaverConfig(BaseModel):
 ```python
 class FileSystemSource(AbstractDataSource):
     """Clean filesystem source with service injection."""
-    
+
     def __init__(
         self,
         config: FileSystemSourceConfig,
@@ -395,34 +401,34 @@ class FileSystemSource(AbstractDataSource):
         self._chunking_service = chunking_service
         self._filtering_service = filtering_service
         self._validation_service = validation_service
-    
+
     async def index_content(
-        self, 
-        path: Path, 
+        self,
+        path: Path,
         context: dict[str, Any] = None
     ) -> list[ContentItem]:
         """Index content using injected services."""
-        
+
         # Use filtering service to discover files
         files = await self._filtering_service.discover_files(
-            path, 
+            path,
             self.config.include_patterns,
             self.config.exclude_patterns
         )
-        
+
         content_items = []
         for file_path in files:
             if not self._filtering_service.should_include_file(file_path):
                 continue
-                
+
             # Read and chunk content using chunking service
             content = await self._read_file_content(file_path)
             chunks = await self._chunking_service.chunk_content(
-                content, 
+                content,
                 file_path,
                 context
             )
-            
+
             # Optional validation
             if self._validation_service:
                 for chunk in chunks:
@@ -430,9 +436,9 @@ class FileSystemSource(AbstractDataSource):
                     if not validation_result.is_valid:
                         # Handle validation failure
                         continue
-            
+
             content_items.extend(chunks)
-        
+
         return content_items
 ```
 
@@ -443,21 +449,21 @@ class FileSystemSource(AbstractDataSource):
 ```python
 class SourceRegistry:
     """Updated source registry with service injection."""
-    
+
     def create_source(
-        self, 
-        source_type: SourceType, 
+        self,
+        source_type: SourceType,
         config: SourceConfig
     ) -> AbstractDataSource:
         """Create source with injected services."""
-        
+
         # Get required services from services manager
         services_manager = self._factory.get_services_manager()
-        
+
         chunking_service = services_manager.get_service(ServiceType.CHUNKING)
         filtering_service = services_manager.get_service(ServiceType.FILTERING)
         validation_service = services_manager.get_service(ServiceType.VALIDATION)
-        
+
         # Create source with service injection
         if source_type == SourceType.FILESYSTEM:
             return FileSystemSource(
@@ -478,39 +484,39 @@ class SourceRegistry:
 ```python
 class CodeWeaverServer:
     """Server with proper service lifecycle management."""
-    
+
     async def initialize(self) -> None:
         """Initialize server with services."""
-        
+
         # 1. Initialize factory
         self._factory = CodeWeaverFactory()
-        
+
         # 2. Load configuration
         config = await self._load_configuration()
         self._factory.configure(config)
-        
+
         # 3. Initialize services BEFORE plugins
         await self._factory.initialize_services()
-        
+
         # 4. Initialize plugins with service injection
         await self._initialize_plugins()
-        
+
         # 5. Setup FastMCP middleware
         await self._setup_middleware()
-    
+
     async def _setup_middleware(self) -> None:
         """Setup FastMCP middleware integrated with services."""
-        
+
         services_manager = self._factory.get_services_manager()
-        
+
         # Middleware uses services through manager
         chunking_service = services_manager.get_service(ServiceType.CHUNKING)
         filtering_service = services_manager.get_service(ServiceType.FILTERING)
-        
+
         # Create middleware that wraps services
         chunking_middleware = ServiceMiddleware(chunking_service)
         filtering_middleware = ServiceMiddleware(filtering_service)
-        
+
         # Add to FastMCP
         self.mcp.add_middleware(chunking_middleware)
         self.mcp.add_middleware(filtering_middleware)
@@ -521,34 +527,34 @@ class CodeWeaverServer:
 ```python
 class ServiceHealthMonitor:
     """Service health monitoring and recovery."""
-    
+
     async def monitor_services(self, services_manager: ServicesManager) -> None:
         """Continuous service health monitoring."""
-        
+
         while True:
             health_report = await services_manager.health_check()
-            
+
             for service_type, health in health_report.services.items():
                 if health.status == HealthStatus.UNHEALTHY:
                     await self._handle_unhealthy_service(service_type, health)
-            
+
             await asyncio.sleep(self._config.check_interval)
-    
+
     async def _handle_unhealthy_service(
-        self, 
-        service_type: ServiceType, 
+        self,
+        service_type: ServiceType,
         health: ServiceHealth
     ) -> None:
         """Handle unhealthy service recovery."""
-        
+
         if health.error_count > self._config.max_errors:
             # Restart service
             await self._restart_service(service_type)
         else:
             # Log warning and continue monitoring
             logger.warning(
-                "Service %s unhealthy: %s", 
-                service_type.value, 
+                "Service %s unhealthy: %s",
+                service_type.value,
                 health.last_error
             )
 ```
@@ -562,7 +568,7 @@ class ServiceHealthMonitor:
 - **Protocol-Based Contracts**: Clear interfaces enable easy testing and substitution
 - **No Direct Dependencies**: Plugins never import middleware classes directly
 
-### 2. Enhanced Extensibility  
+### 2. Enhanced Extensibility
 - **Service Provider Pattern**: Easy addition of new service implementations
 - **Configuration-Driven**: Service behavior controlled through configuration
 - **Plugin Independence**: Plugins work with any service implementation
@@ -588,7 +594,7 @@ class ServiceHealthMonitor:
 
 ### Phase 1: Service Contracts & Registry (Week 1)
 - [ ] Create service protocol interfaces
-- [ ] Implement service registry infrastructure  
+- [ ] Implement service registry infrastructure
 - [ ] Extend factory system for services
 - [ ] Update configuration schema
 

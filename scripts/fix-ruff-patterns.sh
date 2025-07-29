@@ -1,5 +1,13 @@
 #!/bin/bash
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 # fix-ruff-patterns.sh - Apply comprehensive fixes for ruff violations
+# Applies fixes for TRY401, G004, and TRY300 patterns in Python code
+# These are very common anti-patterns that ruff can't fix automatically
+# But we can! ... mostly.
 
 set -euo pipefail
 
@@ -39,7 +47,8 @@ if [ ${#TARGETS[@]} -eq 0 ]; then
 fi
 
 # Debug output function
-debug_log() {
+debug_log()
+            {
     if [ "$DEBUG" = true ]; then
         echo -e "${BLUE}[DEBUG] $1${NC}" >&2
     fi
@@ -58,13 +67,15 @@ TOTAL_FILES_PROCESSED=0
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Function to calculate file checksums for change detection
-calculate_checksums() {
+calculate_checksums()
+                      {
     target_dir="$1"
-    find "$target_dir" -name "*.py" -type f -exec sha256sum {} \; 2>/dev/null | sort
+    find "$target_dir" -name "*.py" -type f -exec sha256sum {} \; 2> /dev/null | sort
 }
 
 # Function to count Python files
-count_python_files() {
+count_python_files()
+                     {
     count=0
     for target in "${TARGETS[@]}"; do
         if [ -f "$target" ] && [[ "$target" == *.py ]]; then
@@ -82,31 +93,31 @@ debug_log "Found $TOTAL_FILES_PROCESSED Python files to process"
 
 # Create temporary directory for checksums
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf $TEMP_DIR' EXIT
 
 # Calculate initial checksums
 INITIAL_CHECKSUMS="$TEMP_DIR/initial.checksums"
 for target in "${TARGETS[@]}"; do
     if [ -f "$target" ]; then
-        sha256sum "$target" >> "$INITIAL_CHECKSUMS" 2>/dev/null || true
+        sha256sum "$target" >> "$INITIAL_CHECKSUMS" 2> /dev/null || true
     elif [ -d "$target" ]; then
         calculate_checksums "$target" >> "$INITIAL_CHECKSUMS"
     fi
 done
-sort -o "$INITIAL_CHECKSUMS" "$INITIAL_CHECKSUMS" 2>/dev/null || touch "$INITIAL_CHECKSUMS"
+sort -o "$INITIAL_CHECKSUMS" "$INITIAL_CHECKSUMS" 2> /dev/null || touch "$INITIAL_CHECKSUMS"
 
 # Function to check if files changed
-files_changed() {
+files_changed()
+                {
     debug_log "Checking for file changes..."
     current_checksums="$TEMP_DIR/current.checksums"
-    debug_log "Clearing current checksums file: $current_checksums"
-    > "$current_checksums"  # Clear the file
-    
+    debug_log "Clearing current checksums file: $current_checksums" > "$current_checksums"  # Clear the file
+
     for target in "${TARGETS[@]}"; do
         debug_log "Processing target: $target"
         if [ -f "$target" ]; then
             debug_log "Target is a file, calculating checksum"
-            sha256sum "$target" >> "$current_checksums" 2>/dev/null || true
+            sha256sum "$target" >> "$current_checksums" 2> /dev/null || true
         elif [ -d "$target" ]; then
             debug_log "Target is a directory, calculating checksums for all Python files"
             calculate_checksums "$target" >> "$current_checksums"
@@ -114,12 +125,12 @@ files_changed() {
         debug_log "Finished processing target: $target"
     done
     debug_log "Sorting current checksums"
-    sort -o "$current_checksums" "$current_checksums" 2>/dev/null || touch "$current_checksums"
-    
+    sort -o "$current_checksums" "$current_checksums" 2> /dev/null || touch "$current_checksums"
+
     debug_log "Comparing checksums..."
     debug_log "Initial checksums file: $INITIAL_CHECKSUMS"
     debug_log "Current checksums file: $current_checksums"
-    if ! diff -q "$INITIAL_CHECKSUMS" "$current_checksums" >/dev/null 2>&1; then
+    if ! diff -q "$INITIAL_CHECKSUMS" "$current_checksums" > /dev/null 2>&1; then
         debug_log "Changes detected"
         debug_log "Updating initial checksums"
         cp "$current_checksums" "$INITIAL_CHECKSUMS"
@@ -198,8 +209,7 @@ if [ "$DRY_RUN" = true ]; then
 else
     # Check if try_return_fixer.py exists, if not fall back to ast-grep rules
     if [ -f "$SCRIPT_DIR/try_return_fixer.py" ]; then
-        python3 "$SCRIPT_DIR/try_return_fixer.py" "${TARGETS[@]}"
-        if [ $? -eq 0 ]; then
+        if python3 "$SCRIPT_DIR/try_return_fixer.py" "${TARGETS[@]}"; then
             if files_changed; then
                 CHANGES_MADE=$((CHANGES_MADE + 1))
                 echo -e "${GREEN}✅ Try/return fixes applied changes${NC}"
@@ -216,14 +226,14 @@ else
         ast_grep_changes=0
         for rule in fix-try-return-simple fix-try-return-as fix-try-return-multiple fix-try-return-multiple-as fix-try-return-bare-except; do
             debug_log "Applying ast-grep rule: $rule"
-            if ast-grep scan -r "$SCRIPT_DIR/rules/$rule.yml" --update-all "${TARGETS[@]}" >/dev/null 2>&1; then
+            if ast-grep scan -r "$SCRIPT_DIR/rules/$rule.yml" --update-all "${TARGETS[@]}" > /dev/null 2>&1; then
                 if files_changed; then
                     ((ast_grep_changes++))
                     debug_log "Rule $rule made changes"
                 fi
             fi
         done
-        
+
         if [ $ast_grep_changes -gt 0 ]; then
             CHANGES_MADE=$((CHANGES_MADE + 1))
             echo -e "${GREEN}✅ Applied $ast_grep_changes try/return fix(es)${NC}"
@@ -256,10 +266,10 @@ elif [ "$DRY_RUN" = true ]; then
 elif command -v ruff &> /dev/null; then
     echo -e "${YELLOW}Verifying fixes with ruff...${NC}"
     debug_log "Running ruff check on targets: ${TARGETS[*]}"
-    
+
     # Run ruff check with simpler approach
     debug_log "About to run ruff check..."
-    if ruff check "${TARGETS[@]}" --select=TRY401,G004,TRY300 >/dev/null 2>&1; then
+    if ruff check "${TARGETS[@]}" --select=TRY401,G004,TRY300 > /dev/null 2>&1; then
         echo -e "${GREEN}🎯 Perfect! No remaining TRY401/G004/TRY300 violations!${NC}"
         debug_log "Ruff verification passed"
     else

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Middleware Service Providers Implementation Specification
 
 ## Overview
@@ -29,8 +35,8 @@ import logging
 from abc import abstractmethod
 from typing import Any, Dict
 
-from codeweaver._types.service_config import ServiceConfig
-from codeweaver._types.services import ServiceProvider
+from codeweaver.types import ServiceConfig
+from codeweaver.types import ServiceProvider
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
@@ -92,8 +98,8 @@ from typing import Any, Deque, Dict, List
 
 from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
 
-from codeweaver._types.service_config import LoggingServiceConfig
-from codeweaver._types.services import LoggingService
+from codeweaver.types import LoggingServiceConfig
+from codeweaver.types import LoggingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -215,8 +221,8 @@ from typing import Any, Deque, Dict
 
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver._types.service_config import TimingServiceConfig
-from codeweaver._types.services import TimingService
+from codeweaver.types import TimingServiceConfig
+from codeweaver.types import TimingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -363,8 +369,8 @@ from typing import Any, Deque, Dict, List
 
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 
-from codeweaver._types.service_config import ErrorHandlingServiceConfig
-from codeweaver._types.services import ErrorHandlingService
+from codeweaver.types import ErrorHandlingServiceConfig
+from codeweaver.types import ErrorHandlingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -486,8 +492,8 @@ from typing import Any, Dict
 
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 
-from codeweaver._types.service_config import RateLimitingServiceConfig
-from codeweaver._types.services import RateLimitingService
+from codeweaver.types import RateLimitingServiceConfig
+from codeweaver.types import RateLimitingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 

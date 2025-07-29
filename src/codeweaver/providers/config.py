@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Provider configuration models using Pydantic v2.
 
 This module defines configuration models for all provider types with comprehensive
@@ -8,7 +12,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver._types import DimensionSize
+from codeweaver.types import DimensionSize
 
 
 class ProviderConfig(BaseModel):

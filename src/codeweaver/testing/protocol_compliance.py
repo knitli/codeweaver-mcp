@@ -19,7 +19,6 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver._types import ContentItem, ProviderInfo, RerankResult
 from codeweaver.backends.base import (
     CollectionInfo,
     DistanceMetric,
@@ -31,6 +30,7 @@ from codeweaver.backends.base import (
 )
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.sources.base import DataSource, SourceCapability, SourceConfig
+from codeweaver.types import ContentItem, ProviderInfo, RerankResult
 
 
 logger = logging.getLogger(__name__)

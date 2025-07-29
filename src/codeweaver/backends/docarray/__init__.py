@@ -10,9 +10,17 @@ Provides unified vector database interface supporting 10+ backends through DocAr
 maintaining full compatibility with CodeWeaver's VectorBackend and HybridSearchBackend protocols.
 """
 
-from .adapter import BaseDocArrayAdapter, DocArrayHybridAdapter
-from .config import DocArrayBackendConfig, DocArrayConfigFactory, DocArraySchemaConfig
-from .schema import DocumentSchemaGenerator, SchemaConfig, SchemaTemplates
+from codeweaver.backends.docarray.adapter import BaseDocArrayAdapter, DocArrayHybridAdapter
+from codeweaver.backends.docarray.config import (
+    DocArrayBackendConfig,
+    DocArrayConfigFactory,
+    DocArraySchemaConfig,
+)
+from codeweaver.backends.docarray.schema import (
+    DocumentSchemaGenerator,
+    SchemaConfig,
+    SchemaTemplates,
+)
 
 
 # Re-export main components

@@ -16,28 +16,28 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServiceConfig, ServicesConfig
-from codeweaver._types.service_data import HealthStatus, ServicesHealthReport
-from codeweaver._types.service_exceptions import (
-    ServiceCreationError,
-    ServiceInitializationError,
-    ServiceNotFoundError,
-)
-from codeweaver._types.services import (
+from codeweaver.factories.service_registry import ServiceRegistry
+from codeweaver.services.providers.chunking import ChunkingService
+from codeweaver.services.providers.file_filtering import FilteringService
+from codeweaver.types import (
     CacheService,
     ErrorHandlingService,
+    HealthStatus,
     LoggingService,
     MetricsService,
     MonitoringService,
     RateLimitingService,
+    ServiceConfig,
+    ServiceCreationError,
+    ServiceInitializationError,
+    ServiceNotFoundError,
     ServiceProvider,
+    ServicesConfig,
+    ServicesHealthReport,
+    ServiceType,
     TimingService,
     ValidationService,
 )
-from codeweaver.factories.service_registry import ServiceRegistry
-from codeweaver.services.providers.chunking import ChunkingService
-from codeweaver.services.providers.file_filtering import FilteringService
 
 
 class ServicesManager:
@@ -216,7 +216,7 @@ class ServicesManager:
             except Exception as e:
                 self._logger.warning("Health check failed for %s: %s", service_type.value, e)
                 # Create unhealthy status for failed check
-                from codeweaver._types.service_data import ServiceHealth
+                from codeweaver.types import ServiceHealth
 
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,
@@ -508,4 +508,3 @@ class ServicesManager:
 
                 except Exception:
                     self._logger.exception("Auto-recovery failed for service %s")
-

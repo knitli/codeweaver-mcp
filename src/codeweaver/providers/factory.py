@@ -15,7 +15,6 @@ import logging
 from dataclasses import dataclass
 from typing import ClassVar
 
-from codeweaver._types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
@@ -24,6 +23,7 @@ from codeweaver.providers.base import (
     RerankProviderBase,
 )
 from codeweaver.providers.config import EmbeddingProviderConfig, RerankingProviderConfig
+from codeweaver.types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 
 
 logger = logging.getLogger(__name__)

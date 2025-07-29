@@ -13,13 +13,16 @@ with politeness policies and content extraction capabilities.
 import logging
 
 from collections.abc import Callable
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
 from codeweaver.utils.decorators import not_implemented
+
+
+if TYPE_CHECKING:
+    from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 
 
 logger = logging.getLogger(__name__)
@@ -148,7 +151,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
     @classmethod
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if web crawler source is available for the given capability."""
-        from codeweaver._types.source_enums import SourceCapability
+        from codeweaver.types import SourceCapability
 
         # Web crawler supports most capabilities but requires HTTP and parsing libraries
         supported_capabilities = {
@@ -168,7 +171,10 @@ class WebCrawlerSourceProvider(AbstractDataSource):
                 try:
                     import requests  # noqa: F401
                 except ImportError:
-                    return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
+                    return (
+                        False,
+                        "HTTP client not available (install with: uv add httpx or uv add requests)",
+                    )
 
             # Check for HTML parsing
             try:

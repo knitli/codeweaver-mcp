@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 # sourcery skip: avoid-global-variables
 """
 Defines *client* log handler for FastMCP.

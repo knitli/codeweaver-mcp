@@ -18,7 +18,7 @@ from typing import Any, ClassVar
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
-from codeweaver._types import CodeChunk
+from codeweaver.types import CodeChunk
 
 
 # ast-grep for proper tree-sitter parsing

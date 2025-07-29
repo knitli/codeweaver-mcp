@@ -16,7 +16,9 @@ from typing import Annotated, ClassVar
 
 from pydantic import Field
 
-from codeweaver._types import (
+from codeweaver.backends.base import VectorBackend
+from codeweaver.backends.config import BackendConfig
+from codeweaver.types import (
     BackendCapabilities,
     BaseComponentInfo,
     ComponentNotFoundError,
@@ -26,8 +28,6 @@ from codeweaver._types import (
     RegistrationResult,
     ValidationResult,
 )
-from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.config import BackendConfig
 
 
 logger = logging.getLogger(__name__)
@@ -281,7 +281,7 @@ class BackendRegistry:
             return
 
         # Import and register built-in backends
-        from codeweaver._types import get_all_backend_capabilities
+        from codeweaver.types import get_all_backend_capabilities
 
         try:
             # Register Qdrant backend

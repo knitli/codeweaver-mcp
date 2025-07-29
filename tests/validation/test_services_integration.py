@@ -12,7 +12,6 @@ layer, including context parameter usage, fallback behavior, and service
 health monitoring.
 """
 
-
 import contextlib
 import inspect
 
@@ -21,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from codeweaver._types import HealthStatus, ServiceHealth
+from codeweaver.types import HealthStatus, ServiceHealth
 
 
 class MockService:
@@ -45,7 +44,7 @@ class MockService:
         """Mock chunking method."""
         if not self._available:
             raise Exception("Chunking service unavailable")  # noqa: TRY002
-        return [content[i:i + 100] for i in range(0, len(content), 100)]
+        return [content[i : i + 100] for i in range(0, len(content), 100)]
 
     async def filter_files(self, files: list) -> list:
         """Mock filtering method."""
@@ -99,17 +98,12 @@ class MockServicesManager:
     async def get_service_health(self, service_name: str) -> ServiceHealth:
         """Get mock service health."""
         return ServiceHealth(
-            status=HealthStatus.HEALTHY,
-            message="Mock service healthy",
-            last_check=None
+            status=HealthStatus.HEALTHY, message="Mock service healthy", last_check=None
         )
 
     async def get_all_service_health(self) -> dict[str, ServiceHealth]:
         """Get all service health statuses."""
-        return {
-            name: await self.get_service_health(name)
-            for name in self._services.keys()
-        }
+        return {name: await self.get_service_health(name) for name in self._services.keys()}
 
 
 def get_testable_provider_classes():
@@ -118,12 +112,15 @@ def get_testable_provider_classes():
 
     with contextlib.suppress(ImportError):
         from codeweaver.providers.voyage import VoyageAIProvider
+
         provider_classes.append(VoyageAIProvider)
     with contextlib.suppress(ImportError):
         from codeweaver.providers.openai import OpenAIProvider
+
         provider_classes.append(OpenAIProvider)
     with contextlib.suppress(ImportError):
         from codeweaver.providers.cohere import CohereProvider
+
         provider_classes.append(CohereProvider)
     return provider_classes
 
@@ -134,6 +131,7 @@ def get_testable_backend_classes():
 
     with contextlib.suppress(ImportError):
         from codeweaver.backends.qdrant import QdrantBackend
+
         backend_classes.append(QdrantBackend)
     return backend_classes
 
@@ -144,6 +142,7 @@ def get_testable_source_classes():
 
     with contextlib.suppress(ImportError):
         from codeweaver.sources.filesystem import FileSystemSource
+
         source_classes.append(FileSystemSource)
     return source_classes
 
@@ -155,20 +154,23 @@ class TestProviderServicesIntegration:
     def test_provider_methods_accept_context(self, provider_class):
         """Test that provider methods accept context parameter."""
         # Check embed_documents method
-# sourcery skip: no-conditionals-in-tests
+        # sourcery skip: no-conditionals-in-tests
         if hasattr(provider_class, "embed_documents"):
             method = provider_class.embed_documents
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
-            assert "context" in params, \
-                    f"Provider {provider_class.__name__}.embed_documents should accept 'context' parameter"
+            assert "context" in params, (
+                f"Provider {provider_class.__name__}.embed_documents should accept 'context' parameter"
+            )
 
-# sourcery skip: no-conditionals-in-tests
+            # sourcery skip: no-conditionals-in-tests
             if context_param := sig.parameters.get("context"):
-                assert context_param.default is not inspect.Parameter.empty or \
-                           "None" in str(context_param.annotation), \
-                        f"Provider {provider_class.__name__}.embed_documents context parameter should be optional"
+                assert context_param.default is not inspect.Parameter.empty or "None" in str(
+                    context_param.annotation
+                ), (
+                    f"Provider {provider_class.__name__}.embed_documents context parameter should be optional"
+                )
 
         # Check rerank_documents method if exists
         if hasattr(provider_class, "rerank_documents"):
@@ -176,19 +178,16 @@ class TestProviderServicesIntegration:
             sig = inspect.signature(method)
             params = list(sig.parameters.keys())
 
-            assert "context" in params, \
-                    f"Provider {provider_class.__name__}.rerank_documents should accept 'context' parameter"
+            assert "context" in params, (
+                f"Provider {provider_class.__name__}.rerank_documents should accept 'context' parameter"
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("provider_class", get_testable_provider_classes())
     async def test_provider_works_without_services(self, provider_class):
         """Test that providers work without services (fallback behavior)."""
         # Create mock config
-        mock_config = {
-            "api_key": "test-key",
-            "model": "test-model",
-            "dimension": 1024,
-        }
+        mock_config = {"api_key": "test-key", "model": "test-model", "dimension": 1024}
 
         try:
             # Create provider instance
@@ -209,24 +208,24 @@ class TestProviderServicesIntegration:
                 empty_context = {}
 
                 result = await provider.embed_documents(["test text"], empty_context)
-                assert result is not None, \
-                        f"Provider {provider_class.__name__} should work without services"
-                assert len(result) > 0, \
-                        f"Provider {provider_class.__name__} should return results without services"
+                assert result is not None, (
+                    f"Provider {provider_class.__name__} should work without services"
+                )
+                assert len(result) > 0, (
+                    f"Provider {provider_class.__name__} should return results without services"
+                )
 
         except Exception as e:
-            pytest.skip(f"Could not test {provider_class.__name__} without external dependencies: {e}")
+            pytest.skip(
+                f"Could not test {provider_class.__name__} without external dependencies: {e}"
+            )
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("provider_class", get_testable_provider_classes())
     async def test_provider_integrates_with_services(self, provider_class):
         """Test that providers integrate with available services."""
         # Create mock config
-        mock_config = {
-            "api_key": "test-key",
-            "model": "test-model",
-            "dimension": 1024,
-        }
+        mock_config = {"api_key": "test-key", "model": "test-model", "dimension": 1024}
 
         try:
             # Create provider instance
@@ -248,10 +247,12 @@ class TestProviderServicesIntegration:
 
             if hasattr(provider, "embed_documents"):
                 result = await provider.embed_documents(["test text"], context)
-                assert result is not None, \
+                assert result is not None, (
                     f"Provider {provider_class.__name__} should work with services"
-                assert len(result) > 0, \
+                )
+                assert len(result) > 0, (
                     f"Provider {provider_class.__name__} should return results with services"
+                )
 
         except Exception as e:
             pytest.skip(f"Could not test {provider_class.__name__} with services: {e}")
@@ -261,11 +262,7 @@ class TestProviderServicesIntegration:
     async def test_provider_handles_service_failures(self, provider_class):
         """Test that providers handle service failures gracefully."""
         # Create mock config
-        mock_config = {
-            "api_key": "test-key",
-            "model": "test-model",
-            "dimension": 1024,
-        }
+        mock_config = {"api_key": "test-key", "model": "test-model", "dimension": 1024}
 
         try:
             # Create provider instance
@@ -291,8 +288,9 @@ class TestProviderServicesIntegration:
             if hasattr(provider, "embed_documents"):
                 # Should not raise exception even if services fail
                 result = await provider.embed_documents(["test text"], context)
-                assert result is not None, \
+                assert result is not None, (
                     f"Provider {provider_class.__name__} should handle service failures"
+                )
 
         except Exception as e:
             pytest.skip(f"Could not test {provider_class.__name__} service failure handling: {e}")
@@ -305,7 +303,7 @@ class TestBackendServicesIntegration:
     def test_backend_should_have_health_check(self, backend_class):
         """Test that backends should have health check methods."""
         # This is aspirational - backends may not have this yet
-# sourcery skip: no-conditionals-in-tests
+        # sourcery skip: no-conditionals-in-tests
         if not hasattr(backend_class, "health_check"):
             pytest.skip(
                 f"Backend {backend_class.__name__} missing health_check method. "
@@ -313,8 +311,7 @@ class TestBackendServicesIntegration:
             )
 
         method = backend_class.health_check
-        assert callable(method), \
-            f"Backend {backend_class.__name__}.health_check should be callable"
+        assert callable(method), f"Backend {backend_class.__name__}.health_check should be callable"
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("backend_class", get_testable_backend_classes())
@@ -324,10 +321,7 @@ class TestBackendServicesIntegration:
             pytest.skip(f"Backend {backend_class.__name__} missing health_check method")
 
         # Create mock config
-        mock_config = {
-            "url": "http://localhost:6333",
-            "api_key": "test-key",
-        }
+        mock_config = {"url": "http://localhost:6333", "api_key": "test-key"}
 
         try:
             # Create backend instance
@@ -340,14 +334,13 @@ class TestBackendServicesIntegration:
 
             # Test health check
             health = await backend.health_check()
-            assert isinstance(health, ServiceHealth), \
+            assert isinstance(health, ServiceHealth), (
                 f"Backend {backend_class.__name__}.health_check should return ServiceHealth"
+            )
 
-            assert hasattr(health, "status"), \
-                "ServiceHealth should have status attribute"
+            assert hasattr(health, "status"), "ServiceHealth should have status attribute"
 
-            assert hasattr(health, "message"), \
-                "ServiceHealth should have message attribute"
+            assert hasattr(health, "message"), "ServiceHealth should have message attribute"
 
         except Exception as e:
             pytest.skip(f"Could not test {backend_class.__name__} health check: {e}")
@@ -364,8 +357,8 @@ class TestSourceServicesIntegration:
 
         missing_context = []
         # sourcery skip: no-loop-in-tests
+        # sourcery skip: no-conditionals-in-tests
         for method_name in main_methods:
-            # sourcery skip: no-conditionals-in-tests
             if hasattr(source_class, method_name):
                 method = getattr(source_class, method_name)
                 sig = inspect.signature(method)
@@ -431,6 +424,7 @@ class TestServicesManagerIntegration:
     def test_services_manager_exists(self):
         """Test that ServicesManager exists."""
         from codeweaver.services.manager import ServicesManager
+
         assert ServicesManager is not None
 
     def test_services_manager_has_required_methods(self):
@@ -447,12 +441,12 @@ class TestServicesManagerIntegration:
 
         # sourcery skip: no-loop-in-tests
         for method_name in required_methods:
-            assert hasattr(ServicesManager, method_name), \
+            assert hasattr(ServicesManager, method_name), (
                 f"ServicesManager missing method: {method_name}"
+            )
 
             method = getattr(ServicesManager, method_name)
-            assert callable(method), \
-                f"ServicesManager.{method_name} should be callable"
+            assert callable(method), f"ServicesManager.{method_name} should be callable"
 
     @pytest.mark.asyncio
     async def test_services_manager_creates_context(self):
@@ -460,20 +454,15 @@ class TestServicesManagerIntegration:
         from codeweaver.services.manager import ServicesManager
 
         # Create minimal config
-        config = {
-            "chunking": {"enabled": True},
-            "filtering": {"enabled": True},
-        }
+        config = {"chunking": {"enabled": True}, "filtering": {"enabled": True}}
 
         try:
             services_manager = ServicesManager(config)
             context = await services_manager.create_service_context()
 
-            assert isinstance(context, dict), \
-                "Service context should be a dictionary"
+            assert isinstance(context, dict), "Service context should be a dictionary"
 
-            assert "services_manager" in context, \
-                "Service context should include services_manager"
+            assert "services_manager" in context, "Service context should include services_manager"
 
         except Exception as e:
             pytest.skip(f"Could not test ServicesManager context creation: {e}")
@@ -484,18 +473,14 @@ class TestServicesManagerIntegration:
         from codeweaver.services.manager import ServicesManager
 
         # Create minimal config
-        config = {
-            "chunking": {"enabled": True},
-            "filtering": {"enabled": True},
-        }
+        config = {"chunking": {"enabled": True}, "filtering": {"enabled": True}}
 
         try:
             services_manager = ServicesManager(config)
 
             # Test getting all service health
             health_status = await services_manager.get_all_service_health()
-            assert isinstance(health_status, dict), \
-                "Service health status should be a dictionary"
+            assert isinstance(health_status, dict), "Service health status should be a dictionary"
 
         except Exception as e:
             pytest.skip(f"Could not test ServicesManager health monitoring: {e}")
@@ -507,13 +492,14 @@ class TestMiddlewareBridgeIntegration:
     def test_middleware_bridge_exists(self):
         """Test that MiddlewareBridge exists."""
         from codeweaver.services.middleware_bridge import MiddlewareBridge
+
         assert MiddlewareBridge is not None
 
     def test_middleware_bridge_is_class(self):
         """Test that MiddlewareBridge is a proper class."""
         from codeweaver.services.middleware_bridge import MiddlewareBridge
-        assert inspect.isclass(MiddlewareBridge), \
-            "MiddlewareBridge should be a class"
+
+        assert inspect.isclass(MiddlewareBridge), "MiddlewareBridge should be a class"
 
 
 def validate_services_integration() -> bool:
@@ -557,7 +543,9 @@ def validate_services_integration() -> bool:
                 if "context" in sig.parameters:
                     context_support_count += 1
 
-        print(f"   ✅ {context_support_count}/{len(provider_classes)} providers support context parameter")
+        print(
+            f"   ✅ {context_support_count}/{len(provider_classes)} providers support context parameter"
+        )
 
         print("   ✅ Services integration validation complete")
 

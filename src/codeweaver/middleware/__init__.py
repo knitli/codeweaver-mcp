@@ -20,4 +20,13 @@ from codeweaver.middleware.chunking import ChunkingMiddleware
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 
 
-__all__ = ["ChunkingMiddleware", "ErrorHandlingMiddleware", "FileFilteringMiddleware", "LoggingMiddleware", "RateLimitingMiddleware", "RetryMiddleware", "StructuredLoggingMiddleware", "TimingMiddleware"]
+__all__ = [
+    "ChunkingMiddleware",
+    "ErrorHandlingMiddleware",
+    "FileFilteringMiddleware",
+    "LoggingMiddleware",
+    "RateLimitingMiddleware",
+    "RetryMiddleware",
+    "StructuredLoggingMiddleware",
+    "TimingMiddleware",
+]

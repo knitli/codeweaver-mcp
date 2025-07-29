@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver._types import (
+from codeweaver.types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
     ComponentType,

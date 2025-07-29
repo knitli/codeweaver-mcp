@@ -17,8 +17,8 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 
 
 logger = logging.getLogger(__name__)
@@ -144,10 +144,8 @@ class DatabaseSourceProvider(AbstractDataSource):
         super().__init__("database", source_id)
 
     @classmethod
-    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+    def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if database source is available for the given capability."""
-        from codeweaver._types.source_enums import SourceCapability
-
         # Database source supports most capabilities but requires database drivers
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -161,7 +159,7 @@ class DatabaseSourceProvider(AbstractDataSource):
         if capability in supported_capabilities:
             # Check for database driver dependencies (basic check)
             try:
-                import sqlite3  # Built-in, always available
+                import sqlite3  # Built-in, always available  # noqa: F401
             except ImportError:
                 return False, "No database drivers available"
 

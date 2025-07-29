@@ -17,8 +17,8 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types import ContentItem, SourceCapabilities
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 from codeweaver.utils.decorators import not_implemented
 
 
@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
         "Consider contributing to the project",
         "Or [open an issue](https://github.com/knitli/codeweaver-mcp/issues/) to discuss your use case",
         "You can also implement your own source using the SourceData protocol",
-    ]
-    )
+    ],
+)
 class APISourceConfig(BaseModel):
     """Configuration specific to API data sources."""
 
@@ -119,8 +119,8 @@ class APISourceConfig(BaseModel):
         "Install requests: pip install requests",
         "Use filesystem source for static API documentation",
         "Consider implementing with aiohttp for async support",
-        "Use web crawler source for API documentation pages"
-    ]
+        "Use web crawler source for API documentation pages",
+    ],
 )
 class APISourceProvider(AbstractDataSource):
     """API data source implementation.
@@ -145,10 +145,8 @@ class APISourceProvider(AbstractDataSource):
         super().__init__("api", source_id)
 
     @classmethod
-    def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
+    def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if API source is available for the given capability."""
-        from codeweaver._types.source_enums import SourceCapability
-
         # API source supports most capabilities but requires HTTP libraries
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
@@ -168,7 +166,10 @@ class APISourceProvider(AbstractDataSource):
                 try:
                     import requests  # noqa: F401
                 except ImportError:
-                    return False, "HTTP client not available (install with: uv add httpx or uv add requests)"
+                    return (
+                        False,
+                        "HTTP client not available (install with: uv add httpx or uv add requests)",
+                    )
                 else:
                     # Requests is available, so API source can be used
                     return True, None

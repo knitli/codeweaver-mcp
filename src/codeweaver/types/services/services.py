@@ -9,10 +9,10 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from codeweaver._types.content import CodeChunk
-from codeweaver._types.data_structures import ContentItem
-from codeweaver._types.enums import ChunkingStrategy, Language
-from codeweaver._types.service_data import (
+from codeweaver.types.content import CodeChunk
+from codeweaver.types.enums import ChunkingStrategy, Language
+from codeweaver.types.factories.data_structures import ContentItem
+from codeweaver.types.service_data import (
     CacheStats,
     ChunkingStats,
     DirectoryStats,
@@ -25,7 +25,7 @@ from codeweaver._types.service_data import (
 
 
 if TYPE_CHECKING:
-    from codeweaver._types.config import ServiceType
+    from codeweaver.types.config import ServiceType
 
 
 @runtime_checkable
@@ -375,6 +375,7 @@ class MetricsService(Protocol):
 
 
 # Middleware service protocols for FastMCP integration
+
 
 @runtime_checkable
 class LoggingService(Protocol):

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # MkDocs Plugin Recommendations
 
 This document provides comprehensive recommendations for MkDocs plugins that enhance CodeWeaver's documentation experience, organized by functionality and use case.

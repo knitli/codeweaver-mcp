@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Middleware Integration Analysis Report
 
 **CodeWeaver MCP Server - Middleware Architecture Assessment**

@@ -12,15 +12,20 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.content import CodeChunk
-from codeweaver._types.enums import ChunkingStrategy, Language
-from codeweaver._types.service_config import ChunkingServiceConfig
-from codeweaver._types.service_data import ChunkingStats, ServiceCapabilities
-from codeweaver._types.service_exceptions import ChunkingError, UnsupportedLanguageError
-from codeweaver._types.services import ChunkingService
 from codeweaver.middleware.chunking import ChunkingMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
+from codeweaver.types import (
+    ChunkingError,
+    ChunkingService,
+    ChunkingServiceConfig,
+    ChunkingStats,
+    ChunkingStrategy,
+    CodeChunk,
+    Language,
+    ServiceCapabilities,
+    ServiceType,
+    UnsupportedLanguageError,
+)
 
 
 class ChunkingService(BaseServiceProvider, ChunkingService):
@@ -37,19 +42,7 @@ class ChunkingService(BaseServiceProvider, ChunkingService):
 
         # Language mapping
         self._language_mapping = {
-            Language.PYTHON: "python",
-            Language.JAVASCRIPT: "javascript",
-            Language.TYPESCRIPT: "typescript",
-            Language.RUST: "rust",
-            Language.GO: "go",
-            Language.JAVA: "java",
-            Language.C: "c",
-            Language.CPP: "cpp",
-            Language.HTML: "html",
-            Language.CSS: "css",
-            Language.JSON: "json",
-            Language.YAML: "yaml",
-            Language.BASH: "bash",
+            k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
         }
 
     @property
@@ -138,7 +131,6 @@ class ChunkingService(BaseServiceProvider, ChunkingService):
             error_msg = f"Chunking failed: {e}"
             self.record_operation(False, error_msg)
             self._logger.exception("Chunking failed for %s")
-
 
             raise ChunkingError(file_path, str(e)) from e
         else:

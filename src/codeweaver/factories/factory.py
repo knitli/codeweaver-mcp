@@ -15,14 +15,6 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-from codeweaver._types import (
-    BaseComponentConfig,
-    ComponentCreationError,
-    ComponentNotFoundError,
-    ConfigurationError,
-    ServiceType,
-    ValidationResult,
-)
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.config import BackendConfig
 from codeweaver.factories.base import create_factory_context
@@ -31,6 +23,14 @@ from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
 from codeweaver.services.manager import ServicesManager
 from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.types import (
+    BaseComponentConfig,
+    ComponentCreationError,
+    ComponentNotFoundError,
+    ConfigurationError,
+    ServiceType,
+    ValidationResult,
+)
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class CodeWeaverFactory:
         self,
         config: "CodeWeaverConfig | None" = None,
         registry: ComponentRegistry | None = None,
-        services_manager: ServicesManager | None = None
+        services_manager: ServicesManager | None = None,
     ):
         """Initialize the CodeWeaver factory.
 
@@ -91,30 +91,30 @@ class CodeWeaverFactory:
         """Initialize built-in backend components."""
         # Import and register Qdrant backend
         try:
-            from codeweaver._types import BackendCapabilities
             from codeweaver.backends.qdrant import QdrantBackend
             from codeweaver.factories.registry import BackendInfo
+            from codeweaver.types import BackendCapabilities
 
             backend_info = BackendInfo(
                 name="qdrant",
                 backend_type="qdrant",
                 description="Qdrant vector database backend",
                 connection_requirements={"url": "Qdrant server URL"},
-                optional_parameters={"api_key": "Optional API key for authentication"}
+                optional_parameters={"api_key": "Optional API key for authentication"},
             )
 
             capabilities = BackendCapabilities(
                 supports_filtering=True,
                 supports_metadata=True,
                 supports_batch_operations=True,
-                max_vector_dimension=65536
+                max_vector_dimension=65536,
             )
 
             self.registry.register_backend(
                 name="qdrant",
                 backend_class=QdrantBackend,
                 capabilities=capabilities,
-                backend_info=backend_info
+                backend_info=backend_info,
             )
 
         except ImportError:
@@ -126,30 +126,30 @@ class CodeWeaverFactory:
         """Initialize built-in source components."""
         # Import and register filesystem source
         try:
-            from codeweaver._types import SourceCapabilities
             from codeweaver.factories.registry import SourceInfo
             from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.types import SourceCapabilities
 
             source_info = SourceInfo(
                 name="filesystem",
                 source_type="filesystem",
                 description="Local filesystem data source",
                 supported_schemes=["file"],
-                configuration_schema={"root_path": "string"}
+                configuration_schema={"root_path": "string"},
             )
 
             capabilities = SourceCapabilities(
                 supports_streaming=True,
                 supports_filtering=True,
                 supports_metadata=True,
-                supports_incremental_updates=False
+                supports_incremental_updates=False,
             )
 
             self.registry.register_source(
                 name="filesystem",
                 source_class=FileSystemSource,
                 capabilities=capabilities,
-                source_info=source_info
+                source_info=source_info,
             )
 
         except ImportError:
@@ -161,12 +161,11 @@ class CodeWeaverFactory:
         """Initialize built-in service components."""
         # Register built-in service providers
         try:
-            from codeweaver._types.config import ServiceType
-            from codeweaver._types.service_data import ServiceCapabilities
             from codeweaver.services.providers.caching import CachingService
             from codeweaver.services.providers.chunking import ChunkingService
             from codeweaver.services.providers.file_filtering import FileFilteringService
             from codeweaver.services.providers.rate_limiting import RateLimitingService
+            from codeweaver.types import ServiceCapabilities, ServiceType
 
             # Register chunking service
             self.registry.register_service_provider(
@@ -174,10 +173,8 @@ class CodeWeaverFactory:
                 provider_name="default",
                 provider_class=ChunkingService,
                 capabilities=ServiceCapabilities(
-                    supports_streaming=True,
-                    supports_batching=True,
-                    max_batch_size=100
-                )
+                    supports_streaming=True, supports_batching=True, max_batch_size=100
+                ),
             )
 
             # Register file filtering service
@@ -185,10 +182,7 @@ class CodeWeaverFactory:
                 service_type=ServiceType.FILE_FILTERING,
                 provider_name="default",
                 provider_class=FileFilteringService,
-                capabilities=ServiceCapabilities(
-                    supports_streaming=True,
-                    supports_batching=False
-                )
+                capabilities=ServiceCapabilities(supports_streaming=True, supports_batching=False),
             )
 
             # Register rate limiting service
@@ -200,8 +194,8 @@ class CodeWeaverFactory:
                     supports_streaming=False,
                     supports_batching=True,
                     max_batch_size=1000,
-                    supports_async=True
-                )
+                    supports_async=True,
+                ),
             )
 
             # Register caching service
@@ -213,8 +207,8 @@ class CodeWeaverFactory:
                     supports_streaming=False,
                     supports_batching=True,
                     max_batch_size=1000,
-                    supports_async=True
-                )
+                    supports_async=True,
+                ),
             )
 
         except ImportError:
@@ -262,7 +256,7 @@ class CodeWeaverFactory:
             backend = backend_class(backend_config)
 
             # Initialize backend if needed
-            if hasattr(backend, 'initialize'):
+            if hasattr(backend, "initialize"):
                 await backend.initialize()
 
             logger.info("Created backend: %s", backend_type)
@@ -274,7 +268,9 @@ class CodeWeaverFactory:
         else:
             return backend
 
-    async def create_provider(self, config: dict[str, Any] | BaseComponentConfig) -> EmbeddingProvider:
+    async def create_provider(
+        self, config: dict[str, Any] | BaseComponentConfig
+    ) -> EmbeddingProvider:
         """Create a provider instance.
 
         Args:
@@ -324,7 +320,7 @@ class CodeWeaverFactory:
             source = source_class(source_config)
 
             # Initialize source if needed
-            if hasattr(source, 'initialize'):
+            if hasattr(source, "initialize"):
                 await source.initialize(context.to_dict())
 
             logger.info("Created source: %s", source_type)
@@ -335,7 +331,9 @@ class CodeWeaverFactory:
         else:
             return source
 
-    async def create_service(self, service_type: ServiceType, provider_name: str = "default") -> Any:
+    async def create_service(
+        self, service_type: ServiceType, provider_name: str = "default"
+    ) -> Any:
         """Create a service instance.
 
         Args:
@@ -352,7 +350,7 @@ class CodeWeaverFactory:
             service = provider_class()
 
             # Initialize service if needed
-            if hasattr(service, 'initialize'):
+            if hasattr(service, "initialize"):
                 await service.initialize()
 
             logger.info("Created service: %s.%s", service_type.value, provider_name)
@@ -417,15 +415,15 @@ class CodeWeaverFactory:
 
         try:
             # Validate backend configuration
-            if hasattr(config, 'backend') and config.backend:
-                backend_type = getattr(config.backend, 'type', None)
+            if hasattr(config, "backend") and config.backend:
+                backend_type = getattr(config.backend, "type", None)
                 if backend_type and not self.registry.is_backend_registered(backend_type):
                     errors.append(f"Backend type '{backend_type}' is not registered")
 
             # Validate source configurations
-            if hasattr(config, 'sources') and config.sources:
+            if hasattr(config, "sources") and config.sources:
                 for source_config in config.sources:
-                    source_type = getattr(source_config, 'type', None)
+                    source_type = getattr(source_config, "type", None)
                     if source_type and not self.registry.is_source_registered(source_type):
                         errors.append(f"Source type '{source_type}' is not registered")
 
@@ -451,7 +449,7 @@ class CodeWeaverFactory:
                 service_type.value: self.registry.list_service_providers(service_type)
                 for service_type in ServiceType
             },
-            "providers": self._provider_factory.get_available_embedding_providers()
+            "providers": self._provider_factory.get_available_embedding_providers(),
         }
 
     def get_component_count(self) -> dict[str, int]:
@@ -462,49 +460,51 @@ class CodeWeaverFactory:
 
     # Service Integration
 
+    async def _create_service_safely(
+        self, service_type: ServiceType, service_key: str
+    ) -> Any | None:
+        """Create a service instance safely with error handling.
+
+        Args:
+            service_type: Type of service to create
+            service_key: Key name for the service in context
+
+        Returns:
+            Service instance or None if creation fails
+        """
+        try:
+            service = await self.create_service(service_type)
+            if service:
+                return service
+        except Exception as e:
+            logger.warning("Failed to create %s service: %s", service_key, e)
+        return None
+
     async def _get_services_context(self) -> dict[str, Any]:
         """Get services context for component creation."""
         services = {}
 
         try:
-            # Create service instances directly from registry
-            from codeweaver._types.config import ServiceType
+            # Import service types
+            from codeweaver.types import ServiceType
 
-            # Add rate limiting service
-            try:
-                rate_limiting_service = await self.create_service(ServiceType.RATE_LIMITING)
-                if rate_limiting_service:
-                    services['rate_limiting_service'] = rate_limiting_service
-            except Exception as e:
-                logger.warning("Failed to create rate limiting service: %s", e)
+            # Service definitions: (service_type, service_key)
+            service_definitions = [
+                (ServiceType.RATE_LIMITING, "rate_limiting_service"),
+                (ServiceType.CACHING, "caching_service"),
+                (ServiceType.CHUNKING, "chunking_service"),
+                (ServiceType.FILE_FILTERING, "filtering_service"),
+            ]
 
-            # Add caching service
-            try:
-                caching_service = await self.create_service(ServiceType.CACHING)
-                if caching_service:
-                    services['caching_service'] = caching_service
-            except Exception as e:
-                logger.warning("Failed to create caching service: %s", e)
-
-            # Add chunking service
-            try:
-                chunking_service = await self.create_service(ServiceType.CHUNKING)
-                if chunking_service:
-                    services['chunking_service'] = chunking_service
-            except Exception as e:
-                logger.warning("Failed to create chunking service: %s", e)
-
-            # Add filtering service
-            try:
-                filtering_service = await self.create_service(ServiceType.FILE_FILTERING)
-                if filtering_service:
-                    services['filtering_service'] = filtering_service
-            except Exception as e:
-                logger.warning("Failed to create filtering service: %s", e)
+            # Create services using helper method
+            for service_type, service_key in service_definitions:
+                service = await self._create_service_safely(service_type, service_key)
+                if service:
+                    services[service_key] = service
 
             # Add services manager if available
             if self.services_manager:
-                services['services_manager'] = self.services_manager
+                services["services_manager"] = self.services_manager
 
         except Exception as e:
             logger.warning("Failed to get services context: %s", e)

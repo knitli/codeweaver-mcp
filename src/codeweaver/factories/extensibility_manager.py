@@ -16,10 +16,10 @@ import logging
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-from codeweaver._types import ComponentInstances, ExtensibilityConfig
 from codeweaver.backends.base import VectorBackend
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.sources.base import DataSource
+from codeweaver.types import ComponentInstances, ExtensibilityConfig
 
 
 if TYPE_CHECKING:

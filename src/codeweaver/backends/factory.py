@@ -17,12 +17,6 @@ from typing import Annotated, Any, ClassVar, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver._types import (
-    BackendCapabilities,
-    BackendConnectionError,
-    CapabilityQueryMixin,
-    ProviderKind,
-)
 from codeweaver.backends.base import HybridSearchBackend, VectorBackend
 from codeweaver.backends.qdrant import QdrantHybridBackend
 from codeweaver.providers.base import (
@@ -30,6 +24,12 @@ from codeweaver.providers.base import (
     EmbeddingProvider,
     LocalEmbeddingProvider,
     RerankProvider,
+)
+from codeweaver.types import (
+    BackendCapabilities,
+    BackendConnectionError,
+    CapabilityQueryMixin,
+    ProviderKind,
 )
 
 
@@ -289,7 +289,7 @@ class BackendFactory(CapabilityQueryMixin):
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
         # Add planned providers using centralized BackendCapabilities model
-        from codeweaver._types import get_all_backend_capabilities
+        from codeweaver.types import get_all_backend_capabilities
 
         # Get all backend capabilities from centralized source
         all_capabilities = get_all_backend_capabilities()
@@ -317,7 +317,7 @@ class BackendFactory(CapabilityQueryMixin):
         Returns:
             Dictionary mapping backend names to their capabilities
         """
-        from codeweaver._types import get_all_backend_capabilities
+        from codeweaver.types import get_all_backend_capabilities
 
         return get_all_backend_capabilities()
 

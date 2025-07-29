@@ -21,7 +21,6 @@ from collections.abc import Callable
 from datetime import UTC
 from typing import Any
 
-from codeweaver._types import ProviderCapability, ProviderInfo, RerankResult
 from codeweaver.backends.base import (
     CollectionInfo,
     DistanceMetric,
@@ -37,6 +36,7 @@ from codeweaver.sources.base import (
     SourceConfig,
     SourceWatcher,
 )
+from codeweaver.types import ProviderCapability, ProviderInfo, RerankResult
 
 
 logger = logging.getLogger(__name__)

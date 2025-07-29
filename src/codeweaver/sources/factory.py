@@ -14,8 +14,8 @@ import logging
 
 from typing import Any
 
-from codeweaver._types import SOURCE_PROVIDERS, SourceProvider, SourceProviderInfo
 from codeweaver.sources.base import DataSource, SourceConfig, SourceRegistry, get_source_registry
+from codeweaver.types import SOURCE_PROVIDERS, SourceProvider, SourceProviderInfo
 
 
 logger = logging.getLogger(__name__)

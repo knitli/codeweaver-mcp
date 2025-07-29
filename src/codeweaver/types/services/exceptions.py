@@ -7,8 +7,8 @@
 
 from pathlib import Path
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.exceptions import CodeWeaverError
+from codeweaver.types.config import ServiceType
+from codeweaver.types.exceptions import CodeWeaverError
 
 
 class ServiceError(CodeWeaverError):

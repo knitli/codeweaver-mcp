@@ -16,7 +16,7 @@ TODO: Add interactive prompt for contributors.
 
 import json
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 from concurrent.futures import ThreadPoolExecutor

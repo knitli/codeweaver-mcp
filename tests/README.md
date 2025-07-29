@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Test Suite
 
 Comprehensive test suite for CodeWeaver's testing framework validation and all protocol implementations.

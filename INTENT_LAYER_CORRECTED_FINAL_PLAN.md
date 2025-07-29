@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Intent Layer: Corrected Implementation Plan
 
 ## 🎯 Executive Summary
@@ -28,7 +34,7 @@ This corrected plan addresses critical gaps in the original design to ensure ful
 - **Testing Framework**: Integrates with existing testing utilities in `src/codeweaver/testing/`
 - **Context Propagation**: Proper service context injection through `ServicesManager.create_service_context()`
 
-### 🎯 **Background Indexing System** 
+### 🎯 **Background Indexing System**
 - **AutoIndexingService**: Background service integrated with `ServicesManager`
 - **File Watching**: Uses existing `watchdog` patterns for real-time updates
 - **Developer Control**: Start/stop exposed to framework developers only
@@ -61,7 +67,7 @@ This corrected plan addresses critical gaps in the original design to ensure ful
 ## 📋 Corrected Implementation Phases
 
 ### Phase 1: Essential Features (Alpha Release) - CORRECTED
-**Duration**: 6-8 weeks  
+**Duration**: 6-8 weeks
 **Priority**: MUST HAVE for alpha release
 
 #### Week 1-2: Service-Compliant Infrastructure
@@ -151,7 +157,7 @@ src/codeweaver/intent/recovery/
 - All alpha success criteria met with architectural compliance
 
 ### Phase 2: Enhanced Features (Performance & Intelligence) - UNCHANGED
-**Duration**: 3-4 weeks  
+**Duration**: 3-4 weeks
 **Priority**: SHOULD HAVE for production readiness
 
 - Enhanced NLP parsing with spaCy integration
@@ -160,7 +166,7 @@ src/codeweaver/intent/recovery/
 - Performance optimization through existing monitoring
 
 ### Phase 3: Advanced Features (Future Enhancement) - UNCHANGED
-**Duration**: 2-3 weeks  
+**Duration**: 2-3 weeks
 **Priority**: COULD HAVE for enhanced developer experience
 
 - User feedback integration and learning
@@ -173,27 +179,27 @@ src/codeweaver/intent/recovery/
 ### 1. Intent Orchestrator (Service-Compliant)
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver._types import ServiceHealth, ServiceStatus, IntentResult
+from codeweaver.types import ServiceHealth, ServiceStatus, IntentResult
 
 class IntentOrchestrator(BaseServiceProvider):
     """Service-compliant orchestrator integrated with ServicesManager."""
-    
+
     def __init__(self, config: IntentServiceConfig):
         super().__init__(config)
         self.parser = None
         self.strategy_registry = None
         self.cache_service = None
-    
+
     async def _initialize_provider(self) -> None:
         """Initialize with existing service dependencies."""
         # Get services through existing dependency injection
         self.cache_service = await self.get_service_dependency("caching_service")
         self.parser = IntentParserFactory.create(self.config.parsing)
         self.strategy_registry = StrategyRegistry(self.services_manager)
-    
+
     async def process_intent(
-        self, 
-        intent_text: str, 
+        self,
+        intent_text: str,
         context: dict[str, Any]
     ) -> IntentResult:
         """Process intent with full service integration."""
@@ -201,7 +207,7 @@ class IntentOrchestrator(BaseServiceProvider):
             # Use existing service context patterns
             service_context = await self.services_manager.create_service_context()
             enhanced_context = {**context, **service_context}
-            
+
             # Check cache using existing caching service
             if self.cache_service:
                 cached_result = await self.cache_service.get(
@@ -209,28 +215,28 @@ class IntentOrchestrator(BaseServiceProvider):
                 )
                 if cached_result:
                     return cached_result
-            
+
             # Parse intent
             parsed_intent = await self.parser.parse(intent_text)
-            
+
             # Select and execute strategy with service context
             strategy = await self.strategy_registry.select_strategy(parsed_intent)
             result = await strategy.execute(parsed_intent, enhanced_context)
-            
+
             # Cache using existing service
             if self.cache_service and result.success:
                 await self.cache_service.set(
-                    self._generate_cache_key(intent_text), 
+                    self._generate_cache_key(intent_text),
                     result,
                     ttl=self.config.cache_ttl
                 )
-            
+
             return result
-            
+
         except Exception as e:
             logger.exception("Intent processing failed")
             return await self._execute_fallback(intent_text, context, e)
-    
+
     async def health_check(self) -> ServiceHealth:
         """Health check following existing patterns."""
         try:
@@ -243,17 +249,17 @@ class IntentOrchestrator(BaseServiceProvider):
                         message=f"Cache service unhealthy: {cache_health.message}",
                         last_check=datetime.now(timezone.utc)
                     )
-            
+
             # Test basic functionality
             test_intent = "test intent"
             await self.parser.parse(test_intent)
-            
+
             return ServiceHealth(
                 status=ServiceStatus.HEALTHY,
                 message="Intent orchestrator operational",
                 last_check=datetime.now(timezone.utc)
             )
-            
+
         except Exception as e:
             return ServiceHealth(
                 status=ServiceStatus.UNHEALTHY,
@@ -270,92 +276,92 @@ from watchdog.events import FileSystemEventHandler
 
 class AutoIndexingService(BaseServiceProvider):
     """Background indexing service - NOT exposed to LLM users."""
-    
+
     def __init__(self, config: AutoIndexingConfig):
         super().__init__(config)
         self.observer = None
         self.watched_paths = set()
         self.chunking_service = None
         self.filtering_service = None
-    
+
     async def _initialize_provider(self) -> None:
         """Initialize with existing service dependencies."""
         self.chunking_service = await self.get_service_dependency("chunking_service")
         self.filtering_service = await self.get_service_dependency("filtering_service")
         self.observer = Observer()
-    
+
     async def start_monitoring(self, path: str) -> None:
         """Start background monitoring - exposed to framework developers only."""
         if path in self.watched_paths:
             logger.info("Path already being monitored: %s", path)
             return
-        
+
         # Initial indexing
         await self._index_path(path)
-        
+
         # Setup file watching
         event_handler = CodebaseChangeHandler(self)
         self.observer.schedule(event_handler, path, recursive=True)
-        
+
         if not self.observer.is_alive():
             self.observer.start()
-        
+
         self.watched_paths.add(path)
         logger.info("Started monitoring path: %s", path)
-    
+
     async def stop_monitoring(self, path: str = None) -> None:
         """Stop monitoring - exposed to framework developers only."""
         if path:
             self.watched_paths.discard(path)
         else:
             self.watched_paths.clear()
-        
+
         if self.observer and self.observer.is_alive():
             self.observer.stop()
             self.observer.join()
-        
+
         logger.info("Stopped monitoring")
-    
+
     async def _index_path(self, path: str) -> None:
         """Index path using existing services."""
         if not self.filtering_service or not self.chunking_service:
             logger.warning("Required services not available for indexing")
             return
-        
+
         # Use existing filtering service
         files = await self.filtering_service.discover_files(path)
-        
+
         for file_path in files:
             try:
                 content = await self._read_file_content(file_path)
-                
+
                 # Use existing chunking service
                 chunks = await self.chunking_service.chunk_content(
                     content, str(file_path)
                 )
-                
+
                 # Index chunks using existing backend
                 await self._store_chunks(file_path, chunks)
-                
+
             except Exception as e:
                 logger.warning("Failed to index file %s: %s", file_path, e)
-    
+
     async def health_check(self) -> ServiceHealth:
         """Health check following existing patterns."""
         try:
-            is_monitoring = bool(self.watched_paths and 
-                               self.observer and 
+            is_monitoring = bool(self.watched_paths and
+                               self.observer and
                                self.observer.is_alive())
-            
+
             status = ServiceStatus.HEALTHY if is_monitoring else ServiceStatus.DEGRADED
             message = f"Monitoring {len(self.watched_paths)} paths" if is_monitoring else "Not monitoring any paths"
-            
+
             return ServiceHealth(
                 status=status,
                 message=message,
                 last_check=datetime.now(timezone.utc)
             )
-            
+
         except Exception as e:
             return ServiceHealth(
                 status=ServiceStatus.UNHEALTHY,
@@ -366,13 +372,13 @@ class AutoIndexingService(BaseServiceProvider):
 
 ### 3. Configuration Integration (Hierarchy-Compliant)
 ```python
-from codeweaver._types.config import BaseServiceConfig
+from codeweaver.types import BaseServiceConfig
 from typing import Annotated
 from pydantic import Field
 
 class IntentServiceConfig(BaseServiceConfig):
     """Intent service configuration extending existing hierarchy."""
-    
+
     enabled: Annotated[bool, Field(default=True, description="Enable intent processing")]
     default_strategy: Annotated[str, Field(default="adaptive", description="Default strategy")]
     confidence_threshold: Annotated[float, Field(default=0.6, description="Minimum confidence threshold")]
@@ -382,7 +388,7 @@ class IntentServiceConfig(BaseServiceConfig):
 
 class AutoIndexingConfig(BaseServiceConfig):
     """Auto-indexing configuration extending existing hierarchy."""
-    
+
     enabled: Annotated[bool, Field(default=True, description="Enable auto-indexing")]
     watch_patterns: Annotated[list[str], Field(default_factory=lambda: ["**/*.py", "**/*.js", "**/*.ts"], description="File patterns to watch")]
     ignore_patterns: Annotated[list[str], Field(default_factory=lambda: [".git", "node_modules", "__pycache__"], description="Patterns to ignore")]
@@ -391,12 +397,12 @@ class AutoIndexingConfig(BaseServiceConfig):
 # Integration with existing services configuration
 class ServicesConfig(BaseModel):
     """Extended services configuration."""
-    
+
     # Existing services
     chunking: ChunkingServiceConfig = ChunkingServiceConfig()
     filtering: FilteringServiceConfig = FilteringServiceConfig()
     validation: ValidationServiceConfig = ValidationServiceConfig()
-    
+
     # New intent-related services
     intent: IntentServiceConfig = IntentServiceConfig()
     auto_indexing: AutoIndexingConfig = AutoIndexingConfig()
@@ -408,20 +414,20 @@ from codeweaver.services.middleware_bridge import ServiceBridge
 
 class IntentServiceBridge(ServiceBridge):
     """Intent-specific service bridge extending existing patterns."""
-    
+
     def __init__(self, services_manager: ServicesManager):
         super().__init__(services_manager)
         self.intent_orchestrator = None
-    
+
     async def initialize(self) -> None:
         """Initialize intent orchestrator through service registry."""
         await super().initialize()
         self.intent_orchestrator = await self.services_manager.get_service("intent_orchestrator")
-    
+
     async def create_intent_context(self, base_context: dict) -> dict:
         """Create intent-specific service context."""
         service_context = await self.create_service_context(base_context)
-        
+
         return {
             **service_context,
             "intent_metadata": {
@@ -439,18 +445,18 @@ async def process_intent_tool(
     """MCP tool integrated with existing service patterns."""
     # Get service bridge from FastMCP context - existing pattern
     service_bridge = context.fastmcp_context.get_state_value("service_bridge")
-    
+
     if not service_bridge or not isinstance(service_bridge, IntentServiceBridge):
         raise ServiceUnavailableError("Intent service bridge not available")
-    
+
     # Create enhanced context using existing patterns
     enhanced_context = await service_bridge.create_intent_context(context or {})
-    
+
     # Process intent through service
     result = await service_bridge.intent_orchestrator.process_intent(
         intent, enhanced_context
     )
-    
+
     return {
         "success": result.success,
         "data": result.data,
@@ -503,40 +509,40 @@ from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
 
 class TestIntentOrchestrator:
     """Test intent orchestrator following existing testing patterns."""
-    
+
     @pytest.fixture
     def services_manager(self):
         """Mock services manager using existing utilities."""
         return MockServicesManager()
-    
-    @pytest.fixture  
+
+    @pytest.fixture
     def intent_orchestrator(self, services_manager):
         """Intent orchestrator with mocked dependencies."""
         config = IntentServiceConfig()
         return IntentOrchestrator(config, services_manager)
-    
+
     async def test_service_compliance(self, intent_orchestrator):
         """Test service provider compliance."""
         assert isinstance(intent_orchestrator, BaseServiceProvider)
-        
+
         health = await intent_orchestrator.health_check()
         assert isinstance(health, ServiceHealth)
-        
+
     async def test_intent_processing_with_services(
-        self, 
-        intent_orchestrator, 
+        self,
+        intent_orchestrator,
         services_manager
     ):
         """Test intent processing with service integration."""
         # Setup mock services using existing patterns
         services_manager.mock_service("caching_service")
         services_manager.mock_service("chunking_service")
-        
+
         result = await intent_orchestrator.process_intent(
-            "find authentication functions", 
+            "find authentication functions",
             {}
         )
-        
+
         assert result.success
         assert "search" in result.metadata.get("strategy", "")
 ```
@@ -557,7 +563,7 @@ src/codeweaver/intent/
 ├── strategies/
 │   ├── base_strategy.py            # IntentStrategy(Protocol)
 │   ├── simple_search.py           # SimpleSearchStrategy(BaseServiceProvider)
-│   ├── analysis_workflow.py       # AnalysisWorkflowStrategy(BaseServiceProvider)  
+│   ├── analysis_workflow.py       # AnalysisWorkflowStrategy(BaseServiceProvider)
 │   ├── adaptive.py                # AdaptiveStrategy(BaseServiceProvider)
 │   └── registry.py                # ExtensibilityManager integration
 ├── workflows/

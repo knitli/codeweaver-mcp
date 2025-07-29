@@ -11,7 +11,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 
-from codeweaver._types import BaseEnum, ServiceType
+from codeweaver.types import BaseEnum, ServiceType
 
 
 # Health monitoring types
@@ -146,16 +146,7 @@ class ValidationSeverity(BaseEnum):
     CRITICAL = "critical"
 
 
-class ValidationLevel(BaseEnum):
-    """Validation levels for configuration and data validation."""
-
-    STRICT = "strict"
-    STANDARD = "standard"
-    RELAXED = "relaxed"
-    DISABLED = "disabled"
-
-
-class ValidationError(BaseModel):
+class ValidationErrorData(BaseModel):
     """A validation error."""
 
     message: Annotated[str, Field(description="Error message")]
@@ -176,7 +167,7 @@ class ValidationResult(BaseModel):
     """Result of a validation operation."""
 
     is_valid: Annotated[bool, Field(description="Whether validation passed")]
-    errors: Annotated[list[ValidationError], Field(description="List of validation errors")]
+    errors: Annotated[list[ValidationErrorData], Field(description="List of validation errors")]
     warnings: Annotated[list[ValidationWarning], Field(description="List of validation warnings")]
     metadata: Annotated[dict[str, Any], Field(description="Additional validation metadata")]
     validation_time: Annotated[float, Field(ge=0, description="Time taken for validation")]

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Implementation Plan & Services Layer Usage Guide
 
 **Date:** January 27, 2025

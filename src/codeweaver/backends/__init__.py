@@ -10,21 +10,6 @@ This module provides comprehensive abstractions for 15+ vector databases
 with support for hybrid search, streaming operations, and transactions.
 """
 
-from codeweaver._types import (
-    CollectionInfo,
-    DistanceMetric,
-    FilterCondition,
-    SearchResult,
-    VectorPoint,
-)
-from codeweaver._types.exceptions import (
-    BackendAuthError,
-    BackendCollectionNotFoundError,
-    BackendConnectionError,
-    BackendError,
-    BackendUnsupportedOperationError,
-    BackendVectorDimensionMismatchError,
-)
 from codeweaver.backends.base import (
     HybridSearchBackend,
     StreamingBackend,
@@ -39,6 +24,19 @@ from codeweaver.backends.config import (
 )
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
+from codeweaver.types import (
+    BackendAuthError,
+    BackendCollectionNotFoundError,
+    BackendConnectionError,
+    BackendError,
+    BackendUnsupportedOperationError,
+    BackendVectorDimensionMismatchError,
+    CollectionInfo,
+    DistanceMetric,
+    FilterCondition,
+    SearchResult,
+    VectorPoint,
+)
 
 
 # Try to import DocArray backends (optional)

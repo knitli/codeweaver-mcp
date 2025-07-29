@@ -14,20 +14,18 @@ from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import (
+from codeweaver.services.providers.base_provider import BaseServiceProvider
+from codeweaver.types import (
+    ErrorHandlingService,
     ErrorHandlingServiceConfig,
+    LoggingService,
     LoggingServiceConfig,
+    RateLimitingService,
     RateLimitingServiceConfig,
+    ServiceType,
+    TimingService,
     TimingServiceConfig,
 )
-from codeweaver._types.services import (
-    ErrorHandlingService,
-    LoggingService,
-    RateLimitingService,
-    TimingService,
-)
-from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class FastMCPLoggingProvider(BaseServiceProvider, LoggingService):
@@ -182,9 +180,7 @@ class FastMCPTimingProvider(BaseServiceProvider, TimingService):
                 "avg": sum(timings) / len(timings),
                 "min": min(timings),
                 "max": max(timings),
-                "recent_avg": (
-                    sum(timings[-10:]) / min(len(timings), 10) if timings else 0
-                ),
+                "recent_avg": (sum(timings[-10:]) / min(len(timings), 10) if timings else 0),
             }
             for method, timings in self._timing_stats.items()
             if timings

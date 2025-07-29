@@ -225,7 +225,11 @@ class FileFilteringMiddleware(Middleware):
 
     def _get_size_unit(self, parsed_size: str) -> str:
         """Extract size unit from a string like '1MB'."""
-        if all(char.isdigit() for char in parsed_size) or (parsed_size.endswith("B") and len(parsed_size) > 1 and parsed_size[-2].isdigit()) or (len(parsed_size) == 1):
+        if (
+            all(char.isdigit() for char in parsed_size)
+            or (parsed_size.endswith("B") and len(parsed_size) > 1 and parsed_size[-2].isdigit())
+            or (len(parsed_size) == 1)
+        ):
             return "B"
         match parsed_size.upper()[-2:]:
             case "GB":
@@ -242,19 +246,30 @@ class FileFilteringMiddleware(Middleware):
         if isinstance(parsed_size, int):
             return parsed_size
 
-        parsed_size = str(parsed_size).upper().replace(" ", "").replace("-", "").replace("_", "").replace(",", "").strip().split(".")[0]  # Remove decimals for size parsing
+        parsed_size = (
+            str(parsed_size)
+            .upper()
+            .replace(" ", "")
+            .replace("-", "")
+            .replace("_", "")
+            .replace(",", ".")
+            .strip()
+            .split(".")[0]
+        )  # Remove decimals for size parsing
 
         if not parsed_size:
             logger.warning("Empty size string provided, defaulting to 0B")
             return 0
         size, unit = 0, "B"
         if all(char.isdigit() for char in parsed_size):
-            return int(parsed_size)  # Purely numeric, assume bytes
+            return int(parsed_size)  # All numbers, assume bytes
         if len(parsed_size) == 1:
-            return 0
-        if len(parsed_size) > 1 and parsed_size[-2] in ["K", "M", "G"]:
+            return 0  # Single character, not a number (because it would have been caught above)
+        if len(parsed_size) > 1 and parsed_size[-2] in ["K", "M", "G", "T"]:
             size, unit = parsed_size[:-2], parsed_size[-2:]
         match unit:
+            case "TB":
+                return int(float(size) * 1024 * 1024 * 1024 * 1024)
             case "GB":
                 return int(float(size) * 1024 * 1024 * 1024)
             case "MB":

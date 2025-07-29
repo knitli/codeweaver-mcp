@@ -12,9 +12,8 @@ from typing import Any
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.services import ChunkingService, FilteringService
 from codeweaver.services.manager import ServicesManager
+from codeweaver.types import ChunkingService, FilteringService, ServiceType
 
 
 class ServiceBridge(Middleware):

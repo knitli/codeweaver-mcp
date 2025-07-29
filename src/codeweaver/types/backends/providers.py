@@ -4,14 +4,14 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 """
-Common types for search providers (i.e. Qdrant).
+Common types for search backend providers (e.g. Qdrant).
 """
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
-from codeweaver._types.provider_enums import (
+from codeweaver.types.providers.enums import (
     BackendProvider,
     DistanceMetric,
     HybridFusionStrategy,
@@ -159,8 +159,8 @@ class RerankProviderBase(ABC):
 
 
 # Import BackendCapabilities here to avoid circular imports
-from codeweaver._types.capabilities import BackendCapabilities
-from codeweaver._types.provider_enums import IndexType, StorageType
+from codeweaver.types.backends.capabilities import BackendCapabilities
+from codeweaver.types.backends.enums import IndexType, StorageType
 
 
 @dataclass

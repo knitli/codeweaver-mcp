@@ -28,17 +28,6 @@ content_items = await source.discover_content(config)
 """
 
 # Import new types
-from codeweaver._types import (
-    SOURCE_PROVIDERS,
-    APIType,
-    AuthType,
-    ContentType,
-    DatabaseType,
-    SourceCapabilities,
-    SourceCapability,
-    SourceProvider,
-    SourceProviderInfo,
-)
 from codeweaver.sources.base import (
     AbstractDataSource,
     ContentItem,
@@ -52,6 +41,17 @@ from codeweaver.sources.config import DataSourcesConfig
 from codeweaver.sources.factory import SourceFactory, get_source_factory
 from codeweaver.sources.filesystem import FileSystemSource, FileSystemSourceConfig
 from codeweaver.sources.integration import DataSourceManager
+from codeweaver.types import (
+    SOURCE_PROVIDERS,
+    APIType,
+    AuthType,
+    ContentType,
+    DatabaseType,
+    SourceCapabilities,
+    SourceCapability,
+    SourceProvider,
+    SourceProviderInfo,
+)
 
 
 __all__ = [

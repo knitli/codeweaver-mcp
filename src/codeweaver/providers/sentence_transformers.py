@@ -14,15 +14,15 @@ import logging
 
 from typing import Any
 
-from codeweaver._types import (
+from codeweaver.providers.base import LocalEmbeddingProvider
+from codeweaver.providers.config import SentenceTransformersConfig
+from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
     get_provider_registry_entry,
     register_provider_class,
 )
-from codeweaver.providers.base import LocalEmbeddingProvider
-from codeweaver.providers.config import SentenceTransformersConfig
 from codeweaver.utils.decorators import feature_flag_required
 
 
@@ -38,10 +38,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-@feature_flag_required(
-    "sentence-transformers",
-    dependencies=["sentence-transformers"],
-)
+@feature_flag_required("sentence-transformers", dependencies=["sentence-transformers"])
 class SentenceTransformersProvider(LocalEmbeddingProvider):
     """SentenceTransformers provider for local embeddings."""
 

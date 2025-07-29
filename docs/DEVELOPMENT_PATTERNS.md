@@ -1,7 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Development Patterns Guide
 
-**Date:** January 27, 2025  
-**Author:** CodeWeaver Development Team  
+**Date:** January 27, 2025
+**Author:** CodeWeaver Development Team
 **Version:** 1.0
 
 ## Overview
@@ -32,7 +38,7 @@ Components should work with reduced functionality when dependencies are unavaila
 ```python
 # ✅ CORRECT: Follow established patterns
 class VoyageAIProvider:          # Embedding/reranking providers
-class QdrantBackend:             # Vector database backends  
+class QdrantBackend:             # Vector database backends
 class FileSystemSourceProvider:  # Data source providers
 class ChunkingService:           # Service implementations
 
@@ -91,11 +97,11 @@ def get_static_provider_info(cls) -> EmbeddingProviderInfo:
 ```python
 # ✅ CORRECT: Inherit from appropriate base class
 from codeweaver.providers.base import CombinedProvider
-from codeweaver._types import EmbeddingProvider, RerankingProvider
+from codeweaver.types import EmbeddingProvider, RerankingProvider
 
 class VoyageAIProvider(CombinedProvider):
     """VoyageAI provider supporting both embeddings and reranking."""
-    
+
     def __init__(self, config: VoyageConfig | dict[str, Any]):
         super().__init__(config)
         # Provider-specific initialization
@@ -111,22 +117,22 @@ class ExampleProvider:
     def provider_name(self) -> str:
         """Get the provider name."""
         return ProviderType.EXAMPLE.value
-    
+
     @property
     def capabilities(self) -> ProviderCapabilities:
         """Get provider capabilities."""
         return self._capabilities
-    
+
     @property
     def model_name(self) -> str:
         """Get the current model name."""
         return self._model
-    
+
     @property
     def dimension(self) -> int:
         """Get the embedding dimension."""
         return self._dimension
-    
+
     @property
     def max_batch_size(self) -> int | None:
         """Get maximum batch size for processing."""
@@ -140,25 +146,25 @@ class ExampleProvider:
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if provider is available for the given capability.
-        
+
         Args:
             capability: The capability to check
-            
+
         Returns:
             Tuple of (is_available, error_message)
         """
         if not EXAMPLE_LIBRARY_AVAILABLE:
             return False, "example-library package not installed (install with: uv add example-library)"
-        
+
         if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
             return True, None
-        
+
         return False, f"Capability {capability.value} not supported by Example provider"
-    
+
     @classmethod
     def get_static_provider_info(cls) -> EmbeddingProviderInfo:
         """Get static information about this provider.
-        
+
         Returns:
             Provider information including capabilities and models
         """
@@ -178,18 +184,18 @@ class ExampleProvider:
 class ExampleProvider:
     def _validate_config(self) -> None:
         """Validate provider configuration.
-        
+
         Raises:
             ValueError: If configuration is invalid
         """
         if not self.config.get("api_key"):
             raise ValueError("Example provider API key is required")
-        
+
         model = self.config.get("model", self._capabilities.default_model)
         if model not in self._capabilities.supported_models:
             available = ", ".join(self._capabilities.supported_models)
             raise ValueError(f"Unknown Example model: {model}. Available: {available}")
-        
+
         # Validate other configuration parameters
         max_batch_size = self.config.get("max_batch_size", 128)
         if not isinstance(max_batch_size, int) or max_batch_size <= 0:
@@ -202,22 +208,22 @@ class ExampleProvider:
 class ExampleProvider:
     async def embed_documents(self, texts: list[str], context: dict | None = None) -> list[list[float]]:
         """Generate embeddings with services layer integration.
-        
+
         Args:
             texts: List of texts to embed
             context: Service context for rate limiting, caching, etc.
-            
+
         Returns:
             List of embedding vectors
         """
         if context is None:
             context = {}
-        
+
         # Rate limiting service integration
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
             await rate_limiter.acquire("example_provider", len(texts))
-        
+
         # Caching service integration
         cache_service = context.get("caching_service")
         if cache_service:
@@ -225,15 +231,15 @@ class ExampleProvider:
             cached_result = await cache_service.get(cache_key)
             if cached_result:
                 return cached_result
-        
+
         try:
             # Generate embeddings
             result = await self._generate_embeddings(texts)
-            
+
             # Cache result if service available
             if cache_service:
                 await cache_service.set(cache_key, result, ttl=3600)
-            
+
             # Record metrics if service available
             metrics_service = context.get("metrics_service")
             if metrics_service:
@@ -243,9 +249,9 @@ class ExampleProvider:
                     count=len(texts),
                     success=True
                 )
-            
+
             return result
-            
+
         except Exception as e:
             # Record failure metrics
             metrics_service = context.get("metrics_service")
@@ -257,7 +263,7 @@ class ExampleProvider:
                     success=False,
                     error=str(e)
                 )
-            
+
             logger.exception("Error generating Example embeddings")
             raise
 ```
@@ -277,7 +283,7 @@ class BaseProviderConfig(BaseModel):
         validate_assignment=True,
         frozen=False,
     )
-    
+
     enabled: bool = True
     timeout: int = 30
     max_retries: int = 3
@@ -296,14 +302,14 @@ class ExampleConfig(BaseProviderConfig):
 ```python
 class ExampleConfig(BaseProviderConfig):
     """Configuration for Example provider with validation."""
-    
+
     @field_validator("api_key")
     @classmethod
     def validate_api_key(cls, v: str) -> str:
         if not v or not v.strip():
             raise ValueError("API key cannot be empty")
         return v.strip()
-    
+
     @field_validator("max_batch_size")
     @classmethod
     def validate_batch_size(cls, v: int) -> int:
@@ -312,7 +318,7 @@ class ExampleConfig(BaseProviderConfig):
         if v > 1000:
             raise ValueError("max_batch_size cannot exceed 1000")
         return v
-    
+
     @model_validator(mode="after")
     def validate_model_dimension_compatibility(self) -> "ExampleConfig":
         """Validate model and dimension compatibility."""
@@ -321,7 +327,7 @@ class ExampleConfig(BaseProviderConfig):
                 "example-model-v1": [512, 1024],
                 "example-model-v2": [768, 1536],
             }
-            
+
             if self.model in valid_dimensions:
                 if self.dimension not in valid_dimensions[self.model]:
                     valid = ", ".join(map(str, valid_dimensions[self.model]))
@@ -329,7 +335,7 @@ class ExampleConfig(BaseProviderConfig):
                         f"Dimension {self.dimension} not supported for model {self.model}. "
                         f"Valid dimensions: {valid}"
                     )
-        
+
         return self
 ```
 
@@ -338,7 +344,7 @@ class ExampleConfig(BaseProviderConfig):
 ### 1. Consistent Exception Types
 
 ```python
-from codeweaver._types.exceptions import (
+from codeweaver.types import (
     ProviderError,
     ConfigurationError,
     ServiceUnavailableError,
@@ -352,20 +358,20 @@ class ExampleProvider:
             # Validate inputs
             if not texts:
                 raise ValueError("texts cannot be empty")
-            
+
             if any(not text.strip() for text in texts):
                 raise ValueError("texts cannot contain empty strings")
-            
+
             # Check rate limits
             if len(texts) > self.max_batch_size:
                 raise RateLimitError(
                     f"Batch size {len(texts)} exceeds maximum {self.max_batch_size}"
                 )
-            
+
             # Generate embeddings
             result = await self._call_api(texts)
             return result
-            
+
         except ValueError as e:
             # Re-raise validation errors as-is
             raise
@@ -385,21 +391,21 @@ class ExampleProvider:
 ```python
 class ExampleProvider:
     async def embed_documents_with_retry(
-        self, 
-        texts: list[str], 
+        self,
+        texts: list[str],
         context: dict | None = None
     ) -> list[list[float]]:
         """Generate embeddings with automatic retry."""
         max_retries = self.config.get("max_retries", 3)
         retry_delay = self.config.get("retry_delay", 1.0)
-        
+
         for attempt in range(max_retries + 1):
             try:
                 return await self.embed_documents(texts, context)
             except ServiceUnavailableError as e:
                 if attempt == max_retries:
                     raise
-                
+
                 logger.warning(
                     f"Example API unavailable (attempt {attempt + 1}/{max_retries + 1}): {e}"
                 )
@@ -407,7 +413,7 @@ class ExampleProvider:
             except RateLimitError as e:
                 if attempt == max_retries:
                     raise
-                
+
                 logger.warning(
                     f"Rate limit hit (attempt {attempt + 1}/{max_retries + 1}): {e}"
                 )
@@ -425,7 +431,7 @@ from codeweaver.providers.example import ExampleProvider, ExampleConfig
 
 class TestExampleProvider:
     """Test suite for Example provider following standard patterns."""
-    
+
     @pytest.fixture
     def config(self) -> ExampleConfig:
         """Standard configuration for testing."""
@@ -434,12 +440,12 @@ class TestExampleProvider:
             model="example-model-v1",
             max_batch_size=128
         )
-    
+
     @pytest.fixture
     def provider(self, config: ExampleConfig) -> ExampleProvider:
         """Provider instance for testing."""
         return ExampleProvider(config)
-    
+
     @pytest.fixture
     def mock_context(self) -> dict:
         """Mock service context."""
@@ -448,96 +454,96 @@ class TestExampleProvider:
             "caching_service": AsyncMock(),
             "metrics_service": AsyncMock(),
         }
-    
+
     # Pattern compliance tests
     def test_provider_follows_naming_convention(self, provider: ExampleProvider):
         """Test that provider follows naming conventions."""
         assert provider.__class__.__name__.endswith("Provider")
         assert hasattr(provider, "provider_name")
         assert provider.provider_name == "example"
-    
+
     def test_provider_has_required_properties(self, provider: ExampleProvider):
         """Test that provider has all required properties."""
         required_properties = [
-            "provider_name", "capabilities", "model_name", 
+            "provider_name", "capabilities", "model_name",
             "dimension", "max_batch_size"
         ]
         for prop_name in required_properties:
             assert hasattr(provider, prop_name)
             assert getattr(provider, prop_name) is not None
-    
+
     def test_provider_has_required_class_methods(self):
         """Test that provider has all required class methods."""
         required_methods = ["check_availability", "get_static_provider_info"]
         for method_name in required_methods:
             assert hasattr(ExampleProvider, method_name)
             assert callable(getattr(ExampleProvider, method_name))
-    
+
     # Functionality tests
     async def test_embed_documents_with_services(
-        self, 
-        provider: ExampleProvider, 
+        self,
+        provider: ExampleProvider,
         mock_context: dict
     ):
         """Test embedding generation with services integration."""
         # Mock successful embedding generation
         provider._generate_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
-        
+
         result = await provider.embed_documents(["test text"], mock_context)
-        
+
         assert len(result) == 1
         assert len(result[0]) == 3
-        
+
         # Verify service interactions
         mock_context["rate_limiting_service"].acquire.assert_called_once()
         mock_context["caching_service"].get.assert_called_once()
         mock_context["metrics_service"].record_request.assert_called_once()
-    
+
     async def test_embed_documents_without_services(self, provider: ExampleProvider):
         """Test embedding generation without services (fallback)."""
         # Mock successful embedding generation
         provider._generate_embeddings = AsyncMock(return_value=[[0.1, 0.2, 0.3]])
-        
+
         result = await provider.embed_documents(["test text"], {})
-        
+
         assert len(result) == 1
         assert len(result[0]) == 3
-    
+
     async def test_embed_documents_with_cache_hit(
-        self, 
-        provider: ExampleProvider, 
+        self,
+        provider: ExampleProvider,
         mock_context: dict
     ):
         """Test embedding generation with cache hit."""
         # Mock cache hit
         cached_result = [[0.4, 0.5, 0.6]]
         mock_context["caching_service"].get.return_value = cached_result
-        
+
         result = await provider.embed_documents(["test text"], mock_context)
-        
+
         assert result == cached_result
         # Should not call actual embedding generation
         assert not hasattr(provider, '_generate_embeddings') or \
                not provider._generate_embeddings.called
-    
+
     # Error handling tests
     async def test_embed_documents_handles_api_error(self, provider: ExampleProvider):
         """Test error handling for API failures."""
         provider._generate_embeddings = AsyncMock(
             side_effect=ConnectionError("API unavailable")
         )
-        
+
         with pytest.raises(ServiceUnavailableError):
             await provider.embed_documents(["test text"], {})
-    
+
     async def test_embed_documents_validates_input(self, provider: ExampleProvider):
         """Test input validation."""
         with pytest.raises(ValueError, match="texts cannot be empty"):
             await provider.embed_documents([], {})
-        
+
         with pytest.raises(ValueError, match="texts cannot contain empty strings"):
             await provider.embed_documents(["", "valid text"], {})
-    
+
     # Configuration tests
     def test_config_validation_success(self):
         """Test successful configuration validation."""
@@ -549,37 +555,37 @@ class TestExampleProvider:
         # Should not raise
         provider = ExampleProvider(config)
         assert provider.config["api_key"] == "valid-key"
-    
+
     def test_config_validation_failure(self):
         """Test configuration validation failures."""
         with pytest.raises(ValueError, match="API key cannot be empty"):
             ExampleConfig(api_key="", model="example-model-v1")
-        
+
         with pytest.raises(ValueError, match="max_batch_size must be positive"):
             ExampleConfig(api_key="valid-key", model="example-model-v1", max_batch_size=0)
-    
+
     # Availability tests
     def test_check_availability_success(self):
         """Test availability checking for supported capabilities."""
-        from codeweaver._types import ProviderCapability
-        
+        from codeweaver.types import ProviderCapability
+
         available, error = ExampleProvider.check_availability(ProviderCapability.EMBEDDING)
         assert available is True
         assert error is None
-    
+
     def test_check_availability_unsupported(self):
         """Test availability checking for unsupported capabilities."""
-        from codeweaver._types import ProviderCapability
-        
+        from codeweaver.types import ProviderCapability
+
         available, error = ExampleProvider.check_availability(ProviderCapability.CLASSIFICATION)
         assert available is False
         assert "not supported" in error.lower()
-    
+
     # Static info tests
     def test_get_static_provider_info(self):
         """Test static provider information."""
         info = ExampleProvider.get_static_provider_info()
-        
+
         assert info.name == "example"
         assert len(info.supported_models) > 0
         assert info.default_model in info.supported_models
@@ -592,7 +598,7 @@ class TestExampleProvider:
 ```python
 class TestExampleProviderIntegration:
     """Integration tests for Example provider."""
-    
+
     @pytest.mark.integration
     async def test_real_api_integration(self):
         """Test integration with real Example API."""
@@ -600,22 +606,22 @@ class TestExampleProviderIntegration:
         api_key = os.getenv("EXAMPLE_API_KEY")
         if not api_key:
             pytest.skip("EXAMPLE_API_KEY not set")
-        
+
         config = ExampleConfig(api_key=api_key)
         provider = ExampleProvider(config)
-        
+
         result = await provider.embed_documents(["Hello, world!"], {})
-        
+
         assert len(result) == 1
         assert len(result[0]) == provider.dimension
         assert all(isinstance(x, float) for x in result[0])
-    
+
     @pytest.mark.integration
     async def test_services_integration(self):
         """Test integration with actual services."""
         from codeweaver.services.manager import ServicesManager
         from codeweaver.config import CodeWeaverConfig
-        
+
         # Load test configuration
         config = CodeWeaverConfig.from_dict({
             "services": {
@@ -629,21 +635,21 @@ class TestExampleProviderIntegration:
                 }
             }
         })
-        
+
         # Initialize services
         services_manager = ServicesManager(config.services)
         await services_manager.start_all_services()
-        
+
         try:
             # Create provider and context
             provider_config = ExampleConfig(**config.providers["example"])
             provider = ExampleProvider(provider_config)
             context = await services_manager.create_service_context()
-            
+
             # Test with services
             result = await provider.embed_documents(["Test integration"], context)
             assert len(result) == 1
-            
+
         finally:
             await services_manager.stop_all_services()
 ```
@@ -654,7 +660,7 @@ class TestExampleProviderIntegration:
 
 ```python
 # At the end of each component module
-from codeweaver._types import register_provider_class, ProviderType
+from codeweaver.types import register_provider_class, ProviderType
 
 # Register the provider in the registry
 register_provider_class(ProviderType.EXAMPLE, ExampleProvider)
@@ -690,18 +696,18 @@ generation and document reranking with rate limiting and caching integration.
 
 Example:
     Basic usage:
-    
+
     ```python
     from codeweaver.providers.example import ExampleProvider, ExampleConfig
-    
+
     config = ExampleConfig(api_key="your-key", model="example-model-v1")
     provider = ExampleProvider(config)
-    
+
     embeddings = await provider.embed_documents(["Hello, world!"], context)
     ```
 
     With services integration:
-    
+
     ```python
     context = await services_manager.create_service_context()
     embeddings = await provider.embed_documents(["Hello, world!"], context)
@@ -714,26 +720,26 @@ Example:
 ```python
 class ExampleProvider(CombinedProvider):
     """Example provider supporting both embeddings and reranking.
-    
+
     This provider implements the unified provider interface for Example's APIs,
     supporting both embedding generation and document reranking. It integrates
     with the services layer for rate limiting, caching, and health monitoring.
-    
+
     Attributes:
         provider_name: The provider identifier ("example")
         capabilities: Provider capabilities (embedding, reranking)
         model_name: Current embedding model name
         dimension: Embedding vector dimension
         max_batch_size: Maximum batch size for API calls
-    
+
     Example:
         ```python
         config = ExampleConfig(api_key="your-key")
         provider = ExampleProvider(config)
-        
+
         # Generate embeddings
         embeddings = await provider.embed_documents(["text1", "text2"], context)
-        
+
         # Rerank documents
         results = await provider.rerank_documents("query", ["doc1", "doc2"], context)
         ```
@@ -744,35 +750,35 @@ class ExampleProvider(CombinedProvider):
 
 ```python
 async def embed_documents(
-    self, 
-    texts: list[str], 
+    self,
+    texts: list[str],
     context: dict | None = None
 ) -> list[list[float]]:
     """Generate embeddings for the given texts.
-    
+
     This method generates embedding vectors for the provided texts using the
     configured Example model. It integrates with the services layer for rate
     limiting, caching, and metrics collection.
-    
+
     Args:
         texts: List of texts to embed. Cannot be empty or contain empty strings.
         context: Optional service context for rate limiting, caching, etc.
             If None, services integration is disabled.
-    
+
     Returns:
         List of embedding vectors, one per input text. Each vector has
         dimension equal to self.dimension.
-    
+
     Raises:
         ValueError: If texts is empty or contains empty strings
         RateLimitError: If batch size exceeds maximum or rate limit hit
         ServiceUnavailableError: If Example API is unavailable
         ProviderError: For other API or processing errors
-    
+
     Example:
         ```python
         embeddings = await provider.embed_documents(
-            ["Hello, world!", "How are you?"], 
+            ["Hello, world!", "How are you?"],
             context
         )
         assert len(embeddings) == 2
@@ -897,4 +903,3 @@ For more information, see:
 - [Services Layer Usage Guide](SERVICES_LAYER_GUIDE.md)
 - [Migration Guide](MIGRATION_GUIDE.md)
 - [Factory System Documentation](FACTORY_SYSTEM.md)
-

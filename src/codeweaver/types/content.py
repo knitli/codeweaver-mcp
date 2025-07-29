@@ -16,15 +16,13 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from codeweaver._types.backends import SearchResult
-from codeweaver._types.data_structures import ContentItem, ContentType
+from codeweaver.types.backends.base import SearchResult
+from codeweaver.types.factories.data_structures import ContentItem, ContentType
 
 
 class CodeChunk(BaseModel):
-    """Pydantic model representing a semantic chunk of code.
-
-    Replaces the legacy dataclass version with enhanced validation,
-    serialization, and extensibility support.
+    """
+    Pydantic model representing a semantic chunk of code.
     """
 
     model_config = ConfigDict(
@@ -168,7 +166,7 @@ class CodeChunk(BaseModel):
         Returns:
             ContentItem representation of this chunk
         """
-        from codeweaver._types.data_structures import ContentItem
+        from codeweaver.types.factories.data_structures import ContentItem
 
         return ContentItem(
             path=self.unique_id,

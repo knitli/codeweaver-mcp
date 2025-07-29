@@ -16,7 +16,10 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from codeweaver._types import (
+from codeweaver.backends.base import VectorBackend
+from codeweaver.providers.base import EmbeddingProvider, RerankProvider
+from codeweaver.sources.base import DataSource
+from codeweaver.types import (
     BaseCapabilities,
     BaseComponentConfig,
     BaseComponentInfo,
@@ -24,9 +27,6 @@ from codeweaver._types import (
     PluginInfo,
     ValidationResult,
 )
-from codeweaver.backends.base import VectorBackend
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.sources.base import DataSource
 
 
 logger = logging.getLogger(__name__)

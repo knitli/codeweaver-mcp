@@ -20,12 +20,12 @@ from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
 
-from codeweaver._types import ContentSearchResult, ExtensibilityConfig
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
 
 # CodeWeaver domain-specific middleware
 from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
 from codeweaver.services.manager import ServicesManager
+from codeweaver.types import ContentSearchResult, ExtensibilityConfig
 
 
 if TYPE_CHECKING:
@@ -90,8 +90,7 @@ class CodeWeaverServer:
 
         # NEW: Create and initialize services manager with FastMCP server reference
         self.services_manager = ServicesManager(
-            config=self.config.services,
-            fastmcp_server=self.mcp
+            config=self.config.services, fastmcp_server=self.mcp
         )
         await self.services_manager.initialize()
 
@@ -206,8 +205,12 @@ class CodeWeaverServer:
 
         # Create context with services for source to use
         source_context = {
-            "chunking_service": self.services_manager.get_chunking_service() if self.services_manager else None,
-            "filtering_service": self.services_manager.get_filtering_service() if self.services_manager else None,
+            "chunking_service": self.services_manager.get_chunking_service()
+            if self.services_manager
+            else None,
+            "filtering_service": self.services_manager.get_filtering_service()
+            if self.services_manager
+            else None,
         }
 
         # Index using enhanced filesystem source
@@ -236,7 +239,9 @@ class CodeWeaverServer:
             "services_used": {
                 "chunking": source_context["chunking_service"] is not None,
                 "filtering": source_context["filtering_service"] is not None,
-                "middleware_services": list(self.services_manager.list_middleware_services().keys()) if self.services_manager else [],
+                "middleware_services": list(self.services_manager.list_middleware_services().keys())
+                if self.services_manager
+                else [],
             },
         }
 
@@ -394,7 +399,9 @@ class CodeWeaverServer:
 
         # Create context with services
         source_context = {
-            "filtering_service": self.services_manager.get_filtering_service() if self.services_manager else None
+            "filtering_service": self.services_manager.get_filtering_service()
+            if self.services_manager
+            else None
         }
 
         # Perform structural search using enhanced filesystem source
@@ -419,7 +426,10 @@ class CodeWeaverServer:
 
             # Get middleware service information
             middleware_services = self.services_manager.list_middleware_services()
-            middleware_info = {str(service_type): service.name for service_type, service in middleware_services.items()}
+            middleware_info = {
+                str(service_type): service.name
+                for service_type, service in middleware_services.items()
+            }
 
         # Get plugin system component info
         component_info = self.extensibility_manager.get_component_info()

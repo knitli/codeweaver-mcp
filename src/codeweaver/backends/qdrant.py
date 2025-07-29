@@ -30,21 +30,20 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from codeweaver._types import (
-    CollectionInfo,
-    DistanceMetric,
-    FilterCondition,
-    HybridStrategy,
-    SearchFilter,
-    SearchResult,
-    VectorPoint,
-)
-from codeweaver._types.exceptions import (
+from codeweaver.types import (
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,
+    CollectionInfo,
+    DistanceMetric,
+    FilterCondition,
+    HealthStatus,
+    HybridStrategy,
+    SearchFilter,
+    SearchResult,
+    ServiceHealth,
+    VectorPoint,
 )
-from codeweaver._types.service_data import HealthStatus, ServiceHealth
 
 
 logger = logging.getLogger(__name__)
@@ -468,7 +467,7 @@ class QdrantHybridBackend(QdrantBackend):
                 return ServiceHealth(
                     status=HealthStatus.UNHEALTHY,
                     message="Unable to get cluster info from Qdrant",
-                    last_check=datetime.now(UTC)
+                    last_check=datetime.now(UTC),
                 )
 
             # Check if we can list collections
@@ -487,8 +486,8 @@ class QdrantHybridBackend(QdrantBackend):
                     metadata={
                         "collection_count": collection_count,
                         "cluster_info": str(health_info),
-                        "telemetry_available": telemetry is not None
-                    }
+                        "telemetry_available": telemetry is not None,
+                    },
                 )
 
             except Exception as e:
@@ -497,7 +496,7 @@ class QdrantHybridBackend(QdrantBackend):
                     status=HealthStatus.DEGRADED,
                     message=f"Qdrant partially available: {e}",
                     last_check=datetime.now(UTC),
-                    metadata={"collection_count": collection_count}
+                    metadata={"collection_count": collection_count},
                 )
 
         except Exception as e:
@@ -512,15 +511,12 @@ class QdrantHybridBackend(QdrantBackend):
         try:
             return {
                 "backend_type": "qdrant",
-                "url": getattr(self.client, '_client', {}).get('url', 'unknown'),
+                "url": getattr(self.client, "_client", {}).get("url", "unknown"),
                 "sparse_vectors_enabled": self.enable_sparse_vectors,
-                "sparse_on_disk": getattr(self, 'sparse_on_disk', False)
+                "sparse_on_disk": getattr(self, "sparse_on_disk", False),
             }
         except Exception:
-            return {
-                "backend_type": "qdrant",
-                "status": "connection_info_unavailable"
-            }
+            return {"backend_type": "qdrant", "status": "connection_info_unavailable"}
 
     async def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for monitoring."""
@@ -528,30 +524,27 @@ class QdrantHybridBackend(QdrantBackend):
             collections = self.client.get_collections()
             metrics = {
                 "total_collections": len(collections.collections) if collections else 0,
-                "collections": []
+                "collections": [],
             }
 
             # Get metrics for each collection
-            for collection in (collections.collections if collections else []):
+            for collection in collections.collections if collections else []:
                 try:
                     collection_info = self.client.get_collection(collection.name)
                     metrics["collections"].append({
                         "name": collection.name,
                         "points_count": collection_info.points_count if collection_info else 0,
                         "vectors_count": collection_info.vectors_count if collection_info else 0,
-                        "status": collection_info.status if collection_info else "unknown"
+                        "status": collection_info.status if collection_info else "unknown",
                     })
                 except Exception as e:
-                    metrics["collections"].append({
-                        "name": collection.name,
-                        "error": str(e)
-                    })
+                    metrics["collections"].append({"name": collection.name, "error": str(e)})
 
         except Exception as e:
             return {
                 "error": f"Failed to get performance metrics: {e}",
                 "total_collections": 0,
-                "collections": []
+                "collections": [],
             }
 
         else:

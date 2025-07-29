@@ -1,3 +1,4 @@
+# sourcery skip: avoid-single-character-names-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -12,7 +13,7 @@ values. These enums support the factory pattern, error handling, component lifec
 and search system functionality.
 """
 
-from codeweaver._types.base_enum import BaseEnum
+from codeweaver.types.base_enum import BaseEnum
 
 
 class ComponentState(BaseEnum):
@@ -149,7 +150,7 @@ class Language(BaseEnum):
     JAVA = "java"
     CSHARP = "csharp"
     CPP = "cpp"
-    C = "c"
+    C_LANG = "c"
     RUST = "rust"
     GO = "go"
     PHP = "php"
@@ -166,3 +167,19 @@ class Language(BaseEnum):
     MARKDOWN = "markdown"
     TEXT = "text"
     UNKNOWN = "unknown"
+
+    @classmethod
+    def ast_grep_languages(cls) -> tuple["Language"]:
+        """Languages supported by Ast-Grep's builtin parsers."""
+        return tuple(
+            sorted(
+                lang
+                for lang in cls.__members__.values()
+                if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+            )
+        )
+
+    @property
+    def supports_ast_grep(self) -> bool:
+        """Check if this language is supported by Ast-Grep."""
+        return self in self.ast_grep_languages()

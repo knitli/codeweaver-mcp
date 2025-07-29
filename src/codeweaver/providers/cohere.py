@@ -1,14 +1,21 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Cohere provider implementation for embeddings and reranking.
 
 Provides Cohere's multilingual embeddings and reranking using the unified provider interface.
 Supports both embedding generation and document reranking with batch processing.
 """
+
 import logging
 
 from typing import Any
 
-from codeweaver._types import (
+from codeweaver.providers.base import CombinedProvider
+from codeweaver.providers.config import CohereConfig
+from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -16,20 +23,20 @@ from codeweaver._types import (
     get_provider_registry_entry,
     register_provider_class,
 )
-from codeweaver.providers.base import CombinedProvider
-from codeweaver.providers.config import CohereConfig
 from codeweaver.utils.decorators import feature_flag_required
 
 
 try:
     import cohere
+
     COHERE_AVAILABLE = True
 except ImportError:
     COHERE_AVAILABLE = False
     cohere = None
 logger = logging.getLogger(__name__)
 
-@feature_flag_required('cohere', dependencies=['cohere'])
+
+@feature_flag_required("cohere", dependencies=["cohere"])
 class CohereProvider(CombinedProvider):
     """Cohere provider supporting both embeddings and reranking."""
 
@@ -41,27 +48,33 @@ class CohereProvider(CombinedProvider):
         """
         super().__init__(config)
         if not COHERE_AVAILABLE:
-            raise ImportError('Cohere library not available. Install with: uv add cohere')
-        self.client = cohere.Client(api_key=self.config['api_key'])
-        self.rate_limiter = self.config.get('rate_limiter')
+            raise ImportError("Cohere library not available. Install with: uv add cohere")
+        self.client = cohere.Client(api_key=self.config["api_key"])
+        self.rate_limiter = self.config.get("rate_limiter")
         self._registry_entry = get_provider_registry_entry(ProviderType.COHERE)
         self._capabilities = self._registry_entry.capabilities
-        self._embedding_model = self.config.get('model', self._capabilities.default_embedding_model)
-        self._rerank_model = self.config.get('rerank_model', self._capabilities.default_reranking_model)
+        self._embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
+        self._rerank_model = self.config.get(
+            "rerank_model", self._capabilities.default_reranking_model
+        )
         self._dimension = self._capabilities.native_dimensions.get(self._embedding_model, 1024)
 
     def _validate_config(self) -> None:
         """Validate Cohere configuration."""
-        if not self.config.get('api_key'):
-            raise ValueError('Cohere API key is required')
-        embedding_model = self.config.get('model', self._capabilities.default_embedding_model)
+        if not self.config.get("api_key"):
+            raise ValueError("Cohere API key is required")
+        embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         if embedding_model not in self._capabilities.supported_embedding_models:
-            available = ', '.join(self._capabilities.supported_embedding_models)
-            raise ValueError(f'Unknown Cohere embedding model: {embedding_model}. Available: {available}')
-        rerank_model = self.config.get('rerank_model', self._capabilities.default_reranking_model)
+            available = ", ".join(self._capabilities.supported_embedding_models)
+            raise ValueError(
+                f"Unknown Cohere embedding model: {embedding_model}. Available: {available}"
+            )
+        rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
         if rerank_model not in self._capabilities.supported_reranking_models:
-            available = ', '.join(self._capabilities.supported_reranking_models)
-            raise ValueError(f'Unknown Cohere reranking model: {rerank_model}. Available: {available}')
+            available = ", ".join(self._capabilities.supported_reranking_models)
+            raise ValueError(
+                f"Unknown Cohere reranking model: {rerank_model}. Available: {available}"
+            )
 
     @property
     def provider_name(self) -> str:
@@ -88,50 +101,66 @@ class CohereProvider(CombinedProvider):
         """Cohere has input length limits."""
         return 500000
 
-    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None=None) -> list[list[float]]:
+    async def embed_documents(
+        self, texts: list[str], context: dict[str, Any] | None = None
+    ) -> list[list[float]]:
         """Generate embeddings for documents with service layer integration."""
         context = context or {}
-        cache_service = context.get('caching_service')
+        cache_service = context.get("caching_service")
         if cache_service:
-            cache_key = {'provider': 'cohere', 'model': self._embedding_model, 'texts': texts, 'input_type': 'search_document'}
+            cache_key = {
+                "provider": "cohere",
+                "model": self._embedding_model,
+                "texts": texts,
+                "input_type": "search_document",
+            }
             cached_result = await cache_service.get(cache_key)
             if cached_result:
-                logger.debug('Cache hit for %s Cohere embeddings', len(texts))
+                logger.debug("Cache hit for %s Cohere embeddings", len(texts))
                 return cached_result
-        if rate_limiter := context.get('rate_limiting_service'):
-            await rate_limiter.acquire('cohere', len(texts))
+        if rate_limiter := context.get("rate_limiting_service"):
+            await rate_limiter.acquire("cohere", len(texts))
         try:
-            response = self.client.embed(texts=texts, model=self._embedding_model, input_type='search_document')
+            response = self.client.embed(
+                texts=texts, model=self._embedding_model, input_type="search_document"
+            )
             embeddings = response.embeddings
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)
-                logger.debug('Cached %s Cohere embeddings', len(texts))
+                logger.debug("Cached %s Cohere embeddings", len(texts))
         except Exception:
-            logger.exception('Error generating Cohere embeddings')
+            logger.exception("Error generating Cohere embeddings")
             raise
         else:
             return embeddings
 
-    async def embed_query(self, text: str, context: dict[str, Any] | None=None) -> list[float]:
+    async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
         """Generate embedding for search query with service layer integration."""
         context = context or {}
-        cache_service = context.get('caching_service')
+        cache_service = context.get("caching_service")
         if cache_service:
-            cache_key = {'provider': 'cohere', 'model': self._embedding_model, 'text': text, 'input_type': 'search_query'}
+            cache_key = {
+                "provider": "cohere",
+                "model": self._embedding_model,
+                "text": text,
+                "input_type": "search_query",
+            }
             cached_result = await cache_service.get(cache_key)
             if cached_result:
-                logger.debug('Cache hit for Cohere query embedding')
+                logger.debug("Cache hit for Cohere query embedding")
                 return cached_result
-        if rate_limiter := context.get('rate_limiting_service'):
-            await rate_limiter.acquire('cohere', 1)
+        if rate_limiter := context.get("rate_limiting_service"):
+            await rate_limiter.acquire("cohere", 1)
         try:
-            response = self.client.embed(texts=[text], model=self._embedding_model, input_type='search_query')
+            response = self.client.embed(
+                texts=[text], model=self._embedding_model, input_type="search_query"
+            )
             embedding = response.embeddings[0]
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)
-                logger.debug('Cached Cohere query embedding')
+                logger.debug("Cached Cohere query embedding")
         except Exception:
-            logger.exception('Error generating Cohere query embedding')
+            logger.exception("Error generating Cohere query embedding")
             raise
         else:
             return embedding
@@ -146,21 +175,33 @@ class CohereProvider(CombinedProvider):
         """Cohere has query length limits for reranking."""
         return 10000
 
-    async def rerank(self, query: str, documents: list[str], top_k: int | None=None) -> list[RerankResult]:
+    async def rerank(
+        self, query: str, documents: list[str], top_k: int | None = None
+    ) -> list[RerankResult]:
         """Rerank documents using Cohere."""
 
         def _raise_value_error(msg: str) -> None:
             raise ValueError(msg)
+
         try:
-            if len(documents) > (self.max_documents or float('inf')):
-                _raise_value_error(f'Too many documents: {len(documents)} > {self.max_documents}')
-            if len(query) > (self.max_query_length or float('inf')):
-                _raise_value_error(f'Query too long: {len(query)} > {self.max_query_length}')
-            response = self.client.rerank(query=query, documents=documents, model=self._rerank_model, top_k=top_k)
+            if len(documents) > (self.max_documents or float("inf")):
+                _raise_value_error(f"Too many documents: {len(documents)} > {self.max_documents}")
+            if len(query) > (self.max_query_length or float("inf")):
+                _raise_value_error(f"Query too long: {len(query)} > {self.max_query_length}")
+            response = self.client.rerank(
+                query=query, documents=documents, model=self._rerank_model, top_k=top_k
+            )
             rerank_results = []
-            rerank_results.extend(RerankResult(index=item.index, relevance_score=item.relevance_score, document=getattr(item, 'document', None)) for item in response.results)
+            rerank_results.extend(
+                RerankResult(
+                    index=item.index,
+                    relevance_score=item.relevance_score,
+                    document=getattr(item, "document", None),
+                )
+                for item in response.results
+            )
         except Exception:
-            logger.exception('Error reranking with Cohere')
+            logger.exception("Error reranking with Cohere")
             raise
         else:
             return rerank_results
@@ -169,21 +210,75 @@ class CohereProvider(CombinedProvider):
         """Get information about Cohere capabilities from centralized registry."""
         registry_entry = get_provider_registry_entry(ProviderType.COHERE)
         capabilities = registry_entry.capabilities
-        return EmbeddingProviderInfo(name=ProviderType.COHERE.value, display_name=registry_entry.display_name, description=registry_entry.description, supported_capabilities=[ProviderCapability.EMBEDDING, ProviderCapability.RERANKING, ProviderCapability.BATCH_PROCESSING], capabilities=capabilities, default_models={'embedding': capabilities.default_embedding_model, 'reranking': capabilities.default_reranking_model}, supported_models={'embedding': capabilities.supported_embedding_models, 'reranking': capabilities.supported_reranking_models}, rate_limits={'requests_per_minute': capabilities.requests_per_minute, 'tokens_per_minute': capabilities.tokens_per_minute}, requires_api_key=capabilities.requires_api_key, max_batch_size=capabilities.max_batch_size, max_input_length=capabilities.max_input_length, native_dimensions=capabilities.native_dimensions)
+        return EmbeddingProviderInfo(
+            name=ProviderType.COHERE.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
+            supported_capabilities=[
+                ProviderCapability.EMBEDDING,
+                ProviderCapability.RERANKING,
+                ProviderCapability.BATCH_PROCESSING,
+            ],
+            capabilities=capabilities,
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
+            },
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
+            },
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
+        )
 
     @classmethod
     def get_static_provider_info(cls) -> EmbeddingProviderInfo:
         """Get static provider information from centralized registry."""
         registry_entry = get_provider_registry_entry(ProviderType.COHERE)
         capabilities = registry_entry.capabilities
-        return EmbeddingProviderInfo(name=ProviderType.COHERE.value, display_name=registry_entry.display_name, description=registry_entry.description, supported_capabilities=[ProviderCapability.EMBEDDING, ProviderCapability.RERANKING, ProviderCapability.BATCH_PROCESSING], capabilities=capabilities, default_models={'embedding': capabilities.default_embedding_model, 'reranking': capabilities.default_reranking_model}, supported_models={'embedding': capabilities.supported_embedding_models, 'reranking': capabilities.supported_reranking_models}, rate_limits={'requests_per_minute': capabilities.requests_per_minute, 'tokens_per_minute': capabilities.tokens_per_minute}, requires_api_key=capabilities.requires_api_key, max_batch_size=capabilities.max_batch_size, max_input_length=capabilities.max_input_length, native_dimensions=capabilities.native_dimensions)
+        return EmbeddingProviderInfo(
+            name=ProviderType.COHERE.value,
+            display_name=registry_entry.display_name,
+            description=registry_entry.description,
+            supported_capabilities=[
+                ProviderCapability.EMBEDDING,
+                ProviderCapability.RERANKING,
+                ProviderCapability.BATCH_PROCESSING,
+            ],
+            capabilities=capabilities,
+            default_models={
+                "embedding": capabilities.default_embedding_model,
+                "reranking": capabilities.default_reranking_model,
+            },
+            supported_models={
+                "embedding": capabilities.supported_embedding_models,
+                "reranking": capabilities.supported_reranking_models,
+            },
+            rate_limits={
+                "requests_per_minute": capabilities.requests_per_minute,
+                "tokens_per_minute": capabilities.tokens_per_minute,
+            },
+            requires_api_key=capabilities.requires_api_key,
+            max_batch_size=capabilities.max_batch_size,
+            max_input_length=capabilities.max_input_length,
+            native_dimensions=capabilities.native_dimensions,
+        )
 
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if Cohere is available for the given capability."""
         if not COHERE_AVAILABLE:
-            return (False, 'cohere package not installed (install with: uv add cohere)')
+            return (False, "cohere package not installed (install with: uv add cohere)")
         if capability in [ProviderCapability.EMBEDDING, ProviderCapability.RERANKING]:
             return (True, None)
-        return (False, f'Capability {capability.value} not supported by Cohere')
+        return (False, f"Capability {capability.value} not supported by Cohere")
+
+
 register_provider_class(ProviderType.COHERE, CohereProvider)

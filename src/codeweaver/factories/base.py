@@ -16,7 +16,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
-from codeweaver._types import (
+from codeweaver.types import (
     BaseComponentConfig,
     BaseComponentInfo,
     ComponentType,
@@ -28,9 +28,9 @@ from codeweaver._types import (
 logger = logging.getLogger(__name__)
 
 # Type variables for generic factory patterns
-T = TypeVar('T')
-ConfigT = TypeVar('ConfigT', bound=BaseComponentConfig)
-InfoT = TypeVar('InfoT', bound=BaseComponentInfo)
+T = TypeVar("T")
+ConfigT = TypeVar("ConfigT", bound=BaseComponentConfig)
+InfoT = TypeVar("InfoT", bound=BaseComponentInfo)
 
 
 @runtime_checkable
@@ -95,11 +95,9 @@ class BaseComponentFactory(ABC):
         """Default configuration validation."""
         try:
             # Basic validation - subclasses should override for specific validation
-            if not hasattr(config, 'model_validate'):
+            if not hasattr(config, "model_validate"):
                 return ValidationResult(
-                    is_valid=False,
-                    errors=["Configuration must be a Pydantic model"],
-                    warnings=[]
+                    is_valid=False, errors=["Configuration must be a Pydantic model"], warnings=[]
                 )
 
             # Validate the model
@@ -108,9 +106,7 @@ class BaseComponentFactory(ABC):
 
         except Exception as e:
             return ValidationResult(
-                is_valid=False,
-                errors=[f"Configuration validation failed: {e}"],
-                warnings=[]
+                is_valid=False, errors=[f"Configuration validation failed: {e}"], warnings=[]
             )
 
     def get_component_info(self) -> BaseComponentInfo:
@@ -118,7 +114,7 @@ class BaseComponentFactory(ABC):
         return BaseComponentInfo(
             name=self.__class__.__name__,
             component_type=self.component_type,
-            description=self.__doc__ or "No description available"
+            description=self.__doc__ or "No description available",
         )
 
 
@@ -135,7 +131,9 @@ class BaseRegistry(ABC):
     def register_component(self, name: str, factory: ComponentFactory) -> None:
         """Register a component factory."""
         if name in self._factories:
-            self.logger.warning("Overriding existing %s factory: %s", self.component_type.value, name)
+            self.logger.warning(
+                "Overriding existing %s factory: %s", self.component_type.value, name
+            )
 
         self._factories[name] = factory
         self.logger.debug("Registered %s factory: %s", self.component_type.value, name)
@@ -197,10 +195,7 @@ class FactoryContext:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert context to dictionary for backward compatibility."""
-        return {
-            **self._services,
-            '_metadata': self._metadata
-        }
+        return {**self._services, "_metadata": self._metadata}
 
 
 class ComponentRegistration:
@@ -211,7 +206,7 @@ class ComponentRegistration:
         name: str,
         factory: ComponentFactory,
         component_type: ComponentType,
-        plugin_info: PluginInfo | None = None
+        plugin_info: PluginInfo | None = None,
     ):
         """Initialize a component registration."""
         self.name = name

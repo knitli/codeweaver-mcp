@@ -14,8 +14,8 @@ from typing import Annotated
 
 from pydantic import ConfigDict, Field
 
-from codeweaver._types.core import BaseCapabilities
-from codeweaver._types.provider_enums import (
+from codeweaver.types.factories.core import BaseCapabilities
+from codeweaver.types.provider_enums import (
     DistanceMetric,
     HybridFusionStrategy,
     IndexType,
@@ -286,7 +286,7 @@ def get_all_backend_capabilities() -> dict[str, BackendCapabilities]:
     Returns:
         Dictionary mapping backend names to their capabilities
     """
-    from codeweaver._types.provider_enums import (
+    from codeweaver.types.provider_enums import (
         DistanceMetric,
         HybridFusionStrategy,
         IndexType,

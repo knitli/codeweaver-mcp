@@ -13,7 +13,7 @@ enabling seamless integration of different embedding and reranking services.
 from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
-from codeweaver._types import EmbeddingProviderInfo, RerankResult
+from codeweaver.types import EmbeddingProviderInfo, RerankResult
 
 
 @runtime_checkable

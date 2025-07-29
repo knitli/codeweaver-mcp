@@ -13,16 +13,17 @@ import time
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServiceConfig
-from codeweaver._types.service_data import (
+from codeweaver.types import (
     HealthStatus,
     ProviderStatus,
     ServiceCapabilities,
+    ServiceConfig,
     ServiceHealth,
+    ServiceInitializationError,
+    ServiceProvider,
+    ServiceStopError,
+    ServiceType,
 )
-from codeweaver._types.service_exceptions import ServiceInitializationError, ServiceStopError
-from codeweaver._types.services import ServiceProvider
 
 
 class BaseServiceProvider(ServiceProvider, ABC):

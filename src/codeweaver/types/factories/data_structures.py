@@ -19,10 +19,9 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
-from codeweaver._types.core import BaseCapabilities, BaseComponentInfo, ComponentType
-from codeweaver._types.provider_enums import ProviderCapability
-from codeweaver._types.provider_registry import EmbeddingProviderInfo
-from codeweaver._types.source_enums import ContentType
+from codeweaver.types.factories.core import BaseCapabilities, BaseComponentInfo, ComponentType
+from codeweaver.types.providers import EmbeddingProviderInfo, ProviderCapability
+from codeweaver.types.sources import ContentType
 
 
 if TYPE_CHECKING:

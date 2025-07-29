@@ -11,7 +11,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver._types.enums import ChunkingStrategy, PerformanceMode
+from codeweaver.types.enums import ChunkingStrategy, PerformanceMode
 
 
 class ServiceConfig(BaseModel):
@@ -226,7 +226,9 @@ class LoggingServiceConfig(ServiceConfig):
 
     provider: str = "fastmcp_logging"
     log_level: Annotated[str, Field(description="Log level for requests")] = "INFO"
-    include_payloads: Annotated[bool, Field(description="Include request/response payloads")] = False
+    include_payloads: Annotated[bool, Field(description="Include request/response payloads")] = (
+        False
+    )
     max_payload_length: Annotated[int, Field(gt=0, description="Max payload length to log")] = 1000
     structured_logging: Annotated[bool, Field(description="Enable structured logging")] = False
     log_performance_metrics: Annotated[bool, Field(description="Log performance metrics")] = True
@@ -239,9 +241,13 @@ class TimingServiceConfig(ServiceConfig):
 
     provider: str = "fastmcp_timing"
     log_level: Annotated[str, Field(description="Log level for timing info")] = "INFO"
-    track_performance_metrics: Annotated[bool, Field(description="Track performance metrics")] = True
+    track_performance_metrics: Annotated[bool, Field(description="Track performance metrics")] = (
+        True
+    )
     expose_metrics_endpoint: Annotated[bool, Field(description="Expose metrics endpoint")] = True
-    metric_aggregation_window: Annotated[int, Field(gt=0, description="Metric aggregation window")] = 300
+    metric_aggregation_window: Annotated[
+        int, Field(gt=0, description="Metric aggregation window")
+    ] = 300
 
 
 class ErrorHandlingServiceConfig(ServiceConfig):
@@ -251,7 +257,9 @@ class ErrorHandlingServiceConfig(ServiceConfig):
     include_traceback: Annotated[bool, Field(description="Include traceback in errors")] = False
     transform_errors: Annotated[bool, Field(description="Transform errors to MCP format")] = True
     error_aggregation: Annotated[bool, Field(description="Enable error aggregation")] = True
-    error_notification_enabled: Annotated[bool, Field(description="Enable error notifications")] = False
+    error_notification_enabled: Annotated[bool, Field(description="Enable error notifications")] = (
+        False
+    )
     max_error_history: Annotated[int, Field(gt=0, description="Max error history entries")] = 100
 
 
@@ -259,7 +267,9 @@ class RateLimitingServiceConfig(ServiceConfig):
     """Configuration for rate limiting middleware service."""
 
     provider: str = "fastmcp_rate_limiting"
-    max_requests_per_second: Annotated[float, Field(gt=0, description="Max requests per second")] = 1.0
+    max_requests_per_second: Annotated[
+        float, Field(gt=0, description="Max requests per second")
+    ] = 1.0
     burst_capacity: Annotated[int, Field(gt=0, description="Burst capacity")] = 10
     global_limit: Annotated[bool, Field(description="Apply limit globally")] = True
     expose_rate_limit_status: Annotated[bool, Field(description="Expose rate limit status")] = True
@@ -278,18 +288,18 @@ class ServicesConfig(BaseModel):
     )
 
     # Middleware services
-    logging: Annotated[LoggingServiceConfig, Field(description="Logging middleware config")] = Field(
-        default_factory=LoggingServiceConfig
+    logging: Annotated[LoggingServiceConfig, Field(description="Logging middleware config")] = (
+        Field(default_factory=LoggingServiceConfig)
     )
     timing: Annotated[TimingServiceConfig, Field(description="Timing middleware config")] = Field(
         default_factory=TimingServiceConfig
     )
-    error_handling: Annotated[ErrorHandlingServiceConfig, Field(description="Error handling config")] = Field(
-        default_factory=ErrorHandlingServiceConfig
-    )
-    rate_limiting: Annotated[RateLimitingServiceConfig, Field(description="Rate limiting config")] = Field(
-        default_factory=RateLimitingServiceConfig
-    )
+    error_handling: Annotated[
+        ErrorHandlingServiceConfig, Field(description="Error handling config")
+    ] = Field(default_factory=ErrorHandlingServiceConfig)
+    rate_limiting: Annotated[
+        RateLimitingServiceConfig, Field(description="Rate limiting config")
+    ] = Field(default_factory=RateLimitingServiceConfig)
 
     # Optional services
     validation: Annotated[ValidationServiceConfig, Field(description="Validation config")] = Field(

@@ -11,7 +11,7 @@ import logging
 
 from typing import Any
 
-from codeweaver._types import T
+from codeweaver.types import T
 
 
 logger = logging.getLogger(__name__)
@@ -386,7 +386,9 @@ class FeatureNotEnabledError(Exception):
     def __init__(self, feature_name: str, msg: str | None = None):
         """Initialize with the feature name."""
         if msg:
-            super().__init__(f"{msg} \n\nYou can enable it by running: `[uv] pip install codeweaver[{feature_name}]`")
+            super().__init__(
+                f"{msg} \n\nYou can enable it by running: `[uv] pip install codeweaver[{feature_name}]`"
+            )
         super().__init__(f"Sorry! :open_hands: The feature '{feature_name}' is not enabled. ")
 
 
@@ -407,9 +409,8 @@ def feature_flag_required(feature_name: str, dependencies: tuple[str] | None) ->
         original_init = cls.__init__
         original_doc = cls.__doc__ or ""
         import importlib.util
-        if dependencies and all(
-            importlib.util.find_spec(dep) is not None for dep in dependencies
-        ):
+
+        if dependencies and all(importlib.util.find_spec(dep) is not None for dep in dependencies):
             cls._dependencies_met = True
         else:
             cls._dependencies_met = False

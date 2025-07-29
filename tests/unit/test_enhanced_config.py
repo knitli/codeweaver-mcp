@@ -10,12 +10,10 @@ Tests the new configuration models, profile system, plugin configuration,
 and factory integration introduced in the enhanced config system.
 """
 
-
 import pytest
 
 from pydantic import ValidationError
 
-from codeweaver._types import ComponentType
 from codeweaver.config import (
     CodeWeaverConfig,
     ConfigurationError,
@@ -28,6 +26,7 @@ from codeweaver.config import (
     ProfileConfig,
     ProfileError,
 )
+from codeweaver.types import ComponentType
 
 
 class TestDefaultsConfig:
@@ -45,10 +44,7 @@ class TestDefaultsConfig:
     def test_defaults_config_custom_values(self):
         """Test DefaultsConfig with custom values."""
         config = DefaultsConfig(
-            profile="minimal",
-            auto_configure=False,
-            validate_setup=False,
-            strict_validation=True
+            profile="minimal", auto_configure=False, validate_setup=False, strict_validation=True
         )
 
         assert config.profile == "minimal"
@@ -77,7 +73,7 @@ class TestPluginRegistryConfig:
             disabled_plugins=["legacy_plugin"],
             plugin_priority_order=["voyage_ai", "qdrant"],
             auto_resolve_conflicts=False,
-            require_explicit_enable=True
+            require_explicit_enable=True,
         )
 
         assert config.enabled_plugins == ["voyage_ai", "qdrant"]
@@ -99,7 +95,7 @@ class TestCustomPluginConfig:
             priority=75,
             config={"connection_url": "mydb://localhost"},
             dependencies=["numpy"],
-            tags=["database", "custom"]
+            tags=["database", "custom"],
         )
 
         assert config.enabled is True
@@ -118,7 +114,7 @@ class TestCustomPluginConfig:
             plugin_type=ComponentType.PROVIDER,
             entry_point="my_plugin_entry",
             module_path="ignored",  # Should be ignored when entry_point is set
-            class_name="ignored"    # Should be ignored when entry_point is set
+            class_name="ignored",  # Should be ignored when entry_point is set
         )
 
         assert config.entry_point == "my_plugin_entry"
@@ -132,7 +128,7 @@ class TestCustomPluginConfig:
             plugin_type=ComponentType.SOURCE,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=100
+            priority=100,
         )
         assert config.priority == 100
 
@@ -141,7 +137,7 @@ class TestCustomPluginConfig:
             plugin_type=ComponentType.SOURCE,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=0
+            priority=0,
         )
         assert config_min.priority == 0
 
@@ -151,7 +147,7 @@ class TestCustomPluginConfig:
                 plugin_type=ComponentType.SOURCE,
                 module_path="test.plugin",
                 class_name="TestPlugin",
-                priority=101  # > 100
+                priority=101,  # > 100
             )
 
         with pytest.raises(ValidationError):
@@ -159,7 +155,7 @@ class TestCustomPluginConfig:
                 plugin_type=ComponentType.SOURCE,
                 module_path="test.plugin",
                 class_name="TestPlugin",
-                priority=-1  # < 0
+                priority=-1,  # < 0
             )
 
 
@@ -184,12 +180,10 @@ class TestPluginsConfig:
         custom_plugin = CustomPluginConfig(
             plugin_type=ComponentType.BACKEND,
             module_path="custom.plugin",
-            class_name="CustomBackend"
+            class_name="CustomBackend",
         )
 
-        config = PluginsConfig(
-            custom={"my_backend": custom_plugin}
-        )
+        config = PluginsConfig(custom={"my_backend": custom_plugin})
 
         assert "my_backend" in config.custom
         assert config.custom["my_backend"].plugin_type == ComponentType.BACKEND
@@ -203,17 +197,9 @@ class TestProfileConfig:
         profile = ProfileConfig(
             name="test_profile",
             description="Test profile for development",
-            data_sources={
-                "default_source_type": "filesystem"
-            },
-            services={
-                "chunking": {
-                    "max_chunk_size": 1000
-                }
-            },
-            backend={
-                "provider": "memory"
-            }
+            data_sources={"default_source_type": "filesystem"},
+            services={"chunking": {"max_chunk_size": 1000}},
+            backend={"provider": "memory"},
         )
 
         assert profile.name == "test_profile"
@@ -224,10 +210,7 @@ class TestProfileConfig:
 
     def test_profile_config_empty_sections(self):
         """Test profile with empty configuration sections."""
-        profile = ProfileConfig(
-            name="minimal_profile",
-            description="Minimal profile"
-        )
+        profile = ProfileConfig(name="minimal_profile", description="Minimal profile")
 
         assert profile.data_sources == {}
         assert profile.services == {}
@@ -261,7 +244,7 @@ class TestFactoryConfig:
             enable_dependency_injection=False,
             lazy_initialization=True,
             shutdown_timeout=60.0,
-            health_check_interval=30.0
+            health_check_interval=30.0,
         )
 
         assert config.enable_dependency_injection is False
@@ -287,11 +270,11 @@ class TestEnhancedCodeWeaverConfig:
         config = CodeWeaverConfig()
 
         # Test that new sections exist
-        assert hasattr(config, 'defaults')
-        assert hasattr(config, 'plugins')
-        assert hasattr(config, 'factory')
-        assert hasattr(config, 'services')
-        assert hasattr(config, 'profiles')
+        assert hasattr(config, "defaults")
+        assert hasattr(config, "plugins")
+        assert hasattr(config, "factory")
+        assert hasattr(config, "services")
+        assert hasattr(config, "profiles")
 
         # Test default values
         assert isinstance(config.defaults, DefaultsConfig)
@@ -356,12 +339,12 @@ class TestEnhancedCodeWeaverConfig:
         config = CodeWeaverConfig()
 
         # Test that services configuration is present and has expected structure
-        assert hasattr(config.services, 'chunking')
-        assert hasattr(config.services, 'filtering')
-        assert hasattr(config.services, 'validation')
-        assert hasattr(config.services, 'cache')
-        assert hasattr(config.services, 'monitoring')
-        assert hasattr(config.services, 'metrics')
+        assert hasattr(config.services, "chunking")
+        assert hasattr(config.services, "filtering")
+        assert hasattr(config.services, "validation")
+        assert hasattr(config.services, "cache")
+        assert hasattr(config.services, "monitoring")
+        assert hasattr(config.services, "metrics")
 
     def test_config_with_custom_profile(self):
         """Test configuration with custom profile."""
@@ -369,12 +352,11 @@ class TestEnhancedCodeWeaverConfig:
             name="custom_test",
             description="Custom test profile",
             backend={"provider": "memory"},
-            indexing={"batch_size": 32}
+            indexing={"batch_size": 32},
         )
 
         config = CodeWeaverConfig(
-            profiles={"custom_test": custom_profile},
-            defaults={"profile": "custom_test"}
+            profiles={"custom_test": custom_profile}, defaults={"profile": "custom_test"}
         )
 
         assert "custom_test" in config.profiles
@@ -413,13 +395,8 @@ class TestProfileOverrides:
 
         # Test services override
         services_config = {
-            "chunking": {
-                "max_chunk_size": 2000,
-                "provider": "custom_chunking"
-            },
-            "filtering": {
-                "use_gitignore": False
-            }
+            "chunking": {"max_chunk_size": 2000, "provider": "custom_chunking"},
+            "filtering": {"use_gitignore": False},
         }
 
         config._apply_services_overrides(services_config)
@@ -437,10 +414,7 @@ class TestProfileOverrides:
         profile = ProfileConfig(
             name="test",
             description="Test profile",
-            backend={
-                "provider": "memory",
-                "enable_hybrid_search": True
-            }
+            backend={"provider": "memory", "enable_hybrid_search": True},
         )
 
         config._apply_profile_overrides(profile)
@@ -456,10 +430,7 @@ class TestProfileOverrides:
         profile = ProfileConfig(
             name="test",
             description="Test profile",
-            indexing={
-                "batch_size": 32,
-                "enable_auto_reindex": False
-            }
+            indexing={"batch_size": 32, "enable_auto_reindex": False},
         )
 
         config._apply_profile_overrides(profile)
@@ -476,13 +447,13 @@ class TestBackwardsCompatibility:
         config = CodeWeaverConfig()
 
         # Verify all original configuration sections still exist
-        assert hasattr(config, 'backend')
-        assert hasattr(config, 'providers')
-        assert hasattr(config, 'data_sources')
-        assert hasattr(config, 'chunking')
-        assert hasattr(config, 'indexing')
-        assert hasattr(config, 'rate_limiting')
-        assert hasattr(config, 'server')
+        assert hasattr(config, "backend")
+        assert hasattr(config, "providers")
+        assert hasattr(config, "data_sources")
+        assert hasattr(config, "chunking")
+        assert hasattr(config, "indexing")
+        assert hasattr(config, "rate_limiting")
+        assert hasattr(config, "server")
 
         # Verify they have the expected types
         from codeweaver.backends.config import BackendConfigExtended
@@ -508,10 +479,10 @@ class TestBackwardsCompatibility:
         config = CodeWeaverConfig()
 
         # Test that all original methods still exist
-        assert hasattr(config, 'get_effective_embedding_provider')
-        assert hasattr(config, 'get_effective_backend_provider')
-        assert hasattr(config, 'get_effective_backend_url')
-        assert hasattr(config, 'get_effective_backend_api_key')
+        assert hasattr(config, "get_effective_embedding_provider")
+        assert hasattr(config, "get_effective_backend_provider")
+        assert hasattr(config, "get_effective_backend_url")
+        assert hasattr(config, "get_effective_backend_api_key")
 
         # Test that they return expected types
         backend_provider = config.get_effective_backend_provider()
@@ -525,10 +496,7 @@ class TestConfigIntegration:
     def test_full_config_initialization(self):
         """Test full configuration initialization with all components."""
         config_data = {
-            "defaults": {
-                "profile": "minimal",
-                "auto_configure": True
-            },
+            "defaults": {"profile": "minimal", "auto_configure": True},
             "plugins": {
                 "enabled": True,
                 "auto_discover": False,
@@ -538,23 +506,18 @@ class TestConfigIntegration:
                         "plugin_type": "backend",
                         "module_path": "test.plugin",
                         "class_name": "TestBackend",
-                        "priority": 80
+                        "priority": 80,
                     }
-                }
+                },
             },
-            "factory": {
-                "enable_plugin_discovery": True,
-                "validate_configurations": True
-            },
+            "factory": {"enable_plugin_discovery": True, "validate_configurations": True},
             "profiles": {
                 "custom_minimal": {
                     "name": "custom_minimal",
                     "description": "Custom minimal setup",
-                    "backend": {
-                        "provider": "memory"
-                    }
+                    "backend": {"provider": "memory"},
                 }
-            }
+            },
         }
 
         config = CodeWeaverConfig(**config_data)

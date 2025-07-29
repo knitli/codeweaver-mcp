@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Simple import checker to identify missing dependencies."""
 
 import sys
 
 
 MODULES_TO_CHECK = (
-    "codeweaver._types",
+    "codeweaver.types",
     "codeweaver.factories",
     "codeweaver.providers",
     "codeweaver.backends",

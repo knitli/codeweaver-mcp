@@ -10,7 +10,7 @@ Replaces string literals with proper enum types following the
 backend improvement pattern for type safety and attribute consolidation.
 """
 
-from codeweaver._types.base_enum import BaseEnum
+from codeweaver.types.base_enum import BaseEnum
 
 
 class SourceProvider(BaseEnum):

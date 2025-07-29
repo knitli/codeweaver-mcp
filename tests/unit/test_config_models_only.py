@@ -10,12 +10,11 @@ Tests only the new configuration classes to avoid any circular import or
 typing issues with the backend systems.
 """
 
-
 import pytest
 
 from pydantic import ValidationError
 
-from codeweaver._types import ComponentType, ServicesConfig
+from codeweaver.types import ComponentType, ServicesConfig
 
 
 # Import just the new config models we created
@@ -29,8 +28,8 @@ def test_component_type_import():
 def test_services_config_import():
     """Test that ServicesConfig can be imported correctly."""
     config = ServicesConfig()
-    assert hasattr(config, 'chunking')
-    assert hasattr(config, 'filtering')
+    assert hasattr(config, "chunking")
+    assert hasattr(config, "filtering")
     assert config.chunking.provider == "fastmcp_chunking"
 
 
@@ -61,9 +60,7 @@ def test_custom_plugin_config_direct():
     from codeweaver.config import CustomPluginConfig
 
     config = CustomPluginConfig(
-        plugin_type=ComponentType.BACKEND,
-        module_path="test.plugin",
-        class_name="TestPlugin"
+        plugin_type=ComponentType.BACKEND, module_path="test.plugin", class_name="TestPlugin"
     )
     assert config.plugin_type == ComponentType.BACKEND
     assert config.module_path == "test.plugin"
@@ -88,9 +85,7 @@ def test_profile_config_direct():
     from codeweaver.config import ProfileConfig
 
     profile = ProfileConfig(
-        name="test_profile",
-        description="Test profile",
-        backend={"provider": "memory"}
+        name="test_profile", description="Test profile", backend={"provider": "memory"}
     )
     assert profile.name == "test_profile"
     assert profile.backend["provider"] == "memory"
@@ -135,7 +130,7 @@ def test_custom_plugin_priority_validation():
         plugin_type=ComponentType.BACKEND,
         module_path="test.plugin",
         class_name="TestPlugin",
-        priority=100
+        priority=100,
     )
     assert config.priority == 100
 
@@ -143,7 +138,7 @@ def test_custom_plugin_priority_validation():
         plugin_type=ComponentType.BACKEND,
         module_path="test.plugin",
         class_name="TestPlugin",
-        priority=0
+        priority=0,
     )
     assert config_min.priority == 0
 
@@ -153,7 +148,7 @@ def test_custom_plugin_priority_validation():
             plugin_type=ComponentType.BACKEND,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=101  # > 100
+            priority=101,  # > 100
         )
 
     with pytest.raises(ValidationError):
@@ -161,7 +156,7 @@ def test_custom_plugin_priority_validation():
             plugin_type=ComponentType.BACKEND,
             module_path="test.plugin",
             class_name="TestPlugin",
-            priority=-1  # < 0
+            priority=-1,  # < 0
         )
 
 
@@ -170,10 +165,7 @@ def test_factory_config_validation():
     from codeweaver.config import FactoryConfig
 
     # Valid configuration
-    config = FactoryConfig(
-        shutdown_timeout=60.0,
-        health_check_interval=30.0
-    )
+    config = FactoryConfig(shutdown_timeout=60.0, health_check_interval=30.0)
     assert config.shutdown_timeout == 60.0
     assert config.health_check_interval == 30.0
 

@@ -16,7 +16,6 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver._types import ProviderType
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.config import CodeWeaverConfig
@@ -31,6 +30,7 @@ from codeweaver.testing.mocks import (
     MockRerankProvider,
     MockVectorBackend,
 )
+from codeweaver.types import ProviderType
 
 
 logger = logging.getLogger(__name__)
@@ -102,12 +102,8 @@ class FactoryPatternValidator:
         )
 
         # Register mock providers
-        from codeweaver._types import (
-            EmbeddingProviderInfo,
-            ProviderCapabilities,
-            ProviderCapability,
-        )
         from codeweaver.providers.factory import ProviderRegistry
+        from codeweaver.types import EmbeddingProviderInfo, ProviderCapabilities, ProviderCapability
 
         # Create mock provider info
         mock_provider_info = EmbeddingProviderInfo(
@@ -535,12 +531,12 @@ class FactoryPatternValidator:
             class TestProvider:
                 """A mock provider class for testing registration."""
 
-            from codeweaver._types import (
+            from codeweaver.providers.factory import ProviderRegistry
+            from codeweaver.types import (
                 EmbeddingProviderInfo,
                 ProviderCapabilities,
                 ProviderCapability,
             )
-            from codeweaver.providers.factory import ProviderRegistry
 
             # Create test provider info
             test_provider_info = EmbeddingProviderInfo(

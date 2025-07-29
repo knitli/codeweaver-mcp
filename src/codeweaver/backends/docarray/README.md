@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # DocArray Backend Integration
 
 This module provides a unified interface to vector databases through DocArray, maintaining full compatibility with CodeWeaver's existing backend protocols.
@@ -35,7 +41,7 @@ CodeWeaver Factory System
 
 ```python
 from codeweaver.backends.docarray.config import DocArrayConfigFactory
-from codeweaver._types import ProviderKind
+from codeweaver.types import ProviderKind
 
 # Create DocArray Qdrant backend configuration
 config = DocArrayConfigFactory.create_config(
@@ -54,7 +60,7 @@ from codeweaver.backends.docarray.schema import SchemaTemplates
 # Code search optimized schema
 code_schema = SchemaTemplates.code_search_schema(512)
 
-# General semantic search schema  
+# General semantic search schema
 semantic_schema = SchemaTemplates.semantic_search_schema(512)
 
 # Multimodal document schema
@@ -103,7 +109,7 @@ pip install docarray[qdrant] qdrant-client
 # For Pinecone support (when implemented)
 pip install docarray[pinecone] pinecone-client
 
-# For Weaviate support (when implemented)  
+# For Weaviate support (when implemented)
 pip install docarray[weaviate] weaviate-client
 ```
 
@@ -154,7 +160,7 @@ pytest tests/unit/test_docarray_integration.py::TestDocArrayWithDependencies
 ## Future Enhancements
 
 - Multi-modal document support
-- Advanced query builders  
+- Advanced query builders
 - Custom distance metrics
 - Connection pooling
 - Query caching

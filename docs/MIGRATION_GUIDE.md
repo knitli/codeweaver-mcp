@@ -1,7 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # CodeWeaver Migration Guide
 
-**Date:** January 27, 2025  
-**Author:** CodeWeaver Development Team  
+**Date:** January 27, 2025
+**Author:** CodeWeaver Development Team
 **Version:** 1.0
 
 ## Overview
@@ -44,7 +50,7 @@ class FileSystemSource:
     async def _chunk_content_fallback(self, content: str, file_path: Path):
         chunker = ChunkingMiddleware()  # Direct dependency!
         return await chunker.chunk_content(content, str(file_path))
-    
+
     async def _filter_files(self, files: list[Path]):
         filter_middleware = FileFilteringMiddleware()  # Direct dependency!
         return await filter_middleware.filter_files(files)
@@ -61,7 +67,7 @@ class FileSystemSourceProvider:
             return await chunking_service.chunk_content(content, str(file_path))
         else:
             return self._simple_chunk_fallback(content, file_path)
-    
+
     async def _filter_files(self, files: list[Path], context: dict) -> list[Path]:
         """Filter files using service layer."""
         filtering_service = context.get("filtering_service")
@@ -69,7 +75,7 @@ class FileSystemSourceProvider:
             return await filtering_service.filter_files(files)
         else:
             return self._simple_filter_fallback(files)
-    
+
     def _simple_chunk_fallback(self, content: str, file_path: Path) -> list[CodeChunk]:
         """Simple chunking fallback without middleware dependency."""
         chunk_size = 1500
@@ -83,7 +89,7 @@ class FileSystemSourceProvider:
                 file_path=str(file_path)
             ))
         return chunks
-    
+
     def _simple_filter_fallback(self, files: list[Path]) -> list[Path]:
         """Simple file filtering without middleware dependency."""
         filtered = []
@@ -164,10 +170,10 @@ class GitSourceProvider:         # Follows naming convention
    ```python
    # Update imports
    from codeweaver.sources.filesystem import FileSystemSourceProvider
-   
+
    # Update factory registrations
    register_source_class(SourceType.FILESYSTEM, FileSystemSourceProvider)
-   
+
    # Update type hints
    def create_source(self) -> FileSystemSourceProvider:
    ```
@@ -176,7 +182,7 @@ class GitSourceProvider:         # Follows naming convention
    ```python
    # OLD naming
    class FileSystemSourceConfig:
-   
+
    # NEW naming (remove redundant "Source")
    class FileSystemConfig:
    ```
@@ -190,7 +196,7 @@ class GitSourceProvider:         # Follows naming convention
 class FileSystemSourceProvider:
     def __init__(self, config: FileSystemConfig):
         self.config = config
-    
+
     # Missing: check_availability classmethod
     # Missing: get_static_source_info classmethod
     # Missing: properties for capabilities
@@ -200,27 +206,27 @@ class FileSystemSourceProvider:
 ```python
 class FileSystemSourceProvider(AbstractDataSource):
     """Filesystem source provider following standard patterns."""
-    
+
     def __init__(self, config: FileSystemConfig):
         super().__init__(config)
         self._capabilities = self._get_capabilities()
-    
+
     @property
     def source_name(self) -> str:
         """Get the source name."""
         return SourceType.FILESYSTEM.value
-    
+
     @property
     def capabilities(self) -> SourceCapabilities:
         """Get source capabilities."""
         return self._capabilities
-    
+
     @classmethod
     def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if filesystem source is available for the given capability."""
         # Filesystem is always available
         return True, None
-    
+
     @classmethod
     def get_static_source_info(cls) -> SourceInfo:
         """Get static information about this source."""
@@ -229,7 +235,7 @@ class FileSystemSourceProvider(AbstractDataSource):
             capabilities=cls._get_static_capabilities(),
             description="Local filesystem source provider"
         )
-    
+
     def _get_capabilities(self) -> SourceCapabilities:
         """Get runtime capabilities."""
         return SourceCapabilities(
@@ -237,7 +243,7 @@ class FileSystemSourceProvider(AbstractDataSource):
             supports_filtering=True,
             supports_watching=True
         )
-    
+
     @classmethod
     def _get_static_capabilities(cls) -> SourceCapabilities:
         """Get static capabilities."""
@@ -255,7 +261,7 @@ class FileSystemSourceProvider(AbstractDataSource):
    @property
    def source_name(self) -> str:
        return SourceType.FILESYSTEM.value
-   
+
    @property
    def capabilities(self) -> SourceCapabilities:
        return self._capabilities
@@ -267,7 +273,7 @@ class FileSystemSourceProvider(AbstractDataSource):
    def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
        # Implementation specific to each source
        return True, None
-   
+
    @classmethod
    def get_static_source_info(cls) -> SourceInfo:
        # Return static information about the source
@@ -279,7 +285,7 @@ class FileSystemSourceProvider(AbstractDataSource):
    # Ensure all abstract methods from base class are implemented
    async def discover_content(self, context: dict) -> AsyncIterator[ContentItem]:
        # Implementation
-   
+
    async def get_content_item(self, identifier: str, context: dict) -> ContentItem:
        # Implementation
    ```
@@ -294,7 +300,7 @@ class FileSystemSourceConfig(BaseModel):
     # Duplicated base fields
     enabled: bool = True
     name: str = "filesystem"
-    
+
     # Source-specific fields
     root_path: Path
     include_patterns: list[str] = []
@@ -304,7 +310,7 @@ class APISourceConfig(BaseModel):
     # Duplicated base fields again
     enabled: bool = True
     name: str = "api"
-    
+
     # Source-specific fields
     base_url: str
     api_key: str | None = None
@@ -319,7 +325,7 @@ class BaseSourceConfig(BaseModel):
         validate_assignment=True,
         frozen=False,
     )
-    
+
     enabled: bool = True
     name: str
     timeout: int = 30
@@ -381,7 +387,7 @@ class VoyageAIProvider:
         rate_limiter = context.get("rate_limiting_service")
         if rate_limiter:
             await rate_limiter.acquire("voyage_ai", len(texts))
-        
+
         # Check cache service
         cache_service = context.get("caching_service")
         if cache_service:
@@ -389,16 +395,16 @@ class VoyageAIProvider:
             cached_result = await cache_service.get(cache_key)
             if cached_result:
                 return cached_result
-        
+
         try:
             # Generate embeddings
             result = self.client.embed(texts=texts, model=self._model)
             embeddings = result.embeddings
-            
+
             # Cache result
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)
-            
+
             return embeddings
         except Exception:
             logger.exception("Error generating VoyageAI embeddings")
@@ -419,14 +425,14 @@ class VoyageAIProvider:
    rate_limiter = context.get("rate_limiting_service")
    if rate_limiter:
        await rate_limiter.acquire("provider_name", request_count)
-   
+
    # Caching
    cache_service = context.get("caching_service")
    if cache_service:
        cached_result = await cache_service.get(cache_key)
        if cached_result:
            return cached_result
-   
+
    # Health monitoring
    health_service = context.get("health_service")
    if health_service:
@@ -439,7 +445,7 @@ class VoyageAIProvider:
        """Embed documents with optional services integration."""
        if context is None:
            context = {}
-       
+
        # Service integration code here
    ```
 
@@ -474,7 +480,7 @@ def _validate_config(self) -> None:
     """Validate provider configuration."""
     if not self.config.get("api_key"):
         raise ValueError("API key is required")
-    
+
     model = self.config.get("model", self._capabilities.default_model)
     if model not in self._capabilities.supported_models:
         available = ", ".join(self._capabilities.supported_models)
@@ -491,7 +497,7 @@ PROVIDERS = {
 }
 
 # After: Automatic registration
-from codeweaver._types import register_provider_class, ProviderType
+from codeweaver.types import register_provider_class, ProviderType
 
 # At end of module
 register_provider_class(ProviderType.VOYAGE_AI, VoyageAIProvider)
@@ -657,4 +663,3 @@ For more information, see:
 - [Services Layer Usage Guide](SERVICES_LAYER_GUIDE.md)
 - [Development Patterns Guide](DEVELOPMENT_PATTERNS.md)
 - [Factory System Documentation](FACTORY_SYSTEM.md)
-

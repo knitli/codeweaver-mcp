@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Services Implementation Specification
 
 **CodeWeaver MCP Server - Services Layer Implementation Guide**
@@ -120,7 +126,7 @@ tests/
 **File:** `src/codeweaver/_types/config.py` (UPDATE)
 
 ```python
-from codeweaver._types.base_enum import BaseEnum
+from codeweaver.types import BaseEnum
 
 class ComponentType(BaseEnum):
     """Extended component types including services."""
@@ -162,12 +168,12 @@ from typing import Protocol, runtime_checkable, AsyncGenerator, Any
 from pathlib import Path
 from abc import abstractmethod
 
-from codeweaver._types.data_structures import CodeChunk, ContentItem
-from codeweaver._types.service_data import (
+from codeweaver.types import CodeChunk, ContentItem
+from codeweaver.types import (
     ChunkingStats, FilteringStats, ValidationResult, CacheStats,
     ValidationRule, FileMetadata, DirectoryStats
 )
-from codeweaver._types.enums import Language, ChunkingStrategy
+from codeweaver.types import Language, ChunkingStrategy
 
 @runtime_checkable
 class ServiceProvider(Protocol):
@@ -286,7 +292,7 @@ from typing import Annotated, Any
 from pydantic import BaseModel, Field, ConfigDict
 from pathlib import Path
 
-from codeweaver._types.enums import ChunkingStrategy, ValidationLevel, PerformanceMode
+from codeweaver.types import ChunkingStrategy, ValidationLevel, PerformanceMode
 
 class ServiceConfig(BaseModel):
     """Base configuration for all services."""
@@ -350,11 +356,11 @@ import logging
 from typing import Any, Dict, Type, TYPE_CHECKING
 from collections import defaultdict
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.services import ServiceProvider
-from codeweaver._types.service_config import ServiceConfig
-from codeweaver._types.service_data import ServiceProviderInfo, ServiceCapabilities
-from codeweaver._types.service_exceptions import (
+from codeweaver.types import ServiceType
+from codeweaver.types import ServiceProvider
+from codeweaver.types import ServiceConfig
+from codeweaver.types import ServiceProviderInfo, ServiceCapabilities
+from codeweaver.types import (
     ServiceNotFoundError, ServiceCreationError, ProviderRegistrationError,
     DuplicateProviderError, ProviderNotFoundError
 )
@@ -491,7 +497,7 @@ class ServiceRegistry:
     def _validate_provider_protocol(self, service_type: ServiceType, provider_class: Type) -> bool:
         """Validate that provider implements required protocol."""
         # Import protocol classes
-        from codeweaver._types.services import ChunkingService, FilteringService
+        from codeweaver.types import ChunkingService, FilteringService
 
         protocol_map = {
             ServiceType.CHUNKING: ChunkingService,
@@ -525,7 +531,7 @@ class ServiceRegistry:
 
     def _create_default_config(self, service_type: ServiceType) -> ServiceConfig | None:
         """Create default configuration for service type."""
-        from codeweaver._types.service_config import ChunkingServiceConfig, FilteringServiceConfig
+        from codeweaver.types import ChunkingServiceConfig, FilteringServiceConfig
 
         config_map = {
             ServiceType.CHUNKING: ChunkingServiceConfig,
@@ -550,8 +556,8 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
-from codeweaver._types.service_config import ServiceConfig
-from codeweaver._types.service_data import ServiceHealth, HealthStatus
+from codeweaver.types import ServiceConfig
+from codeweaver.types import ServiceHealth, HealthStatus
 
 logger = logging.getLogger(__name__)
 
@@ -739,13 +745,13 @@ from typing import Any, AsyncGenerator
 from pathlib import Path
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver._types.config import ServiceType
-from codeweaver._types.services import ChunkingService
-from codeweaver._types.service_config import ChunkingServiceConfig
-from codeweaver._types.data_structures import CodeChunk
-from codeweaver._types.service_data import ChunkingStats
-from codeweaver._types.enums import Language, ChunkingStrategy
-from codeweaver._types.service_exceptions import ChunkingError, UnsupportedLanguageError
+from codeweaver.types import ServiceType
+from codeweaver.types import ChunkingService
+from codeweaver.types import ChunkingServiceConfig
+from codeweaver.types import CodeChunk
+from codeweaver.types import ChunkingStats
+from codeweaver.types import Language, ChunkingStrategy
+from codeweaver.types import ChunkingError, UnsupportedLanguageError
 
 # Import FastMCP middleware
 from codeweaver.middleware.chunking import ChunkingMiddleware
@@ -933,11 +939,11 @@ from typing import AsyncGenerator
 from pathlib import Path
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver._types.config import ServiceType
-from codeweaver._types.services import FilteringService
-from codeweaver._types.service_config import FilteringServiceConfig
-from codeweaver._types.service_data import FilteringStats, FileMetadata, DirectoryStats
-from codeweaver._types.service_exceptions import FilteringError, AccessDeniedError
+from codeweaver.types import ServiceType
+from codeweaver.types import FilteringService
+from codeweaver.types import FilteringServiceConfig
+from codeweaver.types import FilteringStats, FileMetadata, DirectoryStats
+from codeweaver.types import FilteringError, AccessDeniedError
 
 # Import FastMCP middleware
 from codeweaver.middleware.filtering import FilteringMiddleware
@@ -1135,11 +1141,11 @@ import asyncio
 from typing import Any, Dict, List
 from datetime import datetime
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.services import ServiceProvider
-from codeweaver._types.service_config import ServicesConfig, ServiceConfig
-from codeweaver._types.service_data import ServicesHealthReport, ServiceHealth, HealthStatus
-from codeweaver._types.service_exceptions import (
+from codeweaver.types import ServiceType
+from codeweaver.types import ServiceProvider
+from codeweaver.types import ServicesConfig, ServiceConfig
+from codeweaver.types import ServicesHealthReport, ServiceHealth, HealthStatus
+from codeweaver.types import (
     ServiceInitializationError, ServiceStartError, ServiceStopError, ServiceNotFoundError,
     ServiceNotReadyError, DependencyInjectionError, DependencyResolutionError
 )
@@ -1513,11 +1519,11 @@ from typing import Any, List
 from pathlib import Path
 
 from codeweaver.sources.base import AbstractDataSource
-from codeweaver._types.config import SourceType
-from codeweaver._types.services import ChunkingService, FilteringService, ValidationService, CacheService
-from codeweaver._types.data_structures import ContentItem, CodeChunk
-from codeweaver._types.source_config import FileSystemSourceConfig
-from codeweaver._types.source_exceptions import IndexingError, SourceConfigurationError
+from codeweaver.types import SourceType
+from codeweaver.types import ChunkingService, FilteringService, ValidationService, CacheService
+from codeweaver.types import ContentItem, CodeChunk
+from codeweaver.types import FileSystemSourceConfig
+from codeweaver.types import IndexingError, SourceConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -1811,10 +1817,10 @@ import logging
 from typing import TYPE_CHECKING
 
 from codeweaver.factories.base_registry import BaseRegistry
-from codeweaver._types.config import SourceType
-from codeweaver._types.source_config import SourceConfig
+from codeweaver.types import SourceType
+from codeweaver.types import SourceConfig
 from codeweaver.sources.base import AbstractDataSource
-from codeweaver._types.source_exceptions import SourceCreationError, SourceNotFoundError
+from codeweaver.types import SourceCreationError, SourceNotFoundError
 
 if TYPE_CHECKING:
     from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
@@ -1906,9 +1912,9 @@ from unittest.mock import Mock, AsyncMock, patch
 
 from codeweaver.services.services_manager import ServicesManager
 from codeweaver.factories.service_registry import ServiceRegistry
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServicesConfig, ChunkingServiceConfig
-from codeweaver._types.service_exceptions import ServiceInitializationError
+from codeweaver.types import ServiceType
+from codeweaver.types import ServicesConfig, ChunkingServiceConfig
+from codeweaver.types import ServiceInitializationError
 
 class TestServicesManager:
     """Test suite for ServicesManager."""
@@ -2003,8 +2009,8 @@ import tempfile
 from pathlib import Path
 
 from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServicesConfig
+from codeweaver.types import ServiceType
+from codeweaver.types import ServicesConfig
 from codeweaver.sources.filesystem import FileSystemSource
 
 class TestServicesIntegration:

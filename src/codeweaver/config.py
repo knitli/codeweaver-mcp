@@ -26,8 +26,6 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from codeweaver._types import ComponentType, ServicesConfig
-
 # Import configuration components
 from codeweaver.backends.config import BackendConfigExtended
 from codeweaver.providers.config import (
@@ -41,6 +39,7 @@ from codeweaver.providers.config import (
     SentenceTransformersConfig,
     VoyageConfig,
 )
+from codeweaver.types import ComponentType, ServicesConfig
 
 
 logger = logging.getLogger(__name__)
@@ -52,8 +51,16 @@ def _get_default_user_config_location() -> Path:
     import platform
 
     if platform.system() == "Windows":
-        return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "codeweaver" / "config.toml"
-    return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "codeweaver" / "config.toml"
+        return (
+            Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+            / "codeweaver"
+            / "config.toml"
+        )
+    return (
+        Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+        / "codeweaver"
+        / "config.toml"
+    )
 
 
 def _get_default_system_config_location() -> Path:
@@ -62,7 +69,11 @@ def _get_default_system_config_location() -> Path:
     import platform
 
     if platform.system() == "Windows":
-        return Path(os.environ.get("PROGRAMDATA", Path.home() / "ProgramData")) / "codeweaver" / "config.toml"
+        return (
+            Path(os.environ.get("PROGRAMDATA", Path.home() / "ProgramData"))
+            / "codeweaver"
+            / "config.toml"
+        )
     return Path("/etc/codeweaver/config.toml")  # Common Linux system config path
 
 
@@ -249,22 +260,18 @@ class DefaultsConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    profile: Annotated[str, Field(
-        default="codeweaver_original",
-        description="Configuration profile to use"
-    )]
-    auto_configure: Annotated[bool, Field(
-        default=True,
-        description="Automatically configure based on profile"
-    )]
-    validate_setup: Annotated[bool, Field(
-        default=True,
-        description="Validate configuration during startup"
-    )]
-    strict_validation: Annotated[bool, Field(
-        default=False,
-        description="Use strict validation mode"
-    )]
+    profile: Annotated[
+        str, Field(default="codeweaver_original", description="Configuration profile to use")
+    ]
+    auto_configure: Annotated[
+        bool, Field(default=True, description="Automatically configure based on profile")
+    ]
+    validate_setup: Annotated[
+        bool, Field(default=True, description="Validate configuration during startup")
+    ]
+    strict_validation: Annotated[
+        bool, Field(default=False, description="Use strict validation mode")
+    ]
 
 
 class PluginRegistryConfig(BaseModel):
@@ -272,26 +279,22 @@ class PluginRegistryConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    enabled_plugins: Annotated[list[str], Field(
-        default=["*"],
-        description="List of enabled plugins (* means all discovered)"
-    )]
-    disabled_plugins: Annotated[list[str], Field(
-        default_factory=list,
-        description="List of disabled plugins"
-    )]
-    plugin_priority_order: Annotated[list[str], Field(
-        default_factory=list,
-        description="Priority order for plugin resolution"
-    )]
-    auto_resolve_conflicts: Annotated[bool, Field(
-        default=True,
-        description="Automatically resolve plugin conflicts"
-    )]
-    require_explicit_enable: Annotated[bool, Field(
-        default=False,
-        description="Require explicit enabling of all plugins"
-    )]
+    enabled_plugins: Annotated[
+        list[str],
+        Field(default=["*"], description="List of enabled plugins (* means all discovered)"),
+    ]
+    disabled_plugins: Annotated[
+        list[str], Field(default_factory=list, description="List of disabled plugins")
+    ]
+    plugin_priority_order: Annotated[
+        list[str], Field(default_factory=list, description="Priority order for plugin resolution")
+    ]
+    auto_resolve_conflicts: Annotated[
+        bool, Field(default=True, description="Automatically resolve plugin conflicts")
+    ]
+    require_explicit_enable: Annotated[
+        bool, Field(default=False, description="Require explicit enabling of all plugins")
+    ]
 
 
 class CustomPluginConfig(BaseModel):
@@ -303,28 +306,22 @@ class CustomPluginConfig(BaseModel):
     plugin_type: Annotated[ComponentType, Field(description="Type of plugin")]
     module_path: Annotated[str, Field(description="Python module path")]
     class_name: Annotated[str, Field(description="Plugin class name")]
-    entry_point: Annotated[str | None, Field(
-        default=None,
-        description="Entry point name (alternative to module_path/class_name)"
-    )]
-    priority: Annotated[int, Field(
-        default=50,
-        ge=0,
-        le=100,
-        description="Plugin priority (0=lowest, 100=highest)"
-    )]
-    config: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Plugin-specific configuration"
-    )]
-    dependencies: Annotated[list[str], Field(
-        default_factory=list,
-        description="Required dependencies"
-    )]
-    tags: Annotated[list[str], Field(
-        default_factory=list,
-        description="Plugin tags for categorization"
-    )]
+    entry_point: Annotated[
+        str | None,
+        Field(default=None, description="Entry point name (alternative to module_path/class_name)"),
+    ]
+    priority: Annotated[
+        int, Field(default=50, ge=0, le=100, description="Plugin priority (0=lowest, 100=highest)")
+    ]
+    config: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Plugin-specific configuration")
+    ]
+    dependencies: Annotated[
+        list[str], Field(default_factory=list, description="Required dependencies")
+    ]
+    tags: Annotated[
+        list[str], Field(default_factory=list, description="Plugin tags for categorization")
+    ]
 
 
 class PluginsConfig(BaseModel):
@@ -333,43 +330,42 @@ class PluginsConfig(BaseModel):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     enabled: Annotated[bool, Field(default=True, description="Enable plugin system")]
-    auto_discover: Annotated[bool, Field(
-        default=True,
-        description="Automatically discover plugins"
-    )]
-    plugin_directories: Annotated[list[str], Field(
-        default_factory=lambda: [
-            "~/.codeweaver/plugins",
-            "./plugins",
-            "./codeweaver_plugins"
-        ],
-        description="Directories to search for plugins"
-    )]
-    entry_point_groups: Annotated[list[str], Field(
-        default_factory=lambda: [
-            "codeweaver.backends",
-            "codeweaver.providers",
-            "codeweaver.sources",
-            "codeweaver.services"
-        ],
-        description="Entry point groups to scan"
-    )]
-    registry: Annotated[PluginRegistryConfig, Field(
-        default_factory=PluginRegistryConfig,
-        description="Plugin registry configuration"
-    )]
-    custom: Annotated[dict[str, CustomPluginConfig], Field(
-        default_factory=dict,
-        description="Custom plugin configurations"
-    )]
-    development_mode: Annotated[bool, Field(
-        default=False,
-        description="Enable development mode for plugin debugging"
-    )]
-    validation_strict: Annotated[bool, Field(
-        default=True,
-        description="Use strict validation for plugins"
-    )]
+    auto_discover: Annotated[
+        bool, Field(default=True, description="Automatically discover plugins")
+    ]
+    plugin_directories: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: ["~/.codeweaver/plugins", "./plugins", "./codeweaver_plugins"],
+            description="Directories to search for plugins",
+        ),
+    ]
+    entry_point_groups: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: [
+                "codeweaver.backends",
+                "codeweaver.providers",
+                "codeweaver.sources",
+                "codeweaver.services",
+            ],
+            description="Entry point groups to scan",
+        ),
+    ]
+    registry: Annotated[
+        PluginRegistryConfig,
+        Field(default_factory=PluginRegistryConfig, description="Plugin registry configuration"),
+    ]
+    custom: Annotated[
+        dict[str, CustomPluginConfig],
+        Field(default_factory=dict, description="Custom plugin configurations"),
+    ]
+    development_mode: Annotated[
+        bool, Field(default=False, description="Enable development mode for plugin debugging")
+    ]
+    validation_strict: Annotated[
+        bool, Field(default=True, description="Use strict validation for plugins")
+    ]
 
 
 class ProfileConfig(BaseModel):
@@ -379,34 +375,28 @@ class ProfileConfig(BaseModel):
 
     name: Annotated[str, Field(description="Profile name")]
     description: Annotated[str, Field(description="Profile description")]
-    data_sources: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Data sources configuration overrides"
-    )]
-    services: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Services configuration overrides"
-    )]
-    providers: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Providers configuration overrides"
-    )]
-    backend: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Backend configuration overrides"
-    )]
-    indexing: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Indexing configuration overrides"
-    )]
-    plugins: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Plugin configuration overrides"
-    )]
-    factory: Annotated[dict[str, Any], Field(
-        default_factory=dict,
-        description="Factory configuration overrides"
-    )]
+    data_sources: Annotated[
+        dict[str, Any],
+        Field(default_factory=dict, description="Data sources configuration overrides"),
+    ]
+    services: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Services configuration overrides")
+    ]
+    providers: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Providers configuration overrides")
+    ]
+    backend: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Backend configuration overrides")
+    ]
+    indexing: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Indexing configuration overrides")
+    ]
+    plugins: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Plugin configuration overrides")
+    ]
+    factory: Annotated[
+        dict[str, Any], Field(default_factory=dict, description="Factory configuration overrides")
+    ]
 
 
 class FactoryConfig(BaseModel):
@@ -414,44 +404,33 @@ class FactoryConfig(BaseModel):
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
-    enable_dependency_injection: Annotated[bool, Field(
-        default=True,
-        description="Enable dependency injection"
-    )]
-    enable_plugin_discovery: Annotated[bool, Field(
-        default=True,
-        description="Enable plugin discovery"
-    )]
-    validate_configurations: Annotated[bool, Field(
-        default=True,
-        description="Validate configurations during creation"
-    )]
-    lazy_initialization: Annotated[bool, Field(
-        default=False,
-        description="Use lazy initialization for components"
-    )]
-    enable_graceful_shutdown: Annotated[bool, Field(
-        default=True,
-        description="Enable graceful shutdown handling"
-    )]
-    shutdown_timeout: Annotated[float, Field(
-        default=30.0,
-        gt=0,
-        description="Shutdown timeout in seconds"
-    )]
-    enable_health_checks: Annotated[bool, Field(
-        default=True,
-        description="Enable component health checks"
-    )]
-    health_check_interval: Annotated[float, Field(
-        default=60.0,
-        gt=0,
-        description="Health check interval in seconds"
-    )]
-    enable_metrics: Annotated[bool, Field(
-        default=True,
-        description="Enable factory metrics collection"
-    )]
+    enable_dependency_injection: Annotated[
+        bool, Field(default=True, description="Enable dependency injection")
+    ]
+    enable_plugin_discovery: Annotated[
+        bool, Field(default=True, description="Enable plugin discovery")
+    ]
+    validate_configurations: Annotated[
+        bool, Field(default=True, description="Validate configurations during creation")
+    ]
+    lazy_initialization: Annotated[
+        bool, Field(default=False, description="Use lazy initialization for components")
+    ]
+    enable_graceful_shutdown: Annotated[
+        bool, Field(default=True, description="Enable graceful shutdown handling")
+    ]
+    shutdown_timeout: Annotated[
+        float, Field(default=30.0, gt=0, description="Shutdown timeout in seconds")
+    ]
+    enable_health_checks: Annotated[
+        bool, Field(default=True, description="Enable component health checks")
+    ]
+    health_check_interval: Annotated[
+        float, Field(default=60.0, gt=0, description="Health check interval in seconds")
+    ]
+    enable_metrics: Annotated[
+        bool, Field(default=True, description="Enable factory metrics collection")
+    ]
 
 
 class DataSourceConfig(BaseModel):
@@ -543,30 +522,25 @@ class CodeWeaverConfig(BaseSettings):
 
     # NEW: Enhanced configuration sections
     defaults: DefaultsConfig = Field(
-        default_factory=DefaultsConfig,
-        description="Default behavior and profile configuration"
+        default_factory=DefaultsConfig, description="Default behavior and profile configuration"
     )
 
     plugins: PluginsConfig = Field(
-        default_factory=PluginsConfig,
-        description="Plugin system configuration"
+        default_factory=PluginsConfig, description="Plugin system configuration"
     )
 
     factory: FactoryConfig = Field(
-        default_factory=FactoryConfig,
-        description="Factory system configuration"
+        default_factory=FactoryConfig, description="Factory system configuration"
     )
 
     # Services integration
     services: ServicesConfig = Field(
-        default_factory=ServicesConfig,
-        description="Service layer configuration"
+        default_factory=ServicesConfig, description="Service layer configuration"
     )
 
     # Profiles
     profiles: dict[str, ProfileConfig] = Field(
-        default_factory=dict,
-        description="Available configuration profiles"
+        default_factory=dict, description="Available configuration profiles"
     )
 
     # Shared configuration
@@ -586,8 +560,12 @@ class CodeWeaverConfig(BaseSettings):
     @model_validator(mode="after")
     def apply_profile_configuration(self) -> "CodeWeaverConfig":
         """Apply selected profile configuration."""
-        if self.defaults.auto_configure and self.defaults.profile and (profile := self._get_profile(self.defaults.profile)):
-                self._apply_profile_overrides(profile)
+        if (
+            self.defaults.auto_configure
+            and self.defaults.profile
+            and (profile := self._get_profile(self.defaults.profile))
+        ):
+            self._apply_profile_overrides(profile)
         return self
 
     @model_validator(mode="after")
@@ -659,90 +637,56 @@ class CodeWeaverConfig(BaseSettings):
                 description="Original CodeWeaver design: ast-grep + chunking + Voyage AI + Qdrant + auto-watch",
                 data_sources={
                     "default_source_type": "ast_grep",
-                    "sources": [{
-                        "type": "ast_grep",
-                        "enabled": True,
-                        "priority": 1,
-                        "source_id": "primary_codebase",
-                        "config": {
-                            "root_path": ".",
-                            "use_gitignore": True,
-                            "enable_structural_chunking": True,
-                            "auto_watch_changes": True
+                    "sources": [
+                        {
+                            "type": "ast_grep",
+                            "enabled": True,
+                            "priority": 1,
+                            "source_id": "primary_codebase",
+                            "config": {
+                                "root_path": ".",
+                                "use_gitignore": True,
+                                "enable_structural_chunking": True,
+                                "auto_watch_changes": True,
+                            },
                         }
-                    }]
+                    ],
                 },
                 services={
                     "chunking": {
                         "provider": "ast_grep_chunking",
                         "enable_structural_chunking": True,
-                        "respect_code_structure": True
+                        "respect_code_structure": True,
                     },
-                    "filtering": {
-                        "provider": "gitignore_filtering",
-                        "use_gitignore": True
-                    }
+                    "filtering": {"provider": "gitignore_filtering", "use_gitignore": True},
                 },
                 providers={
-                    "embedding": {
-                        "provider_type": "voyage_ai",
-                        "model": "voyage-code-3"
-                    },
-                    "reranking": {
-                        "provider_type": "voyage_ai",
-                        "model": "voyage-rerank-2"
-                    }
+                    "embedding": {"provider_type": "voyage_ai", "model": "voyage-code-3"},
+                    "reranking": {"provider_type": "voyage_ai", "model": "voyage-rerank-2"},
                 },
-                backend={
-                    "provider": "qdrant",
-                    "enable_hybrid_search": False
-                },
-                indexing={
-                    "enable_auto_reindex": True,
-                    "batch_size": 8
-                }
+                backend={"provider": "qdrant", "enable_hybrid_search": False},
+                indexing={"enable_auto_reindex": True, "batch_size": 8},
             ),
             "minimal": ProfileConfig(
                 name="minimal",
                 description="Minimal setup for quick testing",
-                services={
-                    "chunking": {
-                        "provider": "simple_chunking",
-                        "max_chunk_size": 1000
-                    }
-                },
+                services={"chunking": {"provider": "simple_chunking", "max_chunk_size": 1000}},
                 providers={
                     "embedding": {
                         "provider_type": "sentence_transformers",
-                        "model": "all-MiniLM-L6-v2"
+                        "model": "all-MiniLM-L6-v2",
                     }
                 },
-                backend={
-                    "provider": "memory"
-                },
-                indexing={
-                    "enable_auto_reindex": False,
-                    "batch_size": 4
-                }
+                backend={"provider": "memory"},
+                indexing={"enable_auto_reindex": False, "batch_size": 4},
             ),
             "performance": ProfileConfig(
                 name="performance",
                 description="Optimized for large codebases",
-                indexing={
-                    "batch_size": 16,
-                    "max_concurrent_files": 20
-                },
-                services={
-                    "chunking": {
-                        "performance_mode": "fast",
-                        "max_chunk_size": 2000
-                    }
-                },
-                backend={
-                    "enable_hybrid_search": True,
-                    "enable_sparse_vectors": True
-                }
-            )
+                indexing={"batch_size": 16, "max_concurrent_files": 20},
+                services={"chunking": {"performance_mode": "fast", "max_chunk_size": 2000}},
+                backend={"enable_hybrid_search": True, "enable_sparse_vectors": True},
+            ),
         }
 
     def _apply_profile_overrides(self, profile: ProfileConfig) -> None:
@@ -801,7 +745,9 @@ class CodeWeaverConfig(BaseSettings):
                 if provider_obj is None:
                     # Create the provider config if it doesn't exist
                     # This would need proper provider type detection
-                    logger.warning("Cannot create provider %s from profile - not implemented", provider_name)
+                    logger.warning(
+                        "Cannot create provider %s from profile - not implemented", provider_name
+                    )
                 else:
                     for key, value in provider_config.items():
                         if hasattr(provider_obj, key):
@@ -811,33 +757,37 @@ class CodeWeaverConfig(BaseSettings):
         """Set up original CodeWeaver defaults."""
         # Set ast-grep as default source if not configured
         if not self.data_sources.sources:
-            self.data_sources.sources = [{
-                "type": "ast_grep",
-                "enabled": True,
-                "priority": 1,
-                "source_id": "primary_codebase",
-                "config": {
-                    "root_path": ".",
-                    "use_gitignore": True,
-                    "enable_structural_chunking": True,
-                    "auto_watch_changes": True
+            self.data_sources.sources = [
+                {
+                    "type": "ast_grep",
+                    "enabled": True,
+                    "priority": 1,
+                    "source_id": "primary_codebase",
+                    "config": {
+                        "root_path": ".",
+                        "use_gitignore": True,
+                        "enable_structural_chunking": True,
+                        "auto_watch_changes": True,
+                    },
                 }
-            }]
+            ]
 
         # Set chunking service to ast-grep based
         if self.services.chunking.provider == "fastmcp_chunking":
             self.services.chunking.provider = "ast_grep_chunking"
 
         # Enable auto-reindexing by default
-        if not hasattr(self.indexing, 'enable_auto_reindex') or not self.indexing.enable_auto_reindex:
+        if (
+            not hasattr(self.indexing, "enable_auto_reindex")
+            or not self.indexing.enable_auto_reindex
+        ):
             self.indexing.enable_auto_reindex = True
 
 
 class CustomTomlSource(TomlConfigSettingsSource):
     """Custom TOML source with multiple search paths and enhanced error handling."""
 
-    model_config = SettingsConfigDict(
-        extra="allow",)
+    model_config = SettingsConfigDict(extra="allow")
 
     def __init__(self, settings_cls: type[BaseSettings], toml_file: str | Path | None = None):
         """Initialize with custom search paths or explicit file.
@@ -866,6 +816,7 @@ class CustomTomlSource(TomlConfigSettingsSource):
             # Search for configuration files in priority order
             import os
             import platform
+
             local_search_paths = [
                 Path(".local.codeweaver.toml"),  # Local configuration file
                 Path(".codeweaver") / "local.config.toml",  # Workspace local alternative
@@ -875,9 +826,7 @@ class CustomTomlSource(TomlConfigSettingsSource):
                 Path(".codeweaver") / ".codeweaver.toml",  # Repository level alternative
             ]
             search_paths = [
-                Path(
-                    os.environ.get("CW_CONFIG_FILE", "")
-                ),  # Environment variable override
+                Path(os.environ.get("CW_CONFIG_FILE", "")),  # Environment variable override
                 *local_search_paths,  # Local configuration files
                 Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
                 / "codeweaver"
@@ -885,7 +834,11 @@ class CustomTomlSource(TomlConfigSettingsSource):
             ]
             if platform.system() == "Windows":
                 # Windows user config location
-                search_paths.append(Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "codeweaver" / "config.toml")
+                search_paths.append(
+                    Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+                    / "codeweaver"
+                    / "config.toml"
+                )
             if search_paths[0] == "":
                 # If the first path is empty, remove it
                 search_paths.pop(0)
@@ -924,8 +877,6 @@ class CustomTomlSource(TomlConfigSettingsSource):
             return data
 
 
-
-
 class ConfigManager:
     """Simplified configuration manager using pydantic-settings native capabilities."""
 
@@ -945,8 +896,16 @@ class ConfigManager:
         import platform
 
         if platform.system() == "Windows":
-            return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "codeweaver" / "config.toml"
-        return Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "codeweaver" / "config.toml"
+            return (
+                Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+                / "codeweaver"
+                / "config.toml"
+            )
+        return (
+            Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+            / "codeweaver"
+            / "config.toml"
+        )
 
     def get_config(self) -> CodeWeaverConfig:
         """Get the current configuration, loading it if necessary."""

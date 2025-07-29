@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# sourcery skip: snake-case-functions
 """
 Fix TRY300 violations by moving return statements from try blocks to else blocks.
 This handles complex cases that ast-grep rules can't handle reliably.
@@ -6,14 +12,15 @@ This handles complex cases that ast-grep rules can't handle reliably.
 
 import ast
 import sys
+
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 
 class TryReturnFixer(ast.NodeTransformer):
     """Move return statements from try blocks to else blocks."""
 
     def __init__(self) -> None:
+        """Initialize the fixer."""
         self.changes_made = False
 
     def visit_Try(self, node: ast.Try) -> ast.Try:
@@ -23,7 +30,7 @@ class TryReturnFixer(ast.NodeTransformer):
 
         # Check if this try block has return statements
         returns_in_try = self._extract_returns_from_try(node.body)
-        
+
         if not returns_in_try:
             return node  # No returns to move
 
@@ -37,10 +44,7 @@ class TryReturnFixer(ast.NodeTransformer):
 
         # Create new try block without the return statements
         new_body = []
-        for stmt in node.body:
-            if not isinstance(stmt, ast.Return):
-                new_body.append(stmt)
-
+        new_body.extend(stmt for stmt in node.body if not isinstance(stmt, ast.Return))
         # If we removed all statements, don't transform
         if not new_body:
             return node
@@ -55,16 +59,16 @@ class TryReturnFixer(ast.NodeTransformer):
             orelse=else_block,
             finalbody=node.finalbody,
             lineno=node.lineno,
-            col_offset=node.col_offset
+            col_offset=node.col_offset,
         )
 
         self.changes_made = True
         return new_try
 
-    def _extract_returns_from_try(self, body: List[ast.stmt]) -> List[ast.Return]:
+    def _extract_returns_from_try(self, body: list[ast.stmt]) -> list[ast.Return]:
         """Extract return statements from the end of a try block."""
         returns = []
-        
+
         # Look for return statements at the end of the try block
         for stmt in reversed(body):
             if isinstance(stmt, ast.Return):
@@ -72,10 +76,10 @@ class TryReturnFixer(ast.NodeTransformer):
             else:
                 # Stop at the first non-return statement
                 break
-        
+
         return returns
 
-    def _has_returns(self, stmts: List[ast.stmt]) -> bool:
+    def _has_returns(self, stmts: list[ast.stmt]) -> bool:
         """Check if a list of statements contains return statements."""
         return any(isinstance(stmt, ast.Return) for stmt in stmts)
 
@@ -84,6 +88,7 @@ class TryReturnComplexFixer(ast.NodeTransformer):
     """Handle more complex TRY300 cases with conditional returns."""
 
     def __init__(self) -> None:
+        """Initialize the fixer."""
         self.changes_made = False
 
     def visit_Try(self, node: ast.Try) -> ast.Try:
@@ -97,20 +102,15 @@ class TryReturnComplexFixer(ast.NodeTransformer):
 
         return node
 
-    def _has_conditional_returns(self, body: List[ast.stmt]) -> bool:
+    def _has_conditional_returns(self, body: list[ast.stmt]) -> bool:
         """Check if the try body has conditional return patterns."""
-        for stmt in body:
-            if isinstance(stmt, ast.If):
-                # Check if this if statement has returns in all branches
-                if self._if_has_returns(stmt):
-                    return True
-        return False
+        return any(isinstance(stmt, ast.If) and self._if_has_returns(stmt) for stmt in body)
 
     def _if_has_returns(self, if_stmt: ast.If) -> bool:
         """Check if an if statement has returns in its branches."""
         # Check if body has return
         has_body_return = any(isinstance(s, ast.Return) for s in if_stmt.body)
-        
+
         # Check orelse (else/elif)
         has_else_return = False
         if if_stmt.orelse:
@@ -130,7 +130,7 @@ class TryReturnComplexFixer(ast.NodeTransformer):
         return node
 
 
-def fix_try_returns(source_code: str) -> Tuple[str, bool]:
+def fix_try_returns(source_code: str) -> tuple[str, bool]:
     """Fix TRY300 violations in source code."""
     try:
         tree = ast.parse(source_code)
@@ -151,7 +151,7 @@ def fix_try_returns(source_code: str) -> Tuple[str, bool]:
     if changes_made:
         # Fix missing locations
         ast.fix_missing_locations(tree)
-        
+
         try:
             return ast.unparse(tree), True
         except Exception as e:
@@ -164,7 +164,7 @@ def fix_try_returns(source_code: str) -> Tuple[str, bool]:
 def process_file(file_path: Path) -> bool:
     """Process a single Python file."""
     try:
-        original_content = file_path.read_text(encoding='utf-8')
+        original_content = file_path.read_text(encoding="utf-8")
     except Exception as e:
         print(f"❌ Error reading {file_path}: {e}")
         return False
@@ -173,17 +173,19 @@ def process_file(file_path: Path) -> bool:
 
     if changes_made:
         try:
-            file_path.write_text(fixed_content, encoding='utf-8')
-            print(f"✅ Fixed try/return patterns in: {file_path}")
-            return True
+            file_path.write_text(fixed_content, encoding="utf-8")
         except Exception as e:
             print(f"❌ Error writing {file_path}: {e}")
             return False
+        else:
+            print(f"✅ Fixed try/return patterns in: {file_path}")
+            return True
+
     else:
         return False
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     if len(sys.argv) < 2:
         print("Usage: python3 try_return_fixer.py <file_or_directory> [file_or_directory ...]")
@@ -194,13 +196,13 @@ def main():
 
     for arg in sys.argv[1:]:
         path = Path(arg)
-        
-        if path.is_file() and path.suffix == '.py':
+
+        if path.is_file() and path.suffix == ".py":
             total_files += 1
             if process_file(path):
                 files_changed += 1
         elif path.is_dir():
-            for py_file in path.rglob('*.py'):
+            for py_file in path.rglob("*.py"):
                 total_files += 1
                 if process_file(py_file):
                     files_changed += 1

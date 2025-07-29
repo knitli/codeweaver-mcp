@@ -1,5 +1,10 @@
-# sourcery skip: snake-case-functions
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# sourcery skip: snake-case-functions
 """
 Convert logging f-strings to % format using AST parsing.
 Handles G004 violations that ast-grep can't easily transform.
@@ -15,6 +20,7 @@ class FStringConverter(ast.NodeTransformer):
     """Convert f-strings in logging calls to % format."""
 
     def __init__(self) -> None:
+        """Initialize FStringConverter."""
         self.changes_made = False
 
     def visit_Call(self, node: ast.Call) -> ast.Call:
@@ -27,7 +33,8 @@ class FStringConverter(ast.NodeTransformer):
             and isinstance(node.func.value, ast.Name)
             and node.func.value.id in ("logger", "logging", "log")
             and node.func.attr in ("debug", "info", "warning", "error", "critical", "exception")
-            and node.args and isinstance(node.args[0], ast.JoinedStr)
+            and node.args
+            and isinstance(node.args[0], ast.JoinedStr)
         ):
             format_str, args = self._convert_fstring(node.args[0])
 

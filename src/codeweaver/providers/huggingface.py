@@ -14,15 +14,15 @@ import logging
 
 from typing import Any
 
-from codeweaver._types import (
+from codeweaver.providers.base import EmbeddingProviderBase
+from codeweaver.providers.config import HuggingFaceConfig
+from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
     get_provider_registry_entry,
     register_provider_class,
 )
-from codeweaver.providers.base import EmbeddingProviderBase
-from codeweaver.providers.config import HuggingFaceConfig
 from codeweaver.utils.decorators import feature_flag_required
 
 
@@ -48,10 +48,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-@feature_flag_required(
-    "huggingface",
-    dependencies=["torch", "transformers"],
-)
+@feature_flag_required("huggingface", dependencies=["torch", "transformers"])
 class HuggingFaceProvider(EmbeddingProviderBase):
     """HuggingFace provider for embeddings with support for API and local models."""
 

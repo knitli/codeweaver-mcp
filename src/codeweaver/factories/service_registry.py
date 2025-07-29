@@ -10,24 +10,22 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from codeweaver._types.config import ServiceType
-from codeweaver._types.service_config import ServiceConfig
-from codeweaver._types.service_data import (
-    ProviderStatus,
-    ServiceCapabilities,
-    ServiceInstanceInfo,
-    ServiceProviderInfo,
-    ServiceRegistryHealth,
-)
-from codeweaver._types.service_exceptions import (
+from codeweaver.services.providers.base_provider import BaseServiceProvider
+from codeweaver.types import (
     DuplicateProviderError,
     ProviderNotFoundError,
     ProviderRegistrationError,
+    ProviderStatus,
+    ServiceCapabilities,
+    ServiceConfig,
     ServiceCreationError,
+    ServiceInstanceInfo,
     ServiceNotFoundError,
+    ServiceProvider,
+    ServiceProviderInfo,
+    ServiceRegistryHealth,
+    ServiceType,
 )
-from codeweaver._types.services import ServiceProvider
-from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class ServiceRegistry:
@@ -246,9 +244,7 @@ class ServiceRegistry:
 
                 # Update instance info
                 if self._instance_info.get(service_type):
-                    self._instance_info[service_type].last_health_check = datetime.now(
-                        UTC
-                    )
+                    self._instance_info[service_type].last_health_check = datetime.now(UTC)
 
             except Exception as e:
                 issues.append(f"Health check failed for {service_type.value}: {e}")

@@ -34,3 +34,8 @@ class BaseEnum(enum.Enum):
     def __str__(self) -> str:
         """Return the string representation of the enum member."""
         return self.name.replace("_", " ").lower()
+
+    @classmethod
+    def members_to_values(cls) -> dict["BaseEnum", str]:
+        """Return a dictionary mapping member names to their values."""
+        return {member: member.value for member in cls.members()}

@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# sourcery skip: snake-case-functions
 """
 Clean up trailing punctuation when removing redundant exceptions from logging calls.
 This handles the cases that ast-grep can't handle with complex pattern matching.
@@ -15,33 +21,30 @@ class PunctuationCleaner(ast.NodeTransformer):
     """Clean up logging.exception calls that have redundant exception references with trailing punctuation."""
 
     def __init__(self) -> None:
+        """Initialize the cleaner."""
         self.changes_made = False
 
     def visit_Call(self, node: ast.Call) -> ast.Call:
         """Clean up logging.exception calls with redundant exception references."""
         self.generic_visit(node)
 
-        # Check if this is a logging.exception call
+        # Check if this is a logging.exception call and % format call with redundant exception
         if (
             isinstance(node.func, ast.Attribute)
             and isinstance(node.func.value, ast.Name)
             and node.func.value.id in ("logger", "logging", "log")
             and node.func.attr == "exception"
             and len(node.args) >= 2
+            and isinstance(node.args[0], ast.Constant)
+            and isinstance(node.args[0].value, str)
+            and self._is_exception_variable(node.args[-1])
         ):
-            # Check if this is a % format call with redundant exception
-            if (
-                isinstance(node.args[0], ast.Constant)
-                and isinstance(node.args[0].value, str)
-                and len(node.args) >= 2
-                and self._is_exception_variable(node.args[-1])
-            ):
-                cleaned_message = self._clean_message_punctuation(node.args[0].value)
-                if cleaned_message != node.args[0].value:
-                    # Update the message and remove the exception argument
-                    node.args[0] = ast.Constant(value=cleaned_message)
-                    node.args = node.args[:-1]  # Remove the exception argument
-                    self.changes_made = True
+            cleaned_message = self._clean_message_punctuation(node.args[0].value)
+            if cleaned_message != node.args[0].value:
+                # Update the message and remove the exception argument
+                node.args[0] = ast.Constant(value=cleaned_message)
+                node.args = node.args[:-1]  # Remove the exception argument
+                self.changes_made = True
 
         return node
 
@@ -55,16 +58,16 @@ class PunctuationCleaner(ast.NodeTransformer):
         """Clean trailing punctuation patterns when removing exception from logging message."""
         # Common patterns to clean up
         patterns = [
-            (r': %s$', ''),              # "Error: %s" -> "Error"
-            (r':\s*%s$', ''),            # "Error: %s" -> "Error"
-            (r' - %s$', ''),             # "Error - %s" -> "Error"
-            (r'-\s*%s$', ''),            # "Error-%s" -> "Error"
-            (r', %s$', ''),              # "Error, %s" -> "Error"
-            (r',\s*%s$', ''),            # "Error,%s" -> "Error"
-            (r' \(%s\)$', ''),           # "Error (%s)" -> "Error"
-            (r'\(%s\)$', ''),            # "Error(%s)" -> "Error"
-            (r' %s\.$', ''),             # "Error %s." -> "Error"
-            (r'\s*%s\.$', ''),           # "Error%s." -> "Error"
+            (r": %s$", ""),  # "Error: %s" -> "Error"
+            (r":\s*%s$", ""),  # "Error: %s" -> "Error"
+            (r" - %s$", ""),  # "Error - %s" -> "Error"
+            (r"-\s*%s$", ""),  # "Error-%s" -> "Error"
+            (r", %s$", ""),  # "Error, %s" -> "Error"
+            (r",\s*%s$", ""),  # "Error,%s" -> "Error"
+            (r" \(%s\)$", ""),  # "Error (%s)" -> "Error"
+            (r"\(%s\)$", ""),  # "Error(%s)" -> "Error"
+            (r" %s\.$", ""),  # "Error %s." -> "Error"
+            (r"\s*%s\.$", ""),  # "Error%s." -> "Error"
         ]
 
         for pattern, replacement in patterns:

@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 # sourcery skip: avoid-single-character-names-variables, name-type-suffix
 """
 Programmatic fixer for common ruff patterns that can't be auto-fixed.

@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Server Configuration Changes Specification
 
 ## Overview
@@ -22,11 +28,11 @@ Add services configuration to the main CodeWeaver configuration:
 
 ```python
 # Add to imports
-from codeweaver._types.service_config import ServicesConfig
+from codeweaver.types import ServicesConfig
 
 class CodeWeaverConfig(BaseSettings):
     """Main configuration for CodeWeaver."""
-    
+
     model_config = SettingsConfigDict(
         env_prefix="CW_",
         env_nested_delimiter="__",
@@ -35,7 +41,7 @@ class CodeWeaverConfig(BaseSettings):
         extra="allow",
         validate_assignment=True,
     )
-    
+
     # Existing configuration sections
     embedding: EmbeddingProviderConfig = Field(default_factory=EmbeddingProviderConfig)
     reranking: RerankingProviderConfig = Field(default_factory=RerankingProviderConfig)
@@ -43,13 +49,13 @@ class CodeWeaverConfig(BaseSettings):
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
     indexing: IndexingConfig = Field(default_factory=IndexingConfig)
     server: ServerConfig = Field(default_factory=ServerConfig)
-    
+
     # NEW: Services configuration
     services: ServicesConfig = Field(
         default_factory=ServicesConfig,
         description="Configuration for all service providers including middleware"
     )
-    
+
     @field_validator("services")
     @classmethod
     def validate_services_config(cls, v: ServicesConfig) -> ServicesConfig:
@@ -59,13 +65,13 @@ class CodeWeaverConfig(BaseSettings):
         for service_name in v.middleware_initialization_order:
             if service_name not in valid_middleware:
                 raise ValueError(f"Invalid middleware service name: {service_name}")
-        
+
         # Validate that core services are enabled
         if not v.chunking.enabled:
             logger.warning("Chunking service is disabled - this may affect functionality")
         if not v.filtering.enabled:
             logger.warning("Filtering service is disabled - this may affect functionality")
-            
+
         return v
 ```
 
@@ -93,7 +99,7 @@ Add environment variable mapping for middleware services:
 provider = "voyage"
 model = "voyage-code-2"
 
-[backend]  
+[backend]
 provider = "qdrant"
 url = "http://localhost:6333"
 collection_name = "codeweaver-default"
@@ -201,77 +207,77 @@ Add configuration migration support for existing installations:
 ```python
 class ConfigMigration:
     """Handle migration of existing configurations to include services."""
-    
+
     @staticmethod
     def migrate_server_config_to_services(config: dict) -> dict:
         """Migrate existing server-level middleware config to services config."""
         migrated = config.copy()
-        
+
         # Create services section if it doesn't exist
         if "services" not in migrated:
             migrated["services"] = {}
-        
+
         services = migrated["services"]
-        
+
         # Migrate existing server logging settings to services.logging
         if "server" in migrated:
             server_config = migrated["server"]
-            
+
             if "logging" not in services:
                 services["logging"] = {}
-            
+
             # Map server log_level to services.logging.log_level
             if "log_level" in server_config:
                 services["logging"]["log_level"] = server_config["log_level"]
-            
+
             # Map enable_request_logging to include_payloads
             if "enable_request_logging" in server_config:
                 services["logging"]["include_payloads"] = server_config["enable_request_logging"]
-        
+
         # Migrate chunking config to services.chunking
         if "chunking" in migrated:
             chunking_config = migrated["chunking"]
-            
+
             if "chunking" not in services:
                 services["chunking"] = {}
-            
+
             # Copy chunking settings
             for key, value in chunking_config.items():
                 services["chunking"][key] = value
-            
+
             # Ensure provider is set
             if "provider" not in services["chunking"]:
                 services["chunking"]["provider"] = "fastmcp_chunking"
-        
+
         # Migrate indexing config to services.filtering
         if "indexing" in migrated:
             indexing_config = migrated["indexing"]
-            
+
             if "filtering" not in services:
                 services["filtering"] = {}
-            
+
             # Map indexing settings to filtering
             mapping = {
                 "use_gitignore": "use_gitignore",
                 "additional_ignore_patterns": "ignore_directories",
             }
-            
+
             for old_key, new_key in mapping.items():
                 if old_key in indexing_config:
                     services["filtering"][new_key] = indexing_config[old_key]
-            
+
             # Ensure provider is set
             if "provider" not in services["filtering"]:
                 services["filtering"]["provider"] = "fastmcp_filtering"
-        
+
         return migrated
 
 def get_config(config_path: Path | None = None) -> CodeWeaverConfig:
     """Get configuration with migration support."""
-    
+
     # Find and load configuration
     config_data = {}
-    
+
     if config_path:
         config_data = _load_toml_config(config_path)
     else:
@@ -280,10 +286,10 @@ def get_config(config_path: Path | None = None) -> CodeWeaverConfig:
             if search_path.exists():
                 config_data = _load_toml_config(search_path)
                 break
-    
+
     # Apply configuration migration
     config_data = ConfigMigration.migrate_server_config_to_services(config_data)
-    
+
     # Create and validate configuration
     try:
         # Set the TOML file for pydantic-settings
@@ -303,67 +309,67 @@ Add comprehensive validation for services configuration:
 ```python
 class ServicesConfigValidator:
     """Validator for services configuration."""
-    
+
     @staticmethod
     def validate_middleware_dependencies(config: ServicesConfig) -> list[str]:
         """Validate middleware service dependencies and return warnings."""
         warnings = []
-        
+
         # Check if logging is disabled but other services depend on it
         if not config.logging.enabled:
             if config.timing.enabled and config.timing.log_level:
                 warnings.append("Timing service logging may not work with logging service disabled")
-        
+
         # Check rate limiting configuration
         if config.rate_limiting.enabled:
             if config.rate_limiting.max_requests_per_second <= 0:
                 warnings.append("Rate limiting max_requests_per_second must be positive")
-            
+
             if config.rate_limiting.burst_capacity <= 0:
                 warnings.append("Rate limiting burst_capacity must be positive")
-        
+
         # Check timing configuration
         if config.timing.enabled:
             if config.timing.metric_aggregation_window <= 0:
                 warnings.append("Timing metric_aggregation_window must be positive")
-        
+
         # Check error handling configuration
         if config.error_handling.enabled:
             if config.error_handling.max_error_history <= 0:
                 warnings.append("Error handling max_error_history must be positive")
-        
+
         return warnings
-    
+
     @staticmethod
     def validate_service_provider_availability(config: ServicesConfig) -> list[str]:
         """Validate that required service providers are available."""
         errors = []
-        
+
         # Check core services
         if config.chunking.enabled and config.chunking.provider == "fastmcp_chunking":
             # Validate that FastMCP chunking is available
             pass  # Implementation depends on provider registry
-        
+
         if config.filtering.enabled and config.filtering.provider == "fastmcp_filtering":
             # Validate that FastMCP filtering is available
             pass  # Implementation depends on provider registry
-        
+
         return errors
 
 # Add to CodeWeaverConfig class
 @model_validator(mode="after")
 def validate_complete_config(self) -> "CodeWeaverConfig":
     """Validate the complete configuration."""
-    
+
     # Validate services configuration
     warnings = ServicesConfigValidator.validate_middleware_dependencies(self.services)
     for warning in warnings:
         logger.warning("Services configuration warning: %s", warning)
-    
+
     errors = ServicesConfigValidator.validate_service_provider_availability(self.services)
     if errors:
         raise ValueError(f"Services configuration errors: {'; '.join(errors)}")
-    
+
     return self
 ```
 
@@ -467,13 +473,13 @@ Examples:
 import pytest
 from pydantic import ValidationError
 
-from codeweaver._types.service_config import ServicesConfig, LoggingServiceConfig
+from codeweaver.types import ServicesConfig, LoggingServiceConfig
 from codeweaver.config import CodeWeaverConfig, ConfigMigration
 
 
 class TestServicesConfig:
     """Test services configuration validation."""
-    
+
     def test_default_services_config(self):
         """Test default services configuration is valid."""
         config = ServicesConfig()
@@ -481,7 +487,7 @@ class TestServicesConfig:
         assert config.filtering.enabled
         assert config.logging.enabled
         assert config.timing.enabled
-        
+
     def test_middleware_initialization_order_validation(self):
         """Test middleware initialization order validation."""
         config = ServicesConfig(
@@ -490,7 +496,7 @@ class TestServicesConfig:
         # Should raise validation error
         with pytest.raises(ValidationError):
             CodeWeaverConfig(services=config)
-    
+
     def test_logging_service_config_validation(self):
         """Test logging service configuration validation."""
         # Valid config
@@ -499,14 +505,14 @@ class TestServicesConfig:
             max_payload_length=500
         )
         assert config.log_level == "DEBUG"
-        
+
         # Invalid log level should be handled gracefully
         config = LoggingServiceConfig(log_level="INVALID")
         # Validation should handle this appropriately
 
 class TestConfigMigration:
     """Test configuration migration functionality."""
-    
+
     def test_migrate_server_logging_to_services(self):
         """Test migration of server logging config to services."""
         old_config = {
@@ -515,14 +521,14 @@ class TestConfigMigration:
                 "enable_request_logging": True
             }
         }
-        
+
         migrated = ConfigMigration.migrate_server_config_to_services(old_config)
-        
+
         assert "services" in migrated
         assert "logging" in migrated["services"]
         assert migrated["services"]["logging"]["log_level"] == "DEBUG"
         assert migrated["services"]["logging"]["include_payloads"] is True
-    
+
     def test_migrate_chunking_config_to_services(self):
         """Test migration of chunking config to services."""
         old_config = {
@@ -531,9 +537,9 @@ class TestConfigMigration:
                 "min_chunk_size": 100
             }
         }
-        
+
         migrated = ConfigMigration.migrate_server_config_to_services(old_config)
-        
+
         assert "services" in migrated
         assert "chunking" in migrated["services"]
         assert migrated["services"]["chunking"]["max_chunk_size"] == 2000

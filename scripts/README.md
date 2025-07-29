@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Ruff Pattern Fixer Scripts
 
 These scripts automatically fix common ruff linting violations that can't be auto-fixed by ruff itself.

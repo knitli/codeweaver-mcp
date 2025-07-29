@@ -34,6 +34,7 @@ def main():
 
     try:
         from tests.validation.test_pattern_consistency import validate_pattern_consistency
+
         if validate_pattern_consistency():
             print("✅ Pattern consistency validation PASSED")
         else:
@@ -49,6 +50,7 @@ def main():
 
     try:
         from tests.validation.test_services_integration import validate_services_integration
+
         if validate_services_integration():
             print("✅ Services integration validation PASSED")
         else:
@@ -90,7 +92,7 @@ def main():
     required_docs = [
         "docs/SERVICES_LAYER_GUIDE.md",
         "docs/MIGRATION_GUIDE.md",
-        "docs/DEVELOPMENT_PATTERNS.md"
+        "docs/DEVELOPMENT_PATTERNS.md",
     ]
 
     docs_passed = True
@@ -126,35 +128,37 @@ def main():
     # Check for direct middleware imports (refined check)
     try:
         import subprocess
+
         result = subprocess.run(
-            ["grep", "-rn", "from codeweaver.middleware", "src/"],
-            capture_output=True,
-            text=True
+            ["grep", "-rn", "from codeweaver.middleware", "src/"], capture_output=True, text=True
         )
         if result.returncode == 0 and result.stdout.strip():
-            lines = result.stdout.strip().split('\n')
+            lines = result.stdout.strip().split("\n")
             violations = []
 
             for line in lines:
                 # Parse the grep output: filename:line_number:content
-                parts = line.split(':', 2)
+                parts = line.split(":", 2)
                 if len(parts) < 3:
                     continue
 
                 file_path, line_num, content = parts
 
                 # Skip allowed files
-                if any(allowed in file_path for allowed in [
-                    "src/codeweaver/middleware/",
-                    "src/codeweaver/server.py",
-                    "src/codeweaver/main.py",
-                    "src/codeweaver/services/providers/"
-                ]):
+                if any(
+                    allowed in file_path
+                    for allowed in [
+                        "src/codeweaver/middleware/",
+                        "src/codeweaver/server.py",
+                        "src/codeweaver/main.py",
+                        "src/codeweaver/services/providers/",
+                    ]
+                ):
                     continue
 
                 # For other files, check if the import is in a fallback method
                 try:
-                    with open(file_path, 'r') as f:
+                    with open(file_path, "r") as f:
                         file_lines = f.readlines()
 
                     line_idx = int(line_num) - 1
@@ -183,7 +187,9 @@ def main():
                 anti_patterns_found = True
                 all_passed = False
             else:
-                print("✅ All middleware imports are in allowed contexts (services, fallbacks, etc.)")
+                print(
+                    "✅ All middleware imports are in allowed contexts (services, fallbacks, etc.)"
+                )
         else:
             print("✅ No middleware imports found")
     except Exception as e:
@@ -202,7 +208,9 @@ def main():
     if all_passed:
         print("🎉 ALL VALIDATIONS PASSED!")
         print("\nPhase 5 implementation is complete and compliant:")
-        print("✅ Documentation created (Services Layer Guide, Migration Guide, Development Patterns)")
+        print(
+            "✅ Documentation created (Services Layer Guide, Migration Guide, Development Patterns)"
+        )
         print("✅ Pattern consistency validated")
         print("✅ Services integration validated")
         print("✅ Anti-patterns eliminated")
