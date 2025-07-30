@@ -121,7 +121,7 @@ class TestCodeWeaverServer:
             # Check that services manager was created and initialized
             assert server.services_manager is not None
             assert server.services_manager._initialized
-            
+
             # Check that core services are available
             chunking_service = server.services_manager.get_chunking_service()
             filtering_service = server.services_manager.get_filtering_service()

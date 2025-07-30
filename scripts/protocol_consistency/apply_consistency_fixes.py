@@ -214,7 +214,10 @@ def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Apply consistency fixes")
     parser.add_argument(
-        "--src-path", type=Path, default=Path("src"), help="Path to source code directory"
+        "--src-path",
+        type=Path,
+        default=(Path(__file__).parent.parent.parent) / "src",
+        help="Path to source code directory",
     )
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be changed without applying fixes"

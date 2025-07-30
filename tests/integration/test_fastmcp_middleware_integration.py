@@ -101,10 +101,10 @@ class TestFastMCPMiddlewareIntegration:
             mock_backend = AsyncMock()
             mock_backend.list_collections = AsyncMock(return_value=["test_collection"])
             mock_backend.collection_exists = AsyncMock(return_value=True)
-            
+
             mock_embedding_provider = AsyncMock()
             mock_reranking_provider = AsyncMock()
-            
+
             mock_ext_manager.return_value.initialize = AsyncMock()
             mock_ext_manager.return_value.get_backend = AsyncMock(return_value=mock_backend)
             mock_ext_manager.return_value.get_embedding_provider = AsyncMock(

@@ -457,7 +457,7 @@ class QdrantHybridBackend(QdrantBackend):
 
     # Health Monitoring Methods
 
-    async def health_check(self) -> ServiceHealth:
+    async def health_check(self) -> bool:
         """Check backend health and connectivity."""
         try:
             # Test basic connectivity

@@ -199,7 +199,7 @@ class ProtocolConsistencyImprover:
             self.improvements.append(improvement)
 
 
-def generate_improvement_plan(improvements: list[ConsistencyImprovement]) -> str:    # noqa: C901
+def generate_improvement_plan(improvements: list[ConsistencyImprovement]) -> str:  # noqa: C901
     # sourcery skip: no-long-functions
     """Generate a comprehensive improvement plan."""
     # Summary
@@ -224,7 +224,12 @@ def generate_improvement_plan(improvements: list[ConsistencyImprovement]) -> str
         report.append(f"## {category.title()} Improvements ({len(items)})\n")
 
         for i, improvement in enumerate(items, 1):
-            report.extend((f"### {i}. {improvement.description}", f"- **File**: {improvement.file_path}", f"- **Impact**: {improvement.impact}", f"- **Risk**: {improvement.risk}"))
+            report.extend((
+                f"### {i}. {improvement.description}",
+                f"- **File**: {improvement.file_path}",
+                f"- **Impact**: {improvement.impact}",
+                f"- **Risk**: {improvement.risk}",
+            ))
 
             if improvement.changes:
                 report.append("- **Changes**:")
@@ -267,7 +272,10 @@ def generate_improvement_plan(improvements: list[ConsistencyImprovement]) -> str
     ]
 
     for phase in phases:
-        report.extend((f"### {phase['name']} ({len(phase['items'])} items)", f"{phase['description']}\n"))
+        report.extend((
+            f"### {phase['name']} ({len(phase['items'])} items)",
+            f"{phase['description']}\n",
+        ))
 
         report.extend(f"- {improvement.description}" for improvement in phase["items"])
         report.extend((

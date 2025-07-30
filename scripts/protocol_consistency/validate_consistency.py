@@ -39,8 +39,7 @@ def validate_consistency() -> bool:
             results.append((check["name"], False))
             print(f"❌ {check['name']} - Error: {e}")
 
-    passed_count = sum(bool(passed)
-                   for _, passed in results)
+    passed_count = sum(bool(passed) for _, passed in results)
     total_count = len(results)
 
     print(f"\n📊 Validation Results: {passed_count}/{total_count} checks passed")

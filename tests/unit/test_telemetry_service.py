@@ -13,8 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from codeweaver.services.providers.telemetry import PostHogTelemetryProvider
-from codeweaver.types import ServiceType
-from codeweaver.types import TelemetryServiceConfig
+from codeweaver.types import ServiceType, TelemetryServiceConfig
 
 
 @pytest.mark.unit

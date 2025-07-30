@@ -246,7 +246,7 @@ class ProtocolAnalyzer:
                     )
 
 
-def generate_report(analyses: dict[str, PackageAnalysis]) -> str:    # noqa: C901
+def generate_report(analyses: dict[str, PackageAnalysis]) -> str:  # noqa: C901
     # sourcery skip: low-code-quality, no-long-functions
     """Generate a comprehensive consistency report."""
     total_implementations = sum(len(a.implementations) for a in analyses.values())
@@ -362,16 +362,15 @@ def main() -> None:
     analyses = analyzer.analyze_all_packages()
 
     if args.json:
-        # Output raw data as JSON (simplified for JSON serialization)
-        json_data = {}
-        for package_name, analysis in analyses.items():
-            json_data[package_name] = {
+        json_data = {
+            package_name: {
                 "implementations": list(analysis.implementations.keys()),
                 "protocols": list(analysis.protocols.keys()),
                 "common_methods": list(analysis.common_methods),
                 "inconsistencies": analysis.inconsistencies,
             }
-
+            for package_name, analysis in analyses.items()
+        }
         if args.output:
             with (args.output).open("w") as f:
                 json.dump(json_data, f, indent=2)

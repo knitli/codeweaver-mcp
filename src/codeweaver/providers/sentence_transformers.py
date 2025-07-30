@@ -124,7 +124,9 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
         # Most models have 512 token limit, roughly 4 chars per token
         return 2000
 
-    async def embed_documents(self, texts: list[str], *, context: dict | None = None) -> list[list[float]]:
+    async def embed_documents(
+        self, texts: list[str], *, context: dict | None = None
+    ) -> list[list[float]]:
         """Generate embeddings for documents."""
         try:
             # SentenceTransformers encode is synchronous, but we run in async context
