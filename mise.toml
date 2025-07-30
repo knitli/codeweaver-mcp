@@ -27,13 +27,145 @@ GH_REPO="knitli/code-weaver-mcp"
 
 [tasks]
 
-fix = """
+# Development setup
+setup = """
 #!/bin/bash
-ruff check --fix --unsafe-fixes . &&
-ruff format . &&
-hk fix
+echo "Setting up development environment..."
+uv sync --group dev --group test --group docs --group typing &&
+echo "✅ Development environment ready!"
 """
 
-check = "hk check"
+install = "uv sync"
+
+# Code quality and formatting
+fix = """
+#!/bin/bash
+echo "Fixing code issues..."
+ruff check --fix --unsafe-fixes . &&
+ruff format . &&
+hk fix &&
+echo "✅ Code fixes applied!"
+"""
+
+check = """
+#!/bin/bash
+echo "Running quality checks..."
+hk check
+"""
+
+lint = """
+#!/bin/bash
+echo "Running linting checks..."
+uv run ruff check .
+"""
+
+format = """
+#!/bin/bash
+echo "Running formatting checks..."
+uv run ruff format --check .
+"""
+
+format-fix = """
+#!/bin/bash
+echo "Applying formatting..."
+uv run ruff format .
+"""
+
+# Testing
+test = """
+#!/bin/bash
+echo "Running tests..."
+uv run pytest tests/ -v
+"""
+
+test-cov = """
+#!/bin/bash
+echo "Running tests with coverage..."
+uv run pytest tests/ --cov=codeweaver --cov-report=xml --cov-report=term-missing --junit-xml=test-results.xml -v
+"""
+
+test-watch = """
+#!/bin/bash
+echo "Running tests in watch mode..."
+uv run pytest tests/ -f --tb=short
+"""
+
+# Building and packaging  
+build = """
+#!/bin/bash
+echo "Building package..."
+uv build &&
+echo "✅ Package built successfully!"
+"""
+
+clean = """
+#!/bin/bash
+echo "Cleaning build artifacts..."
+rm -rf dist/ build/ *.egg-info/ .coverage test-results.xml &&
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true &&
+find . -type f -name "*.pyc" -delete &&
+echo "✅ Build artifacts cleaned!"
+"""
+
+# Documentation
+docs-serve = """
+#!/bin/bash
+echo "Starting documentation server..."
+uv run --group docs mkdocs serve
+"""
+
+docs-build = """
+#!/bin/bash
+echo "Building documentation..."
+uv run --group docs mkdocs build
+"""
+
+# Script automation
+fix-patterns = """
+#!/bin/bash
+echo "Running ruff pattern fixer..."
+./scripts/fix-ruff-patterns.sh
+"""
+
+update-licenses = """
+#!/bin/bash
+echo "Updating license headers..."
+uv run python scripts/update-licenses.py
+"""
+
+# Release and maintenance
+version = """
+#!/bin/bash
+echo "CodeWeaver version information:"
+echo "Package version: $(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")"
+echo "Python version: $(python --version)"
+echo "UV version: $(uv --version)"
+"""
+
+changelog = """
+#!/bin/bash
+echo "Generating changelog..."
+npm exec changeset version
+"""
+
+# Combined workflows
+ci = """
+#!/bin/bash
+echo "Running full CI pipeline locally..."
+mise run check &&
+mise run lint &&
+mise run format &&
+mise run test-cov &&
+mise run build &&
+echo "✅ All CI checks passed!"
+"""
+
+pre-commit = """
+#!/bin/bash
+echo "Running pre-commit checks..."
+mise run fix &&
+mise run test &&
+echo "✅ Pre-commit checks passed!"
+"""
 
 
