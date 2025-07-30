@@ -30,8 +30,13 @@ GH_REPO="knitli/code-weaver-mcp"
 # Development setup
 setup = """
 #!/bin/bash
+mise trust -y &&
+mise install -y &&
+mise reshim &&
+eval "$(mise activate)" &&
+hk init --mise &&
 echo "Setting up development environment..."
-uv sync --group dev --group test --group docs --group typing &&
+uv sync --all-groups &&
 echo "✅ Development environment ready!"
 """
 
@@ -130,7 +135,7 @@ echo "Running ruff pattern fixer..."
 update-licenses = """
 #!/bin/bash
 echo "Updating license headers..."
-uv run python scripts/update-licenses.py
+uv run python scripts/update-licenses.py "${*}"
 """
 
 # Release and maintenance
@@ -163,9 +168,9 @@ echo "✅ All CI checks passed!"
 pre-commit = """
 #!/bin/bash
 echo "Running pre-commit checks..."
-mise run fix &&
-mise run test &&
-echo "✅ Pre-commit checks passed!"
+hk fix && 
+git add . &&
+hk check
 """
 
 
