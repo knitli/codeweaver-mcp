@@ -80,3 +80,75 @@ dev = [
     "ipython>=9.4.0",
 ]
 typing = ["pylance>=0.32.0"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=codeweaver",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+markers = [
+    # Test categories
+    "unit: Unit tests that test individual components in isolation",
+    "integration: Integration tests that test component interactions",
+    "validation: Validation tests that ensure system consistency",
+    "e2e: End-to-end tests that test complete workflows",
+
+    # Performance & benchmarks
+    "benchmark: Performance benchmark tests",
+    "slow: Tests that take a significant amount of time to run",
+    "performance: Performance-related tests",
+
+    # External dependencies
+    "network: Tests that require network access",
+    "external_api: Tests that interact with external APIs",
+    "voyageai: Tests that require VoyageAI API access",
+    "qdrant: Tests that require Qdrant vector database",
+
+    # Configuration & environment
+    "config: Configuration-related tests",
+    "env_vars: Tests that depend on environment variables",
+    "mock_only: Tests that only use mocked dependencies",
+
+    # Feature-specific
+    "embeddings: Tests related to embedding functionality",
+    "search: Tests related to search functionality",
+    "indexing: Tests related to code indexing",
+    "telemetry: Tests related to telemetry and metrics",
+    "mcp: Tests related to MCP protocol functionality",
+    "services: Tests related to services layer",
+
+    # Test types
+    "parametrize: Parametrized tests with multiple test cases",
+    "fixtures: Tests that heavily rely on pytest fixtures",
+    "async_test: Asynchronous tests (in addition to pytest.mark.asyncio)",
+
+    # Stability & reliability
+    "flaky: Tests that may occasionally fail due to timing or external factors",
+    "timeout: Tests with specific timeout requirements",
+    "retry: Tests that may need retries",
+
+    # Development & debugging
+    "debug: Tests for debugging purposes",
+    "dev_only: Tests that should only run in development",
+    "skip_ci: Tests to skip in CI/CD environments",
+]
+asyncio_mode = "auto"
+timeout = 300
+timeout_method = "thread"

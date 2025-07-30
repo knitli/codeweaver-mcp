@@ -19,6 +19,10 @@ except ImportError:
     DOCARRAY_AVAILABLE = False
 
 
+@pytest.mark.embeddings
+@pytest.mark.external_api
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestDocArrayIntegration:
     """Test DocArray backend integration with CodeWeaver."""
 
@@ -91,6 +95,10 @@ class TestDocArrayIntegration:
     condition=not DOCARRAY_AVAILABLE,
     reason="DocArray not installed - this tests the implementation with dependencies",
 )
+@pytest.mark.embeddings
+@pytest.mark.external_api
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestDocArrayWithDependencies:
     """Test DocArray backend when dependencies are available."""
 

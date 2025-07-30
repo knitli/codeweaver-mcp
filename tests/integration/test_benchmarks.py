@@ -27,6 +27,10 @@ from codeweaver.testing import (
 )
 
 
+@pytest.mark.benchmark
+@pytest.mark.performance
+@pytest.mark.integration
+@pytest.mark.mock_only
 class TestBenchmarkResult:
     """Test BenchmarkResult data structure."""
 
@@ -104,6 +108,9 @@ class TestBenchmarkResult:
         assert result_data["metadata"]["test"] == "value"
 
 
+@pytest.mark.benchmark
+@pytest.mark.performance
+@pytest.mark.integration
 class TestBenchmarkSuite:
     """Test BenchmarkSuite functionality."""
 
@@ -276,6 +283,10 @@ class TestBenchmarkSuite:
             assert len(text.split()) > 1  # Should have multiple words
 
 
+@pytest.mark.benchmark
+@pytest.mark.performance
+@pytest.mark.integration
+@pytest.mark.slow
 class TestBenchmarkScenarios:
     """Test different benchmark scenarios."""
 
@@ -323,6 +334,9 @@ class TestBenchmarkScenarios:
         assert any("small_batch" in r.benchmark_name for r in results)
 
 
+@pytest.mark.benchmark
+@pytest.mark.performance
+@pytest.mark.integration
 class TestConvenienceFunctions:
     """Test convenience functions for benchmarking."""
 
@@ -438,6 +452,10 @@ class TestConvenienceFunctions:
         assert loaded_results["test_component"][0]["benchmark_name"] == "test_benchmark"
 
 
+@pytest.mark.benchmark
+@pytest.mark.performance
+@pytest.mark.integration
+@pytest.mark.slow
 class TestPerformanceRegression:
     """Test performance regression detection."""
 

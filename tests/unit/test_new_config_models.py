@@ -199,6 +199,7 @@ class FactoryConfig(BaseModel):
 
 
 # Tests
+@pytest.mark.unit
 class TestNewConfigModels:
     """Test the new configuration models."""
 

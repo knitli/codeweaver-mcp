@@ -33,6 +33,11 @@ from codeweaver.config import (
 )
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestCodeWeaverConfig:
     """Test the main CodeWeaverConfig class."""
 
@@ -125,6 +130,11 @@ class TestCodeWeaverConfig:
         assert default_source["source_id"] == "default_filesystem"
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestCustomTomlSource:
     """Test the custom TOML source implementation."""
 
@@ -190,6 +200,11 @@ server_name = "found-via-search"
         assert data == {}
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestConfigManager:
     """Test the ConfigManager class."""
 
@@ -319,6 +334,11 @@ min_chunk_size = 100
         assert isinstance(config, CodeWeaverConfig)
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestSourcePriority:
     """Test configuration source priority and precedence."""
 
@@ -376,6 +396,11 @@ log_level = "INFO"
             assert config.server.log_level == "WARNING"
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestConfigurationComponents:
     """Test individual configuration component classes."""
 
@@ -440,6 +465,11 @@ class TestConfigurationComponents:
         assert config.content_cache_ttl_hours == 24
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestCodeWeaverConfigWithFile:
     """Test CodeWeaverConfigWithFile for explicit file loading."""
 
@@ -465,6 +495,11 @@ min_chunk_size = 300
         assert config.chunking.min_chunk_size == 300
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling and graceful degradation."""
 
@@ -514,6 +549,11 @@ class TestErrorHandling:
                 assert isinstance(config.indexing.batch_size, int)
 
 
+@pytest.mark.config
+@pytest.mark.external_api
+@pytest.mark.mock_only
+@pytest.mark.qdrant
+@pytest.mark.unit
 class TestIntegrationScenarios:
     """Test realistic integration scenarios."""
 

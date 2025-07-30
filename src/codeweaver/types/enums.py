@@ -173,9 +173,10 @@ class Language(BaseEnum):
         """Languages supported by Ast-Grep's builtin parsers."""
         return tuple(
             sorted(
-                lang
+                (lang
                 for lang in cls.__members__.values()
-                if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+                if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)),
+                key=lambda x: x.value
             )
         )
 

@@ -286,7 +286,7 @@ def get_all_backend_capabilities() -> dict[str, BackendCapabilities]:
     Returns:
         Dictionary mapping backend names to their capabilities
     """
-    from codeweaver.types.providers import (
+    from codeweaver.types.backends.enums import (
         DistanceMetric,
         HybridFusionStrategy,
         IndexType,

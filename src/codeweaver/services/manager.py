@@ -220,6 +220,37 @@ class ServicesManager:
         """Get all middleware services."""
         return self._middleware_services.copy()
 
+    def create_service_context(self) -> dict[str, Any]:
+        """Create a service context for provider operations."""
+        return {
+            "services_manager": self,
+            "chunking_service": self.get_chunking_service() if ServiceType.CHUNKING in self._services else None,
+            "filtering_service": self.get_filtering_service() if ServiceType.FILTERING in self._services else None,
+            "telemetry_service": self.get_telemetry_service(),
+            "validation_service": self.get_validation_service(),
+            "cache_service": self.get_cache_service(),
+            "monitoring_service": self.get_monitoring_service(),
+            "metrics_service": self.get_metrics_service(),
+        }
+
+    async def get_service_health(self) -> dict[str, Any]:
+        """Get service health information."""
+        health_report = await self.get_health_report()
+        return {
+            "overall_status": health_report.overall_status.value,
+            "services": {
+                service_type.value: {
+                    "status": health.status.value,
+                    "last_check": health.last_check.isoformat(),
+                    "response_time": health.response_time,
+                    "error_count": health.error_count,
+                    "success_rate": health.success_rate,
+                }
+                for service_type, health in health_report.services.items()
+            },
+            "check_time": health_report.check_time.isoformat(),
+        }
+
     async def get_health_report(self) -> ServicesHealthReport:
         """Get comprehensive health report for all services."""
         services_health = {}
@@ -294,6 +325,9 @@ class ServicesManager:
             # Register core service providers
             self._registry.register_provider(
                 ServiceType.CHUNKING, "fastmcp_chunking", ChunkingService
+            )
+            self._registry.register_provider(
+                ServiceType.CHUNKING, "ast_grep_chunking", ChunkingService
             )
             self._registry.register_provider(
                 ServiceType.FILTERING, "fastmcp_filtering", FilteringService

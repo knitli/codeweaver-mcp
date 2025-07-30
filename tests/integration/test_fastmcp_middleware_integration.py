@@ -15,6 +15,9 @@ from codeweaver.services.manager import ServicesManager
 from codeweaver.types import ServicesConfig
 
 
+@pytest.mark.integration
+@pytest.mark.mcp
+@pytest.mark.services
 class TestFastMCPMiddlewareIntegration:
     """Test the complete FastMCP middleware integration."""
 

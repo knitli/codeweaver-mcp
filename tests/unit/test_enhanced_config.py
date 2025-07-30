@@ -29,6 +29,8 @@ from codeweaver.config import (
 from codeweaver.types import ComponentType
 
 
+@pytest.mark.unit
+@pytest.mark.config
 class TestDefaultsConfig:
     """Test DefaultsConfig functionality."""
 
@@ -53,6 +55,8 @@ class TestDefaultsConfig:
         assert config.strict_validation is True
 
 
+@pytest.mark.unit
+@pytest.mark.config
 class TestPluginRegistryConfig:
     """Test PluginRegistryConfig functionality."""
 
@@ -83,6 +87,8 @@ class TestPluginRegistryConfig:
         assert config.require_explicit_enable is True
 
 
+@pytest.mark.unit
+@pytest.mark.config
 class TestCustomPluginConfig:
     """Test CustomPluginConfig functionality."""
 
@@ -221,6 +227,8 @@ class TestProfileConfig:
         assert profile.factory == {}
 
 
+@pytest.mark.unit
+@pytest.mark.config
 class TestFactoryConfig:
     """Test FactoryConfig functionality."""
 
@@ -487,6 +495,8 @@ class TestBackwardsCompatibility:
 
 
 @pytest.mark.integration
+@pytest.mark.config
+@pytest.mark.slow
 class TestConfigIntegration:
     """Integration tests for the enhanced configuration system."""
 

@@ -59,6 +59,9 @@ def hello_world():
     print("Hello, World!")
     return "success"
 
+@pytest.mark.async_test
+@pytest.mark.integration
+@pytest.mark.services
 class TestClass:
     def method(self):
         pass

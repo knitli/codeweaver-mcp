@@ -16,6 +16,9 @@ from codeweaver.services.providers.telemetry import PostHogTelemetryProvider
 from codeweaver.types import TelemetryServiceConfig
 
 
+@pytest.mark.unit
+@pytest.mark.telemetry
+@pytest.mark.mock_only
 class TestPostHogTelemetryProvider:
     """Unit tests for PostHog telemetry provider."""
 
@@ -31,6 +34,7 @@ class TestPostHogTelemetryProvider:
         """Create a telemetry provider instance."""
         return PostHogTelemetryProvider(default_config)
 
+    @pytest.mark.env_vars
     def test_opt_out_environment_variable(self) -> None:
         """Test opt-out via CW_TELEMETRY_ENABLED environment variable."""
         config = TelemetryServiceConfig(enabled=True)
@@ -39,6 +43,7 @@ class TestPostHogTelemetryProvider:
             provider = PostHogTelemetryProvider(config)
             assert not provider._enabled
 
+    @pytest.mark.env_vars
     def test_opt_out_no_telemetry_variable(self) -> None:
         """Test opt-out via CW_NO_TELEMETRY environment variable."""
         config = TelemetryServiceConfig(enabled=True)
@@ -47,6 +52,7 @@ class TestPostHogTelemetryProvider:
             provider = PostHogTelemetryProvider(config)
             assert not provider._enabled
 
+    @pytest.mark.config
     def test_config_based_opt_out(self) -> None:
         """Test opt-out via configuration."""
         config = TelemetryServiceConfig(enabled=False)

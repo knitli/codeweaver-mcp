@@ -1,0 +1,1545 @@
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0 -- /home/knitli/code-weaver-mcp/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/knitli/code-weaver-mcp
+configfile: pyproject.toml
+plugins: timeout-2.4.0, flakefinder-1.1.0, asyncio-1.1.0, cov-6.2.1, env-1.1.5, mock-3.14.1, httpx-0.35.0, anyio-4.9.0, langsmith-0.4.8, report-0.2.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+[1mcollecting ... [0mcollected 309 items
+
+tests/integration/test_benchmarks.py::TestBenchmarkResult::test_benchmark_result_creation [32mPASSED[0m[33m [  0%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkResult::test_benchmark_result_string_representation [32mPASSED[0m[33m [  0%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkResult::test_benchmark_result_to_dict [32mPASSED[0m[33m [  0%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_suite_initialization [32mPASSED[0m[33m [  1%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_vector_backend [32mPASSED[0m[33m [  1%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_embedding_provider [32mPASSED[0m[33m [  1%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_rerank_provider [32mPASSED[0m[33m [  2%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_data_source [32mPASSED[0m[33m [  2%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_with_errors [32mPASSED[0m[33m [  2%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_benchmark_with_high_latency [32mPASSED[0m[33m [  3%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_generate_test_vectors [32mPASSED[0m[33m [  3%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkSuite::test_generate_test_texts [32mPASSED[0m[33m [  3%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkScenarios::test_custom_vector_backend_scenarios [32mPASSED[0m[33m [  4%][0m
+tests/integration/test_benchmarks.py::TestBenchmarkScenarios::test_custom_embedding_scenarios [32mPASSED[0m[33m [  4%][0m
+tests/integration/test_benchmarks.py::TestConvenienceFunctions::test_run_performance_benchmarks [32mPASSED[0m[33m [  4%][0m
+tests/integration/test_benchmarks.py::TestConvenienceFunctions::test_run_performance_benchmarks_unknown_component [32mPASSED[0m[33m [  5%][0m
+tests/integration/test_benchmarks.py::TestConvenienceFunctions::test_print_benchmark_results [32mPASSED[0m[33m [  5%][0m
+tests/integration/test_benchmarks.py::TestConvenienceFunctions::test_save_benchmark_results [32mPASSED[0m[33m [  5%][0m
+tests/integration/test_benchmarks.py::TestPerformanceRegression::test_consistent_performance_measurements [32mPASSED[0m[33m [  6%][0m
+tests/integration/test_benchmarks.py::TestPerformanceRegression::test_performance_scales_with_latency [32mPASSED[0m[33m [  6%][0m
+tests/integration/test_benchmarks.py::test_concurrent_benchmarking [32mPASSED[0m[33m [  6%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_server_initialization [32mPASSED[0m[33m [  7%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_server_initialization_with_extensibility_config [32mPASSED[0m[33m [  7%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_server_initialization_process [31mFAILED[0m[31m [  7%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_double_initialization_warning [32mPASSED[0m[31m [  8%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_middleware_setup [31mFAILED[0m[31m [  8%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_component_initialization [31mFAILED[0m[31m [  8%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_collection_creation [32mPASSED[0m[31m [  9%][0m
+tests/integration/test_clean_server_integration.py::TestCodeWeaverServer::test_collection_exists_no_creation [32mPASSED[0m[31m [  9%][0m
+tests/integration/test_clean_server_integration.py::TestServerToolRegistration::test_tools_registered [31mFAILED[0m[31m [  9%][0m
+tests/integration/test_clean_server_integration.py::TestServerToolRegistration::test_tool_registration_creates_functions [32mPASSED[0m[31m [ 10%][0m
+tests/integration/test_clean_server_integration.py::TestServerBehaviorIntegration::test_server_with_mock_components [31mFAILED[0m[31m [ 10%][0m
+tests/integration/test_clean_server_integration.py::TestServerBehaviorIntegration::test_initialization_error_handling [32mPASSED[0m[31m [ 10%][0m
+tests/integration/test_clean_server_integration.py::TestServerBehaviorIntegration::test_collection_creation_error_handling [32mPASSED[0m[31m [ 11%][0m
+tests/integration/test_clean_server_integration.py::TestServerConfiguration::test_server_uses_provided_config [32mPASSED[0m[31m [ 11%][0m
+tests/integration/test_clean_server_integration.py::TestServerConfiguration::test_server_uses_default_config_when_none_provided [32mPASSED[0m[31m [ 11%][0m
+tests/integration/test_clean_server_integration.py::TestServerConfiguration::test_extensibility_config_passed_to_manager [32mPASSED[0m[31m [ 11%][0m
+tests/integration/test_fastmcp_middleware_integration.py::TestFastMCPMiddlewareIntegration::test_services_manager_middleware_integration [31mFAILED[0m[31m [ 12%][0m
+tests/integration/test_fastmcp_middleware_integration.py::TestFastMCPMiddlewareIntegration::test_server_services_manager_integration [31mFAILED[0m[31m [ 12%][0m
+tests/integration/test_fastmcp_middleware_integration.py::TestFastMCPMiddlewareIntegration::test_middleware_service_health_checks [31mFAILED[0m[31m [ 12%][0m
+tests/integration/test_fastmcp_middleware_integration.py::TestFastMCPMiddlewareIntegration::test_middleware_service_configuration_validation [32mPASSED[0m[31m [ 13%][0m
+tests/integration/test_fastmcp_middleware_integration.py::TestFastMCPMiddlewareIntegration::test_middleware_service_lifecycle [31mFAILED[0m[31m [ 13%][0m
+tests/integration/test_integration.py::TestTestConfiguration::test_default_configuration [32mPASSED[0m[31m [ 13%][0m
+tests/integration/test_integration.py::TestTestConfiguration::test_custom_configuration [32mPASSED[0m[31m [ 14%][0m
+tests/integration/test_integration.py::TestTestConfiguration::test_create_test_configuration_helper [32mPASSED[0m[31m [ 14%][0m
+tests/integration/test_integration.py::TestIntegrationTestSuite::test_suite_initialization [32mPASSED[0m[31m [ 14%][0m
+tests/integration/test_integration.py::TestIntegrationTestSuite::test_setup_test_environment_mock_components [32mPASSED[0m[31m [ 15%][0m
+tests/integration/test_integration.py::TestIntegrationTestSuite::test_setup_test_environment_no_rerank [32mPASSED[0m[31m [ 15%][0m
+tests/integration/test_integration.py::TestIntegrationTestSuite::test_cleanup_test_environment [32mPASSED[0m[31m [ 15%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_embedding_workflow [32mPASSED[0m[31m [ 16%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_search_workflow [32mPASSED[0m[31m [ 16%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_rerank_workflow [32mPASSED[0m[31m [ 16%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_data_source_workflow [32mPASSED[0m[31m [ 17%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_hybrid_search_workflow [32mPASSED[0m[31m [ 17%][0m
+tests/integration/test_integration.py::TestWorkflowTests::test_complete_pipeline [32mPASSED[0m[31m [ 17%][0m
+tests/integration/test_integration.py::TestIntegrationTestExecution::test_run_all_tests_success [32mPASSED[0m[31m [ 18%][0m
+tests/integration/test_integration.py::TestIntegrationTestExecution::test_run_all_tests_with_errors [32mPASSED[0m[31m [ 18%][0m
+tests/integration/test_integration.py::TestIntegrationTestExecution::test_run_compliance_tests_only [32mPASSED[0m[31m [ 18%][0m
+tests/integration/test_integration.py::TestIntegrationTestExecution::test_run_workflow_tests_only [32mPASSED[0m[31m [ 19%][0m
+tests/integration/test_integration.py::TestConvenienceFunctions::test_run_integration_tests_default [32mPASSED[0m[31m [ 19%][0m
+tests/integration/test_integration.py::TestConvenienceFunctions::test_run_integration_tests_custom_config [32mPASSED[0m[31m [ 19%][0m
+tests/integration/test_integration.py::TestConvenienceFunctions::test_run_quick_integration_test [32mPASSED[0m[31m [ 20%][0m
+tests/integration/test_integration.py::TestIntegrationTestResult::test_result_string_representation [32mPASSED[0m[31m [ 20%][0m
+tests/integration/test_integration.py::TestIntegrationTestResult::test_result_detailed_report [32mPASSED[0m[31m [ 20%][0m
+tests/integration/test_integration.py::TestErrorHandling::test_timeout_handling [32mPASSED[0m[31m [ 21%][0m
+tests/integration/test_integration.py::TestErrorHandling::test_component_creation_failure [32mPASSED[0m[31m [ 21%][0m
+tests/integration/test_integration.py::test_concurrent_integration_tests [32mPASSED[0m[31m [ 21%][0m
+tests/integration/test_integration.py::test_integration_with_different_component_combinations [32mPASSED[0m[31m [ 22%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_middleware_initialization [32mPASSED[0m[31m [ 22%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_middleware_initialization_defaults [32mPASSED[0m[31m [ 22%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_chunk_python_file [32mPASSED[0m[31m [ 22%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_chunk_javascript_file [32mPASSED[0m[31m [ 23%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_chunk_unsupported_language [32mPASSED[0m[31m [ 23%][0m
+tests/integration/test_middleware_integration.py::TestChunkingMiddleware::test_get_supported_languages [32mPASSED[0m[31m [ 23%][0m
+tests/integration/test_middleware_integration.py::TestFileFilteringMiddleware::test_middleware_initialization [32mPASSED[0m[31m [ 24%][0m
+tests/integration/test_middleware_integration.py::TestFileFilteringMiddleware::test_middleware_initialization_defaults [32mPASSED[0m[31m [ 24%][0m
+tests/integration/test_middleware_integration.py::TestFileFilteringMiddleware::test_find_files_basic [32mPASSED[0m[31m [ 24%][0m
+tests/integration/test_middleware_integration.py::TestFileFilteringMiddleware::test_find_files_with_patterns [32mPASSED[0m[31m [ 25%][0m
+tests/integration/test_middleware_integration.py::TestFileFilteringMiddleware::test_parse_file_size [32mPASSED[0m[31m [ 25%][0m
+tests/integration/test_middleware_integration.py::TestMiddlewareIntegration::test_chunking_and_filtering_integration [32mPASSED[0m[31m [ 25%][0m
+tests/integration/test_server_functionality.py::test_environment [32mPASSED[0m[31m  [ 26%][0m
+tests/integration/test_server_functionality.py::test_chunker [32mPASSED[0m[31m      [ 26%][0m
+tests/integration/test_server_functionality.py::test_full_workflow [32mPASSED[0m[31m [ 26%][0m
+tests/integration/test_service_integration.py::test_service_layer_integration [32mPASSED[0m[31m [ 27%][0m
+tests/integration/test_service_integration.py::test_service_factory_integration [32mPASSED[0m[31m [ 27%][0m
+tests/unit/test_config_models_only.py::test_component_type_import [32mPASSED[0m[31m [ 27%][0m
+tests/unit/test_config_models_only.py::test_services_config_import [32mPASSED[0m[31m [ 28%][0m
+tests/unit/test_config_models_only.py::test_defaults_config_direct [32mPASSED[0m[31m [ 28%][0m
+tests/unit/test_config_models_only.py::test_plugin_registry_config_direct [32mPASSED[0m[31m [ 28%][0m
+tests/unit/test_config_models_only.py::test_custom_plugin_config_direct [32mPASSED[0m[31m [ 29%][0m
+tests/unit/test_config_models_only.py::test_plugins_config_direct [32mPASSED[0m[31m [ 29%][0m
+tests/unit/test_config_models_only.py::test_profile_config_direct [32mPASSED[0m[31m [ 29%][0m
+tests/unit/test_config_models_only.py::test_factory_config_direct [32mPASSED[0m[31m [ 30%][0m
+tests/unit/test_config_models_only.py::test_configuration_errors [32mPASSED[0m[31m  [ 30%][0m
+tests/unit/test_config_models_only.py::test_custom_plugin_priority_validation [32mPASSED[0m[31m [ 30%][0m
+tests/unit/test_config_models_only.py::test_factory_config_validation [32mPASSED[0m[31m [ 31%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_default_configuration [32mPASSED[0m[31m [ 31%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_environment_variable_loading [31mFAILED[0m[31m [ 31%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_nested_environment_variables [31mFAILED[0m[31m [ 32%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_configuration_validation [32mPASSED[0m[31m [ 32%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_effective_methods [32mPASSED[0m[31m [ 32%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfig::test_default_data_sources_setup [31mFAILED[0m[31m [ 33%][0m
+tests/unit/test_config_pydantic_settings.py::TestCustomTomlSource::test_toml_source_with_explicit_file [32mPASSED[0m[31m [ 33%][0m
+tests/unit/test_config_pydantic_settings.py::TestCustomTomlSource::test_toml_source_search_paths [31mFAILED[0m[31m [ 33%][0m
+tests/unit/test_config_pydantic_settings.py::TestCustomTomlSource::test_toml_source_nonexistent_file [32mPASSED[0m[31m [ 33%][0m
+tests/unit/test_config_pydantic_settings.py::TestCustomTomlSource::test_toml_source_invalid_syntax [32mPASSED[0m[31m [ 34%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_basic_usage [32mPASSED[0m[31m [ 34%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_with_specific_file [31mFAILED[0m[31m [ 34%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_caching [32mPASSED[0m[31m [ 35%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_reload [31mFAILED[0m[31m [ 35%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_save_config [31mFAILED[0m[31m [ 35%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_validate_config [32mPASSED[0m[31m [ 36%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigManager::test_config_manager_fallback_on_error [32mPASSED[0m[31m [ 36%][0m
+tests/unit/test_config_pydantic_settings.py::TestSourcePriority::test_environment_overrides_toml [32mPASSED[0m[31m [ 36%][0m
+tests/unit/test_config_pydantic_settings.py::TestSourcePriority::test_init_overrides_all [32mPASSED[0m[31m [ 37%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_chunking_config_validation [32mPASSED[0m[31m [ 37%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_indexing_config_defaults [32mPASSED[0m[31m [ 37%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_rate_limit_config_constraints [32mPASSED[0m[31m [ 38%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_server_config_log_level [32mPASSED[0m[31m [ 38%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_provider_config_methods [32mPASSED[0m[31m [ 38%][0m
+tests/unit/test_config_pydantic_settings.py::TestConfigurationComponents::test_data_source_config_defaults [32mPASSED[0m[31m [ 39%][0m
+tests/unit/test_config_pydantic_settings.py::TestCodeWeaverConfigWithFile::test_config_with_explicit_file [31mFAILED[0m[31m [ 39%][0m
+tests/unit/test_config_pydantic_settings.py::TestErrorHandling::test_invalid_toml_syntax_handling [32mPASSED[0m[31m [ 39%][0m
+tests/unit/test_config_pydantic_settings.py::TestErrorHandling::test_permission_error_handling [32mPASSED[0m[31m [ 40%][0m
+tests/unit/test_config_pydantic_settings.py::TestErrorHandling::test_environment_variable_type_errors [32mPASSED[0m[31m [ 40%][0m
+tests/unit/test_config_pydantic_settings.py::TestIntegrationScenarios::test_complete_configuration_scenario [31mFAILED[0m[31m [ 40%][0m
+tests/unit/test_config_pydantic_settings.py::TestIntegrationScenarios::test_development_vs_production_config [31mFAILED[0m[31m [ 41%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayIntegration::test_docarray_backend_availability [31mFAILED[0m[31m [ 41%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayIntegration::test_docarray_imports_fail_gracefully_when_not_installed [33mSKIPPED[0m[31m [ 41%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayIntegration::test_docarray_imports_work_when_installed [31mFAILED[0m[31m [ 42%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayIntegration::test_main_factory_always_works [31mFAILED[0m[31m [ 42%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayIntegration::test_backend_creation_still_works [32mPASSED[0m[31m [ 42%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayWithDependencies::test_docarray_config_factory [31mFAILED[0m[31m [ 43%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayWithDependencies::test_schema_templates [31mFAILED[0m[31m [ 43%][0m
+tests/unit/test_docarray_integration.py::TestDocArrayWithDependencies::test_qdrant_backend_dependencies [31mFAILED[0m[31m [ 43%][0m
+tests/unit/test_enhanced_config.py::TestDefaultsConfig::test_defaults_config_creation [32mPASSED[0m[31m [ 44%][0m
+tests/unit/test_enhanced_config.py::TestDefaultsConfig::test_defaults_config_custom_values [32mPASSED[0m[31m [ 44%][0m
+tests/unit/test_enhanced_config.py::TestPluginRegistryConfig::test_plugin_registry_defaults [32mPASSED[0m[31m [ 44%][0m
+tests/unit/test_enhanced_config.py::TestPluginRegistryConfig::test_plugin_registry_custom_config [32mPASSED[0m[31m [ 44%][0m
+tests/unit/test_enhanced_config.py::TestCustomPluginConfig::test_custom_plugin_config_creation [32mPASSED[0m[31m [ 45%][0m
+tests/unit/test_enhanced_config.py::TestCustomPluginConfig::test_custom_plugin_with_entry_point [32mPASSED[0m[31m [ 45%][0m
+tests/unit/test_enhanced_config.py::TestCustomPluginConfig::test_custom_plugin_priority_validation [32mPASSED[0m[31m [ 45%][0m
+tests/unit/test_enhanced_config.py::TestPluginsConfig::test_plugins_config_defaults [32mPASSED[0m[31m [ 46%][0m
+tests/unit/test_enhanced_config.py::TestPluginsConfig::test_plugins_config_with_custom_plugin [32mPASSED[0m[31m [ 46%][0m
+tests/unit/test_enhanced_config.py::TestProfileConfig::test_profile_config_creation [32mPASSED[0m[31m [ 46%][0m
+tests/unit/test_enhanced_config.py::TestProfileConfig::test_profile_config_empty_sections [32mPASSED[0m[31m [ 47%][0m
+tests/unit/test_enhanced_config.py::TestFactoryConfig::test_factory_config_defaults [32mPASSED[0m[31m [ 47%][0m
+tests/unit/test_enhanced_config.py::TestFactoryConfig::test_factory_config_custom [32mPASSED[0m[31m [ 47%][0m
+tests/unit/test_enhanced_config.py::TestFactoryConfig::test_factory_config_validation [32mPASSED[0m[31m [ 48%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_enhanced_config_creation [32mPASSED[0m[31m [ 48%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_builtin_profiles_available [32mPASSED[0m[31m [ 48%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_profile_retrieval [32mPASSED[0m[31m [ 49%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_profile_application_disabled [32mPASSED[0m[31m [ 49%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_original_defaults_setup [32mPASSED[0m[31m [ 49%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_services_integration [32mPASSED[0m[31m [ 50%][0m
+tests/unit/test_enhanced_config.py::TestEnhancedCodeWeaverConfig::test_config_with_custom_profile [32mPASSED[0m[31m [ 50%][0m
+tests/unit/test_enhanced_config.py::TestConfigurationErrors::test_configuration_error_inheritance [32mPASSED[0m[31m [ 50%][0m
+tests/unit/test_enhanced_config.py::TestProfileOverrides::test_apply_services_overrides [32mPASSED[0m[31m [ 51%][0m
+tests/unit/test_enhanced_config.py::TestProfileOverrides::test_apply_backend_overrides [32mPASSED[0m[31m [ 51%][0m
+tests/unit/test_enhanced_config.py::TestProfileOverrides::test_apply_indexing_overrides [32mPASSED[0m[31m [ 51%][0m
+tests/unit/test_enhanced_config.py::TestBackwardsCompatibility::test_existing_config_structure_preserved [32mPASSED[0m[31m [ 52%][0m
+tests/unit/test_enhanced_config.py::TestBackwardsCompatibility::test_original_methods_preserved [32mPASSED[0m[31m [ 52%][0m
+tests/unit/test_enhanced_config.py::TestConfigIntegration::test_full_config_initialization [32mPASSED[0m[31m [ 52%][0m
+tests/unit/test_enhanced_config.py::TestConfigIntegration::test_profile_auto_application [32mPASSED[0m[31m [ 53%][0m
+tests/unit/test_factory_validation.py::TestFactoryValidationResult::test_factory_validation_result_creation [32mPASSED[0m[31m [ 53%][0m
+tests/unit/test_factory_validation.py::TestFactoryValidationResult::test_factory_validation_result_string_representation [32mPASSED[0m[31m [ 53%][0m
+tests/unit/test_factory_validation.py::TestFactoryValidationResult::test_factory_validation_result_detailed_report [32mPASSED[0m[31m [ 54%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validator_initialization [32mPASSED[0m[31m [ 54%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_all_factories [32mPASSED[0m[31m [ 54%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_backend_factory [32mPASSED[0m[31m [ 55%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_embedding_provider_factory [32mPASSED[0m[31m [ 55%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_rerank_provider_factory [32mPASSED[0m[31m [ 55%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_data_source_factory [32mPASSED[0m[31m [ 55%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_configuration_integration [32mPASSED[0m[31m [ 56%][0m
+tests/unit/test_factory_validation.py::TestFactoryPatternValidator::test_validate_factory_registration [32mPASSED[0m[31m [ 56%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_validate_all_factory_patterns [32mPASSED[0m[31m [ 56%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_validate_specific_factory_patterns [32mPASSED[0m[31m [ 57%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_validate_unknown_factory_pattern [32mPASSED[0m[31m [ 57%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_print_factory_validation_results [32mPASSED[0m[31m [ 57%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_print_factory_validation_results_all_valid [32mPASSED[0m[31m [ 58%][0m
+tests/unit/test_factory_validation.py::TestConvenienceFunctions::test_save_factory_validation_results [32mPASSED[0m[31m [ 58%][0m
+tests/unit/test_factory_validation.py::TestErrorHandling::test_factory_validation_with_missing_dependencies [32mPASSED[0m[31m [ 58%][0m
+tests/unit/test_factory_validation.py::TestErrorHandling::test_factory_validation_with_invalid_configurations [32mPASSED[0m[31m [ 59%][0m
+tests/unit/test_factory_validation.py::TestFactoryIntegration::test_factory_pattern_consistency [32mPASSED[0m[31m [ 59%][0m
+tests/unit/test_factory_validation.py::TestFactoryIntegration::test_mock_factory_registration [31mFAILED[0m[31m [ 59%][0m
+tests/unit/test_factory_validation.py::test_concurrent_factory_validation [32mPASSED[0m[31m [ 60%][0m
+tests/unit/test_factory_validation.py::test_end_to_end_factory_validation [32mPASSED[0m[31m [ 60%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_defaults_config_creation [32mPASSED[0m[31m [ 60%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_defaults_config_custom_values [32mPASSED[0m[31m [ 61%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_plugin_registry_defaults [32mPASSED[0m[31m [ 61%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_custom_plugin_config_creation [32mPASSED[0m[31m [ 61%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_custom_plugin_priority_validation [32mPASSED[0m[31m [ 62%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_plugins_config_defaults [32mPASSED[0m[31m [ 62%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_plugins_config_with_custom_plugin [32mPASSED[0m[31m [ 62%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_profile_config_creation [32mPASSED[0m[31m [ 63%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_factory_config_defaults [32mPASSED[0m[31m [ 63%][0m
+tests/unit/test_new_config_models.py::TestNewConfigModels::test_factory_config_validation [32mPASSED[0m[31m [ 63%][0m
+tests/unit/test_protocol_compliance.py::TestProtocolComplianceValidator::test_validator_initialization [32mPASSED[0m[31m [ 64%][0m
+tests/unit/test_protocol_compliance.py::TestProtocolComplianceValidator::test_validate_all_protocols [32mPASSED[0m[31m [ 64%][0m
+tests/unit/test_protocol_compliance.py::TestProtocolComplianceValidator::test_validate_unknown_protocol [32mPASSED[0m[31m [ 64%][0m
+tests/unit/test_protocol_compliance.py::TestVectorBackendCompliance::test_mock_vector_backend_compliance [32mPASSED[0m[31m [ 65%][0m
+tests/unit/test_protocol_compliance.py::TestVectorBackendCompliance::test_vector_backend_with_errors [32mPASSED[0m[31m [ 65%][0m
+tests/unit/test_protocol_compliance.py::TestVectorBackendCompliance::test_vector_backend_performance_metrics [32mPASSED[0m[31m [ 65%][0m
+tests/unit/test_protocol_compliance.py::TestHybridSearchBackendCompliance::test_mock_hybrid_search_backend_compliance [32mPASSED[0m[31m [ 66%][0m
+tests/unit/test_protocol_compliance.py::TestHybridSearchBackendCompliance::test_hybrid_search_extends_vector_backend [32mPASSED[0m[31m [ 66%][0m
+tests/unit/test_protocol_compliance.py::TestEmbeddingProviderCompliance::test_mock_embedding_provider_compliance [32mPASSED[0m[31m [ 66%][0m
+tests/unit/test_protocol_compliance.py::TestEmbeddingProviderCompliance::test_embedding_provider_properties [32mPASSED[0m[31m [ 66%][0m
+tests/unit/test_protocol_compliance.py::TestEmbeddingProviderCompliance::test_embedding_provider_functionality [32mPASSED[0m[31m [ 67%][0m
+tests/unit/test_protocol_compliance.py::TestRerankProviderCompliance::test_mock_rerank_provider_compliance [32mPASSED[0m[31m [ 67%][0m
+tests/unit/test_protocol_compliance.py::TestRerankProviderCompliance::test_rerank_provider_functionality [32mPASSED[0m[31m [ 67%][0m
+tests/unit/test_protocol_compliance.py::TestDataSourceCompliance::test_mock_data_source_compliance [32mPASSED[0m[31m [ 68%][0m
+tests/unit/test_protocol_compliance.py::TestDataSourceCompliance::test_data_source_capabilities [32mPASSED[0m[31m [ 68%][0m
+tests/unit/test_protocol_compliance.py::TestDataSourceCompliance::test_data_source_functionality [32mPASSED[0m[31m [ 68%][0m
+tests/unit/test_protocol_compliance.py::TestComplianceResultFormatting::test_compliance_result_string_representation [32mPASSED[0m[31m [ 69%][0m
+tests/unit/test_protocol_compliance.py::TestComplianceResultFormatting::test_compliance_result_detailed_report [32mPASSED[0m[31m [ 69%][0m
+tests/unit/test_protocol_compliance.py::TestErrorHandling::test_timeout_handling [32mPASSED[0m[31m [ 69%][0m
+tests/unit/test_protocol_compliance.py::TestErrorHandling::test_high_error_rate_handling [32mPASSED[0m[31m [ 70%][0m
+tests/unit/test_protocol_compliance.py::test_concurrent_compliance_validation [32mPASSED[0m[31m [ 70%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_opt_out_environment_variable [32mPASSED[0m[31m [ 70%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_opt_out_no_telemetry_variable [32mPASSED[0m[31m [ 71%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_config_based_opt_out [32mPASSED[0m[31m [ 71%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_runtime_opt_out [32mPASSED[0m[31m [ 71%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_anonymous_mode_toggle [32mPASSED[0m[31m [ 72%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_path_sanitization [32mPASSED[0m[31m [ 72%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_repository_name_sanitization [32mPASSED[0m[31m [ 72%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_query_sanitization [32mPASSED[0m[31m [ 73%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_privacy_info [32mPASSED[0m[31m [ 73%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_event_tracking_disabled [31mFAILED[0m[31m [ 73%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_health_check [32mPASSED[0m[31m [ 74%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_batch_flushing [31mFAILED[0m[31m [ 74%][0m
+tests/unit/test_telemetry_service.py::TestPostHogTelemetryProvider::test_config_validation [32mPASSED[0m[31m [ 74%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_naming_convention[VoyageAIProvider] [32mPASSED[0m[31m [ 75%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_naming_convention[OpenAIProvider] [32mPASSED[0m[31m [ 75%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_naming_convention[CohereProvider] [32mPASSED[0m[31m [ 75%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_naming_convention[HuggingFaceProvider] [32mPASSED[0m[31m [ 76%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_naming_convention[SentenceTransformersProvider] [32mPASSED[0m[31m [ 76%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_properties[VoyageAIProvider] [33mSKIPPED[0m[31m [ 76%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_properties[OpenAIProvider] [33mSKIPPED[0m[31m [ 77%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_properties[CohereProvider] [33mSKIPPED[0m[31m [ 77%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_properties[HuggingFaceProvider] [33mSKIPPED[0m[31m [ 77%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_properties[SentenceTransformersProvider] [33mSKIPPED[0m[31m [ 77%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_class_methods[VoyageAIProvider] [32mPASSED[0m[31m [ 78%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_class_methods[OpenAIProvider] [32mPASSED[0m[31m [ 78%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_class_methods[CohereProvider] [32mPASSED[0m[31m [ 78%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_class_methods[HuggingFaceProvider] [32mPASSED[0m[31m [ 79%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_required_class_methods[SentenceTransformersProvider] [32mPASSED[0m[31m [ 79%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_check_availability_signature[VoyageAIProvider] [31mFAILED[0m[31m [ 79%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_check_availability_signature[OpenAIProvider] [31mFAILED[0m[31m [ 80%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_check_availability_signature[CohereProvider] [31mFAILED[0m[31m [ 80%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_check_availability_signature[HuggingFaceProvider] [31mFAILED[0m[31m [ 80%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_check_availability_signature[SentenceTransformersProvider] [31mFAILED[0m[31m [ 81%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_get_static_info_signature[VoyageAIProvider] [31mFAILED[0m[31m [ 81%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_get_static_info_signature[OpenAIProvider] [31mFAILED[0m[31m [ 81%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_get_static_info_signature[CohereProvider] [31mFAILED[0m[31m [ 82%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_get_static_info_signature[HuggingFaceProvider] [31mFAILED[0m[31m [ 82%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_get_static_info_signature[SentenceTransformersProvider] [31mFAILED[0m[31m [ 82%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_validate_config_method[VoyageAIProvider] [32mPASSED[0m[31m [ 83%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_validate_config_method[OpenAIProvider] [32mPASSED[0m[31m [ 83%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_validate_config_method[CohereProvider] [32mPASSED[0m[31m [ 83%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_validate_config_method[HuggingFaceProvider] [32mPASSED[0m[31m [ 84%][0m
+tests/validation/test_pattern_consistency.py::TestProviderPatternConsistency::test_provider_has_validate_config_method[SentenceTransformersProvider] [32mPASSED[0m[31m [ 84%][0m
+tests/validation/test_pattern_consistency.py::TestBackendPatternConsistency::test_backend_naming_convention[QdrantBackend] [32mPASSED[0m[31m [ 84%][0m
+tests/validation/test_pattern_consistency.py::TestBackendPatternConsistency::test_backend_has_required_properties[QdrantBackend] [33mSKIPPED[0m[31m [ 85%][0m
+tests/validation/test_pattern_consistency.py::TestBackendPatternConsistency::test_backend_should_have_class_methods[QdrantBackend] [33mSKIPPED[0m[31m [ 85%][0m
+tests/validation/test_pattern_consistency.py::TestSourcePatternConsistency::test_source_naming_convention[FileSystemSource] [33mSKIPPED[0m[31m [ 85%][0m
+tests/validation/test_pattern_consistency.py::TestSourcePatternConsistency::test_source_should_have_required_properties[FileSystemSource] [33mSKIPPED[0m[31m [ 86%][0m
+tests/validation/test_pattern_consistency.py::TestSourcePatternConsistency::test_source_should_have_class_methods[FileSystemSource] [33mSKIPPED[0m[31m [ 86%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.providers.voyage] [32mPASSED[0m[31m [ 86%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.providers.openai] [32mPASSED[0m[31m [ 87%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.providers.cohere] [32mPASSED[0m[31m [ 87%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.providers.huggingface] [32mPASSED[0m[31m [ 87%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.providers.sentence_transformers] [32mPASSED[0m[31m [ 88%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.backends.qdrant] [32mPASSED[0m[31m [ 88%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.sources.filesystem] [31mFAILED[0m[31m [ 88%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.sources.api] [32mPASSED[0m[31m [ 88%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.sources.git] [32mPASSED[0m[31m [ 89%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_no_migration_code_exists [32mPASSED[0m[31m [ 89%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_providers_use_services_context[VoyageAIProvider] [32mPASSED[0m[31m [ 89%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_providers_use_services_context[OpenAIProvider] [32mPASSED[0m[31m [ 90%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_providers_use_services_context[CohereProvider] [32mPASSED[0m[31m [ 90%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_providers_use_services_context[HuggingFaceProvider] [32mPASSED[0m[31m [ 90%][0m
+tests/validation/test_pattern_consistency.py::TestAntiPatternDetection::test_providers_use_services_context[SentenceTransformersProvider] [31mFAILED[0m[31m [ 91%][0m
+tests/validation/test_pattern_consistency.py::TestConfigurationPatterns::test_provider_configs_follow_naming [32mPASSED[0m[31m [ 91%][0m
+tests/validation/test_pattern_consistency.py::TestConfigurationPatterns::test_config_classes_inherit_from_base [32mPASSED[0m[31m [ 91%][0m
+tests/validation/test_pattern_consistency.py::TestServicesIntegration::test_services_manager_exists [31mFAILED[0m[31m [ 92%][0m
+tests/validation/test_pattern_consistency.py::TestServicesIntegration::test_middleware_bridge_exists [32mPASSED[0m[31m [ 92%][0m
+tests/validation/test_pattern_consistency.py::TestServicesIntegration::test_service_providers_exist [32mPASSED[0m[31m [ 92%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_methods_accept_context[VoyageAIProvider] [32mPASSED[0m[31m [ 93%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_methods_accept_context[OpenAIProvider] [32mPASSED[0m[31m [ 93%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_methods_accept_context[CohereProvider] [32mPASSED[0m[31m [ 93%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_works_without_services[VoyageAIProvider] [33mSKIPPED[0m[31m [ 94%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_works_without_services[OpenAIProvider] [33mSKIPPED[0m[31m [ 94%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_works_without_services[CohereProvider] [33mSKIPPED[0m[31m [ 94%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_integrates_with_services[VoyageAIProvider] [33mSKIPPED[0m[31m [ 95%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_integrates_with_services[OpenAIProvider] [33mSKIPPED[0m[31m [ 95%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_integrates_with_services[CohereProvider] [33mSKIPPED[0m[31m [ 95%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_handles_service_failures[VoyageAIProvider] [33mSKIPPED[0m[31m [ 96%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_handles_service_failures[OpenAIProvider] [33mSKIPPED[0m[31m [ 96%][0m
+tests/validation/test_services_integration.py::TestProviderServicesIntegration::test_provider_handles_service_failures[CohereProvider] [33mSKIPPED[0m[31m [ 96%][0m
+tests/validation/test_services_integration.py::TestBackendServicesIntegration::test_backend_should_have_health_check[QdrantBackend] [33mSKIPPED[0m[31m [ 97%][0m
+tests/validation/test_services_integration.py::TestBackendServicesIntegration::test_backend_health_check_returns_service_health[QdrantBackend] [33mSKIPPED[0m[31m [ 97%][0m
+tests/validation/test_services_integration.py::TestSourceServicesIntegration::test_source_methods_should_accept_context[FileSystemSource] [32mPASSED[0m[31m [ 97%][0m
+tests/validation/test_services_integration.py::TestSourceServicesIntegration::test_source_should_work_with_services[FileSystemSource] [33mSKIPPED[0m[31m [ 98%][0m
+tests/validation/test_services_integration.py::TestServicesManagerIntegration::test_services_manager_exists [32mPASSED[0m[31m [ 98%][0m
+tests/validation/test_services_integration.py::TestServicesManagerIntegration::test_services_manager_has_required_methods [32mPASSED[0m[31m [ 98%][0m
+tests/validation/test_services_integration.py::TestServicesManagerIntegration::test_services_manager_creates_context [33mSKIPPED[0m[31m [ 99%][0m
+tests/validation/test_services_integration.py::TestServicesManagerIntegration::test_services_manager_health_monitoring [33mSKIPPED[0m[31m [ 99%][0m
+tests/validation/test_services_integration.py::TestServiceBridgeIntegration::test_middleware_bridge_exists [32mPASSED[0m[31m [ 99%][0m
+tests/validation/test_services_integration.py::TestServiceBridgeIntegration::test_middleware_bridge_is_class [32mPASSED[0m[31m [100%][0m
+
+=================================== FAILURES ===================================
+[31m[1m___________ TestCodeWeaverServer.test_server_initialization_process ____________[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_clean_server_integration.py[0m:74: in test_server_initialization_process
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m__________________ TestCodeWeaverServer.test_middleware_setup __________________[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_clean_server_integration.py[0m:119: in test_middleware_setup
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m______________ TestCodeWeaverServer.test_component_initialization ______________[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_clean_server_integration.py[0m:156: in test_component_initialization
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m_______________ TestServerToolRegistration.test_tools_registered _______________[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_clean_server_integration.py[0m:244: in test_tools_registered
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m________ TestServerBehaviorIntegration.test_server_with_mock_components ________[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_clean_server_integration.py[0m:305: in test_server_with_mock_components
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m_ TestFastMCPMiddlewareIntegration.test_services_manager_middleware_integration _[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:147: in create_service
+    [0mservice_instance = provider_class(service_type, config)[90m[39;49;00m
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/services/providers/chunking.py[0m:45: in __init__
+    [0mk: v [94mfor[39;49;00m k, v [95min[39;49;00m Language.members_to_values().items() [94mif[39;49;00m k.supports_ast_grep[90m[39;49;00m
+                                                             ^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:185: in supports_ast_grep
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m [95min[39;49;00m [96mself[39;49;00m.ast_grep_languages()[90m[39;49;00m
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:175: in ast_grep_languages
+    [0m[96msorted[39;49;00m([90m[39;49;00m
+[1m[31mE   TypeError: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_fastmcp_middleware_integration.py[0m:53: in test_services_manager_middleware_integration
+    [0m[94mawait[39;49;00m services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider fastmcp_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[31m[1m__ TestFastMCPMiddlewareIntegration.test_server_services_manager_integration ___[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:144: in create_service
+    [0mprovider_class = [96mself[39;49;00m._get_provider_class(service_type, config.provider)[90m[39;49;00m
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:277: in _get_provider_class
+    [0m[94mraise[39;49;00m ProviderNotFoundError(service_type, provider_name)[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_fastmcp_middleware_integration.py[0m:113: in test_server_services_manager_integration
+    [0m[94mawait[39;49;00m server.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:95: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking[0m
+
+[33mDuring handling of the above exception, another exception occurred:[0m
+[1m[31mtests/integration/test_fastmcp_middleware_integration.py[0m:125: in test_server_services_manager_integration
+    [0m[94mawait[39;49;00m server.shutdown()[90m[39;49;00m
+[1m[31msrc/codeweaver/server.py[0m:468: in shutdown
+    [0m[94mawait[39;49;00m [96mself[39;49;00m.extensibility_manager.shutdown()[90m[39;49;00m
+[1m[31mE   TypeError: object MagicMock can't be used in 'await' expression[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider ast_grep_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 144, in create_service
+    provider_class = self._get_provider_class(service_type, config.provider)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 277, in _get_provider_class
+    raise ProviderNotFoundError(service_type, provider_name)
+codeweaver.types.services.exceptions.ProviderNotFoundError: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: Provider ast_grep_chunking not found for chunking
+[31m[1m____ TestFastMCPMiddlewareIntegration.test_middleware_service_health_checks ____[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:147: in create_service
+    [0mservice_instance = provider_class(service_type, config)[90m[39;49;00m
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/services/providers/chunking.py[0m:45: in __init__
+    [0mk: v [94mfor[39;49;00m k, v [95min[39;49;00m Language.members_to_values().items() [94mif[39;49;00m k.supports_ast_grep[90m[39;49;00m
+                                                             ^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:185: in supports_ast_grep
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m [95min[39;49;00m [96mself[39;49;00m.ast_grep_languages()[90m[39;49;00m
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:175: in ast_grep_languages
+    [0m[96msorted[39;49;00m([90m[39;49;00m
+[1m[31mE   TypeError: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_fastmcp_middleware_integration.py[0m:134: in test_middleware_service_health_checks
+    [0m[94mawait[39;49;00m services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider fastmcp_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[31m[1m______ TestFastMCPMiddlewareIntegration.test_middleware_service_lifecycle ______[0m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:147: in create_service
+    [0mservice_instance = provider_class(service_type, config)[90m[39;49;00m
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/services/providers/chunking.py[0m:45: in __init__
+    [0mk: v [94mfor[39;49;00m k, v [95min[39;49;00m Language.members_to_values().items() [94mif[39;49;00m k.supports_ast_grep[90m[39;49;00m
+                                                             ^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:185: in supports_ast_grep
+    [0m[94mreturn[39;49;00m [96mself[39;49;00m [95min[39;49;00m [96mself[39;49;00m.ast_grep_languages()[90m[39;49;00m
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/enums.py[0m:175: in ast_grep_languages
+    [0m[96msorted[39;49;00m([90m[39;49;00m
+[1m[31mE   TypeError: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:352: in _create_core_services
+    [0mservice = [94mawait[39;49;00m [96mself[39;49;00m._registry.create_service(service_type, config)[90m[39;49;00m
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/factories/service_registry.py[0m:177: in create_service
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31msrc/codeweaver/services/manager.py[0m:86: in initialize
+    [0m[94mawait[39;49;00m [96mself[39;49;00m._create_core_services()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:359: in _create_core_services
+    [0m[94mraise[39;49;00m ServiceCreationError(service_type, [96mstr[39;49;00m(e)) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+
+[33mThe above exception was the direct cause of the following exception:[0m
+[1m[31mtests/integration/test_fastmcp_middleware_integration.py[0m:188: in test_middleware_service_lifecycle
+    [0m[94mawait[39;49;00m services_manager.initialize()[90m[39;49;00m
+[1m[31msrc/codeweaver/services/manager.py[0m:104: in initialize
+    [0m[94mraise[39;49;00m ServiceInitializationError(error_msg) [94mfrom[39;49;00m[90m [39;49;00m[04m[96me[39;49;00m[90m[39;49;00m
+[1m[31mE   codeweaver.types.services.exceptions.ServiceInitializationError: Service initialization failed: Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'[0m
+------------------------------ Captured log call -------------------------------
+[1m[31mERROR   [0m codeweaver.services.manager:service_registry.py:176 Failed to create service chunking with provider fastmcp_chunking
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:358 Failed to create core service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[1m[31mERROR   [0m codeweaver.services.manager:manager.py:103 Failed to initialize services manager: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 147, in create_service
+    service_instance = provider_class(service_type, config)
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/providers/chunking.py", line 45, in __init__
+    k: v for k, v in Language.members_to_values().items() if k.supports_ast_grep
+                                                             ^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 185, in supports_ast_grep
+    return self in self.ast_grep_languages()
+                   ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/types/enums.py", line 175, in ast_grep_languages
+    sorted(
+    ~~~~~~^
+        lang
+        ^^^^
+        for lang in cls.__members__.values()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if lang not in (cls.UNKNOWN, cls.TEXT, cls.MARKDOWN, cls.XML)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+TypeError: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 352, in _create_core_services
+    service = await self._registry.create_service(service_type, config)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/factories/service_registry.py", line 177, in create_service
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 86, in initialize
+    await self._create_core_services()
+  File "/home/knitli/code-weaver-mcp/src/codeweaver/services/manager.py", line 359, in _create_core_services
+    raise ServiceCreationError(service_type, str(e)) from e
+codeweaver.types.services.exceptions.ServiceCreationError: Failed to create service chunking: Failed to create service chunking: '<' not supported between instances of 'Language' and 'Language'
+[31m[1m____________ TestCodeWeaverConfig.test_environment_variable_loading ____________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:72: in test_environment_variable_loading
+    [0m[94massert[39;49;00m config.indexing.batch_size == [94m16[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 8 == 16[0m
+[1m[31mE    +  where 8 = IndexingConfig(use_gitignore=True, additional_ignore_patterns=['node_modules', '.git', '.venv', 'venv', '__pycache__', 'target', 'build', 'dist', '.next', '.nuxt', 'coverage', '.pytest_cache', '.mypy_cache', '.vscode', '.idea'], enable_auto_reindex=True, watch_debounce_seconds=2.0, batch_size=8, max_concurrent_files=10).batch_size[0m
+[1m[31mE    +    where IndexingConfig(use_gitignore=True, additional_ignore_patterns=['node_modules', '.git', '.venv', 'venv', '__pycache__', 'target', 'build', 'dist', '.next', '.nuxt', 'coverage', '.pytest_cache', '.mypy_cache', '.vscode', '.idea'], enable_auto_reindex=True, watch_debounce_seconds=2.0, batch_size=8, max_concurrent_files=10) = CodeWeaverConfig(backend=BackendConfigExtended(provider='qdrant', kind=<ProviderKind.COMBINED: 'combined'>, name=None, url='http://test.example.com', api_key='test-api-key', capabilities=None, enable_hybrid_search=False, enable_sparse_vectors=False, enable_streaming=False, enable_transactions=False, connection_timeout=30.0, request_timeout=60.0, max_connections=10, retry_count=3, prefer_memory=False, prefer_disk=False, provider_options=None, collection_name='codeweaver-9d62b493-4097-4128-bc4b-f3d83926ba93', auto_create_collection=True, collection_dimension=1024, sparse_index_fields=['content', 'chunk_type'], sparse_index_type=<SparseIndexType.BM25: 'bm25'>, hybrid_fusion_strategy=<HybridFusionStrategy.RRF: 'rrf'>, hybrid_alpha=0.5, batch_size=100, max_batch_size=1000, connection_pool_size=10, enable_connection_pooling=True, enable_request_compression=True, enable_result_caching=False, cache_ttl_seconds=300, enable_query_optimization=True, replica_urls=[], enable_failover=False, health_check_interval=30, enable_tls=True, verify_ssl=True, require_encryption=True, enable_grpc=False, prefer_http=True, prefer_grpc=False, client_cert_path=None, client_key_path=None, enable_metrics=Fals...nabled=True, auto_recovery=True, enable_service_discovery=False, service_discovery_interval=60.0, middleware_auto_registration=True, middleware_initialization_order=['error_handling', 'rate_limiting', 'logging', 'timing'], max_concurrent_services=10, service_startup_timeout=30.0, service_shutdown_timeout=10.0), profiles={}, chunking=ChunkingConfig(max_chunk_size=2000, min_chunk_size=100, max_file_size_mb=1, language_settings={}), indexing=IndexingConfig(use_gitignore=True, additional_ignore_patterns=['node_modules', '.git', '.venv', 'venv', '__pycache__', 'target', 'build', 'dist', '.next', '.nuxt', 'coverage', '.pytest_cache', '.mypy_cache', '.vscode', '.idea'], enable_auto_reindex=True, watch_debounce_seconds=2.0, batch_size=8, max_concurrent_files=10), rate_limiting=RateLimitConfig(voyage_requests_per_minute=100, voyage_tokens_per_minute=1000000, openai_requests_per_minute=5000, openai_tokens_per_minute=1000000, qdrant_requests_per_second=100, initial_backoff_seconds=1.0, max_backoff_seconds=60.0, backoff_multiplier=2.0, max_retries=5), server=ServerConfig(server_name='test-server', server_version='1.0.0', log_level='DEBUG', enable_request_logging=False, max_search_results=50)).indexing[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m____________ TestCodeWeaverConfig.test_nested_environment_variables ____________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:92: in test_nested_environment_variables
+    [0m[94massert[39;49;00m config.data_sources.default_source_type == [33m"[39;49;00m[33mcustom[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'ast_grep' == 'custom'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- custom[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ ast_grep[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m_____________ TestCodeWeaverConfig.test_default_data_sources_setup _____________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:123: in test_default_data_sources_setup
+    [0m[94massert[39;49;00m default_source[[33m"[39;49;00m[33mtype[39;49;00m[33m"[39;49;00m] == [33m"[39;49;00m[33mfilesystem[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'ast_grep' == 'filesystem'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- filesystem[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ ast_grep[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m______________ TestCustomTomlSource.test_toml_source_search_paths ______________[0m
+[1m[31m/home/knitli/code-weaver-mcp/tests/unit/test_config_pydantic_settings.py[0m:171: in test_toml_source_search_paths
+    [0m[94massert[39;49;00m data[[33m"[39;49;00m[33mserver[39;49;00m[33m"[39;49;00m][[33m"[39;49;00m[33mserver_name[39;49;00m[33m"[39;49;00m] == [33m"[39;49;00m[33mfound-via-search[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+           ^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31mE   KeyError: 'server'[0m
+[31m[1m___________ TestConfigManager.test_config_manager_with_specific_file ___________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:220: in test_config_manager_with_specific_file
+    [0m[94massert[39;49;00m config.server.server_name == [33m"[39;49;00m[33mspecific-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'specific-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- specific-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m_________________ TestConfigManager.test_config_manager_reload _________________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:247: in test_config_manager_reload
+    [0m[94massert[39;49;00m config1.server.server_name == [33m"[39;49;00m[33minitial-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'initial-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- initial-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m______________ TestConfigManager.test_config_manager_save_config _______________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:279: in test_config_manager_save_config
+    [0m[94massert[39;49;00m loaded_config.server.server_name == [33m"[39;49;00m[33msaved-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'saved-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- saved-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m_________ TestCodeWeaverConfigWithFile.test_config_with_explicit_file __________[0m
+[1m[31mtests/unit/test_config_pydantic_settings.py[0m:462: in test_config_with_explicit_file
+    [0m[94massert[39;49;00m config.server.server_name == [33m"[39;49;00m[33mexplicit-file-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'explicit-file-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- explicit-file-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m________ TestIntegrationScenarios.test_complete_configuration_scenario _________[0m
+[1m[31m/home/knitli/code-weaver-mcp/tests/unit/test_config_pydantic_settings.py[0m:575: in test_complete_configuration_scenario
+    [0m[94massert[39;49;00m config.server.server_name == [33m"[39;49;00m[33mproduction-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'production-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- production-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m________ TestIntegrationScenarios.test_development_vs_production_config ________[0m
+[1m[31m/home/knitli/code-weaver-mcp/tests/unit/test_config_pydantic_settings.py[0m:644: in test_development_vs_production_config
+    [0m[94massert[39;49;00m config.server.server_name == [33m"[39;49;00m[33mdev-server[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'codeweaver-mcp' == 'dev-server'[0m
+[1m[31mE     [0m
+[1m[31mE     [0m[91m- dev-server[39;49;00m[90m[39;49;00m[0m
+[1m[31mE     [92m+ codeweaver-mcp[39;49;00m[90m[39;49;00m[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m__________ TestDocArrayIntegration.test_docarray_backend_availability __________[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:27: in test_docarray_backend_availability
+    [0mproviders = BackendFactory.list_supported_providers()[90m[39;49;00m
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/backends/factory.py[0m:295: in list_supported_providers
+    [0mall_capabilities = get_all_backend_capabilities()[90m[39;49;00m
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/backends/capabilities.py[0m:289: in get_all_backend_capabilities
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mtypes[39;49;00m[04m[96m.[39;49;00m[04m[96mproviders[39;49;00m[90m [39;49;00m[94mimport[39;49;00m ([90m[39;49;00m
+[1m[31mE   ImportError: cannot import name 'DistanceMetric' from 'codeweaver.types.providers' (/home/knitli/code-weaver-mcp/src/codeweaver/types/providers/__init__.py)[0m
+[31m[1m______ TestDocArrayIntegration.test_docarray_imports_work_when_installed _______[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:56: in test_docarray_imports_work_when_installed
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mqdrant[39;49;00m[90m [39;49;00m[94mimport[39;49;00m QdrantDocArrayBackend  [90m# noqa: F401[39;49;00m[90m[39;49;00m
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/__init__.py[0m:19: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mschema[39;49;00m[90m [39;49;00m[94mimport[39;49;00m ([90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/schema.py[0m:11: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mtyping[39;49;00m[90m [39;49;00m[94mimport[39;49;00m AndArray[90m[39;49;00m
+[1m[31m.venv/lib/python3.13/site-packages/docarray/typing/__init__.py[0m:104: in __getattr__
+    [0m[94mraise[39;49;00m [96mImportError[39;49;00m([90m[39;49;00m
+[1m[31mE   ImportError: cannot import name 'AndArray' from 'docarray.typing'[0m
+[31m[1m____________ TestDocArrayIntegration.test_main_factory_always_works ____________[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:61: in test_main_factory_always_works
+    [0mproviders = BackendFactory.list_supported_providers()[90m[39;49;00m
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/backends/factory.py[0m:295: in list_supported_providers
+    [0mall_capabilities = get_all_backend_capabilities()[90m[39;49;00m
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[90m[39;49;00m
+[1m[31msrc/codeweaver/types/backends/capabilities.py[0m:289: in get_all_backend_capabilities
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mtypes[39;49;00m[04m[96m.[39;49;00m[04m[96mproviders[39;49;00m[90m [39;49;00m[94mimport[39;49;00m ([90m[39;49;00m
+[1m[31mE   ImportError: cannot import name 'DistanceMetric' from 'codeweaver.types.providers' (/home/knitli/code-weaver-mcp/src/codeweaver/types/providers/__init__.py)[0m
+[31m[1m__________ TestDocArrayWithDependencies.test_docarray_config_factory ___________[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:103: in test_docarray_config_factory
+    [0m[94massert[39;49;00m [33m"[39;49;00m[33mdocarray_qdrant[39;49;00m[33m"[39;49;00m [95min[39;49;00m backends[90m[39;49;00m
+[1m[31mE   AssertionError: assert 'docarray_qdrant' in [<DocArrayBackendKind.QDRANT: 'docarray_qdrant'>, <DocArrayBackendKind.PINECONE: 'docarray_pinecone'>, <DocArrayBackendKind.WEAVIATE: 'docarray_weaviate'>][0m
+[31m[1m______________ TestDocArrayWithDependencies.test_schema_templates ______________[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:115: in test_schema_templates
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mschema[39;49;00m[90m [39;49;00m[94mimport[39;49;00m SchemaTemplates[90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/__init__.py[0m:19: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mschema[39;49;00m[90m [39;49;00m[94mimport[39;49;00m ([90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/schema.py[0m:11: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mtyping[39;49;00m[90m [39;49;00m[94mimport[39;49;00m AndArray[90m[39;49;00m
+[1m[31m.venv/lib/python3.13/site-packages/docarray/typing/__init__.py[0m:104: in __getattr__
+    [0m[94mraise[39;49;00m [96mImportError[39;49;00m([90m[39;49;00m
+[1m[31mE   ImportError: cannot import name 'AndArray' from 'docarray.typing'[0m
+[31m[1m________ TestDocArrayWithDependencies.test_qdrant_backend_dependencies _________[0m
+[1m[31mtests/unit/test_docarray_integration.py[0m:127: in test_qdrant_backend_dependencies
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mqdrant[39;49;00m[90m [39;49;00m[94mimport[39;49;00m QdrantDocArrayBackend[90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/__init__.py[0m:19: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mcodeweaver[39;49;00m[04m[96m.[39;49;00m[04m[96mbackends[39;49;00m[04m[96m.[39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mschema[39;49;00m[90m [39;49;00m[94mimport[39;49;00m ([90m[39;49;00m
+[1m[31msrc/codeweaver/backends/docarray/schema.py[0m:11: in <module>
+    [0m[94mfrom[39;49;00m[90m [39;49;00m[04m[96mdocarray[39;49;00m[04m[96m.[39;49;00m[04m[96mtyping[39;49;00m[90m [39;49;00m[94mimport[39;49;00m AndArray[90m[39;49;00m
+[1m[31m.venv/lib/python3.13/site-packages/docarray/typing/__init__.py[0m:104: in __getattr__
+    [0m[94mraise[39;49;00m [96mImportError[39;49;00m([90m[39;49;00m
+[1m[31mE   ImportError: cannot import name 'AndArray' from 'docarray.typing'[0m
+[31m[1m____________ TestFactoryIntegration.test_mock_factory_registration _____________[0m
+[1m[31mtests/unit/test_factory_validation.py[0m:402: in test_mock_factory_registration
+    [0m[94massert[39;49;00m valid_factories, [33m"[39;49;00m[33mNo valid factories found - mock registration may have failed[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+[1m[31mE   AssertionError: No valid factories found - mock registration may have failed[0m
+[1m[31mE   assert [][0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider embedding from profile - not implemented
+[33mWARNING [0m codeweaver.config:config.py:716 Cannot create provider reranking from profile - not implemented
+[31m[1m__________ TestPostHogTelemetryProvider.test_event_tracking_disabled ___________[0m
+[1m[31mtests/unit/test_telemetry_service.py[0m:128: in test_event_tracking_disabled
+    [0m[94massert[39;49;00m stats[[33m"[39;49;00m[33mevents_tracked[39;49;00m[33m"[39;49;00m] == [94m0[39;49;00m[90m[39;49;00m
+[1m[31mE   assert 1 == 0[0m
+[31m[1m_______________ TestPostHogTelemetryProvider.test_batch_flushing _______________[0m
+[1m[31mtests/unit/test_telemetry_service.py[0m:155: in test_batch_flushing
+    [0m[94massert[39;49;00m stats_after_flush[[33m"[39;49;00m[33mevents_sent[39;49;00m[33m"[39;49;00m] == [94m5[39;49;00m[90m[39;49;00m
+[1m[31mE   assert 0 == 5[0m
+------------------------------ Captured log call -------------------------------
+[33mWARNING [0m codeweaver.services.posthog_telemetry:telemetry.py:124 PostHog library not available - telemetry disabled
+[31m[1m_ TestProviderPatternConsistency.test_provider_check_availability_signature[VoyageAIProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:194: in test_provider_check_availability_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m2[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: check_availability should have 2 parameters, got 1: ['capability'][0m
+[1m[31mE   assert 1 == 2[0m
+[1m[31mE    +  where 1 = len(['capability'])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_check_availability_signature[OpenAIProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:194: in test_provider_check_availability_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m2[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: check_availability should have 2 parameters, got 1: ['capability'][0m
+[1m[31mE   assert 1 == 2[0m
+[1m[31mE    +  where 1 = len(['capability'])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_check_availability_signature[CohereProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:194: in test_provider_check_availability_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m2[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: check_availability should have 2 parameters, got 1: ['capability'][0m
+[1m[31mE   assert 1 == 2[0m
+[1m[31mE    +  where 1 = len(['capability'])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_check_availability_signature[HuggingFaceProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:194: in test_provider_check_availability_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m2[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: check_availability should have 2 parameters, got 1: ['capability'][0m
+[1m[31mE   assert 1 == 2[0m
+[1m[31mE    +  where 1 = len(['capability'])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_check_availability_signature[SentenceTransformersProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:194: in test_provider_check_availability_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m2[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: check_availability should have 2 parameters, got 1: ['capability'][0m
+[1m[31mE   assert 1 == 2[0m
+[1m[31mE    +  where 1 = len(['capability'])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_get_static_info_signature[VoyageAIProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:221: in test_provider_get_static_info_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m1[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: get_static_provider_info should have 1 parameter, got 0: [][0m
+[1m[31mE   assert 0 == 1[0m
+[1m[31mE    +  where 0 = len([])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_get_static_info_signature[OpenAIProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:221: in test_provider_get_static_info_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m1[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: get_static_provider_info should have 1 parameter, got 0: [][0m
+[1m[31mE   assert 0 == 1[0m
+[1m[31mE    +  where 0 = len([])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_get_static_info_signature[CohereProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:221: in test_provider_get_static_info_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m1[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: get_static_provider_info should have 1 parameter, got 0: [][0m
+[1m[31mE   assert 0 == 1[0m
+[1m[31mE    +  where 0 = len([])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_get_static_info_signature[HuggingFaceProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:221: in test_provider_get_static_info_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m1[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: get_static_provider_info should have 1 parameter, got 0: [][0m
+[1m[31mE   assert 0 == 1[0m
+[1m[31mE    +  where 0 = len([])[0m
+[31m[1m_ TestProviderPatternConsistency.test_provider_get_static_info_signature[SentenceTransformersProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:221: in test_provider_get_static_info_signature
+    [0m[94massert[39;49;00m [96mlen[39;49;00m(params) == [94m1[39;49;00m, ([90m[39;49;00m
+[1m[31mE   AssertionError: get_static_provider_info should have 1 parameter, got 0: [][0m
+[1m[31mE   assert 0 == 1[0m
+[1m[31mE    +  where 0 = len([])[0m
+[31m[1m_ TestAntiPatternDetection.test_no_direct_middleware_imports[codeweaver.sources.filesystem] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:384: in test_no_direct_middleware_imports
+    [0m[94massert[39;49;00m forbidden_import [95mnot[39;49;00m [95min[39;49;00m module_source, ([90m[39;49;00m
+[1m[31mE   AssertionError: Module codeweaver.sources.filesystem contains forbidden import: from codeweaver.middleware[0m
+[1m[31mE   assert 'from codeweaver.middleware' not in '# SPDX-File...et(suffix)\n'[0m
+[1m[31mE     [0m
+[1m[31mE     'from codeweaver.middleware' is contained here:[0m
+[1m[31mE       # SPDX-FileCopyrightText: 2025 Knitli Inc.[0m
+[1m[31mE       # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>[0m
+[1m[31mE       #[0m
+[1m[31mE       # SPDX-License-Identifier: MIT OR Apache-2.0[0m
+[1m[31mE       ...[0m
+[1m[31mE     [0m
+[1m[31mE     ...Full output truncated (945 lines hidden), use '-vv' to show[0m
+[31m[1m_ TestAntiPatternDetection.test_providers_use_services_context[SentenceTransformersProvider] _[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:406: in test_providers_use_services_context
+    [0m[94massert[39;49;00m [33m"[39;49;00m[33mcontext[39;49;00m[33m"[39;49;00m [95min[39;49;00m params, ([90m[39;49;00m
+[1m[31mE   AssertionError: Provider SentenceTransformersProvider.embed_documents should accept 'context' parameter[0m
+[1m[31mE   assert 'context' in ['self', 'texts'][0m
+[31m[1m_____________ TestServicesIntegration.test_services_manager_exists _____________[0m
+[1m[31mtests/validation/test_pattern_consistency.py[0m:504: in test_services_manager_exists
+    [0m[94massert[39;49;00m [96mhasattr[39;49;00m(ServicesManager, method_name), ([90m[39;49;00m
+[1m[31mE   AssertionError: ServicesManager missing method: create_service_context[0m
+[1m[31mE   assert False[0m
+[1m[31mE    +  where False = hasattr(<class 'codeweaver.services.manager.ServicesManager'>, 'create_service_context')[0m
+[33m=============================== warnings summary ===============================[0m
+.venv/lib/python3.13/site-packages/pydantic/fields.py:1093
+  /home/knitli/code-weaver-mcp/.venv/lib/python3.13/site-packages/pydantic/fields.py:1093: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warn(
+
+.venv/lib/python3.13/site-packages/pydantic/_internal/_config.py:323
+  /home/knitli/code-weaver-mcp/.venv/lib/python3.13/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+.venv/lib/python3.13/site-packages/pydantic/_migration.py:283
+  /home/knitli/code-weaver-mcp/.venv/lib/python3.13/site-packages/pydantic/_migration.py:283: UserWarning: `pydantic.error_wrappers:ValidationError` has been moved to `pydantic:ValidationError`.
+    warnings.warn(f'`{import_path}` has been moved to `{new_location}`.')
+
+src/codeweaver/testing/integration.py:40
+  /home/knitli/code-weaver-mcp/src/codeweaver/testing/integration.py:40: PytestCollectionWarning: cannot collect test class 'TestConfiguration' because it has a __init__ constructor (from: tests/integration/test_integration.py)
+    @dataclass
+
+tests/unit/test_enhanced_config.py:489
+  /home/knitli/code-weaver-mcp/tests/unit/test_enhanced_config.py:489: PytestUnknownMarkWarning: Unknown pytest.mark.integration - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.integration
+
+tests/integration/test_server_functionality.py::test_environment
+  /home/knitli/code-weaver-mcp/.venv/lib/python3.13/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but tests/integration/test_server_functionality.py::test_environment returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+tests/validation/test_services_integration.py::TestSourceServicesIntegration::test_source_should_work_with_services[FileSystemSource]
+  /home/knitli/code-weaver-mcp/tests/validation/test_services_integration.py:412: RuntimeWarning: coroutine 'FileSystemSource.discover_content' was never awaited
+    async for item in source.discover_content(context):
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+[36m[1m=========================== short test summary info ============================[0m
+[31mFAILED[0m tests/integration/test_clean_server_integration.py::[1mTestCodeWeaverServer::test_server_initialization_process[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_clean_server_integration.py::[1mTestCodeWeaverServer::test_middleware_setup[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_clean_server_integration.py::[1mTestCodeWeaverServer::test_component_initialization[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_clean_server_integration.py::[1mTestServerToolRegistration::test_tools_registered[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_clean_server_integration.py::[1mTestServerBehaviorIntegration::test_server_with_mock_components[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_fastmcp_middleware_integration.py::[1mTestFastMCPMiddlewareIntegration::test_services_manager_middleware_integration[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_fastmcp_middleware_integration.py::[1mTestFastMCPMiddlewareIntegration::test_server_services_manager_integration[0m - TypeError: object MagicMock can't be used in 'await' expression
+[31mFAILED[0m tests/integration/test_fastmcp_middleware_integration.py::[1mTestFastMCPMiddlewareIntegration::test_middleware_service_health_checks[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/integration/test_fastmcp_middleware_integration.py::[1mTestFastMCPMiddlewareIntegration::test_middleware_service_lifecycle[0m - codeweaver.types.services.exceptions.ServiceInitializationError: Service in...
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestCodeWeaverConfig::test_environment_variable_loading[0m - AssertionError: assert 8 == 16
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestCodeWeaverConfig::test_nested_environment_variables[0m - AssertionError: assert 'ast_grep' == 'custom'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestCodeWeaverConfig::test_default_data_sources_setup[0m - AssertionError: assert 'ast_grep' == 'filesystem'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestCustomTomlSource::test_toml_source_search_paths[0m - KeyError: 'server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestConfigManager::test_config_manager_with_specific_file[0m - AssertionError: assert 'codeweaver-mcp' == 'specific-server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestConfigManager::test_config_manager_reload[0m - AssertionError: assert 'codeweaver-mcp' == 'initial-server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestConfigManager::test_config_manager_save_config[0m - AssertionError: assert 'codeweaver-mcp' == 'saved-server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestCodeWeaverConfigWithFile::test_config_with_explicit_file[0m - AssertionError: assert 'codeweaver-mcp' == 'explicit-file-server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestIntegrationScenarios::test_complete_configuration_scenario[0m - AssertionError: assert 'codeweaver-mcp' == 'production-server'
+[31mFAILED[0m tests/unit/test_config_pydantic_settings.py::[1mTestIntegrationScenarios::test_development_vs_production_config[0m - AssertionError: assert 'codeweaver-mcp' == 'dev-server'
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayIntegration::test_docarray_backend_availability[0m - ImportError: cannot import name 'DistanceMetric' from 'codeweaver.types.pro...
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayIntegration::test_docarray_imports_work_when_installed[0m - ImportError: cannot import name 'AndArray' from 'docarray.typing'
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayIntegration::test_main_factory_always_works[0m - ImportError: cannot import name 'DistanceMetric' from 'codeweaver.types.pro...
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayWithDependencies::test_docarray_config_factory[0m - AssertionError: assert 'docarray_qdrant' in [<DocArrayBackendKind.QDRANT: '...
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayWithDependencies::test_schema_templates[0m - ImportError: cannot import name 'AndArray' from 'docarray.typing'
+[31mFAILED[0m tests/unit/test_docarray_integration.py::[1mTestDocArrayWithDependencies::test_qdrant_backend_dependencies[0m - ImportError: cannot import name 'AndArray' from 'docarray.typing'
+[31mFAILED[0m tests/unit/test_factory_validation.py::[1mTestFactoryIntegration::test_mock_factory_registration[0m - AssertionError: No valid factories found - mock registration may have failed
+[31mFAILED[0m tests/unit/test_telemetry_service.py::[1mTestPostHogTelemetryProvider::test_event_tracking_disabled[0m - assert 1 == 0
+[31mFAILED[0m tests/unit/test_telemetry_service.py::[1mTestPostHogTelemetryProvider::test_batch_flushing[0m - assert 0 == 5
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_check_availability_signature[VoyageAIProvider][0m - AssertionError: check_availability should have 2 parameters, got 1: ['capab...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_check_availability_signature[OpenAIProvider][0m - AssertionError: check_availability should have 2 parameters, got 1: ['capab...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_check_availability_signature[CohereProvider][0m - AssertionError: check_availability should have 2 parameters, got 1: ['capab...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_check_availability_signature[HuggingFaceProvider][0m - AssertionError: check_availability should have 2 parameters, got 1: ['capab...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_check_availability_signature[SentenceTransformersProvider][0m - AssertionError: check_availability should have 2 parameters, got 1: ['capab...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_get_static_info_signature[VoyageAIProvider][0m - AssertionError: get_static_provider_info should have 1 parameter, got 0: []
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_get_static_info_signature[OpenAIProvider][0m - AssertionError: get_static_provider_info should have 1 parameter, got 0: []
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_get_static_info_signature[CohereProvider][0m - AssertionError: get_static_provider_info should have 1 parameter, got 0: []
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_get_static_info_signature[HuggingFaceProvider][0m - AssertionError: get_static_provider_info should have 1 parameter, got 0: []
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestProviderPatternConsistency::test_provider_get_static_info_signature[SentenceTransformersProvider][0m - AssertionError: get_static_provider_info should have 1 parameter, got 0: []
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestAntiPatternDetection::test_no_direct_middleware_imports[codeweaver.sources.filesystem][0m - AssertionError: Module codeweaver.sources.filesystem contains forbidden imp...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestAntiPatternDetection::test_providers_use_services_context[SentenceTransformersProvider][0m - AssertionError: Provider SentenceTransformersProvider.embed_documents shoul...
+[31mFAILED[0m tests/validation/test_pattern_consistency.py::[1mTestServicesIntegration::test_services_manager_exists[0m - AssertionError: ServicesManager missing method: create_service_context
+[31m====== [31m[1m41 failed[0m, [32m243 passed[0m, [33m25 skipped[0m, [33m7 warnings[0m[31m in 129.14s (0:02:09)[0m[31m ======[0m
