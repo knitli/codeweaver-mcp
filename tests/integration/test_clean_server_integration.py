@@ -118,13 +118,15 @@ class TestCodeWeaverServer:
 
             await server.initialize()
 
-            # Check that middleware instances were created
-            assert "error_handling" in server._middleware_instances
-            assert "rate_limiting" in server._middleware_instances
-            assert "logging" in server._middleware_instances
-            assert "timing" in server._middleware_instances
-            assert "chunking" in server._middleware_instances
-            assert "filtering" in server._middleware_instances
+            # Check that services manager was created and initialized
+            assert server.services_manager is not None
+            assert server.services_manager._initialized
+            
+            # Check that core services are available
+            chunking_service = server.services_manager.get_chunking_service()
+            filtering_service = server.services_manager.get_filtering_service()
+            assert chunking_service is not None
+            assert filtering_service is not None
 
     @pytest.mark.asyncio
     async def test_component_initialization(self) -> None:

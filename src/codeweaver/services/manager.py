@@ -296,7 +296,7 @@ class ServicesManager:
         }
 
         return ServicesHealthReport(
-            overall_status=overall_status, services=services_health, check_time=UTC, metrics=metrics
+            overall_status=overall_status, services=services_health, check_time=datetime.now(UTC), metrics=metrics
         )
 
     async def restart_service(self, service_type: ServiceType) -> None:
