@@ -228,14 +228,12 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         user_id: str | None = None,
     ) -> None:
         """Track a single event."""
-        # Even if telemetry is disabled, we still track the event for accuracy in local statistics reporting and for tests
-        self._stats["events_tracked"] += 1
         if not self._enabled:
-            self._stats["queue_size"] += 1
             self._logger.debug("Telemetry disabled - event %s not tracked", event_name)
-            if self._stats["queue_size"] >= self._config.batch_size:
-                await self.flush()
             return
+
+        # Only count events when telemetry is enabled
+        self._stats["events_tracked"] += 1
 
         try:
             # Prepare event data
