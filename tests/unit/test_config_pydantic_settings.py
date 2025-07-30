@@ -10,7 +10,6 @@ Tests configuration loading, environment variables, TOML files, source prioritie
 caching, reloading, and error handling.
 """
 
-
 import contextlib
 import os
 
@@ -535,12 +534,12 @@ class TestErrorHandling:
     def test_environment_variable_type_errors(self):
         """Test handling of invalid environment variable types."""
         with patch.dict(
-                os.environ,
-                {
-                    "CW_CHUNKING__MAX_CHUNK_SIZE": "not-a-number",
-                    "CW_INDEXING__BATCH_SIZE": "invalid-int",
-                },
-            ):
+            os.environ,
+            {
+                "CW_CHUNKING__MAX_CHUNK_SIZE": "not-a-number",
+                "CW_INDEXING__BATCH_SIZE": "invalid-int",
+            },
+        ):
             # Should either use defaults or raise validation error
             with contextlib.suppress(Exception):
                 config = CodeWeaverConfig()

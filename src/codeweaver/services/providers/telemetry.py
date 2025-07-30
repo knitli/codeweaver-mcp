@@ -71,7 +71,9 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         if not self._anonymous:
             # For non-anonymous tracking, we still use a hash of machine-specific info
             # but it's more persistent across sessions
-            machine_info = f"{os.environ.get('USER', 'unknown')}-{os.environ.get('HOSTNAME', 'unknown')}"
+            machine_info = (
+                f"{os.environ.get('USER', 'unknown')}-{os.environ.get('HOSTNAME', 'unknown')}"
+            )
             return hashlib.sha256(machine_info.encode()).hexdigest()[:16]
         # For anonymous tracking, generate a session-specific UUID
         return str(uuid.uuid4())[:16]
@@ -154,11 +156,10 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             self._logger.info("PostHog telemetry provider initialized successfully")
 
             # Track initialization event
-            await self.track_event("telemetry_initialized", {
-                "anonymous_mode": self._anonymous,
-                "provider": "posthog",
-                "version": self.version,
-            })
+            await self.track_event(
+                "telemetry_initialized",
+                {"anonymous_mode": self._anonymous, "provider": "posthog", "version": self.version},
+            )
 
         except Exception as e:
             self._logger.warning("Failed to initialize PostHog: %s", e)
@@ -172,10 +173,13 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 await self.flush()
 
                 # Track shutdown event
-                await self.track_event("telemetry_shutdown", {
-                    "events_tracked": self._stats["events_tracked"],
-                    "events_sent": self._stats["events_sent"],
-                })
+                await self.track_event(
+                    "telemetry_shutdown",
+                    {
+                        "events_tracked": self._stats["events_tracked"],
+                        "events_sent": self._stats["events_sent"],
+                    },
+                )
 
                 # Final flush
                 if self._posthog_client:
@@ -190,10 +194,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             return True  # If disabled, consider it healthy
 
         # Check if PostHog is initialized and queue isn't overflowing
-        return (
-            self._initialized_posthog
-            and len(self._event_queue) < self._config.max_queue_size
-        )
+        return self._initialized_posthog and len(self._event_queue) < self._config.max_queue_size
 
     def _on_posthog_error(self, error, items):
         """Handle PostHog errors."""
@@ -338,7 +339,8 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         if context:
             # Sanitize context to remove sensitive information
             sanitized_context = {
-                k: v for k, v in context.items()
+                k: v
+                for k, v in context.items()
                 if k not in ("file_path", "repository", "query", "user_id")
             }
             properties["context"] = sanitized_context
@@ -357,10 +359,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         if not self._enabled or not self._config.track_performance:
             return
 
-        properties = {
-            "operation": operation,
-            "duration": duration,
-        }
+        properties = {"operation": operation, "duration": duration}
 
         if resource_usage:
             properties["resource_usage"] = resource_usage
@@ -386,7 +385,9 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             # Send events to PostHog (or simulate in mock mode)
             if self._config.mock_mode:
                 # In mock mode, just simulate sending
-                self._logger.debug("Mock mode: simulating %d events sent to PostHog", len(events_to_send))
+                self._logger.debug(
+                    "Mock mode: simulating %d events sent to PostHog", len(events_to_send)
+                )
             else:
                 # Send events to PostHog
                 for event in events_to_send:

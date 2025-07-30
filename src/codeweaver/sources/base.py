@@ -20,6 +20,7 @@ from typing import Annotated, Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field
 
 from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
+from codeweaver.utils.decorators import require_implementation
 
 
 logger = logging.getLogger(__name__)
@@ -193,6 +194,7 @@ class AbstractDataSource(ABC):
     of the DataSource protocol across different source types.
     """
 
+    @require_implementation("discover_content", "read_content")
     def __init__(self, source_type: SourceProvider, source_id: str | None = None):
         """Initialize the abstract data source.
 

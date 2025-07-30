@@ -24,11 +24,13 @@ from codeweaver.types import (
     ServiceStopError,
     ServiceType,
 )
+from codeweaver.utils.decorators import require_implementation
 
 
 class BaseServiceProvider(ServiceProvider, ABC):
     """Base implementation for all service providers."""
 
+    @require_implementation("_initialize_provider", "_shutdown_provider")
     def __init__(
         self, service_type: ServiceType, config: ServiceConfig, logger: logging.Logger | None = None
     ):

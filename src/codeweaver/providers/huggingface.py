@@ -180,7 +180,9 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         """Input length depends on model tokenizer limits."""
         return 8000  # Conservative estimate for most models
 
-    async def embed_documents(self, texts: list[str], context: dict[str, Any] | None = None) -> list[list[float]]:
+    async def embed_documents(
+        self, texts: list[str], context: dict[str, Any] | None = None
+    ) -> list[list[float]]:
         """Generate embeddings for documents."""
         try:
             if self._use_local:

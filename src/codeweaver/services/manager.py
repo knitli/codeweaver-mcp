@@ -184,7 +184,9 @@ class ServicesManager:
                     service.start()
                     self._logger.info("Started service: %s", service.service_type.value)
                 except Exception:
-                    self._logger.exceptions("Failed to start service %s", service.service_type.value)
+                    self._logger.exceptions(
+                        "Failed to start service %s", service.service_type.value
+                    )
 
     def stop_all_services(self) -> None:
         """Stop all services that support stopping."""
@@ -224,8 +226,12 @@ class ServicesManager:
         """Create a service context for provider operations."""
         return {
             "services_manager": self,
-            "chunking_service": self.get_chunking_service() if ServiceType.CHUNKING in self._services else None,
-            "filtering_service": self.get_filtering_service() if ServiceType.FILTERING in self._services else None,
+            "chunking_service": self.get_chunking_service()
+            if ServiceType.CHUNKING in self._services
+            else None,
+            "filtering_service": self.get_filtering_service()
+            if ServiceType.FILTERING in self._services
+            else None,
             "telemetry_service": self.get_telemetry_service(),
             "validation_service": self.get_validation_service(),
             "cache_service": self.get_cache_service(),
@@ -418,7 +424,8 @@ class ServicesManager:
                     else:
                         # TODO: Implement other optional service providers
                         self._logger.info(
-                            "Optional service %s enabled but not implemented yet", service_type.value
+                            "Optional service %s enabled but not implemented yet",
+                            service_type.value,
                         )
 
                 except Exception as e:

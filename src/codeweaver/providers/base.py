@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
 from codeweaver.types import EmbeddingProviderInfo, RerankResult
+from codeweaver.utils.decorators import require_implementation
 
 
 @runtime_checkable
@@ -139,6 +140,7 @@ class RerankProvider(Protocol):
 class EmbeddingProviderBase(ABC):
     """Abstract base class for embedding providers with common functionality."""
 
+    @require_implementation("embed_documents", "embed_query", "_validate_config")
     def __init__(self, config: Any):
         """Initialize the provider with configuration.
 
@@ -204,6 +206,7 @@ class EmbeddingProviderBase(ABC):
 class RerankProviderBase(ABC):
     """Abstract base class for reranking providers with common functionality."""
 
+    @require_implementation("rerank", "_validate_config")
     def __init__(self, config: Any):
         """Initialize the provider with configuration.
 

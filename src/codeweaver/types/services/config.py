@@ -284,8 +284,12 @@ class TelemetryServiceConfig(ServiceConfig):
     # Privacy and opt-out settings
     enabled: bool = True
     anonymous_tracking: Annotated[bool, Field(description="Use anonymous tracking")] = True
-    collect_sensitive_data: Annotated[bool, Field(description="Allow sensitive data collection")] = False
-    user_consent_required: Annotated[bool, Field(description="Require explicit user consent")] = False
+    collect_sensitive_data: Annotated[
+        bool, Field(description="Allow sensitive data collection")
+    ] = False
+    user_consent_required: Annotated[bool, Field(description="Require explicit user consent")] = (
+        False
+    )
 
     # PostHog configuration
     api_key: Annotated[str | None, Field(description="PostHog API key")] = None

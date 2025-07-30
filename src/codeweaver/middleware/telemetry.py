@@ -24,14 +24,10 @@ class TelemetryMiddleware(Middleware):
         self.telemetry_service = telemetry_service
         self.logger = logger or logging.getLogger("codeweaver.middleware.telemetry")
 
-    async def __call__(
-        self,
-        context: MiddlewareContext,
-        call_next: CallNext,
-    ) -> Any:
+    async def __call__(self, context: MiddlewareContext, call_next: CallNext) -> Any:
         """Process request and track telemetry data."""
         start_time = time.time()
-        method = getattr(context.request, 'method', 'unknown')
+        method = getattr(context.request, "method", "unknown")
 
         try:
             # Call the actual handler
@@ -45,7 +41,9 @@ class TelemetryMiddleware(Middleware):
             duration = time.time() - start_time
 
             # Track operation error
-            await self._track_operation_error(method, getattr(context.request, 'params', None), e, duration)
+            await self._track_operation_error(
+                method, getattr(context.request, "params", None), e, duration
+            )
 
             # Re-raise the exception
             raise
@@ -53,11 +51,7 @@ class TelemetryMiddleware(Middleware):
             return response
 
     async def _track_operation_success(
-        self,
-        method: str,
-        params: dict[str, Any] | None,
-        response: Any,
-        duration: float,
+        self, method: str, params: dict[str, Any] | None, response: Any, duration: float
     ) -> None:
         """Track successful operations."""
         try:
@@ -70,20 +64,14 @@ class TelemetryMiddleware(Middleware):
             else:
                 # Track general performance metric
                 await self.telemetry_service.track_performance(
-                    operation=method,
-                    duration=duration,
-                    metadata={"success": True},
+                    operation=method, duration=duration, metadata={"success": True}
                 )
 
         except Exception as e:
             self.logger.warning("Failed to track operation success: %s", e)
 
     async def _track_operation_error(
-        self,
-        method: str,
-        params: dict[str, Any] | None,
-        error: Exception,
-        duration: float,
+        self, method: str, params: dict[str, Any] | None, error: Exception, duration: float
     ) -> None:
         """Track operation errors."""
         try:
@@ -91,20 +79,14 @@ class TelemetryMiddleware(Middleware):
                 error_type=type(error).__name__,
                 error_category="operation_error",
                 operation=method,
-                context={
-                    "duration": duration,
-                    "has_params": params is not None,
-                },
+                context={"duration": duration, "has_params": params is not None},
             )
 
         except Exception as e:
             self.logger.warning("Failed to track operation error: %s", e)
 
     async def _track_indexing_success(
-        self,
-        params: dict[str, Any] | None,
-        response: Any,
-        duration: float,
+        self, params: dict[str, Any] | None, response: Any, duration: float
     ) -> None:
         """Track successful indexing operations."""
         if not params:
@@ -127,10 +109,7 @@ class TelemetryMiddleware(Middleware):
         )
 
     async def _track_search_success(
-        self,
-        params: dict[str, Any] | None,
-        response: Any,
-        duration: float,
+        self, params: dict[str, Any] | None, response: Any, duration: float
     ) -> None:
         """Track successful search operations."""
         if not params:
@@ -158,10 +137,7 @@ class TelemetryMiddleware(Middleware):
         )
 
     async def _track_ast_grep_success(
-        self,
-        params: dict[str, Any] | None,
-        response: Any,
-        duration: float,
+        self, params: dict[str, Any] | None, response: Any, duration: float
     ) -> None:
         """Track successful AST grep search operations."""
         if not params:
@@ -217,7 +193,7 @@ class TelemetryMiddleware(Middleware):
         ast_constructs = ["$_", "$A", "$B", "$C", "kind:", "has:", "inside:", "follows:"]
         construct_count = sum(1 for construct in ast_constructs if construct in pattern)
 
-        line_count = len(pattern.split('\n'))
+        line_count = len(pattern.split("\n"))
 
         if construct_count > 3 or line_count > 10:
             return "complex"
