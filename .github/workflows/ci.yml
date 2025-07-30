@@ -36,9 +36,14 @@ jobs:
     - name: Cache mise tools
       uses: actions/cache@v4
       with:
-        path: |
+        path: &paths |
           ~/.local/share/mise
           ~/.local/bin/mise
+          ~/.local/share/mise/shims
+          ~/.cache/uv
+          ./.cache/uv
+          ~/.local/bin
+          ./scripts
         key: mise-${{ runner.os }}-${{ hashFiles('mise.toml') }}
         restore-keys: |
           mise-${{ runner.os }}-
