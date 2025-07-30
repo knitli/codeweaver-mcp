@@ -332,6 +332,14 @@ class ServicesManager:
             self._registry.register_provider(
                 ServiceType.FILTERING, "fastmcp_filtering", FilteringService
             )
+            
+            # Register provider aliases for backward compatibility
+            self._registry.register_provider(
+                ServiceType.FILTERING, "gitignore_filtering", FilteringService
+            )
+            self._registry.register_provider(
+                ServiceType.CHUNKING, "basic_chunking", ChunkingService
+            )
 
             # NEW: Register middleware service providers
             from codeweaver.services.providers.middleware import (
@@ -482,8 +490,8 @@ class ServicesManager:
         except Exception as e:
             self._logger.exception("Failed to create middleware service %s")
 
-            if config.fail_fast:
-                raise ServiceCreationError(f"Failed to create {service_type.value} service") from e
+            if getattr(config, 'fail_fast', True):
+                raise ServiceCreationError(service_type, f"Failed to initialize {service_type.value} service") from e
             return None
         else:
             self._logger.info("Created middleware service: %s", service_type.value)
