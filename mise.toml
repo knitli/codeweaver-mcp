@@ -36,11 +36,13 @@ mise reshim &&
 eval "$(mise activate)" &&
 hk init --mise &&
 echo "Setting up development environment..."
+uv venv --allow-existing .venv &&
+source .venv/bin/activate
 uv sync --all-groups &&
 echo "✅ Development environment ready!"
 """
 
-install = "uv sync"
+install = "uv sync --all-groups"
 
 # Code quality and formatting
 fix = """
