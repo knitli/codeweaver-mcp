@@ -27,9 +27,9 @@ from codeweaver.types import ServiceType, TelemetryService, TelemetryServiceConf
 class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
     """PostHog telemetry service provider with privacy-first design and opt-out functionality."""
 
-    def __init__(self, config: TelemetryServiceConfig, logger: logging.Logger | None = None):
+    def __init__(self, service_type: ServiceType, config: TelemetryServiceConfig, logger: logging.Logger | None = None):
         """Initialize the PostHog telemetry provider."""
-        super().__init__(ServiceType.TELEMETRY, config, logger)
+        super().__init__(service_type, config, logger)
         self._config: TelemetryServiceConfig = config
 
         # Privacy settings

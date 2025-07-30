@@ -177,7 +177,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
 
             # Determine health status
             success_rate = self._calculate_success_rate()
-            status = self._determine_health_status(is_healthy, success_rate, response_time)
+            status = self._determine_health_status(is_healthy=is_healthy, success_rate=success_rate, response_time=response_time)
 
             # Calculate uptime
             uptime = 0.0

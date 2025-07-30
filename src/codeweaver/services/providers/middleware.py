@@ -311,7 +311,7 @@ class FastMCPRateLimitingProvider(BaseServiceProvider, RateLimitingService):
             "global_limit": self._config.global_limit,
         }
 
-        self._middleware = RateLimitingMiddleware(middleware_config)
+        self._middleware = RateLimitingMiddleware(**middleware_config)
         self._logger.info("FastMCP rate limiting provider initialized")
 
     async def _shutdown_provider(self) -> None:

@@ -296,7 +296,7 @@ class ServicesManager:
         }
 
         return ServicesHealthReport(
-            overall_status=overall_status, services=services_health, check_time=UTC, metrics=metrics
+            overall_status=overall_status, services=services_health, check_time=datetime.now(UTC), metrics=metrics
         )
 
     async def restart_service(self, service_type: ServiceType) -> None:
@@ -331,6 +331,14 @@ class ServicesManager:
             )
             self._registry.register_provider(
                 ServiceType.FILTERING, "fastmcp_filtering", FilteringService
+            )
+            
+            # Register provider aliases for backward compatibility
+            self._registry.register_provider(
+                ServiceType.FILTERING, "gitignore_filtering", FilteringService
+            )
+            self._registry.register_provider(
+                ServiceType.CHUNKING, "basic_chunking", ChunkingService
             )
 
             # NEW: Register middleware service providers
@@ -482,8 +490,8 @@ class ServicesManager:
         except Exception as e:
             self._logger.exception("Failed to create middleware service %s")
 
-            if config.fail_fast:
-                raise ServiceCreationError(f"Failed to create {service_type.value} service") from e
+            if getattr(config, 'fail_fast', True):
+                raise ServiceCreationError(f"Failed to initialize {service_type.value} service (type: {service_type})") from e
             return None
         else:
             self._logger.info("Created middleware service: %s", service_type.value)

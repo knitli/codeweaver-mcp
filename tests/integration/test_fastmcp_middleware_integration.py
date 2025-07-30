@@ -97,16 +97,25 @@ class TestFastMCPMiddlewareIntegration:
 
         # Mock the extensibility manager to avoid complex initialization
         with patch("codeweaver.server.ExtensibilityManager") as mock_ext_manager:
+            # Create proper async mocks for backend and providers
+            mock_backend = AsyncMock()
+            mock_backend.list_collections = AsyncMock(return_value=["test_collection"])
+            mock_backend.collection_exists = AsyncMock(return_value=True)
+            
+            mock_embedding_provider = AsyncMock()
+            mock_reranking_provider = AsyncMock()
+            
             mock_ext_manager.return_value.initialize = AsyncMock()
-            mock_ext_manager.return_value.get_backend = AsyncMock(return_value=MagicMock())
+            mock_ext_manager.return_value.get_backend = AsyncMock(return_value=mock_backend)
             mock_ext_manager.return_value.get_embedding_provider = AsyncMock(
-                return_value=MagicMock()
+                return_value=mock_embedding_provider
             )
             mock_ext_manager.return_value.get_reranking_provider = AsyncMock(
-                return_value=MagicMock()
+                return_value=mock_reranking_provider
             )
             mock_ext_manager.return_value.get_data_sources = AsyncMock(return_value=[])
             mock_ext_manager.return_value.get_component_info = MagicMock(return_value={})
+            mock_ext_manager.return_value.shutdown = AsyncMock()
 
             # Create server
             server = CodeWeaverServer(config=config)
