@@ -155,8 +155,8 @@ jobs:
     - name: Check code style and linting
       run: |
         export PATH="$HOME/.local/bin:$PATH"
-        uv run ruff check . --output-format=github
-        uv run ruff format --check . --diff
+        mise run lint
+        mise run format
 
   build:
     name: Build Package
