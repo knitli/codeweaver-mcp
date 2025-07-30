@@ -89,6 +89,14 @@ class BaseServiceProvider(ServiceProvider, ABC):
             performance_profile="standard",
         )
 
+    async def start(self) -> None:
+        """Alias for `initialize`; starts the service provider."""
+        await self.initialize()
+
+    async def stop(self) -> None:
+        """Alias for `shutdown`; stops the service provider."""
+        await self.shutdown()
+
     async def initialize(self) -> None:
         """Initialize the service provider."""
         if self._initialized:

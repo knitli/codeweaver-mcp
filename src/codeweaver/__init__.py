@@ -12,7 +12,7 @@ using simple and sophisticated techniques to provide the LLM exactly the context
 It's also a powerful platform for human developers to extend, change, and configure. CodeWeaver
 is built with factory patterns and protocol-based interfaces, allowing it to support multiple
 data sources, embedding generators/rerankers, sparse and vector databases, general services of any kind,
-and fully extend its intent layer with new orchestration strategies. 
+and fully extend its intent layer with new orchestration strategies.
 
 Key Features:
 - Single natural language interface for its LLM users

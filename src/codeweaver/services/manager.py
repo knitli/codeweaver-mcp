@@ -176,6 +176,26 @@ class ServicesManager:
         """List all active services."""
         return self._services.copy()
 
+    def start_all_services(self) -> None:
+        """Start all services that support starting."""
+        for service in self._services.values():
+            if hasattr(service, "start"):
+                try:
+                    service.start()
+                    self._logger.info("Started service: %s", service.service_type.value)
+                except Exception:
+                    self._logger.exceptions("Failed to start service %s", service.service_type.value)
+
+    def stop_all_services(self) -> None:
+        """Stop all services that support stopping."""
+        for service in self._services.values():
+            if hasattr(service, "stop"):
+                try:
+                    service.stop()
+                    self._logger.info("Stopped service: %s", service.service_type.value)
+                except Exception:
+                    self._logger.exception("Failed to stop service %s", service.service_type.value)
+
     def get_logging_service(self) -> LoggingService | None:
         """Get the logging middleware service."""
         return self._middleware_services.get(ServiceType.LOGGING)

@@ -17,11 +17,7 @@ def validate_protocol_compliance() -> bool:
         from codeweaver.services.providers.base_provider import BaseServiceProvider
         from codeweaver.services.providers.chunking import ChunkingService
         from codeweaver.services.providers.file_filtering import FilteringService
-        from codeweaver.types import (  # noqa: F401
-            ChunkingService,
-            FilteringService,
-            ServiceProvider,
-        )
+        from codeweaver.types import ServiceProvider  # noqa: F401
 
         # Check base provider implements ServiceProvider protocol
         base_methods = set(dir(BaseServiceProvider))

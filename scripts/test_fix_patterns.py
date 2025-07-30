@@ -11,7 +11,7 @@ Generates test files with various ruff violations and validates fixes.
 """
 
 import shutil
-import subprocess  # noqa: S404
+import subprocess
 import sys
 
 from pathlib import Path
