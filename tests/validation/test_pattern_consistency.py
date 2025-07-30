@@ -189,16 +189,14 @@ class TestProviderPatternConsistency:
         method = provider_class.check_availability
         sig = inspect.signature(method)
 
-        # Should have parameters: cls, capability
+        # Should have parameters: capability (cls is automatically excluded from classmethod signatures)
         params = list(sig.parameters.keys())
-        assert len(params) == 2, (
-            f"check_availability should have 2 parameters, got {len(params)}: {params}"
+        assert len(params) == 1, (
+            f"check_availability should have 1 parameter, got {len(params)}: {params}"
         )
 
-        assert params[0] == "cls", f"First parameter should be 'cls', got '{params[0]}'"
-
-        assert params[1] == "capability", (
-            f"Second parameter should be 'capability', got '{params[1]}'"
+        assert params[0] == "capability", (
+            f"Parameter should be 'capability', got '{params[0]}'"
         )
 
         # Check return type annotation
@@ -216,13 +214,11 @@ class TestProviderPatternConsistency:
         method = provider_class.get_static_provider_info
         sig = inspect.signature(method)
 
-        # Should have only cls parameter
+        # Should have no parameters (cls is automatically excluded from classmethod signatures)
         params = list(sig.parameters.keys())
-        assert len(params) == 1, (
-            f"get_static_provider_info should have 1 parameter, got {len(params)}: {params}"
+        assert len(params) == 0, (
+            f"get_static_provider_info should have 0 parameters, got {len(params)}: {params}"
         )
-
-        assert params[0] == "cls", f"Parameter should be 'cls', got '{params[0]}'"
 
         # Check return type annotation
         return_annotation = sig.return_annotation
