@@ -13,6 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from codeweaver.services.providers.telemetry import PostHogTelemetryProvider
+from codeweaver.types import ServiceType
 from codeweaver.types import TelemetryServiceConfig
 
 
@@ -32,7 +33,7 @@ class TestPostHogTelemetryProvider:
         self, default_config: TelemetryServiceConfig
     ) -> PostHogTelemetryProvider:
         """Create a telemetry provider instance."""
-        return PostHogTelemetryProvider(default_config)
+        return PostHogTelemetryProvider(ServiceType.TELEMETRY, default_config)
 
     @pytest.mark.env_vars
     def test_opt_out_environment_variable(self) -> None:
@@ -40,7 +41,7 @@ class TestPostHogTelemetryProvider:
         config = TelemetryServiceConfig(enabled=True)
 
         with patch.dict(os.environ, {"CW_TELEMETRY_ENABLED": "false"}):
-            provider = PostHogTelemetryProvider(config)
+            provider = PostHogTelemetryProvider(ServiceType.TELEMETRY, config)
             assert not provider._enabled
 
     @pytest.mark.env_vars
@@ -49,14 +50,14 @@ class TestPostHogTelemetryProvider:
         config = TelemetryServiceConfig(enabled=True)
 
         with patch.dict(os.environ, {"CW_NO_TELEMETRY": "true"}):
-            provider = PostHogTelemetryProvider(config)
+            provider = PostHogTelemetryProvider(ServiceType.TELEMETRY, config)
             assert not provider._enabled
 
     @pytest.mark.config
     def test_config_based_opt_out(self) -> None:
         """Test opt-out via configuration."""
         config = TelemetryServiceConfig(enabled=False)
-        provider = PostHogTelemetryProvider(config)
+        provider = PostHogTelemetryProvider(ServiceType.TELEMETRY, config)
         assert not provider._enabled
 
     def test_runtime_opt_out(self, telemetry_provider: PostHogTelemetryProvider) -> None:
@@ -126,7 +127,7 @@ class TestPostHogTelemetryProvider:
     async def test_event_tracking_disabled(self) -> None:
         """Test that events are not tracked when telemetry is disabled."""
         config = TelemetryServiceConfig(enabled=False)
-        provider = PostHogTelemetryProvider(config)
+        provider = PostHogTelemetryProvider(ServiceType.TELEMETRY, config)
 
         await provider.track_event("test_event", {"key": "value"})
 
@@ -167,7 +168,7 @@ class TestPostHogTelemetryProvider:
         valid_config = TelemetryServiceConfig(
             enabled=True, batch_size=50, flush_interval=30.0, max_queue_size=1000
         )
-        provider = PostHogTelemetryProvider(valid_config)
+        provider = PostHogTelemetryProvider(ServiceType.TELEMETRY, valid_config)
         assert provider._config.batch_size == 50
 
         # Test invalid batch size (should be constrained by Pydantic)
