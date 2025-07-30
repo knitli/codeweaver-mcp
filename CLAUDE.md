@@ -154,6 +154,7 @@ uv run ruff check src/codeweaver/main.py
 
 ### Testing
 
+Full [testing guide here](tests/README.md).
 The project has a comprehensive test suite organized by type:
 
 ```bash
@@ -366,6 +367,12 @@ The system supports 20+ programming languages with proper AST-aware chunking:
 **Scripts**: Bash, PowerShell, Docker, Make, CMake
 
 ## Development Notes
+
+### Repository Practices
+
+See guides:
+- docs/DEVELOPMENT_PATTERNS.md
+- docs/SERVICES_LAYER_GUIDE.md
 
 ### Code Style
 - Uses Google docstring convention with plain language, active voice, and present tense
