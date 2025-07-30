@@ -491,7 +491,7 @@ class ServicesManager:
             self._logger.exception("Failed to create middleware service %s")
 
             if getattr(config, 'fail_fast', True):
-                raise ServiceCreationError(service_type, f"Failed to initialize {service_type.value} service") from e
+                raise ServiceCreationError(f"Failed to initialize {service_type.value} service (type: {service_type})") from e
             return None
         else:
             self._logger.info("Created middleware service: %s", service_type.value)
