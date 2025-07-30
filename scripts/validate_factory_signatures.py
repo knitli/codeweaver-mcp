@@ -68,16 +68,14 @@ def check_package_signatures(package_path: Path, method_name: str, expected_sig:
 
     for py_file in python_files:
         try:
-            with open(py_file, "r", encoding="utf-8") as f:
+            with py_file.open("r", encoding="utf-8") as f:
                 content = f.read()
 
             # Look for method definitions
             import re
 
             method_pattern = rf"(async\s+)?def\s+{method_name}\s*\([^)]*\)\s*(?:->\s*[^:]*)?:"
-            matches = re.findall(method_pattern, content)
-
-            if matches:
+            if matches := re.findall(method_pattern, content):
                 # Extract the full signature
                 match = re.search(method_pattern, content)
                 if match:
