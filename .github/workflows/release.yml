@@ -44,9 +44,9 @@ jobs:
         restore-keys: |
           uv-release-${{ runner.os }}-
           
-    - name: Install UV
+    - name: Install UV and build tools
       run: |
-        python -m pip install uv
+        python -m pip install uv twine
         
     - name: Install dependencies
       run: |
