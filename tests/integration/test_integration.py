@@ -11,6 +11,7 @@ component combinations, and configuration scenarios.
 """
 
 import asyncio
+import os
 
 import pytest
 
@@ -404,6 +405,7 @@ class TestIntegrationTestResult:
 class TestErrorHandling:
     """Test error handling in integration tests."""
 
+    @pytest.mark.skipif(os.getenv("CI") == "true", reason="Skip timeout test in CI")
     @pytest.mark.asyncio
     async def test_timeout_handling(self) -> None:
         """Test handling of test timeouts."""

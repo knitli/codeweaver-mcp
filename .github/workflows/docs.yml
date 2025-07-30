@@ -27,20 +27,20 @@ concurrency:
 
 jobs:
   build:
-    name: Build Documentation  
+    name: Build Documentation
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Needed for git-revision-date-localized plugin
-        
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
-        
+
     - name: Cache UV dependencies
       uses: actions/cache@v4
       with:
@@ -50,31 +50,31 @@ jobs:
         key: uv-docs-${{ runner.os }}-${{ hashFiles('uv.lock') }}
         restore-keys: |
           uv-docs-${{ runner.os }}-
-          
+
     - name: Install UV
       run: |
         python -m pip install uv
-        
+
     - name: Install documentation dependencies
       run: |
         uv sync --group docs
-        
+
     - name: Configure git for docs plugins
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        
+
     - name: Build documentation
       run: |
         # Remove custom_dir temporarily if overrides directory doesn't exist
         if [ ! -d "docs/overrides" ]; then
           sed -i 's/custom_dir: docs\/overrides/# custom_dir: docs\/overrides/' mkdocs.yml
         fi
-        
+
         # Try to build docs, if it fails due to missing plugins, create a minimal version
         if ! uv run mkdocs build --verbose; then
           echo "⚠️  Full documentation build failed, creating minimal version..."
-          
+
           # Create minimal mkdocs.yml for CI
           cat > mkdocs-minimal.yml << 'EOF'
         site_name: CodeWeaver - Documentation Build Test
@@ -82,34 +82,34 @@ jobs:
         site_author: Knitli Inc.
         repo_url: https://github.com/knitli/code-weaver-mcp
         repo_name: knitli/code-weaver-mcp
-        
+
         theme:
           name: material
-          
+
         nav:
           - Home: index.md
         EOF
-          
+
           uv run mkdocs build -f mkdocs-minimal.yml --verbose
           echo "✅ Minimal documentation build completed"
         else
-          echo "✅ Full documentation build completed"  
+          echo "✅ Full documentation build completed"
         fi
-        
+
     - name: Validate documentation build
       run: |
         # Check that essential files were generated
         test -f site/index.html || { echo "❌ Missing index.html"; exit 1; }
         test -d site/assets || { echo "❌ Missing assets directory"; exit 1; }
         echo "✅ Documentation build validated"
-        
+
         # Show build statistics
         echo "📊 Documentation site statistics:"
         echo "Total files: $(find site -type f | wc -l)"
         echo "HTML files: $(find site -name "*.html" | wc -l)"
         echo "CSS files: $(find site -name "*.css" | wc -l)"
         echo "JS files: $(find site -name "*.js" | wc -l)"
-        
+
         # Check for broken internal links (basic check)
         if command -v grep >/dev/null 2>&1; then
           BROKEN_LINKS=$(find site -name "*.html" -exec grep -l "404.html\|not found" {} \; 2>/dev/null || true)
@@ -120,14 +120,14 @@ jobs:
             echo "✅ No obvious broken links detected"
           fi
         fi
-        
+
     - name: Upload documentation artifacts
       uses: actions/upload-artifact@v4
       with:
         name: documentation-site
         path: site/
         retention-days: 30
-        
+
     - name: Upload pages artifact (for GitHub Pages compatibility)
       uses: actions/upload-pages-artifact@v3
       with:
@@ -145,14 +145,14 @@ jobs:
   #   environment:
   #     name: production
   #     url: ${{ steps.deploy.outputs.url }}
-  #     
-  #   steps:  
+  #
+  #   steps:
   #   - name: Download documentation artifacts
   #     uses: actions/download-artifact@v4
   #     with:
   #       name: documentation-site
   #       path: site/
-  #       
+  #
   #   - name: Deploy to Cloudflare Pages
   #     id: deploy
   #     uses: cloudflare/pages-action@v1
@@ -162,15 +162,15 @@ jobs:
   #       projectName: code-weaver-mcp-docs
   #       directory: site
   #       gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-  #       
+  #
   #   - name: Add deployment summary
   #     run: |
   #       echo "## 🚀 Documentation Deployed" >> $GITHUB_STEP_SUMMARY
-  #       echo "The documentation has been successfully deployed to Cloudflare Pages." >> $GITHUB_STEP_SUMMARY  
+  #       echo "The documentation has been successfully deployed to Cloudflare Pages." >> $GITHUB_STEP_SUMMARY
   #       echo "**URL**: ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
   #       echo "**Deployment ID**: ${{ steps.deploy.outputs.id }}" >> $GITHUB_STEP_SUMMARY
 
-  # PLACEHOLDER: GitHub Pages deployment  
+  # PLACEHOLDER: GitHub Pages deployment
   # Alternative deployment option for GitHub Pages
   # Uncomment if you prefer GitHub Pages over Cloudflare Pages
   #
@@ -185,12 +185,12 @@ jobs:
   #   permissions:
   #     pages: write
   #     id-token: write
-  #     
+  #
   #   steps:
   #   - name: Deploy to GitHub Pages
   #     id: deployment
   #     uses: actions/deploy-pages@v4
-  #     
+  #
   #   - name: Add deployment summary
   #     run: |
   #       echo "## 📚 Documentation Deployed" >> $GITHUB_STEP_SUMMARY
@@ -202,22 +202,22 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
     - name: Download documentation artifacts
-      uses: actions/download-artifact@v4  
+      uses: actions/download-artifact@v4
       with:
         name: documentation-site
         path: site/
-        
+
     - name: Setup Node.js for link checking
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        
+
     - name: Install link checker
       run: npm install -g markdown-link-check
-      
+
     - name: Check documentation links
       run: |
         # Find all markdown files in the built site and check links

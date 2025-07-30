@@ -63,7 +63,11 @@ hk check
 lint = """
 #!/bin/bash
 echo "Running linting checks..."
-uv run ruff check .
+if [ "$CI" = "true" ]; then
+    uv run ruff check . --output-format=github
+else
+    uv run ruff check .
+fi
 """
 
 format = """
