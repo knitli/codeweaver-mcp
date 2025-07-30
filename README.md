@@ -11,7 +11,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 CodeWeaver is a next-generation Model Context Protocol (MCP) server built on an extensible plugin architecture. Navigate your entire codebase using natural language queries with your choice of embedding providers (Voyage AI, OpenAI, Cohere, HuggingFace), vector databases (Qdrant, Pinecone, Weaviate, ChromaDB), and data sources (filesystem, git, database, API, web). Enhanced with ast-grep's structural search capabilities across 20+ programming languages.
 
-![CodeWeaver Demo](https://img.shields.io/badge/MCP-Compatible-blue) ![Languages](https://img.shields.io/badge/Languages-20+-green) ![Providers](https://img.shields.io/badge/Providers-Extensible-purple) ![License](https://img.shields.io/badge/License-MIT-yellow)
+![CodeWeaver Demo](https://img.shields.io/badge/MCP-Compatible-blue) ![Languages](https://img.shields.io/badge/Languages-20+-green) ![Providers](https://img.shields.io/badge/Providers-Extensible-purple) ![License](https://img.shields.io/badge/License-MIT-yellow) ![License](https://img.shields.io/badge/License-Apache-2.0-yellow)
 
 ## 🌟 What Makes CodeWeaver Special
 
