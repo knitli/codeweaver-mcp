@@ -1,9 +1,3 @@
-# sourcery skip: lambdas-should-be-short
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Factory for creating vector database backends.
 
@@ -34,11 +28,7 @@ from codeweaver.types import (
 
 
 logger = logging.getLogger(__name__)
-
-# Type variables for factory returns
 BackendT = TypeVar("BackendT", bound=VectorBackend)
-
-# Custom backend capabilities type
 CustomBackendCapabilities = dict[str, Any]
 
 
@@ -51,8 +41,6 @@ class BackendConfig(BaseModel):
         validate_assignment=True,
         arbitrary_types_allowed=True,
     )
-
-    # Core connection settings
     provider: Annotated[
         type[CombinedProvider]
         | type[EmbeddingProvider]
@@ -74,8 +62,6 @@ class BackendConfig(BaseModel):
             description="Capabilities of the backend, required for custom backends to define their features",
         ),
     ]
-
-    # Advanced capabilities
     enable_hybrid_search: Annotated[
         bool, Field(default=False, description="Enable hybrid dense/sparse search")
     ]
@@ -88,8 +74,6 @@ class BackendConfig(BaseModel):
     enable_transactions: Annotated[
         bool, Field(default=False, description="Enable transaction support")
     ]
-
-    # Performance settings
     connection_timeout: Annotated[
         float,
         Field(
@@ -106,12 +90,8 @@ class BackendConfig(BaseModel):
     retry_count: Annotated[
         int, Field(default=3, ge=0, le=10, description="Number of retry attempts (0-10)")
     ]
-
-    # Storage preferences
     prefer_memory: Annotated[bool, Field(default=False, description="Prefer memory-based storage")]
     prefer_disk: Annotated[bool, Field(default=False, description="Prefer disk-based storage")]
-
-    # Provider-specific settings
     provider_options: Annotated[
         dict[str, Any] | None,
         Field(
@@ -134,16 +114,13 @@ class BackendConfig(BaseModel):
             url = url.strip()
             if len(url) == 0:
                 return None
-            # Basic URL validation - must start with http/https for web services
-            if not (
-                url.startswith((
-                    "http://",
-                    "https://",
-                    "postgresql://",
-                    "postgres://",
-                    "mongodb://",
-                ))
-            ):
+            if not url.startswith((
+                "http://",
+                "https://",
+                "postgresql://",
+                "postgres://",
+                "mongodb://",
+            )):
                 raise ValueError(f"URL must be a valid connection string, got: {url}")
         return url
 
@@ -156,25 +133,24 @@ class BackendFactory(CapabilityQueryMixin):
     automatic capability detection and intelligent fallbacks.
     """
 
-    # Registry of available backends
     _backends: ClassVar[
         dict[
-            Literal[  # We're being explicit about the expected keys
-                "annoy",  # noqa: PYI051
-                "chroma",  # noqa: PYI051
-                "custom",  # noqa: PYI051
-                "faiss",  # noqa: PYI051
-                "lancedb",  # noqa: PYI051
-                "marqo",  # noqa: PYI051
-                "milvus",  # noqa: PYI051
-                "opensearch",  # noqa: PYI051
-                "pgvector",  # noqa: PYI051
-                "pinecone",  # noqa: PYI051
-                "qdrant",  # noqa: PYI051
-                "redis",  # noqa: PYI051
-                "scann",  # noqa: PYI051
-                "vespa",  # noqa: PYI051
-                "weaviate",  # noqa: PYI051
+            Literal[
+                "annoy",
+                "chroma",
+                "custom",
+                "faiss",
+                "lancedb",
+                "marqo",
+                "milvus",
+                "opensearch",
+                "pgvector",
+                "pinecone",
+                "qdrant",
+                "redis",
+                "scann",
+                "vespa",
+                "weaviate",
             ]
             | str,
             ProviderKind,
@@ -196,79 +172,53 @@ class BackendFactory(CapabilityQueryMixin):
             ValueError: If provider is not supported
             BackendConnectionError: If backend connection fails
         """
-        # Handle both string and enum provider values
         if hasattr(config.provider, "value"):
             provider = config.provider.value.lower()
         else:
             provider = str(config.provider).lower()
-
         if provider not in cls._backends:
             available = ", ".join(cls._backends.keys())
             raise ValueError(
                 f"Unsupported backend provider: {provider}. Available providers: {available}"
             )
-
         backend_class, supports_hybrid = cls._backends[provider]
-
-        # Choose hybrid version if requested and supported
         if config.enable_hybrid_search and supports_hybrid:
             backend_class = cls._get_hybrid_backend_class(provider)
-
-        # Build backend-specific arguments
         backend_args = cls._build_backend_args(config)
-
         try:
             logger.info("Creating %s backend with hybrid=%s", provider, config.enable_hybrid_search)
-            return backend_class(**backend_args)
-
         except Exception as e:
             logger.exception("Failed to create %s backend")
-
             raise BackendConnectionError(
                 f"Failed to create {provider} backend", backend_type=provider
             ) from e
+        else:
+            return backend_class(**backend_args)
 
     @classmethod
     def _get_hybrid_backend_class(cls, provider: str) -> type[HybridSearchBackend]:
         """Get the hybrid search version of a backend."""
         if provider == "qdrant":
             return QdrantHybridBackend
-        # Add other hybrid backends here
-        # elif provider == "weaviate":
-        #     return WeaviateHybridBackend
-        # elif provider == "vespa":
-        #     return VespaHybridBackend
-
-        # Fallback to basic backend
         backend_class, _ = cls._backends[provider]
         return backend_class
 
     @classmethod
     def _build_backend_args(cls, config: BackendConfig) -> dict[str, Any]:
         """Build backend-specific arguments from configuration."""
-        # Handle both string and enum provider values
         if hasattr(config.provider, "value"):
             provider = config.provider.value.lower()
         else:
             provider = str(config.provider).lower()
-
-        # Mock backends don't use url/api_key
         args = {} if provider.startswith("mock") else {"url": config.url, "api_key": config.api_key}
-
-        # Add provider-specific settings
         if provider == "qdrant":
             args |= {
                 "enable_sparse_vectors": config.enable_sparse_vectors,
                 "sparse_on_disk": config.prefer_disk,
                 "timeout": config.request_timeout,
             }
-        # Add other provider-specific configurations here
-
-        # Add any custom provider options
         if config.provider_options:
             args |= config.provider_options
-
-        # Remove None values
         return {k: v for k, v in args.items() if v is not None}
 
     @classmethod
@@ -288,25 +238,19 @@ class BackendFactory(CapabilityQueryMixin):
             }
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
-        # Add planned providers using centralized BackendCapabilities model
         from codeweaver.types import get_all_backend_capabilities
 
-        # Get all backend capabilities from centralized source
         all_capabilities = get_all_backend_capabilities()
-
-        # Convert to legacy format for backward compatibility
         planned_providers = {
             provider: {
-                "available": False,  # Not yet implemented
+                "available": False,
                 "supports_hybrid_search": caps.supports_hybrid_search,
                 "supports_streaming": caps.supports_streaming,
                 "supports_transactions": caps.supports_transactions,
             }
             for provider, caps in all_capabilities.items()
-            if provider
-            not in cls._backends  # Only include planned backends, not already implemented ones
+            if provider not in cls._backends
         }
-
         providers |= planned_providers
         return providers
 
@@ -353,39 +297,28 @@ class BackendFactory(CapabilityQueryMixin):
         Returns:
             Configured backend instance
         """
-        # Parse URL to determine provider and connection details
         if url.startswith("qdrant://"):
             provider = "qdrant"
-            # Parse Qdrant URL format
-            # This is a simplified parser - in production, use proper URL parsing
             base_url = url.replace("qdrant://", "https://")
         elif url.startswith(("postgres://", "postgresql://")):
             provider = "pgvector"
             base_url = url
         else:
             raise ValueError(f"Unsupported URL scheme: {url}")
-
-        # Ensure we have a valid ProviderKind for the config
         kind = kwargs.pop("kind", ProviderKind.COMBINED)
-
         config = BackendConfig(provider=provider, kind=kind, url=base_url, **kwargs)
-
         return cls.create_backend(config)
 
 
-# Register default backends
 def _register_default_backends() -> None:
     """Register the default backend implementations."""
     try:
         from codeweaver.backends.qdrant import QdrantHybridBackend
 
-        # Register Qdrant as both basic and hybrid backend
         BackendFactory.register_backend("qdrant", QdrantHybridBackend, supports_hybrid=True)
         logger.info("Registered Qdrant backend")
-
     except ImportError as e:
         logger.warning("Failed to register Qdrant backend: %s", e)
 
 
-# Auto-register backends on module import
 _register_default_backends()

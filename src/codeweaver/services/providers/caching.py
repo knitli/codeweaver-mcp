@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Caching service provider for CodeWeaver.
 
@@ -118,9 +113,10 @@ class CachingService(BaseServiceProvider):
                 return len(str(value).encode("utf-8"))
             if isinstance(value, dict):
                 return len(json.dumps(value).encode("utf-8"))
-            return len(str(value).encode("utf-8"))
         except Exception:
             return 1024
+        else:
+            return len(str(value).encode("utf-8"))
 
     async def get(self, key: Any) -> Any | None:
         """Get value from cache.
@@ -258,13 +254,14 @@ class CachingService(BaseServiceProvider):
                 )
             if self._cleanup_task and self._cleanup_task.done():
                 return ServiceHealth(status=HealthStatus.DEGRADED, message="Cleanup task stopped")
-            return ServiceHealth(
-                status=HealthStatus.HEALTHY,
-                message=f"Cache active: {stats['total_entries']} entries, {stats['hit_rate']:.2f} hit rate",
-            )
         except Exception as e:
             return ServiceHealth(
                 status=HealthStatus.UNHEALTHY, message=f"Cache health check failed: {e}"
+            )
+        else:
+            return ServiceHealth(
+                status=HealthStatus.HEALTHY,
+                message=f"Cache active: {stats['total_entries']} entries, {stats['hit_rate']:.2f} hit rate",
             )
 
     def get_capabilities(self) -> ServiceCapabilities:

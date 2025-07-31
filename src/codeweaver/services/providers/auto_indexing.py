@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """Auto-indexing background service provider."""
 
 import asyncio
@@ -41,7 +36,6 @@ class CodebaseChangeHandler(FileSystemEventHandler):
         """Handle file modification events."""
         if event.is_directory:
             return
-
         file_path = Path(event.src_path)
         if self._should_process_file(file_path):
             self.create_and_store_task(file_path)
@@ -50,7 +44,6 @@ class CodebaseChangeHandler(FileSystemEventHandler):
         """Handle file creation events."""
         if event.is_directory:
             return
-
         file_path = Path(event.src_path)
         if self._should_process_file(file_path):
             self.create_and_store_task(file_path)
@@ -65,7 +58,6 @@ class CodebaseChangeHandler(FileSystemEventHandler):
         """Handle file deletion events."""
         if event.is_directory:
             return
-
         file_path = Path(event.src_path)
         if self._should_process_file(file_path):
             task = asyncio.create_task(self._remove_from_index(file_path))
@@ -75,26 +67,22 @@ class CodebaseChangeHandler(FileSystemEventHandler):
     def _should_process_file(self, file_path: Path) -> bool:
         """Check if file should be processed based on patterns."""
         raw_path = str(file_path)
-
-        # Check ignore patterns
         for pattern in self.service._auto_indexing_config.ignore_patterns:
             if pattern in raw_path:
                 return False
-
         return any(
-            file_path.match(pattern)
-            for pattern in self.service._auto_indexing_config.watch_patterns
+            (
+                file_path.match(pattern)
+                for pattern in self.service._auto_indexing_config.watch_patterns
+            )
         )
 
     async def _debounced_index_file(self, file_path: Path):
         """Index file with debouncing to avoid excessive processing."""
         file_key = str(file_path)
-
-        # Cancel existing debounce task for this file
         if file_key in self._debounce_tasks:
             self._debounce_tasks[file_key].cancel()
 
-        # Create new debounced task
         async def _delayed_index():
             await asyncio.sleep(self.service._auto_indexing_config.debounce_delay)
             await self.service._index_single_file(file_path)
@@ -133,18 +121,12 @@ class AutoIndexingService(BaseServiceProvider):
     def __init__(self, config: AutoIndexingConfig, logger: logging.Logger | None = None):
         """Initialize the auto-indexing service."""
         super().__init__(ServiceType.AUTO_INDEXING, config, logger)
-
-        # Configuration access
         self._auto_indexing_config = config
-
-        # Core components (initialized in _initialize_provider)
         self.observer: Observer | None = None
         self.watched_paths: set[str] = set()
         self.chunking_service: ChunkingService | None = None
         self.filtering_service: FilteringService | None = None
-        self.backend_registry = None  # Will be injected
-
-        # Indexing state
+        self.backend_registry = None
         self._indexing_queue: asyncio.Queue = asyncio.Queue(maxsize=config.indexing_queue_size)
         self._indexing_workers: list[asyncio.Task] = []
         self._indexing_stats = {
@@ -157,21 +139,13 @@ class AutoIndexingService(BaseServiceProvider):
     async def _initialize_provider(self) -> None:
         """Initialize with existing service dependencies."""
         self._logger.info("Initializing auto-indexing service with service dependencies")
-
         try:
-            # Get services through existing dependency injection patterns
             self.chunking_service = await self._get_chunking_service()
             self.filtering_service = await self._get_filtering_service()
             self.backend_registry = await self._get_backend_registry()
-
-            # Initialize file observer
             self.observer = Observer()
-
-            # Start indexing workers
             await self._start_indexing_workers()
-
             self._logger.info("Auto-indexing service initialized successfully")
-
         except Exception as e:
             self._logger.exception("Failed to initialize auto-indexing service")
             raise ServiceIntegrationError(
@@ -181,65 +155,47 @@ class AutoIndexingService(BaseServiceProvider):
     async def _shutdown_provider(self) -> None:
         """Shutdown provider-specific resources."""
         self._logger.info("Shutting down auto-indexing service")
-
-        # Stop file monitoring
         if self.observer and self.observer.is_alive():
             self.observer.stop()
             self.observer.join()
-
-        # Stop indexing workers
         for worker in self._indexing_workers:
             worker.cancel()
-
         if self._indexing_workers:
             await asyncio.gather(*self._indexing_workers, return_exceptions=True)
-
-        # Log final statistics
         self._logger.info(
             "Auto-indexing statistics: %d files indexed, %d failed, %d chunks created",
             self._indexing_stats["files_indexed"],
             self._indexing_stats["files_failed"],
             self._indexing_stats["total_chunks_created"],
         )
-
-        # Clean up
         self.watched_paths.clear()
         self.observer = None
 
     async def _check_health(self) -> bool:
         """Perform provider-specific health check."""
         try:
-            # Check if services are available
             if not self.chunking_service:
                 self._logger.warning("Chunking service not available")
                 return False
-
             if not self.filtering_service:
                 self._logger.warning("Filtering service not available")
                 return False
-
-            # Check if observer is running when paths are being watched
-            if self.watched_paths and not (self.observer and self.observer.is_alive()):
+            if self.watched_paths and (not (self.observer and self.observer.is_alive())):
                 self._logger.warning("File observer not running but paths are being watched")
                 return False
-
-            # Check service health
             chunking_health = await self.chunking_service.health_check()
             filtering_health = await self.filtering_service.health_check()
-
             if chunking_health.status == HealthStatus.UNHEALTHY:
                 self._logger.warning("Chunking service is unhealthy")
                 return False
-
             if filtering_health.status == HealthStatus.UNHEALTHY:
                 self._logger.warning("Filtering service is unhealthy")
                 return False
-
-            return True
-
         except Exception as e:
             self._logger.warning("Health check failed: %s", e)
             return False
+        else:
+            return True
 
     async def start_monitoring(self, path: str) -> None:
         """
@@ -254,27 +210,18 @@ class AutoIndexingService(BaseServiceProvider):
         if path in self.watched_paths:
             self._logger.info("Path already being monitored: %s", path)
             return
-
         self._logger.info("Starting monitoring for path: %s", path)
-
         try:
-            # Perform initial indexing if enabled
             if self._auto_indexing_config.initial_scan_enabled:
                 await self._index_path_initial(path)
-
-            # Setup file watching
             event_handler = CodebaseChangeHandler(self)
             self.observer.schedule(
                 event_handler, path, recursive=self._auto_indexing_config.recursive_monitoring
             )
-
-            # Start observer if not already running
             if not self.observer.is_alive():
                 self.observer.start()
-
             self.watched_paths.add(path)
             self._logger.info("Started monitoring path: %s", path)
-
         except Exception as e:
             self._logger.exception("Failed to start monitoring path %s: %s", path, e)
             raise ServiceIntegrationError(f"Failed to start monitoring {path}: {e}") from e
@@ -292,8 +239,6 @@ class AutoIndexingService(BaseServiceProvider):
         else:
             self.watched_paths.clear()
             self._logger.info("Stopped monitoring all paths")
-
-        # Stop observer if no paths are being watched
         if not self.watched_paths and self.observer and self.observer.is_alive():
             self.observer.stop()
             self.observer.join()
@@ -303,23 +248,16 @@ class AutoIndexingService(BaseServiceProvider):
         if not all([self.filtering_service, self.chunking_service]):
             self._logger.warning("Required services not available for indexing")
             return
-
         self._logger.info("Starting initial indexing of path: %s", path)
-
         try:
-            # Use existing filtering service for file discovery
             files = await self.filtering_service.discover_files(path)
-
             self._logger.info("Found %d files to index in %s", len(files), path)
-
-            # Queue files for indexing
             for file_path in files:
                 try:
                     await self._indexing_queue.put(file_path)
                 except asyncio.QueueFull:
                     self._logger.warning("Indexing queue full, skipping file: %s", file_path)
                     break
-
         except Exception as e:
             self._logger.exception("Failed to perform initial indexing of %s: %s", path, e)
 
@@ -333,8 +271,6 @@ class AutoIndexingService(BaseServiceProvider):
     async def _remove_file_from_index(self, file_path: Path) -> None:
         """Remove a file from the index."""
         try:
-            # This would integrate with the backend to remove file chunks
-            # For now, just log the action
             self._logger.debug("File removed from index: %s", file_path)
         except Exception as e:
             self._logger.warning("Failed to remove file from index %s: %s", file_path, e)
@@ -342,26 +278,19 @@ class AutoIndexingService(BaseServiceProvider):
     async def _start_indexing_workers(self) -> None:
         """Start background indexing workers."""
         num_workers = self._auto_indexing_config.max_concurrent_indexing
-
         for i in range(num_workers):
             worker = asyncio.create_task(self._indexing_worker(f"worker-{i}"))
             self._indexing_workers.append(worker)
-
         self._logger.info("Started %d indexing workers", num_workers)
 
     async def _indexing_worker(self, worker_name: str) -> None:
         """Background worker for processing indexing queue."""
         self._logger.debug("Starting indexing worker: %s", worker_name)
-
         while True:
             try:
-                # Get file from queue with timeout
                 file_path = await asyncio.wait_for(self._indexing_queue.get(), timeout=30.0)
-
                 await self._process_file_for_indexing(file_path, worker_name)
-
             except TimeoutError:
-                # Normal timeout, continue
                 continue
             except asyncio.CancelledError:
                 self._logger.debug("Indexing worker %s cancelled", worker_name)
@@ -372,33 +301,21 @@ class AutoIndexingService(BaseServiceProvider):
     async def _process_file_for_indexing(self, file_path: Path, worker_name: str) -> None:
         """Process a single file for indexing."""
         try:
-            # Check file size limits
             if file_path.stat().st_size > self._auto_indexing_config.max_file_size:
                 self._logger.debug("Skipping large file: %s", file_path)
                 return
-
-            # Read file content
             content = await self._read_file_content(file_path)
-
             if not content.strip():
                 self._logger.debug("Skipping empty file: %s", file_path)
                 return
-
-            # Use existing chunking service
             chunks = await self.chunking_service.chunk_content(content, str(file_path))
-
-            # Store chunks using existing backend patterns
             await self._store_chunks_via_backend(file_path, chunks)
-
-            # Update statistics
             self._indexing_stats["files_indexed"] += 1
             self._indexing_stats["total_chunks_created"] += len(chunks)
             self._indexing_stats["last_indexing_time"] = asyncio.get_event_loop().time()
-
             self._logger.debug(
                 "Worker %s indexed file %s (%d chunks)", worker_name, file_path, len(chunks)
             )
-
         except Exception as e:
             self._indexing_stats["files_failed"] += 1
             self._logger.warning("Worker %s failed to index file %s: %s", worker_name, file_path, e)
@@ -409,40 +326,28 @@ class AutoIndexingService(BaseServiceProvider):
             with file_path.open("r", encoding="utf-8") as f:
                 return f.read()
         except UnicodeDecodeError:
-            # Try with fallback encoding
             with file_path.open("r", encoding="latin1") as f:
                 return f.read()
 
     async def _store_chunks_via_backend(self, file_path: Path, chunks: list[ContentItem]) -> None:
         """Store chunks using existing backend patterns."""
-        # This is a placeholder for backend integration
-        # In the real implementation, this would use the backend registry
-        # to store chunks in the vector database
         self._logger.debug("Storing %d chunks for file: %s", len(chunks), file_path)
 
     async def _get_chunking_service(self) -> ChunkingService | None:
         """Get chunking service through dependency injection."""
-        # Placeholder for actual dependency injection
-        # In real implementation: return await self.services_manager.get_service("chunking")
         return None
 
     async def _get_filtering_service(self) -> FilteringService | None:
         """Get filtering service through dependency injection."""
-        # Placeholder for actual dependency injection
-        # In real implementation: return await self.services_manager.get_service("filtering")
         return None
 
     async def _get_backend_registry(self):
         """Get backend registry through dependency injection."""
-        # Placeholder for actual dependency injection
-        # In real implementation: return await self.services_manager.get_service("backend_registry")
         return
 
     async def health_check(self) -> ServiceHealth:
         """Enhanced health check with auto-indexing specific metrics."""
         base_health = await super().health_check()
-
-        # Add auto-indexing specific metadata
         base_health.metadata = {
             "watched_paths_count": len(self.watched_paths),
             "watched_paths": list(self.watched_paths),
@@ -455,5 +360,4 @@ class AutoIndexingService(BaseServiceProvider):
             "chunking_service_available": bool(self.chunking_service),
             "filtering_service_available": bool(self.filtering_service),
         }
-
         return base_health

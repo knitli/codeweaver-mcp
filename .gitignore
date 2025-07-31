@@ -10,6 +10,7 @@
 mise.local.toml
 mise.local.toml.license
 hk.local.pkl.license
+.ruff_cache
 
 # non-public working files
 .workbench/*

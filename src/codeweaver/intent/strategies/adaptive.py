@@ -57,7 +57,7 @@ class AdaptiveStrategy(BaseServiceProvider, IntentStrategy):
     async def _check_health(self) -> bool:
         """Check adaptive strategy health."""
         try:
-            from codeweaver.server import search_code_handler
+            from codeweaver.server import search_code_handler  # noqa: F401
         except ImportError:
             self.logger.warning("Basic handlers not available")
             return False

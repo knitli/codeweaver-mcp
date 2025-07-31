@@ -1,9 +1,3 @@
-# sourcery skip: do-not-use-staticmethod, lambdas-should-be-short
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Configuration management for Code Weaver MCP server.
 
@@ -26,7 +20,6 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-# Import configuration components
 from codeweaver.backends.config import BackendConfigExtended
 from codeweaver.providers.config import (
     CohereConfig,
@@ -49,7 +42,6 @@ class ChunkingConfig(BaseModel):
     """Configuration for code chunking."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     max_chunk_size: Annotated[int, Field(default=1500, ge=100, le=10000)] = Field(
         description="Maximum chunk size in characters"
     )
@@ -59,8 +51,6 @@ class ChunkingConfig(BaseModel):
     max_file_size_mb: Annotated[int, Field(default=1, ge=1, le=100)] = Field(
         description="Skip files larger than this (MB)"
     )
-
-    # Language-specific settings
     language_settings: dict[str, dict[str, Any]] = Field(
         default_factory=dict, description="Language-specific chunking settings"
     )
@@ -77,8 +67,6 @@ class IndexingConfig(BaseModel):
     """Configuration for codebase indexing."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # File filtering
     use_gitignore: bool = Field(default=True, description="Use .gitignore patterns for filtering")
     additional_ignore_patterns: list[str] = Field(
         default_factory=lambda: [
@@ -100,16 +88,12 @@ class IndexingConfig(BaseModel):
         ],
         description="Additional patterns to ignore during indexing",
     )
-
-    # File watching
     enable_auto_reindex: bool = Field(
         default=False, description="Enable automatic reindexing on file changes"
     )
     watch_debounce_seconds: Annotated[float, Field(default=2.0, ge=0.1, le=60.0)] = Field(
         description="Debounce time for file watching"
     )
-
-    # Performance
     batch_size: Annotated[int, Field(default=8, ge=1, le=100)] = Field(
         description="Batch size for indexing operations"
     )
@@ -122,29 +106,21 @@ class RateLimitConfig(BaseModel):
     """Configuration for API rate limiting and backoff."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # Voyage AI rate limiting
     voyage_requests_per_minute: Annotated[int, Field(default=100, ge=1, le=10000)] = Field(
         description="Voyage AI requests per minute"
     )
     voyage_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(
         description="Voyage AI tokens per minute"
     )
-
-    # OpenAI rate limiting
     openai_requests_per_minute: Annotated[int, Field(default=5000, ge=1, le=50000)] = Field(
         description="OpenAI requests per minute"
     )
     openai_tokens_per_minute: Annotated[int, Field(default=1000000, ge=1000, le=10000000)] = Field(
         description="OpenAI tokens per minute"
     )
-
-    # Qdrant rate limiting
     qdrant_requests_per_second: Annotated[int, Field(default=100, ge=1, le=1000)] = Field(
         description="Qdrant requests per second"
     )
-
-    # Exponential backoff
     initial_backoff_seconds: Annotated[float, Field(default=1.0, ge=0.1, le=10.0)] = Field(
         description="Initial backoff time"
     )
@@ -163,14 +139,11 @@ class ServerConfig(BaseModel):
     """Configuration for the MCP server."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     server_name: str = Field(default="codeweaver-mcp", description="MCP server name")
     server_version: str = Field(default="1.0.0", description="MCP server version")
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = Field(
         default="INFO", description="Logging level"
     )
-
-    # Performance settings
     enable_request_logging: bool = Field(
         default=False, description="Enable request/response logging"
     )
@@ -183,18 +156,12 @@ class ProviderConfig(BaseModel):
     """Modern provider configuration using pydantic models."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # Primary embedding provider
     embedding: EmbeddingProviderConfig | CombinedProviderConfig | None = Field(
         default=None, description="Primary embedding provider configuration"
     )
-
-    # Primary reranking provider
     reranking: RerankingProviderConfig | CombinedProviderConfig | None = Field(
         default=None, description="Primary reranking provider configuration"
     )
-
-    # Provider-specific configurations
     voyage_ai: VoyageConfig | None = Field(
         default=None, description="Voyage AI provider configuration"
     )
@@ -227,7 +194,6 @@ class DefaultsConfig(BaseModel):
     """Configuration for default behavior and profiles."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     profile: Annotated[
         str, Field(default="codeweaver_original", description="Configuration profile to use")
     ]
@@ -246,7 +212,6 @@ class PluginRegistryConfig(BaseModel):
     """Plugin registry configuration for controlling plugin behavior."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enabled_plugins: Annotated[
         list[str],
         Field(default=["*"], description="List of enabled plugins (* means all discovered)"),
@@ -269,7 +234,6 @@ class CustomPluginConfig(BaseModel):
     """Configuration for a custom plugin."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enabled: Annotated[bool, Field(default=True, description="Whether plugin is enabled")]
     plugin_type: Annotated[ComponentType, Field(description="Type of plugin")]
     module_path: Annotated[str, Field(description="Python module path")]
@@ -296,7 +260,6 @@ class PluginsConfig(BaseModel):
     """Enhanced plugin system configuration."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enabled: Annotated[bool, Field(default=True, description="Enable plugin system")]
     auto_discover: Annotated[
         bool, Field(default=True, description="Automatically discover plugins")
@@ -340,7 +303,6 @@ class ProfileConfig(BaseModel):
     """Configuration profile definition."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     name: Annotated[str, Field(description="Profile name")]
     description: Annotated[str, Field(description="Profile description")]
     data_sources: Annotated[
@@ -371,7 +333,6 @@ class FactoryConfig(BaseModel):
     """Factory system configuration."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enable_dependency_injection: Annotated[
         bool, Field(default=True, description="Enable dependency injection")
     ]
@@ -405,14 +366,11 @@ class DataSourceConfig(BaseModel):
     """Data source configuration."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enabled: bool = Field(default=True, description="Enable data sources system")
     default_source_type: str = Field(default="filesystem", description="Default source type")
     max_concurrent_sources: Annotated[int, Field(default=5, ge=1, le=20)] = Field(
         description="Maximum concurrent sources"
     )
-
-    # Content processing
     enable_content_deduplication: bool = Field(
         default=True, description="Enable content deduplication"
     )
@@ -420,8 +378,6 @@ class DataSourceConfig(BaseModel):
         description="Content cache TTL in hours"
     )
     enable_metadata_extraction: bool = Field(default=True, description="Enable metadata extraction")
-
-    # Source definitions
     sources: list[dict[str, Any]] = Field(
         default_factory=list, description="List of configured data sources"
     )
@@ -435,13 +391,11 @@ class CodeWeaverConfig(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        # Environment variable settings
         env_prefix="CW_",
         env_nested_delimiter="__",
         env_ignore_empty=True,
         env_file=".env",
         env_file_encoding="utf-8",
-        # Extra configuration
         extra="allow",
         validate_assignment=True,
         str_strip_whitespace=True,
@@ -466,18 +420,9 @@ class CodeWeaverConfig(BaseSettings):
         4. .env files
         5. Secret files (lowest priority)
         """
-        # Create custom TOML source with multiple search paths
         toml_settings = CustomTomlSource(settings_cls)
+        return (init_settings, env_settings, toml_settings, dotenv_settings, file_secret_settings)
 
-        return (
-            init_settings,  # Highest priority: direct instantiation
-            env_settings,  # Environment variables with CW_ prefix
-            toml_settings,  # TOML configuration files
-            dotenv_settings,  # .env files
-            file_secret_settings,  # Secret files (lowest priority)
-        )
-
-    # Core configuration sections
     backend: BackendConfigExtended = Field(
         default_factory=BackendConfigExtended, description="Vector database backend configuration"
     )
@@ -487,31 +432,21 @@ class CodeWeaverConfig(BaseSettings):
     data_sources: DataSourceConfig = Field(
         default_factory=DataSourceConfig, description="Data source configuration"
     )
-
-    # NEW: Enhanced configuration sections
     defaults: DefaultsConfig = Field(
         default_factory=DefaultsConfig, description="Default behavior and profile configuration"
     )
-
     plugins: PluginsConfig = Field(
         default_factory=PluginsConfig, description="Plugin system configuration"
     )
-
     factory: FactoryConfig = Field(
         default_factory=FactoryConfig, description="Factory system configuration"
     )
-
-    # Services integration
     services: ServicesConfig = Field(
         default_factory=ServicesConfig, description="Service layer configuration"
     )
-
-    # Profiles
     profiles: dict[str, ProfileConfig] = Field(
         default_factory=dict, description="Available configuration profiles"
     )
-
-    # Shared configuration
     chunking: ChunkingConfig = Field(
         default_factory=ChunkingConfig, description="Code chunking configuration"
     )
@@ -589,11 +524,8 @@ class CodeWeaverConfig(BaseSettings):
 
     def _get_profile(self, profile_name: str) -> ProfileConfig | None:
         """Get profile configuration by name."""
-        # Check user-defined profiles first
         if profile_name in self.profiles:
             return self.profiles[profile_name]
-
-        # Check built-in profiles
         built_in_profiles = self._get_builtin_profiles()
         return built_in_profiles.get(profile_name)
 
@@ -711,8 +643,6 @@ class CodeWeaverConfig(BaseSettings):
             if hasattr(self.providers, provider_name):
                 provider_obj = getattr(self.providers, provider_name)
                 if provider_obj is None:
-                    # Create the provider config if it doesn't exist
-                    # This would need proper provider type detection
                     logger.warning(
                         "Cannot create provider %s from profile - not implemented", provider_name
                     )
@@ -723,7 +653,6 @@ class CodeWeaverConfig(BaseSettings):
 
     def _setup_original_defaults(self) -> None:
         """Set up original CodeWeaver defaults."""
-        # Set ast-grep as default source if not configured
         if not self.data_sources.sources:
             self.data_sources.sources = [
                 {
@@ -739,12 +668,8 @@ class CodeWeaverConfig(BaseSettings):
                     },
                 }
             ]
-
-        # Set chunking service to ast-grep based
         if self.services.chunking.provider == "fastmcp_chunking":
             self.services.chunking.provider = "ast_grep_chunking"
-
-        # Enable auto-reindexing by default
         if (
             not hasattr(self.indexing, "enable_auto_reindex")
             or not self.indexing.enable_auto_reindex
@@ -767,48 +692,41 @@ class CustomTomlSource(TomlConfigSettingsSource):
         self.settings_cls = settings_cls
         self.loaded_from = "None"
         self.initialization_error = None
-
         self._local_search_paths = None
         self._search_paths = None
         if toml_file is not None:
-            # Use explicit file path
             self.loaded_from = str(toml_file)
             try:
                 super().__init__(settings_cls, toml_file=toml_file)
             except Exception as e:
                 self.initialization_error = e
-                # Initialize with empty TOML file to avoid parent class errors
                 super().__init__(settings_cls, toml_file=None)
         else:
-            # TODO: Insert the local paths into .gitignore with the `init` command
-            # Search for configuration files in priority order
             import os
             import platform
 
             local_search_paths = [
-                Path(".local.codeweaver.toml"),  # Local configuration file
-                Path(".codeweaver") / "local.config.toml",  # Workspace local alternative
-                Path(".codeweaver") / ".local.config.toml",  # Workspace local alternative
-                Path(".codeweaver.toml"),  # Repository level
-                Path(".codeweaver") / "config.toml",  # Repository level alternative
-                Path(".codeweaver") / ".codeweaver.toml",  # Repository level alternative
+                Path(".local.codeweaver.toml"),
+                Path(".codeweaver") / "local.config.toml",
+                Path(".codeweaver") / ".local.config.toml",
+                Path(".codeweaver.toml"),
+                Path(".codeweaver") / "config.toml",
+                Path(".codeweaver") / ".codeweaver.toml",
             ]
             search_paths = [
-                Path(os.environ.get("CW_CONFIG_FILE", "")),  # Environment variable override
-                *local_search_paths,  # Local configuration files
+                Path(os.environ.get("CW_CONFIG_FILE", "")),
+                *local_search_paths,
                 Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
                 / "codeweaver"
-                / "config.toml",  # User level
+                / "config.toml",
             ]
             if platform.system() == "Windows":
-                # Windows user config location
                 search_paths.append(
                     Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
                     / "codeweaver"
                     / "config.toml"
                 )
             if search_paths[0] == "":
-                # If the first path is empty, remove it
                 search_paths.pop(0)
             found_file = next((path for path in search_paths if path.exists()), None)
             self.loaded_from = str(found_file) if found_file else "None"
@@ -816,12 +734,10 @@ class CustomTomlSource(TomlConfigSettingsSource):
                 super().__init__(settings_cls, toml_file=found_file)
             except Exception as e:
                 self.initialization_error = e
-                # Initialize with empty TOML file to avoid parent class errors
                 super().__init__(settings_cls, toml_file=None)
 
     def __call__(self) -> dict[str, Any]:
         """Load TOML data with enhanced error handling, logging, and migration support."""
-        # If there was an initialization error, return empty dict
         if self.initialization_error:
             logger.warning(
                 "Failed to load TOML configuration from %s: %s",
@@ -829,12 +745,10 @@ class CustomTomlSource(TomlConfigSettingsSource):
                 self.initialization_error,
             )
             return {}
-
         try:
             data = super().__call__()
             if data and hasattr(self, "toml_file") and self.toml_file:
                 logger.info("Loaded configuration from TOML: %s", self.loaded_from)
-
         except FileNotFoundError:
             logger.debug("TOML configuration file not found: %s", self.loaded_from)
             return {}
@@ -887,7 +801,7 @@ class ConfigManager:
                 / "codeweaver"
                 / "config.toml"
             )
-        return Path("/etc/codeweaver/config.toml")  # Common Linux system config path
+        return Path("/etc/codeweaver/config.toml")
 
     def get_config(self) -> CodeWeaverConfig:
         """Get the current configuration, loading it if necessary."""
@@ -899,17 +813,13 @@ class ConfigManager:
         """Load configuration using pydantic-settings with custom source."""
         try:
             if self.config_path:
-                # Load with specific TOML file
                 return CodeWeaverConfigWithFile(toml_file=self.config_path)
-            # Load with default search paths
-            return CodeWeaverConfig()
         except Exception:
             logger.exception("Failed to load configuration")
             logger.info("Using default configuration")
-            # Return minimal working configuration
-            return CodeWeaverConfig(
-                _env_file=None  # Disable .env loading on fallback
-            )
+            return CodeWeaverConfig(_env_file=None)
+        else:
+            return CodeWeaverConfig()
 
     def reload_config(self) -> CodeWeaverConfig:
         """Reload configuration, clearing cache."""
@@ -927,23 +837,16 @@ class ConfigManager:
             Path where the configuration was saved
         """
         if config_path is None:
-            # Use the user config location as default for saving
             save_path = Path.home() / ".config" / "codeweaver" / "config.toml"
         else:
             save_path = Path(config_path)
-
         save_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Use pydantic's model_dump for serialization
         config_data = config.model_dump(exclude_unset=True)
-
-        # Convert to TOML format
         try:
             import tomli_w
 
             with save_path.open("wb") as f:
                 tomli_w.dump(config_data, f)
-
             logger.info("Saved configuration to: %s", save_path)
         except ImportError:
             logger.exception(
@@ -971,28 +874,22 @@ class ConfigManager:
             "file_path": str(path),
             "loaded_from": None,
         }
-
         if not path.exists():
             result["errors"].append(f"Configuration file does not exist: {path}")
             return result
-
         try:
             self._load_from_default_path(path, result)
         except Exception as e:
             result["errors"].append(f"Configuration validation failed: {e}")
-
         return result
 
     def _load_from_default_path(self, path, result) -> None:
         """Load configuration from a specific path and validate it."""
-        # Try to load the config with the specific path
         temp_manager = ConfigManager(config_path=path)
         config = temp_manager.get_config()
         result["valid"] = True
         result["loaded_from"] = str(path)
         result["warnings"].append("Configuration file loaded and validated successfully")
-
-        # Add configuration summary for validation feedback
         result["summary"] = {
             "backend_provider": config.get_effective_backend_provider(),
             "embedding_provider": config.get_effective_embedding_provider(),
@@ -1010,7 +907,6 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
             toml_file: Path to specific TOML configuration file
             **kwargs: Additional configuration parameters
         """
-        # Store the toml_file as a class variable for the customize_sources method
         type(self)._current_toml_file = toml_file
         super().__init__(**kwargs)
 
@@ -1024,14 +920,11 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         """Customize sources to use explicit TOML file."""
-        # Use the specific TOML file if available
         toml_file = getattr(cls, "_current_toml_file", None)
         toml_settings = CustomTomlSource(settings_cls, toml_file=toml_file)
-
         return (init_settings, env_settings, toml_settings, dotenv_settings, file_secret_settings)
 
 
-# Configuration-related exceptions
 class ConfigurationError(Exception):
     """Configuration-related errors."""
 
@@ -1044,15 +937,12 @@ class PluginConfigurationError(ConfigurationError):
     """Plugin configuration errors."""
 
 
-# Configuration setup functions
 def setup_development_config() -> CodeWeaverConfig:
     """Set up development configuration with optimized settings for development work."""
     return CodeWeaverConfig(
         server={"log_level": "DEBUG", "enable_request_logging": True},
         indexing={"batch_size": 4, "enable_auto_reindex": True},
-        chunking={
-            "max_chunk_size": 1000  # Smaller for faster processing
-        },
+        chunking={"max_chunk_size": 1000},
     )
 
 
@@ -1073,13 +963,10 @@ def setup_testing_config() -> CodeWeaverConfig:
         server={"log_level": "CRITICAL", "enable_request_logging": False},
         indexing={"batch_size": 1, "enable_auto_reindex": False},
         chunking={"max_chunk_size": 500, "min_chunk_size": 25},
-        data_sources={
-            "enabled": False  # Disable for testing unless explicitly needed
-        },
+        data_sources={"enabled": False},
     )
 
 
-# Configuration validation
 class ConfigValidator:
     """Validates configuration settings and provides recommendations."""
 
@@ -1090,59 +977,38 @@ class ConfigValidator:
     def validate(self) -> dict[str, Any]:
         """Validate the configuration and return results."""
         results = {"valid": True, "errors": [], "warnings": [], "recommendations": []}
-
-        # Validate backend configuration
         backend_validation = self._validate_backend()
         results["errors"].extend(backend_validation["errors"])
         results["warnings"].extend(backend_validation["warnings"])
-
-        # Validate provider configuration
         provider_validation = self._validate_providers()
         results["errors"].extend(provider_validation["errors"])
         results["warnings"].extend(provider_validation["warnings"])
-
-        # Validate performance settings
         performance_validation = self._validate_performance()
         results["warnings"].extend(performance_validation["warnings"])
         results["recommendations"].extend(performance_validation["recommendations"])
-
-        # Set overall validity
         results["valid"] = len(results["errors"]) == 0
-
         return results
 
     def _validate_backend(self) -> dict[str, list[str]]:
         """Validate backend configuration."""
         errors = []
         warnings = []
-
         backend = self.config.backend
-
-        # Check required backend settings
         if not backend.url:
             errors.append("Backend URL is required")
-
-        if backend.provider == "qdrant" and not backend.api_key:
+        if backend.provider == "qdrant" and (not backend.api_key):
             warnings.append("Qdrant API key is not set - may be required for authentication")
-
-        # Check collection configuration
         if not backend.collection_name:
             warnings.append("Backend collection name is not set")
-
         return {"errors": errors, "warnings": warnings}
 
     def _validate_providers(self) -> dict[str, list[str]]:
         """Validate provider configuration."""
         errors = []
         warnings = []
-
         providers = self.config.providers
-
-        # Check embedding provider
         if not providers.embedding:
             warnings.append("No embedding provider configured")
-
-        # Check if any providers are configured
         provider_configs = [
             providers.voyage_ai,
             providers.openai,
@@ -1151,38 +1017,27 @@ class ConfigValidator:
             providers.sentence_transformers,
             providers.openai_compatible,
         ]
-
         if not any(provider_configs):
             errors.append("No provider configurations found")
-
         return {"errors": errors, "warnings": warnings}
 
     def _validate_performance(self) -> dict[str, list[str]]:
         """Validate performance settings."""
         warnings = []
         recommendations = []
-
         chunking = self.config.chunking
         indexing = self.config.indexing
-
-        # Check chunk sizes
         if chunking.max_chunk_size > 3000:
             warnings.append("Large chunk sizes may impact embedding performance")
-
         if chunking.min_chunk_size < 25:
             warnings.append("Very small chunks may produce poor search results")
-
-        # Check batch sizes
         if indexing.batch_size > 20:
             recommendations.append("Consider reducing batch size for better memory usage")
-
         if indexing.batch_size < 4:
             recommendations.append("Consider increasing batch size for better performance")
-
         return {"warnings": warnings, "recommendations": recommendations}
 
 
-# Configuration schema utilities
 class ConfigSchema:
     """Utilities for generating and validating configuration schemas."""
 
@@ -1209,7 +1064,6 @@ class ConfigSchema:
             return {"valid": True, "errors": []}
 
 
-# Configuration builder classes
 class BackendConfigBuilder:
     """Builder for backend configurations."""
 
@@ -1241,8 +1095,6 @@ class BackendConfigBuilder:
     def build(self) -> dict[str, Any]:
         """Build the backend configuration."""
         config = {"provider": self.backend_type, **self.config_data}
-
-        # Set provider-specific defaults
         if self.backend_type == "qdrant":
             config.setdefault("url", "http://localhost:6333")
             config.setdefault("collection_name", "codeweaver-embeddings")
@@ -1251,7 +1103,6 @@ class BackendConfigBuilder:
         elif self.backend_type == "weaviate":
             config.setdefault("url", "http://localhost:8080")
             config.setdefault("collection_name", "CodeWeaver")
-
         return config
 
 
@@ -1296,8 +1147,6 @@ class ProviderConfigBuilder:
     def build(self) -> dict[str, Any]:
         """Build the provider configuration."""
         config = {**self.config_data}
-
-        # Set provider-specific defaults
         match self.provider_type:
             case "voyage":
                 config.setdefault("model", "voyage-code-3")
@@ -1325,7 +1174,6 @@ class ProviderConfigBuilder:
         return config
 
 
-# Global config manager instance
 _config_manager: ConfigManager | None = None
 
 
@@ -1344,86 +1192,16 @@ def get_config() -> CodeWeaverConfig:
 
 def create_example_config() -> str:
     """Create an example TOML configuration."""
-    return """# Code Weaver MCP Server Configuration
-# Place this file in one of these locations (highest precedence first):
-# 1. .local.codeweaver.toml (workspace local)
-# 2. .codeweaver.toml (repository)
-# 3. ~/.config/codeweaver/config.toml (user)
-
-# Vector Database Backend Configuration
-[backend]
-provider = "qdrant"
-url = "YOUR_BACKEND_URL"  # Can also use CW_BACKEND__URL env var
-api_key = "YOUR_BACKEND_API_KEY"  # Can also use CW_BACKEND__API_KEY env var
-collection_name = "code-embeddings"
-enable_hybrid_search = false
-enable_sparse_vectors = false
-
-# Provider Configuration
-[providers]
-
-# Voyage AI Configuration (Combined embedding + reranking)
-[providers.voyage_ai]
-api_key = "YOUR_VOYAGE_API_KEY"  # Can also use CW_PROVIDERS__VOYAGE_AI__API_KEY env var
-model = "voyage-code-3"
-embedding_model = "voyage-code-3"
-reranking_model = "voyage-rerank-2"
-enable_embeddings = true
-enable_reranking = true
-
-# Set active providers
-[providers.embedding]
-api_key = "YOUR_VOYAGE_API_KEY"
-model = "voyage-code-3"
-
-[providers.reranking]
-api_key = "YOUR_VOYAGE_API_KEY"
-model = "voyage-rerank-2"
-
-# Data Sources Configuration
-[data_sources]
-enabled = true
-default_source_type = "filesystem"
-
-# File System Source
-[[data_sources.sources]]
-type = "filesystem"
-enabled = true
-priority = 1
-source_id = "main_codebase"
-
-[data_sources.sources.config]
-root_path = "."
-use_gitignore = true
-max_file_size_mb = 1
-
-# Shared Configuration
-[chunking]
-max_chunk_size = 1500
-min_chunk_size = 50
-max_file_size_mb = 1
-
-[indexing]
-use_gitignore = true
-enable_auto_reindex = false
-batch_size = 8
-
-[rate_limiting]
-voyage_requests_per_minute = 100
-voyage_tokens_per_minute = 1000000
-max_retries = 5
-
-[server]
-server_name = "codeweaver-mcp"
-log_level = "INFO"
-max_search_results = 50
-"""
+    return '# Code Weaver MCP Server Configuration\n# Place this file in one of these locations (highest precedence first):\n# 1. .local.codeweaver.toml (workspace local)\n# 2. .codeweaver.toml (repository)\n# 3. ~/.config/codeweaver/config.toml (user)\n\n# Vector Database Backend Configuration\n[backend]\nprovider = "qdrant"\nurl = "YOUR_BACKEND_URL"  # Can also use CW_BACKEND__URL env var\napi_key = "YOUR_BACKEND_API_KEY"  # Can also use CW_BACKEND__API_KEY env var\ncollection_name = "code-embeddings"\nenable_hybrid_search = false\nenable_sparse_vectors = false\n\n# Provider Configuration\n[providers]\n\n# Voyage AI Configuration (Combined embedding + reranking)\n[providers.voyage_ai]\napi_key = "YOUR_VOYAGE_API_KEY"  # Can also use CW_PROVIDERS__VOYAGE_AI__API_KEY env var\nmodel = "voyage-code-3"\nembedding_model = "voyage-code-3"\nreranking_model = "voyage-rerank-2"\nenable_embeddings = true\nenable_reranking = true\n\n# Set active providers\n[providers.embedding]\napi_key = "YOUR_VOYAGE_API_KEY"\nmodel = "voyage-code-3"\n\n[providers.reranking]\napi_key = "YOUR_VOYAGE_API_KEY"\nmodel = "voyage-rerank-2"\n\n# Data Sources Configuration\n[data_sources]\nenabled = true\ndefault_source_type = "filesystem"\n\n# File System Source\n[[data_sources.sources]]\ntype = "filesystem"\nenabled = true\npriority = 1\nsource_id = "main_codebase"\n\n[data_sources.sources.config]\nroot_path = "."\nuse_gitignore = true\nmax_file_size_mb = 1\n\n# Shared Configuration\n[chunking]\nmax_chunk_size = 1500\nmin_chunk_size = 50\nmax_file_size_mb = 1\n\n[indexing]\nuse_gitignore = true\nenable_auto_reindex = false\nbatch_size = 8\n\n[rate_limiting]\nvoyage_requests_per_minute = 100\nvoyage_tokens_per_minute = 1000000\nmax_retries = 5\n\n[server]\nserver_name = "codeweaver-mcp"\nlog_level = "INFO"\nmax_search_results = 50\n'
 
 
 def get_effective_config_summary() -> dict[str, Any]:
     """Get a summary of the effective configuration."""
     try:
         config = get_config()
+    except Exception as e:
+        return {"error": str(e)}
+    else:
         return {
             "backend": {
                 "provider": config.get_effective_backend_provider(),
@@ -1444,5 +1222,3 @@ def get_effective_config_summary() -> dict[str, Any]:
                 }),
             },
         }
-    except Exception as e:
-        return {"error": str(e)}

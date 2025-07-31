@@ -5,7 +5,7 @@
 
 """Enums for intent types, scopes, and complexities."""
 
-from codweaver.types.base_enum import BaseEnum
+from codeweaver.types.base_enum import BaseEnum
 
 
 class IntentType(BaseEnum):

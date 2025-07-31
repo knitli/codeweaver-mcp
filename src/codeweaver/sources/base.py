@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Base protocols and data structures for CodeWeaver data source abstraction.
 
@@ -73,26 +68,17 @@ class SourceConfig(BaseModel):
     """Base configuration for all sources."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
-
-    # Content filtering
     include_patterns: Annotated[list[str], Field(default_factory=list)]
     exclude_patterns: Annotated[list[str], Field(default_factory=list)]
     max_file_size_mb: Annotated[int, Field(1, ge=1, le=1000)]
-
-    # Performance settings
     batch_size: Annotated[int, Field(8, ge=1, le=1000)]
     max_concurrent_requests: Annotated[int, Field(10, ge=1, le=100)]
     request_timeout_seconds: Annotated[int, Field(30, ge=1, le=300)]
-
-    # Change detection
     enable_change_watching: bool = Field(False, description="Enable change watching")
     change_check_interval_seconds: Annotated[int, Field(60, ge=1, le=3600)]
-
-    # Content processing
     enable_content_deduplication: bool = Field(True, description="Enable content deduplication")
     enable_metadata_extraction: bool = Field(False, description="Enable metadata extraction")
     supported_languages: list[str] = Field(
@@ -224,14 +210,12 @@ class AbstractDataSource(ABC):
         """Default implementation for change watching."""
         if SourceCapability.CHANGE_WATCHING not in self.get_capabilities():
             raise NotImplementedError(f"Change watching not supported by {self.source_type}")
-
         watcher = SourceWatcher(self.source_id, callback)
         self._watchers.append(watcher)
         return watcher
 
     async def validate_source(self, config: SourceConfig) -> bool:
         """Default validation implementation."""
-        # Basic validation - check if config is properly formatted
         try:
             required_fields = ["enabled"]
             for field in required_fields:
@@ -250,8 +234,6 @@ class AbstractDataSource(ABC):
             "source_id": self.source_id,
             "discovered_at": datetime.now(UTC).isoformat(),
         }
-
-        # Add any existing metadata from the item
         metadata |= item.metadata
         return metadata
 
@@ -261,31 +243,22 @@ class AbstractDataSource(ABC):
         """Apply include/exclude patterns and size filters to content items."""
         if not items:
             return items
-
         filtered_items = []
         include_patterns = config.get("include_patterns", [])
         exclude_patterns = config.get("exclude_patterns", [])
         max_size_mb = config.get("max_file_size_mb", 100)
         max_size_bytes = max_size_mb * 1024 * 1024
-
         for item in items:
-            # Check size limits
             if item.size and item.size > max_size_bytes:
                 logger.debug("Skipping large file: %s (%.1fMB)", item.path, item.size / 1024 / 1024)
                 continue
-
-            # Check exclude patterns
-            if exclude_patterns and any(pattern in item.path for pattern in exclude_patterns):
+            if exclude_patterns and any((pattern in item.path for pattern in exclude_patterns)):
                 logger.debug("Excluded by pattern: %s", item.path)
                 continue
-
-            # Check include patterns (if specified)
-            if include_patterns and all(pattern not in item.path for pattern in include_patterns):
+            if include_patterns and all((pattern not in item.path for pattern in include_patterns)):
                 logger.debug("Not included by pattern: %s", item.path)
                 continue
-
             filtered_items.append(item)
-
         logger.info(
             "Content filtering: %d items -> %d items (source: %s)",
             len(items),
@@ -317,7 +290,6 @@ class SourceRegistry:
         """
         if not issubclass(source_class, DataSource):
             raise TypeError(f"Source class must implement DataSource protocol: {source_class}")
-
         self._sources[source_type] = source_class
         logger.info("Registered data source: %s -> %s", source_type, source_class.__name__)
 
@@ -350,16 +322,15 @@ class SourceRegistry:
             SourceCapabilities object if source is registered, None otherwise
         """
         if source_class := self._sources.get(source_type):
-            # Create a temporary instance to get capabilities
             try:
                 instance = source_class()
-                return instance.get_capabilities()
             except Exception:
                 logger.warning("Failed to get capabilities for source type: %s", source_type.value)
+            else:
+                return instance.get_capabilities()
         return None
 
 
-# Global source registry instance
 _source_registry = SourceRegistry()
 
 

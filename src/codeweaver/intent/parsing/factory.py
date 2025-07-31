@@ -9,6 +9,7 @@
 import logging
 import re
 
+from re import Pattern
 from typing import Any, ClassVar, Protocol, runtime_checkable
 
 from codeweaver.types import IntentParsingError, ParsedIntent
@@ -44,7 +45,7 @@ class IntentParserFactory:
     """
 
     _logger = logging.getLogger(__name__)
-    _patterns: ClassVar[set[re.compile | None]] = set()
+    _patterns: ClassVar[set[Pattern[str] | None]] = set()
 
     @staticmethod
     def create(config: dict[str, Any]) -> IntentParser:

@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Qdrant vector database backend implementation.
 
@@ -80,11 +75,8 @@ class QdrantBackend:
             self.client = QdrantClient(url=url, api_key=api_key, **kwargs)
             self.enable_sparse_vectors = enable_sparse_vectors
             self.sparse_on_disk = sparse_on_disk
-
-            # Test connection
             self.client.get_collections()
             logger.info("Connected to Qdrant at %s", url)
-
         except Exception as e:
             raise BackendConnectionError(
                 f"Failed to connect to Qdrant at {url}", backend_type="qdrant", original_error=e
@@ -103,24 +95,20 @@ class QdrantBackend:
     def _convert_filter(self, search_filter: SearchFilter) -> Filter:
         """Convert universal SearchFilter to Qdrant Filter."""
         conditions = []
-
         if search_filter.conditions:
             for condition in search_filter.conditions:
                 field_condition = self._convert_filter_condition(condition)
                 conditions.append(field_condition)
-
-        # Handle nested filters
         must = []
         should = []
         must_not = []
-
         if search_filter.must:
-            must.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.must)
+            must.extend((self._convert_filter(sub_filter) for sub_filter in search_filter.must))
         if search_filter.should:
-            should.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.should)
+            should.extend((self._convert_filter(sub_filter) for sub_filter in search_filter.should))
         if search_filter.must_not:
             must_not.extend(
-                self._convert_filter(sub_filter) for sub_filter in search_filter.must_not
+                (self._convert_filter(sub_filter) for sub_filter in search_filter.must_not)
             )
         return Filter(must=conditions + must, should=should or None, must_not=must_not or None)
 
@@ -130,7 +118,6 @@ class QdrantBackend:
             return FieldCondition(key=condition.field, match=MatchValue(value=condition.value))
         if condition.operator == "in":
             return FieldCondition(key=condition.field, match=MatchValue(any=condition.value))
-        # Add more operators as needed
         raise ValueError("Unsupported filter operator: %s", condition.operator)
 
     def _convert_search_result(self, hit: Any) -> SearchResult:
@@ -151,14 +138,11 @@ class QdrantBackend:
     ) -> None:
         """Create a new collection with optional sparse vector support."""
         try:
-            # Dense vector configuration
             vectors_config = {
                 "dense": VectorParams(
                     size=dimension, distance=self._convert_distance_metric(distance_metric)
                 )
             }
-
-            # Sparse vector configuration for hybrid search
             sparse_vectors_config = None
             if self.enable_sparse_vectors:
                 sparse_vectors_config = {
@@ -167,16 +151,13 @@ class QdrantBackend:
                     )
                 }
                 logger.info("Enabling sparse vectors for collection %s", name)
-
             self.client.create_collection(
                 collection_name=name,
                 vectors_config=vectors_config,
                 sparse_vectors_config=sparse_vectors_config,
                 **kwargs,
             )
-
             logger.info("Created Qdrant collection: %s (dimension: %d)", name, dimension)
-
         except Exception as e:
             raise BackendError(
                 f"Failed to create collection {name}", backend_type="qdrant", original_error=e
@@ -192,16 +173,11 @@ class QdrantBackend:
                     "vector": {"dense": vector_point.vector},
                     "payload": vector_point.payload or {},
                 }
-
-                # Add sparse vector if available
                 if vector_point.sparse_vector and self.enable_sparse_vectors:
                     point_data["vector"]["sparse"] = vector_point.sparse_vector
-
                 points.append(PointStruct(**point_data))
-
             self.client.upsert(collection_name=collection_name, points=points)
             logger.debug("Upserted %d vectors to collection %s", len(vectors), collection_name)
-
         except Exception as e:
             raise BackendError(
                 f"Failed to upsert vectors to {collection_name}",
@@ -229,23 +205,21 @@ class QdrantBackend:
                 "score_threshold": score_threshold,
                 **kwargs,
             }
-
             results = self.client.search(**search_params)
-            return [self._convert_search_result(hit) for hit in results]
-
         except Exception as e:
             raise BackendError(
                 f"Failed to search collection {collection_name}",
                 backend_type="qdrant",
                 original_error=e,
             ) from e
+        else:
+            return [self._convert_search_result(hit) for hit in results]
 
     async def delete_vectors(self, collection_name: str, ids: list[str | int]) -> None:
         """Delete vectors by IDs."""
         try:
             self.client.delete(collection_name=collection_name, points_selector=ids)
             logger.debug("Deleted %d vectors from collection %s", len(ids), collection_name)
-
         except Exception as e:
             raise BackendError(
                 f"Failed to delete vectors from {collection_name}",
@@ -257,19 +231,23 @@ class QdrantBackend:
         """Get collection metadata and capabilities."""
         try:
             collection = self.client.get_collection(name)
-
-            # Extract dimension from vectors config
             vectors_config = collection.config.params.vectors
             if isinstance(vectors_config, dict):
-                # Multi-vector case
                 dense_config = vectors_config.get("dense")
                 dimension = dense_config.size if dense_config else 0
                 supports_sparse = "sparse" in vectors_config
             else:
-                # Single vector case
                 dimension = vectors_config.size
                 supports_sparse = False
-
+        except Exception as e:
+            if "not found" in str(e).lower():
+                raise BackendCollectionNotFoundError(
+                    f"Collection {name} not found", backend_type="qdrant", original_error=e
+                ) from e
+            raise BackendError(
+                f"Failed to get collection info for {name}", backend_type="qdrant", original_error=e
+            ) from e
+        else:
             return CollectionInfo(
                 name=name,
                 dimension=dimension,
@@ -280,7 +258,7 @@ class QdrantBackend:
                 supports_hybrid_search=supports_sparse,
                 supports_filtering=True,
                 supports_updates=True,
-                storage_type="hybrid",  # Qdrant supports both memory and disk
+                storage_type="hybrid",
                 index_type="hnsw",
                 backend_info={
                     "qdrant_version": getattr(collection, "version", None),
@@ -289,25 +267,13 @@ class QdrantBackend:
                 },
             )
 
-        except Exception as e:
-            if "not found" in str(e).lower():
-                raise BackendCollectionNotFoundError(
-                    f"Collection {name} not found", backend_type="qdrant", original_error=e
-                ) from e
-            raise BackendError(
-                f"Failed to get collection info for {name}", backend_type="qdrant", original_error=e
-            ) from e
-
     def _convert_qdrant_distance(self, vectors_config: Any) -> DistanceMetric:
         """Convert Qdrant Distance to universal DistanceMetric."""
         if isinstance(vectors_config, dict):
-            # Multi-vector case, use dense vector distance
             dense_config = vectors_config.get("dense")
             distance = dense_config.distance if dense_config else Distance.COSINE
         else:
-            # Single vector case
             distance = vectors_config.distance
-
         mapping = {
             Distance.COSINE: DistanceMetric.COSINE,
             Distance.EUCLID: DistanceMetric.EUCLIDEAN,
@@ -320,11 +286,12 @@ class QdrantBackend:
         """List all available collections."""
         try:
             collections = self.client.get_collections()
-            return [collection.name for collection in collections.collections]
         except Exception as e:
             raise BackendError(
                 "Failed to list collections", backend_type="qdrant", original_error=e
             ) from e
+        else:
+            return [collection.name for collection in collections.collections]
 
     async def delete_collection(self, name: str) -> None:
         """Delete a collection entirely."""
@@ -347,7 +314,6 @@ class QdrantHybridBackend(QdrantBackend):
 
     def __init__(self, *args: Any, **kwargs: Any):
         """Initialize the qdrant backend."""
-        # Force enable sparse vectors for hybrid search
         kwargs["enable_sparse_vectors"] = True
         super().__init__(*args, **kwargs)
 
@@ -362,7 +328,7 @@ class QdrantHybridBackend(QdrantBackend):
         """
 
         def _raise_backend_error(msg: str, e: BackendError | Any = None) -> None:
-            if e and not isinstance(e, BackendError):
+            if e and (not isinstance(e, BackendError)):
                 raise BackendError(msg, backend_type="qdrant", original_error=e) from e
             if e:
                 return
@@ -372,12 +338,9 @@ class QdrantHybridBackend(QdrantBackend):
             collection_info = await self.get_collection_info(collection_name)
             if not collection_info.supports_sparse_vectors:
                 _raise_backend_error(
-                    f"Collection {collection_name} does not support sparse vectors. "
-                    "Recreate with enable_sparse_vectors=True"
+                    f"Collection {collection_name} does not support sparse vectors. Recreate with enable_sparse_vectors=True"
                 )
-
             logger.info("Sparse index already configured for collection %s", collection_name)
-
         except Exception as e:
             _raise_backend_error(f"Failed to validate sparse index for {collection_name}", e)
             raise
@@ -400,34 +363,19 @@ class QdrantHybridBackend(QdrantBackend):
         using server-side fusion for optimal performance.
         """
         try:
-            # Convert sparse query to vector format
             if isinstance(sparse_query, str):
-                # Simple keyword extraction (in production, use proper tokenization)
                 tokens = sparse_query.lower().split()
                 sparse_vector = {hash(token) % 10000: 1.0 for token in tokens}
             else:
                 sparse_vector = sparse_query
-
-            # Build prefetch queries
-            prefetch_queries = [
-                Prefetch(
-                    query=dense_vector,
-                    using="dense",
-                    limit=limit * 2,  # Get more for fusion
-                )
-            ]
-
+            prefetch_queries = [Prefetch(query=dense_vector, using="dense", limit=limit * 2)]
             if sparse_vector:
                 prefetch_queries.append(
                     Prefetch(query=sparse_vector, using="sparse", limit=limit * 2)
                 )
-
-            # Convert fusion strategy
             fusion_mapping = {HybridStrategy.RRF: Fusion.RRF, HybridStrategy.DBSF: Fusion.DBSF}
             fusion = fusion_mapping.get(hybrid_strategy, Fusion.RRF)
-
             qdrant_filter = self._convert_filter(search_filter) if search_filter else None
-            # Execute hybrid search
             result = self.client.query_points(
                 collection_name=collection_name,
                 prefetch=prefetch_queries,
@@ -436,15 +384,14 @@ class QdrantHybridBackend(QdrantBackend):
                 query_filter=qdrant_filter,
                 **kwargs,
             )
-
-            return [self._convert_search_result(hit) for hit in result.points]
-
         except Exception as e:
             raise BackendError(
                 f"Failed to perform hybrid search on {collection_name}",
                 backend_type="qdrant",
                 original_error=e,
             ) from e
+        else:
+            return [self._convert_search_result(hit) for hit in result.points]
 
     async def update_sparse_vectors(self, collection_name: str, vectors: list[VectorPoint]) -> None:
         """
@@ -455,30 +402,28 @@ class QdrantHybridBackend(QdrantBackend):
         """
         await self.upsert_vectors(collection_name, vectors)
 
-    # Health Monitoring Methods
-
     async def health_check(self) -> bool:
         """Check backend health and connectivity."""
         try:
-            # Test basic connectivity
             health_info = self.client.get_cluster_info()
-
             if not health_info:
                 return ServiceHealth(
                     status=HealthStatus.UNHEALTHY,
                     message="Unable to get cluster info from Qdrant",
                     last_check=datetime.now(UTC),
                 )
-
-            # Check if we can list collections
             collections = self.client.get_collections()
             collection_count = len(collections.collections) if collections else 0
-
-            # Test basic operations
             try:
-                # Try to get telemetry (lightweight operation)
                 telemetry = self.client.get_telemetry()
-
+            except Exception as e:
+                return ServiceHealth(
+                    status=HealthStatus.DEGRADED,
+                    message=f"Qdrant partially available: {e}",
+                    last_check=datetime.now(UTC),
+                    metadata={"collection_count": collection_count},
+                )
+            else:
                 return ServiceHealth(
                     status=HealthStatus.HEALTHY,
                     message=f"Qdrant healthy: {collection_count} collections available",
@@ -489,16 +434,6 @@ class QdrantHybridBackend(QdrantBackend):
                         "telemetry_available": telemetry is not None,
                     },
                 )
-
-            except Exception as e:
-                # Connection works but some operations might be limited
-                return ServiceHealth(
-                    status=HealthStatus.DEGRADED,
-                    message=f"Qdrant partially available: {e}",
-                    last_check=datetime.now(UTC),
-                    metadata={"collection_count": collection_count},
-                )
-
         except Exception as e:
             return ServiceHealth(
                 status=HealthStatus.UNHEALTHY,
@@ -526,8 +461,6 @@ class QdrantHybridBackend(QdrantBackend):
                 "total_collections": len(collections.collections) if collections else 0,
                 "collections": [],
             }
-
-            # Get metrics for each collection
             for collection in collections.collections if collections else []:
                 try:
                     collection_info = self.client.get_collection(collection.name)
@@ -539,13 +472,11 @@ class QdrantHybridBackend(QdrantBackend):
                     })
                 except Exception as e:
                     metrics["collections"].append({"name": collection.name, "error": str(e)})
-
         except Exception as e:
             return {
                 "error": f"Failed to get performance metrics: {e}",
                 "total_collections": 0,
                 "collections": [],
             }
-
         else:
             return metrics

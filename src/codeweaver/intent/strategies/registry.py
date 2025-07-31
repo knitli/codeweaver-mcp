@@ -1,6 +1,5 @@
 """Strategy registry integrated with ExtensibilityManager."""
 
-
 import contextlib
 import logging
 import operator
@@ -269,7 +268,20 @@ class StrategyRegistry:
 
     async def _get_extensibility_manager(self):
         """Get ExtensibilityManager through services."""
-        return
+        try:
+            if hasattr(self.services_manager, "get_extensibility_manager"):
+                return await self.services_manager.get_extensibility_manager()
+            from codeweaver.config import CodeWeaverConfig
+            from codeweaver.factories.extensibility_manager import ExtensibilityManager
+
+            config = CodeWeaverConfig()
+            extensibility_manager = ExtensibilityManager(config)
+            await extensibility_manager.initialize()
+        except Exception as e:
+            self.logger.warning("Failed to get ExtensibilityManager: %s", e)
+            return None
+        else:
+            return extensibility_manager
 
     def get_registry_stats(self) -> dict[str, Any]:
         """Get registry statistics."""

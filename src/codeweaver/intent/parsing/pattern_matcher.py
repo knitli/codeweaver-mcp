@@ -142,7 +142,7 @@ class PatternBasedParser:
     def _detect_intent_type_no_index(self, text: str) -> IntentType:
         """Detect intent type without INDEX option."""
         index_keywords = ["index", "indexing", "build index", "create index", "reindex"]
-        if any((keyword in text for keyword in index_keywords)):
+        if any(keyword in text for keyword in index_keywords):
             self.logger.info("INDEX intent detected - redirecting to background service note")
             return IntentType.SEARCH
         for pattern in self.patterns["search_patterns"]:
@@ -255,16 +255,16 @@ class PatternBasedParser:
             "everywhere",
             "globally",
         ]
-        if any((indicator in text for indicator in system_indicators)):
+        if any(indicator in text for indicator in system_indicators):
             return Scope.SYSTEM
         project_indicators = ["project", "repository", "repo", "across", "throughout"]
-        if any((indicator in text for indicator in project_indicators)):
+        if any(indicator in text for indicator in project_indicators):
             return Scope.PROJECT
         module_indicators = ["module", "package", "directory", "folder", "component"]
-        if any((indicator in text for indicator in module_indicators)):
+        if any(indicator in text for indicator in module_indicators):
             return Scope.MODULE
         file_indicators = ["file", "this file", "current file", "single file"]
-        if any((indicator in text for indicator in file_indicators)):
+        if any(indicator in text for indicator in file_indicators):
             return Scope.FILE
         if len(target.split()) > 3:
             return Scope.PROJECT
@@ -288,7 +288,7 @@ class PatternBasedParser:
             "comprehensive",
             "detailed analysis",
         ]
-        if any((indicator in text for indicator in complex_indicators)):
+        if any(indicator in text for indicator in complex_indicators):
             return Complexity.COMPLEX
         moderate_indicators = [
             "how",
@@ -303,7 +303,7 @@ class PatternBasedParser:
             "several",
             "various",
         ]
-        if any((indicator in text for indicator in moderate_indicators)):
+        if any(indicator in text for indicator in moderate_indicators):
             return Complexity.MODERATE
         if scope in [Scope.SYSTEM, Scope.PROJECT]:
             return Complexity.MODERATE

@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Universal plugin interface protocols for the CodeWeaver factory system.
 
@@ -125,43 +120,34 @@ class PluginValidator:
         """Multi-stage plugin validation."""
         errors = []
         warnings = []
-
         try:
-            # Validate plugin interface compliance
             if not isinstance(plugin_info.plugin_class, type):
                 errors.append("Plugin class must be a type")
                 return ValidationResult(is_valid=False, errors=errors)
-
-            # Check protocol compliance
             if not hasattr(plugin_info.plugin_class, "get_plugin_name"):
                 errors.append("Plugin must implement PluginInterface protocol")
                 return ValidationResult(is_valid=False, errors=errors)
-
-            # Validate plugin-specific requirements
             validation_stages = [
                 self._validate_plugin_interface,
                 self._validate_plugin_capabilities,
                 self._validate_plugin_dependencies,
                 self._validate_plugin_configuration,
             ]
-
             for stage in validation_stages:
                 result = stage(plugin_info)
                 if not result.is_valid:
                     errors.extend(result.errors)
                     warnings.extend(result.warnings)
-                    if result.errors:  # Stop on errors
+                    if result.errors:
                         break
-
-            return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
-
         except Exception as e:
             return ValidationResult(is_valid=False, errors=[f"Plugin validation failed: {e}"])
+        else:
+            return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_plugin_interface(self, plugin_info: PluginInfo) -> ValidationResult:
         """Validate plugin interface compliance."""
         warnings = []
-
         required_methods = [
             "get_plugin_name",
             "get_component_type",
@@ -170,88 +156,68 @@ class PluginValidator:
             "validate_config",
             "get_dependencies",
         ]
-
         errors = [
             f"Plugin missing required method: {method}"
             for method in required_methods
             if not hasattr(plugin_info.plugin_class, method)
         ]
-
-        # Check component-specific methods
         if plugin_info.component_type == ComponentType.BACKEND:
             if not hasattr(plugin_info.plugin_class, "get_backend_class"):
                 errors.append("Backend plugin missing get_backend_class method")
         elif plugin_info.component_type == ComponentType.PROVIDER:
             if not hasattr(plugin_info.plugin_class, "get_provider_class"):
                 errors.append("Provider plugin missing get_provider_class method")
-        elif plugin_info.component_type == ComponentType.SOURCE and not hasattr(
-            plugin_info.plugin_class, "get_source_class"
+        elif plugin_info.component_type == ComponentType.SOURCE and (
+            not hasattr(plugin_info.plugin_class, "get_source_class")
         ):
             errors.append("Source plugin missing get_source_class method")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_plugin_capabilities(self, plugin_info: PluginInfo) -> ValidationResult:
         """Validate plugin capabilities consistency."""
         errors = []
         warnings = []
-
         try:
             capabilities = plugin_info.plugin_class.get_capabilities()
             if not isinstance(capabilities, BaseCapabilities):
                 errors.append("Plugin capabilities must inherit from BaseCapabilities")
-
-            # Additional capability validation could go here
-
         except Exception as e:
             errors.append(f"Failed to get plugin capabilities: {e}")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_plugin_dependencies(self, plugin_info: PluginInfo) -> ValidationResult:
         """Validate plugin dependencies."""
         errors = []
         warnings = []
-
         try:
             dependencies = plugin_info.plugin_class.get_dependencies()
             if not isinstance(dependencies, list):
                 errors.append("Plugin dependencies must be a list")
                 return ValidationResult(is_valid=False, errors=errors)
-
             for dep in dependencies:
                 if not isinstance(dep, str):
                     errors.append(f"Dependency must be a string, got {type(dep)}")
-
-                # Check if dependency is available (basic check)
                 try:
                     __import__(dep)
                 except ImportError:
                     warnings.append(f"Dependency '{dep}' may not be installed")
-
         except Exception as e:
             errors.append(f"Failed to validate plugin dependencies: {e}")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_plugin_configuration(self, plugin_info: PluginInfo) -> ValidationResult:
         """Validate plugin configuration handling."""
         errors = []
         warnings = []
-
         try:
-            # Test with a basic config
             test_config = BaseComponentConfig(
                 component_type=plugin_info.component_type, provider=plugin_info.name
             )
-
             result = plugin_info.plugin_class.validate_config(test_config)
             if not isinstance(result, ValidationResult):
                 errors.append("Plugin validate_config must return ValidationResult")
-
         except Exception as e:
             errors.append(f"Plugin configuration validation failed: {e}")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
 
@@ -262,14 +228,12 @@ class PluginSecurityValidator:
         """Validate plugin security requirements."""
         errors = []
         warnings = []
-
         security_checks = [
             self._check_code_signing,
             self._check_dependency_security,
             self._check_permission_requirements,
             self._check_data_access_patterns,
         ]
-
         for check in security_checks:
             try:
                 result = check(plugin_info)
@@ -278,29 +242,24 @@ class PluginSecurityValidator:
                     warnings.extend(result.warnings)
             except Exception as e:
                 warnings.append(f"Security check failed: {e}")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _check_code_signing(self, plugin_info: PluginInfo) -> ValidationResult:
         """Check plugin code signature validation."""
-        # Placeholder for code signing validation
         return ValidationResult(is_valid=True, warnings=["Code signing validation not implemented"])
 
     def _check_dependency_security(self, plugin_info: PluginInfo) -> ValidationResult:
         """Check plugin dependency security."""
-        # Placeholder for dependency security validation
         return ValidationResult(
             is_valid=True, warnings=["Dependency security validation not implemented"]
         )
 
     def _check_permission_requirements(self, plugin_info: PluginInfo) -> ValidationResult:
         """Check plugin permission requirements."""
-        # Placeholder for permission validation
         return ValidationResult(is_valid=True, warnings=["Permission validation not implemented"])
 
     def _check_data_access_patterns(self, plugin_info: PluginInfo) -> ValidationResult:
         """Check plugin data access patterns."""
-        # Placeholder for data access validation
         return ValidationResult(is_valid=True, warnings=["Data access validation not implemented"])
 
 
@@ -330,28 +289,24 @@ class PluginDiscoveryEngine:
             ComponentType.PROVIDER: [],
             ComponentType.SOURCE: [],
         }
-
         if self.enable_entry_points:
             try:
                 entry_point_plugins = self._discover_entry_point_plugins()
                 self._merge_plugin_discoveries(discovered, entry_point_plugins)
             except Exception as e:
                 logger.warning("Entry point plugin discovery failed: %s", e)
-
         if self.enable_directory_scan:
             try:
                 directory_plugins = self._discover_directory_plugins()
                 self._merge_plugin_discoveries(discovered, directory_plugins)
             except Exception as e:
                 logger.warning("Directory plugin discovery failed: %s", e)
-
         if self.enable_module_scan:
             try:
                 module_plugins = self._discover_module_plugins()
                 self._merge_plugin_discoveries(discovered, module_plugins)
             except Exception as e:
                 logger.warning("Module plugin discovery failed: %s", e)
-
         return discovered
 
     def discover_plugins_for_type(self, component_type: ComponentType) -> list[PluginInfo]:
@@ -361,7 +316,6 @@ class PluginDiscoveryEngine:
 
     def _discover_entry_point_plugins(self) -> dict[ComponentType, list[PluginInfo]]:
         """Discover plugins via setuptools entry points."""
-        # Placeholder for entry point discovery
         logger.debug("Entry point plugin discovery not yet implemented")
         return {ComponentType.BACKEND: [], ComponentType.PROVIDER: [], ComponentType.SOURCE: []}
 
@@ -372,34 +326,27 @@ class PluginDiscoveryEngine:
             ComponentType.PROVIDER: [],
             ComponentType.SOURCE: [],
         }
-
         for directory_path in self.plugin_directories:
             directory = Path(directory_path)
             if not directory.exists():
                 continue
-
             for py_file in directory.rglob("*.py"):
                 if py_file.name.startswith("_") or "test" in py_file.name.lower():
                     continue
-
                 try:
                     if plugin_info := self._load_plugin_from_file(py_file):
                         discovered[plugin_info.component_type].append(plugin_info)
                 except Exception as e:
                     logger.warning("Failed to load plugin from %s: %s", py_file, e)
-
         return discovered
 
     def _discover_module_plugins(self) -> dict[ComponentType, list[PluginInfo]]:
         """Discover plugins within Python modules."""
-        # Placeholder for module-based discovery
         logger.debug("Module plugin discovery not yet implemented")
         return {ComponentType.BACKEND: [], ComponentType.PROVIDER: [], ComponentType.SOURCE: []}
 
     def _load_plugin_from_file(self, file_path: Path) -> PluginInfo | None:
         """Load a plugin from a Python file."""
-        # This would implement the actual plugin loading logic
-        # For now, return None to indicate no plugins found
         return None
 
     def _merge_plugin_discoveries(
@@ -410,7 +357,6 @@ class PluginDiscoveryEngine:
         """Merge plugin discoveries, avoiding duplicates."""
         for component_type, plugins in source.items():
             for plugin in plugins:
-                # Check for duplicates by name
                 existing_names = {p.name for p in target[component_type]}
                 if plugin.name not in existing_names:
                     target[component_type].append(plugin)

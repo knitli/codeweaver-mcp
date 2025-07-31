@@ -30,7 +30,7 @@ This corrected plan addresses critical gaps in the original design to ensure ful
 ### 🔧 **Critical Architecture Corrections**
 - **No INDEX Intent**: Removed user-facing INDEX, replaced with `AutoIndexingService` background service
 - **Service Provider Pattern**: All components extend `BaseServiceProvider` with proper lifecycle management
-- **Error Handling**: Uses existing exception hierarchy and patterns from `_types.exceptions`
+- **Error Handling**: Uses existing exception hierarchy and patterns from `types.exceptions`
 - **Testing Framework**: Integrates with existing testing utilities in `src/codeweaver/testing/`
 - **Context Propagation**: Proper service context injection through `ServicesManager.create_service_context()`
 

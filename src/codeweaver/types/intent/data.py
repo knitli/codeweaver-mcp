@@ -70,18 +70,19 @@ class IntentResult:
     metadata: dict[str, Any]
     """Execution metadata including strategy used, timing, etc."""
 
-    error_message: str | None = None
-    """Error message if processing failed."""
-
-    suggestions: list[str] | None = None
-    """Suggested next actions or alternative queries."""
-
-    # Execution information
+    # Execution information (required fields)
     executed_at: datetime
     """When the intent was executed."""
 
     execution_time: float
     """Time taken to execute the intent in seconds."""
+
+    # Optional fields (with defaults)
+    error_message: str | None = None
+    """Error message if processing failed."""
+
+    suggestions: list[str] | None = None
+    """Suggested next actions or alternative queries."""
 
     strategy_used: str | None = None
     """Name of the strategy that was used."""

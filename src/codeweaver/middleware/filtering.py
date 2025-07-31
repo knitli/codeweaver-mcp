@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 FastMCP middleware for file filtering services.
 
@@ -55,14 +50,9 @@ class FileFilteringMiddleware(Middleware):
                 ],
             )
         )
-
-        # File extension filtering
         extensions = self.config.get("included_extensions")
         self.included_extensions = set(extensions) if extensions else None
-
-        # Additional ignore patterns beyond gitignore
         self.additional_ignore_patterns = self.config.get("additional_ignore_patterns", [])
-
         logger.info(
             "FileFilteringMiddleware initialized: gitignore=%s, max_size=%s, excluded_dirs=%d",
             self.use_gitignore,
@@ -72,20 +62,15 @@ class FileFilteringMiddleware(Middleware):
 
     async def on_call_tool(self, context: MiddlewareContext, call_next: CallNext) -> Any:
         """Handle tool calls that need file filtering services."""
-        # Check if this tool needs filtering services
         if self._needs_filtering_service(context):
-            # Inject filtering service into context
             context.fastmcp_context.set_state_value("filtering_service", self)
             logger.debug("Injected filtering service for tool: %s", context.message.name)
-
-        # Continue with normal tool execution
         return await call_next(context)
 
     def _needs_filtering_service(self, context: MiddlewareContext) -> bool:
         """Check if this tool call needs filtering services."""
         if not hasattr(context.message, "name"):
             return False
-
         filtering_tools = {"index_codebase", "search_code", "find_files", "ast_grep_search"}
         return context.message.name in filtering_tools
 
@@ -104,41 +89,30 @@ class FileFilteringMiddleware(Middleware):
         """
         patterns = patterns or ["*"]
         found_files = []
-
         if not base_path.exists():
             logger.warning("Base path does not exist: %s", base_path)
             return found_files
-
         try:
             if self.use_gitignore:
-                # Use rignore.walk() for gitignore support
                 walker = rignore.walk(str(base_path))
-
                 for entry in walker:
                     if entry.is_file():
                         file_path = Path(entry)
-
-                        # Apply filtering criteria
                         if await self._should_include_file(
                             file_path, base_path
                         ) and self._matches_patterns(file_path, patterns):
                             found_files.append(file_path)
             else:
-                # Fallback to standard Path.rglob()
                 logger.warning("rignore not available, using fallback file discovery")
                 found_files = await self._fallback_file_discovery(
                     base_path, patterns, recursive=recursive
                 )
-
         except Exception:
             logger.exception("File discovery error")
-            # Try fallback method
             found_files = await self._fallback_file_discovery(
                 base_path, patterns, recursive=recursive
             )
-
         logger.debug("Found %d files in %s (patterns: %s)", len(found_files), base_path, patterns)
-
         return found_files
 
     async def _fallback_file_discovery(
@@ -146,33 +120,29 @@ class FileFilteringMiddleware(Middleware):
     ) -> list[Path]:
         """Fallback file discovery using Path.rglob()."""
         found_files = []
-
         try:
             for pattern in patterns:
                 matches = base_path.rglob(pattern) if recursive else base_path.glob(pattern)
-
                 found_files.extend(
-                    file_path
-                    for file_path in matches
-                    if file_path.is_file() and await self._should_include_file(file_path, base_path)
+                    (
+                        file_path
+                        for file_path in matches
+                        if file_path.is_file()
+                        and await self._should_include_file(file_path, base_path)
+                    )
                 )
-
         except Exception:
             logger.exception("Fallback file discovery error")
-
         return found_files
 
     async def _should_include_file(self, file_path: Path, base_path: Path) -> bool:
         """Check if file should be included based on filtering criteria."""
         if not self._is_valid_file_size(file_path):
             return False
-
         if not self._is_under_base_path(file_path, base_path):
             return False
-
         if not self._has_allowed_extension(file_path):
             return False
-
         return not self._matches_ignore_patterns(file_path)
 
     def _is_valid_file_size(self, file_path: Path) -> bool:
@@ -192,10 +162,11 @@ class FileFilteringMiddleware(Middleware):
         """Check if file is under base path and not in excluded directories."""
         try:
             relative_path = file_path.relative_to(base_path)
-            return all(part not in self.excluded_dirs for part in relative_path.parts[:-1])
         except ValueError:
             logger.debug("File not under base path: %s", file_path)
             return False
+        else:
+            return all((part not in self.excluded_dirs for part in relative_path.parts[:-1]))
 
     def _has_allowed_extension(self, file_path: Path) -> bool:
         """Check if file has an allowed extension."""
@@ -208,27 +179,27 @@ class FileFilteringMiddleware(Middleware):
         if not self.additional_ignore_patterns:
             return False
         return any(
-            fnmatch.fnmatch(str(file_path), pattern) for pattern in self.additional_ignore_patterns
+            (
+                fnmatch.fnmatch(str(file_path), pattern)
+                for pattern in self.additional_ignore_patterns
+            )
         )
 
     def _matches_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if file matches any of the given patterns."""
         for pattern in patterns:
-            # Match against filename
             if fnmatch.fnmatch(file_path.name, pattern):
                 return True
-            # Match against full path
             if fnmatch.fnmatch(str(file_path), pattern):
                 return True
-
         return False
 
     def _get_size_unit(self, parsed_size: str) -> str:
         """Extract size unit from a string like '1MB'."""
         if (
-            all(char.isdigit() for char in parsed_size)
+            all((char.isdigit() for char in parsed_size))
             or (parsed_size.endswith("B") and len(parsed_size) > 1 and parsed_size[-2].isdigit())
-            or (len(parsed_size) == 1)
+            or len(parsed_size) == 1
         ):
             return "B"
         match parsed_size.upper()[-2:]:
@@ -245,7 +216,6 @@ class FileFilteringMiddleware(Middleware):
         """Parse size string like '1MB' to bytes."""
         if isinstance(parsed_size, int):
             return parsed_size
-
         parsed_size = (
             str(parsed_size)
             .upper()
@@ -258,9 +228,9 @@ class FileFilteringMiddleware(Middleware):
         if not parsed_size:
             logger.warning("Empty size string provided, defaulting to 0B")
             return 0
-        if any(char.isalpha() for char in parsed_size):
+        if any((char.isalpha() for char in parsed_size)):
             if len(parsed_size) == 1:
-                return 0  # only one character, not a number
+                return 0
             if parsed_size[-1] == "B" and parsed_size[-2].isdigit():
                 parsed_size = int(parsed_size[:-1])
             match parsed_size[-2:]:
@@ -273,7 +243,7 @@ class FileFilteringMiddleware(Middleware):
                 case "KB":
                     parsed_size = int(float(parsed_size[:-2]) * 1024)
                 case _:
-                    parsed_size = int(parsed_size[:-1])  # Default to bytes if no suffix
+                    parsed_size = int(parsed_size[:-1])
         else:
             parsed_size = int(float(parsed_size))
         return parsed_size

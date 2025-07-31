@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Rate limiting service provider for CodeWeaver.
 
@@ -193,13 +188,14 @@ class RateLimitingService(BaseServiceProvider):
                     status=HealthStatus.DEGRADED,
                     message=f"Many buckets depleted: {depleted_buckets}",
                 )
-            return ServiceHealth(
-                status=HealthStatus.HEALTHY,
-                message=f"Rate limiting active with {bucket_count} buckets",
-            )
         except Exception as e:
             return ServiceHealth(
                 status=HealthStatus.UNHEALTHY, message=f"Rate limiting health check failed: {e}"
+            )
+        else:
+            return ServiceHealth(
+                status=HealthStatus.HEALTHY,
+                message=f"Rate limiting active with {bucket_count} buckets",
             )
 
     def get_capabilities(self) -> ServiceCapabilities:

@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Main CodeWeaver Factory orchestrator.
 
@@ -40,8 +35,6 @@ if TYPE_CHECKING:
     from codeweaver.config import CodeWeaverConfig
     from codeweaver.factories.service_registry import ServiceRegistry
     from codeweaver.server import CodeWeaverServer
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -51,7 +44,7 @@ class CapabilityManager:
     def __init__(
         self,
         backend_registry: BackendRegistry,
-        provider_registry: Any,  # Existing provider registry
+        provider_registry: Any,
         source_registry: SourceRegistry,
         service_registry: "ServiceRegistry",
     ):
@@ -72,9 +65,10 @@ class CapabilityManager:
         """Check if component supports specific capability."""
         try:
             capabilities = self.get_component_capabilities(component_type, component_name)
-            return hasattr(capabilities, capability) and getattr(capabilities, capability, False)
         except Exception:
             return False
+        else:
+            return hasattr(capabilities, capability) and getattr(capabilities, capability, False)
 
     def _get_registry(self, component_type: ComponentType) -> Any:
         """Get registry for component type."""
@@ -107,61 +101,48 @@ class ConfigurationValidator:
         """Comprehensive configuration validation."""
         errors = []
         warnings = []
-
         validation_pipeline = [
             self._validate_syntax,
             self._validate_component_availability,
             self._validate_capabilities,
             self._validate_dependencies,
         ]
-
         for validator in validation_pipeline:
             try:
                 result = validator(config)
                 if not result.is_valid:
                     errors.extend(result.errors)
                     warnings.extend(result.warnings)
-                    # Continue validation to collect all issues
             except Exception as e:
                 errors.append(f"Validation failed: {e}")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_syntax(self, config: "CodeWeaverConfig") -> ValidationResult:
         """Basic syntax and structure validation."""
         errors = []
         warnings = []
-
-        # Check required fields
         if not hasattr(config, "backend") or not config.backend:
             errors.append("Missing backend configuration")
-
         if not hasattr(config, "providers") or not config.providers.embedding:
             errors.append("Missing embedding configuration")
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_component_availability(self, config: "CodeWeaverConfig") -> ValidationResult:
         """Validate component existence."""
         errors = []
         warnings = []
-
-        # Check backend availability
         if (
             hasattr(config, "backend")
             and config.backend
-            and not self._backend_registry.has_component(config.backend.provider)
+            and (not self._backend_registry.has_component(config.backend.provider))
         ):
             errors.append(f"Backend '{config.backend.provider}' not available")
-
-        # Check embedding provider availability
         if hasattr(config, "providers") and config.providers.embedding:
             available_providers = self._provider_registry.get_available_embedding_providers()
             if config.providers.embedding.provider not in available_providers:
                 errors.append(
                     f"Embedding provider '{config.providers.embedding.provider}' not available"
                 )
-
         return ValidationResult(is_valid=not errors, errors=errors, warnings=warnings)
 
     def _validate_capabilities(self, config: "CodeWeaverConfig") -> ValidationResult:
@@ -172,7 +153,6 @@ class ConfigurationValidator:
         """Validate inter-component dependencies."""
         return self._validate_capabilities_and_dependencies()
 
-    # TODO Rename this here and in `_validate_capabilities` and `_validate_dependencies`
     def _validate_capabilities_and_dependencies(self):
         errors = []
         warnings = []
@@ -195,7 +175,7 @@ class CodeWeaverFactory:
         enable_dependency_injection: bool = True,
         plugin_directories: list[str] | None = None,
         auto_discover_plugins: bool = True,
-    ):  # sourcery skip: remove-empty-nested-block, remove-redundant-if
+    ):
         """Initialize the CodeWeaver factory.
 
         Args:
@@ -205,38 +185,27 @@ class CodeWeaverFactory:
             plugin_directories: Custom plugin directories to scan
             auto_discover_plugins: Whether to automatically discover plugins on initialization
         """
-        # Import at runtime to avoid circular import
         from codeweaver.config import CodeWeaverConfig
 
         self._config = config or CodeWeaverConfig()
-
-        # Initialize registries
         self._backend_registry = BackendRegistry()
-        self._provider_registry = (
-            ExistingProviderFactory().registry
-        )  # Use existing A+ implementation
+        self._provider_registry = ExistingProviderFactory().registry
         self._source_registry = SourceRegistry()
-
-        # Import ServiceRegistry lazily to avoid circular imports
         from codeweaver.factories.service_registry import ServiceRegistry
 
         self._service_registry = ServiceRegistry()
-
-        # Initialize supporting systems
         self._capability_manager = CapabilityManager(
             backend_registry=self._backend_registry,
             provider_registry=self._provider_registry,
             source_registry=self._source_registry,
             service_registry=self._service_registry,
         )
-
         self._configuration_validator = ConfigurationValidator(
             backend_registry=self._backend_registry,
             provider_registry=self._provider_registry,
             source_registry=self._source_registry,
             service_registry=self._service_registry,
         )
-
         self._plugin_manager = None
         if enable_plugins:
             self._plugin_manager = PluginDiscoveryEngine(
@@ -245,27 +214,16 @@ class CodeWeaverFactory:
                 enable_entry_points=True,
                 enable_module_scan=True,
             )
-
             if auto_discover_plugins:
                 self._discover_and_register_plugins()
-
         self._dependency_resolver = None
-        # TODO: Implement dependency resolver if needed
         if enable_dependency_injection:
-            # Dependency resolver would be implemented here
             pass
-
         self._error_handler = ErrorHandler()
         self._degradation_manager = GracefulDegradationManager()
         self._initializer = FactoryInitializer()
-
-        # Initialize default components
         self._initialize_builtin_components()
-
-        # Initialize service registry with built-in providers
         self._initialize_builtin_services()
-
-    # Component Creation Methods
 
     def create_server(
         self, config: "CodeWeaverConfig | None" = None, *, validate_config: bool = True
@@ -285,34 +243,26 @@ class CodeWeaverFactory:
             ComponentCreationError: If component creation fails
         """
         effective_config = config or self._config
-
         if validate_config:
             validation_result = self.validate_configuration(effective_config)
             if not validation_result.is_valid:
                 raise ConfigurationError(
                     f"Configuration validation failed: {validation_result.errors}"
                 )
-
-        # Create components with error handling
         try:
             self.create_backend(effective_config.backend)
             self.create_provider(effective_config.providers.embedding)
-
             if hasattr(effective_config, "data_sources") and effective_config.data_sources:
-                # Create sources if configured
                 sources = []
                 for source_config in effective_config.data_sources.sources:
                     source = self.create_source(source_config)
                     sources.append(source)
-
-            # Import at runtime to avoid circular import
             from codeweaver.server import CodeWeaverServer
-
-            return CodeWeaverServer(config=effective_config)
-
         except Exception as e:
             logger.exception("Failed to create CodeWeaver server")
             raise ComponentCreationError(f"Server creation failed: {e}") from e
+        else:
+            return CodeWeaverServer(config=effective_config)
 
     def create_backend(self, config: BackendConfig) -> VectorBackend:
         """Create a vector backend instance.
@@ -334,7 +284,6 @@ class CodeWeaverFactory:
         Returns:
             Configured EmbeddingProvider instance
         """
-        # Use existing provider factory for now
         provider_factory = ExistingProviderFactory()
         return provider_factory.create_embedding_provider(config)
 
@@ -353,10 +302,8 @@ class CodeWeaverFactory:
         else:
             source_type = getattr(config, "type", None)
             source_config = config
-
         if not source_type:
             raise ConfigurationError("Source configuration must specify 'type'")
-
         return self._source_registry.create_source(source_type, source_config)
 
     def create_service(self, service_type: ServiceType, config: Any) -> Any:
@@ -370,8 +317,6 @@ class CodeWeaverFactory:
             Configured service instance
         """
         return self._service_registry.create_service(service_type, config)
-
-    # Configuration and Validation Methods
 
     def validate_configuration(self, config: "CodeWeaverConfig") -> ValidationResult:
         """Validate a complete configuration.
@@ -398,8 +343,6 @@ class CodeWeaverFactory:
         """
         registry = self._get_registry(component_type)
         return registry.validate_component(config.provider)
-
-    # Information and Discovery Methods
 
     def get_available_components(self) -> dict[str, dict[str, Any]]:
         """Get information about all available components.
@@ -443,8 +386,6 @@ class CodeWeaverFactory:
             component_type, component_name, capability
         )
 
-    # Plugin Management Methods
-
     def discover_plugins(self) -> dict[ComponentType, list[str]]:
         """Discover available plugins.
 
@@ -458,7 +399,6 @@ class CodeWeaverFactory:
                 ComponentType.SOURCE: [],
                 ComponentType.SERVICE: [],
             }
-
         discovered = self._plugin_manager.discover_all_plugins()
         return {
             component_type: [plugin.name for plugin in plugins]
@@ -484,52 +424,39 @@ class CodeWeaverFactory:
             if plugin_info.component_type == ComponentType.SERVICE:
                 return self._register_service_plugin(plugin_info)
             logger.error("Unknown component type: %s", plugin_info.component_type)
-
         except Exception:
             logger.exception("Plugin registration failed for %s")
-
         else:
             return False
-
-    # Private Implementation Methods
 
     def _create_component(self, component_type: str, config: Any, registry: Any) -> Any:
         """Unified component creation pattern."""
         provider_name = getattr(config, "provider", None)
         if not provider_name:
             raise ConfigurationError(f"Configuration must specify provider for {component_type}")
-
         if not registry.has_component(provider_name):
             raise ComponentNotFoundError(f"{component_type} '{provider_name}' not found")
-
-        # Validate configuration
         validation_result = registry.validate_component(provider_name)
         if not validation_result.is_valid:
             raise ConfigurationError(
                 f"Invalid {component_type} configuration: {validation_result.errors}"
             )
-
-        # Resolve dependencies
         dependencies = {}
         if self._dependency_resolver:
             dependencies = self._dependency_resolver.resolve_dependencies(
                 component_type, provider_name
             )
-
-        # Create component
         try:
             if component_type == "backend":
                 return registry.create_backend(config)
             if component_type == "source":
                 return registry.create_source(provider_name, config)
             component_class = registry.get_component_class(provider_name)
-
         except Exception as e:
             logger.exception("Component creation failed")
             raise ComponentCreationError(
                 f"Failed to create {component_type} '{provider_name}': {e}"
             ) from e
-
         else:
             return component_class(config=config, **dependencies)
 
@@ -545,12 +472,7 @@ class CodeWeaverFactory:
 
     def _initialize_builtin_components(self) -> None:
         """Initialize built-in component registrations."""
-        # Initialize backend registrations
         self._backend_registry.initialize_builtin_backends()
-
-        # Provider registrations are already handled by existing A+ system
-
-        # Initialize source registrations
         self._source_registry.initialize_builtin_sources()
 
     def _initialize_builtin_services(self) -> None:
@@ -559,7 +481,6 @@ class CodeWeaverFactory:
         from codeweaver.services.providers.file_filtering import FilteringService
         from codeweaver.types import ServiceCapabilities
 
-        # Register chunking service providers
         self._service_registry.register_provider(
             ServiceType.CHUNKING,
             "fastmcp_chunking",
@@ -573,8 +494,6 @@ class CodeWeaverFactory:
                 performance_profile="standard",
             ),
         )
-
-        # Register filtering service providers
         self._service_registry.register_provider(
             ServiceType.FILTERING,
             "fastmcp_filtering",
@@ -588,17 +507,14 @@ class CodeWeaverFactory:
                 performance_profile="standard",
             ),
         )
-
         logger.info("Built-in service providers registered")
 
     def _discover_and_register_plugins(self) -> None:
         """Discover and register available plugins."""
         if not self._plugin_manager:
             return
-
         try:
             discovered_plugins = self._plugin_manager.discover_all_plugins()
-
             for component_type, plugins in discovered_plugins.items():
                 for plugin_info in plugins:
                     if self.register_plugin(plugin_info):
@@ -607,7 +523,6 @@ class CodeWeaverFactory:
                         )
                     else:
                         logger.warning("Failed to register plugin: %s", plugin_info.name)
-
         except Exception as e:
             logger.warning("Plugin discovery failed: %s", e)
 
@@ -624,14 +539,11 @@ class CodeWeaverFactory:
         except Exception:
             logger.exception("Backend plugin registration failed")
             return False
-
         else:
             return result.success
 
     def _register_provider_plugin(self, plugin_info: PluginInfo) -> bool:
         """Register a provider plugin."""
-        # Provider plugin registration would go here
-        # For now, return False as it's not implemented
         logger.warning("Provider plugin registration not yet implemented")
         return False
 
@@ -655,23 +567,19 @@ class CodeWeaverFactory:
         """Register a service plugin."""
         try:
             service_class = plugin_info.plugin_class.get_service_class()
-            # Determine service type from plugin info
             service_type = getattr(plugin_info, "service_type", None)
             if not service_type:
                 logger.error("Service plugin %s missing service_type", plugin_info.name)
                 return False
-
             self._service_registry.register_provider(
                 service_type=service_type,
                 provider_name=plugin_info.name,
                 provider_class=service_class,
                 capabilities=plugin_info.capabilities,
             )
-
         except Exception:
             logger.exception("Service plugin registration failed")
             return False
-
         else:
             logger.info("Registered service plugin: %s (%s)", plugin_info.name, service_type.value)
             return True

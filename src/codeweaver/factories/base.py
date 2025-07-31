@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 Base factory patterns and protocols for the CodeWeaver factory system.
 
@@ -26,8 +21,6 @@ from codeweaver.types import (
 
 
 logger = logging.getLogger(__name__)
-
-# Type variables for generic factory patterns
 T = TypeVar("T")
 ConfigT = TypeVar("ConfigT", bound=BaseComponentConfig)
 InfoT = TypeVar("InfoT", bound=BaseComponentInfo)
@@ -94,20 +87,17 @@ class BaseComponentFactory(ABC):
     def validate_config(self, config: BaseComponentConfig) -> ValidationResult:
         """Default configuration validation."""
         try:
-            # Basic validation - subclasses should override for specific validation
             if not hasattr(config, "model_validate"):
                 return ValidationResult(
                     is_valid=False, errors=["Configuration must be a Pydantic model"], warnings=[]
                 )
-
-            # Validate the model
             config.model_validate(config.model_dump())
-            return ValidationResult(is_valid=True, errors=[], warnings=[])
-
         except Exception as e:
             return ValidationResult(
                 is_valid=False, errors=[f"Configuration validation failed: {e}"], warnings=[]
             )
+        else:
+            return ValidationResult(is_valid=True, errors=[], warnings=[])
 
     def get_component_info(self) -> BaseComponentInfo:
         """Get basic component information."""
@@ -134,7 +124,6 @@ class BaseRegistry(ABC):
             self.logger.warning(
                 "Overriding existing %s factory: %s", self.component_type.value, name
             )
-
         self._factories[name] = factory
         self.logger.debug("Registered %s factory: %s", self.component_type.value, name)
 
@@ -220,7 +209,6 @@ class ComponentRegistration:
         return f"ComponentRegistration(name={self.name}, type={self.component_type.value})"
 
 
-# Factory pattern utilities
 def create_factory_context(services: dict[str, Any] | None = None) -> FactoryContext:
     """Create a factory context with optional services."""
     return FactoryContext(services)

@@ -7,7 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from codeweaver.types.intent.enums import IntentResult, ParsedIntent
+from codeweaver.types.intent.data import IntentResult, ParsedIntent
 
 
 @runtime_checkable

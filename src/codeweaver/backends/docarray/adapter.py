@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """Universal adapter for DocArray backends to CodeWeaver protocols."""
 
 import logging
@@ -43,30 +40,22 @@ class VectorConverter:
             "embedding": vector.vector,
             "metadata": vector.payload.copy() if vector.payload else {},
         }
-
-        # Add sparse vector if available
         if "sparse_vector" in self._field_names and vector.sparse_vector:
             doc_data["sparse_vector"] = vector.sparse_vector
-
-        # Extract structured metadata
         if vector.payload:
             for field_name in self._field_names:
                 if field_name.startswith("meta_") and field_name[5:] in vector.payload:
                     doc_data[field_name] = vector.payload[field_name[5:]]
-
         return self.doc_class(**doc_data)
 
     def doc_to_search_result(self, doc: BaseDoc, score: float) -> SearchResult:
         """Convert DocArray document to SearchResult."""
         payload = doc.metadata.copy() if hasattr(doc, "metadata") else {}
-
-        # Add structured metadata back to payload
         for field_name, value in doc.model_dump().items():
             if field_name.startswith("meta_"):
                 payload[field_name[5:]] = value
             elif field_name not in {"id", "embedding", "metadata", "sparse_vector"}:
                 payload[field_name] = value
-
         return SearchResult(
             id=str(doc.id),
             score=score,
@@ -82,11 +71,8 @@ class VectorConverter:
             "embedding": query_vector,
             "metadata": kwargs.get("metadata", {}),
         }
-
-        # Add sparse vector for hybrid queries
         if "sparse_vector" in self._field_names and "sparse_vector" in kwargs:
             query_data["sparse_vector"] = kwargs["sparse_vector"]
-
         return self.doc_class(**query_data)
 
 
@@ -120,15 +106,11 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
         self.collection_name = name
         self._dimension = dimension
         self._distance_metric = distance_metric
-
-        # DocArray handles collection creation implicitly
-        # Store configuration for later use
         self._collection_config = {
             "dimension": dimension,
             "distance_metric": distance_metric,
             **kwargs,
         }
-
         self._initialized = True
         logger.info("Created collection '%s' with dimension %s", name, dimension)
 
@@ -136,17 +118,11 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
         """Insert or update vectors in the collection."""
         if not self._initialized:
             raise DocArrayAdapterError("Collection not initialized")
-
         try:
-            # Convert vectors to documents
             docs = [self.converter.vector_to_doc(vector) for vector in vectors]
             all_docs = DocList[self.doc_class](docs)
-
-            # Batch insert for performance
             self.doc_index.index(all_docs)
-
             logger.debug("Upserted %s vectors to collection '%s'", len(vectors), collection_name)
-
         except Exception as e:
             logger.exception("Failed to upsert vectors")
             raise DocArrayAdapterError(f"Upsert failed: {e}") from e
@@ -163,23 +139,18 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
         """Search for similar vectors."""
         if not self._initialized:
             raise DocArrayAdapterError("Collection not initialized")
-
         try:
-            # Create query document
             query_doc = self.converter.create_query_doc(query_vector, **kwargs)
-
-            # Perform search
             results, scores = self.doc_index.find(query_doc, search_field="embedding", limit=limit)
-
-            # Convert results
             search_results = []
             search_results.extend(
-                self.converter.doc_to_search_result(doc, score)
-                for doc, score in zip(results, scores, strict=False)
-                if score_threshold is None or score >= score_threshold
+                (
+                    self.converter.doc_to_search_result(doc, score)
+                    for doc, score in zip(results, scores, strict=False)
+                    if score_threshold is None or score >= score_threshold
+                )
             )
             logger.debug("Found %s results for query", len(search_results))
-
         except Exception as e:
             logger.exception("Search failed")
             raise DocArrayAdapterError(f"Search failed: {e}") from e
@@ -189,12 +160,10 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
     async def delete_vectors(self, collection_name: str, ids: list[str | int]) -> None:
         """Delete vectors by IDs."""
         try:
-            # DocArray delete implementation depends on backend
             if hasattr(self.doc_index, "delete"):
                 self.doc_index.delete([str(id_) for id_ in ids])
             else:
                 logger.warning("Backend doesn't support direct deletion")
-
         except Exception as e:
             logger.exception("Delete failed")
             raise DocArrayAdapterError(f"Delete failed: {e}") from e
@@ -202,28 +171,25 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
     async def get_collection_info(self, name: str) -> CollectionInfo:
         """Get collection metadata and statistics."""
         try:
-            # Extract information from DocArray index
             vector_count = self._get_vector_count()
             dimension = getattr(self, "_dimension", 512)
-
+        except Exception as e:
+            logger.exception("Failed to get collection info")
+            raise DocArrayAdapterError(f"Collection info failed: {e}") from e
+        else:
             return CollectionInfo(
                 name=name,
                 dimension=dimension,
                 points_count=vector_count,
                 distance_metric=getattr(self, "_distance_metric", DistanceMetric.COSINE),
-                indexed=True,  # Assume indexed by default
+                indexed=True,
                 supports_hybrid_search=self._supports_hybrid_search(),
-                supports_filtering=True,  # Most backends support basic filtering
+                supports_filtering=True,
                 supports_sparse_vectors=self._supports_sparse_vectors(),
             )
 
-        except Exception as e:
-            logger.exception("Failed to get collection info")
-            raise DocArrayAdapterError(f"Collection info failed: {e}") from e
-
     async def list_collections(self) -> list[str]:
         """List all available collections."""
-        # DocArray typically works with single collections
         return [self.collection_name] if self._initialized else []
 
     async def delete_collection(self, name: str) -> None:
@@ -233,12 +199,9 @@ class BaseDocArrayAdapter(VectorBackend, ABC):
                 self.doc_index.drop()
             self._initialized = False
             logger.info("Deleted collection '%s'", name)
-
         except Exception as e:
             logger.exception("Failed to delete collection")
             raise DocArrayAdapterError(f"Collection deletion failed: {e}") from e
-
-    # Abstract methods for backend-specific implementations
 
     @abstractmethod
     def _get_vector_count(self) -> int:
@@ -266,7 +229,6 @@ class DocArrayHybridAdapter(BaseDocArrayAdapter, HybridSearchBackend):
                 logger.info("Created %s sparse index on fields: %s", index_type, fields)
             else:
                 logger.warning("Backend doesn't support native sparse indexing")
-
         except Exception as e:
             logger.exception("Sparse index creation failed")
             raise DocArrayAdapterError(f"Sparse index failed: {e}") from e
@@ -284,45 +246,33 @@ class DocArrayHybridAdapter(BaseDocArrayAdapter, HybridSearchBackend):
     ) -> list[SearchResult]:
         """Perform hybrid search combining dense and sparse retrieval."""
         try:
-            # Convert sparse query to proper format
             if isinstance(sparse_query, str):
                 sparse_vector = self._text_to_sparse_vector(sparse_query)
             else:
                 sparse_vector = sparse_query
-
-            # Create hybrid query document
             query_doc = self.converter.create_query_doc(
                 dense_vector, sparse_vector=sparse_vector, **kwargs
             )
-
-            # Use native hybrid search if available
             if hasattr(self.doc_index, "hybrid_search"):
                 results, scores = self.doc_index.hybrid_search(query_doc, alpha=alpha, limit=limit)
             else:
-                # Fallback to RRF fusion
                 results, scores = await self._fallback_hybrid_search(
                     dense_vector, sparse_vector, limit, alpha
                 )
-
-            # Convert results
+        except Exception as e:
+            logger.exception("Hybrid search failed")
+            raise DocArrayAdapterError(f"Hybrid search failed: {e}") from e
+        else:
             return list(
                 starmap(self.converter.doc_to_search_result, zip(results, scores, strict=False))
             )
 
-        except Exception as e:
-            logger.exception("Hybrid search failed")
-            raise DocArrayAdapterError(f"Hybrid search failed: {e}") from e
-
     def _text_to_sparse_vector(self, text: str) -> dict[str, float]:
         """Convert text to sparse vector representation."""
-        # Simple TF-IDF implementation
-        # In production, use proper BM25 or TF-IDF vectorizer
         words = text.lower().split()
         term_freq = {}
         for word in words:
             term_freq[word] = term_freq.get(word, 0) + 1
-
-        # Normalize
         max_freq = max(term_freq.values()) if term_freq else 1
         return {word: freq / max_freq for word, freq in term_freq.items()}
 
@@ -330,13 +280,8 @@ class DocArrayHybridAdapter(BaseDocArrayAdapter, HybridSearchBackend):
         self, dense_vector: list[float], sparse_vector: dict[str, float], limit: int, alpha: float
     ) -> tuple[list[BaseDoc], list[float]]:
         """Fallback hybrid search using RRF fusion."""
-        # Perform separate dense and sparse searches
         dense_results = await self.search_vectors(self.collection_name, dense_vector, limit * 2)
-
-        # For sparse search, we'd need a separate implementation
-        # This is a simplified version
-        sparse_results = dense_results  # Placeholder
-
+        sparse_results = dense_results
         return self._apply_rrf_fusion(sparse_results, sparse_results, limit)
 
     def _apply_rrf_fusion(
@@ -347,20 +292,10 @@ class DocArrayHybridAdapter(BaseDocArrayAdapter, HybridSearchBackend):
         k: int = 60,
     ) -> tuple[list[BaseDoc], list[float]]:
         """Apply Reciprocal Rank Fusion to combine results."""
-        # Simplified RRF implementation
         scores = {}
-
-        # Score dense results
         for rank, result in enumerate(dense_results):
             scores[result.id] = scores.get(result.id, 0) + 1 / (rank + k)
-
-        # Score sparse results
         for rank, result in enumerate(sparse_results):
             scores[result.id] = scores.get(result.id, 0) + 1 / (rank + k)
-
-        # Sort by combined score
         sorted(scores.keys(), key=lambda x: scores[x], reverse=True)[:limit]
-
-        # Return placeholder results
-        # In real implementation, fetch the actual documents
-        return [], []
+        return ([], [])

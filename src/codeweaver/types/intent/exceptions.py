@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 # Intent processing errors extending existing hierarchy
-from codeweaver.types.exceptions import ServiceError
+from codeweaver.types.exceptions import CodeWeaverError
 
 
-class IntentError(ServiceError):
+class IntentError(CodeWeaverError):
     """Base class for intent layer errors."""
 
 

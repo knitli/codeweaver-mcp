@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """Base service provider implementation."""
 
 import asyncio
@@ -38,8 +33,6 @@ class BaseServiceProvider(ServiceProvider, ABC):
         self._service_type = service_type
         self._config = config
         self._logger = logger or logging.getLogger(f"codeweaver.services.{self.name}")
-
-        # State management
         self._status = ProviderStatus.REGISTERED
         self._initialized = False
         self._started_at: datetime | None = None
@@ -49,8 +42,6 @@ class BaseServiceProvider(ServiceProvider, ABC):
             "last_error": None,
             "last_response_time": 0.0,
         }
-
-        # Async state
         self._health_check_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
@@ -62,7 +53,7 @@ class BaseServiceProvider(ServiceProvider, ABC):
     @property
     def version(self) -> str:
         """Provider version."""
-        return "1.0.0"  # Default version, override in subclasses
+        return "1.0.0"
 
     @property
     def service_type(self) -> ServiceType:
@@ -104,27 +95,17 @@ class BaseServiceProvider(ServiceProvider, ABC):
         if self._initialized:
             self._logger.warning("Provider %s already initialized", self.name)
             return
-
         try:
             self._status = ProviderStatus.INITIALIZING
             self._logger.info("Initializing service provider: %s", self.name)
-
-            # Validate configuration
             await self._validate_config()
-
-            # Initialize provider-specific resources
             await self._initialize_provider()
-
-            # Start health monitoring if configured
             if self._config.health_check_interval > 0:
                 await self._start_health_monitoring()
-
             self._initialized = True
             self._started_at = datetime.now(UTC)
             self._status = ProviderStatus.READY
-
             self._logger.info("Service provider initialized successfully: %s", self.name)
-
         except Exception as e:
             self._status = ProviderStatus.ERROR
             error_msg = f"Failed to initialize provider {self.name}: {e}"
@@ -135,27 +116,17 @@ class BaseServiceProvider(ServiceProvider, ABC):
         """Shutdown the service provider gracefully."""
         if not self._initialized:
             return
-
         try:
             self._logger.info("Shutting down service provider: %s", self.name)
-
-            # Signal shutdown
             self._shutdown_event.set()
-
-            # Stop health monitoring
-            if self._health_check_task and not self._health_check_task.done():
+            if self._health_check_task and (not self._health_check_task.done()):
                 self._health_check_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await self._health_check_task
-
-            # Shutdown provider-specific resources
             await self._shutdown_provider()
-
             self._initialized = False
             self._status = ProviderStatus.REGISTERED
-
             self._logger.info("Service provider shut down successfully: %s", self.name)
-
         except Exception as e:
             error_msg = f"Failed to shutdown provider {self.name}: {e}"
             self._logger.exception(error_msg)
@@ -164,52 +135,28 @@ class BaseServiceProvider(ServiceProvider, ABC):
     async def health_check(self) -> ServiceHealth:
         """Check if the service is healthy."""
         start_time = time.time()
-
         try:
-            # Perform provider-specific health check
             is_healthy = await self._check_health()
             response_time = time.time() - start_time
-
-            # Update health stats
             self._health_stats["last_response_time"] = response_time
             if is_healthy:
                 self._health_stats["successful_operations"] += 1
             else:
                 self._health_stats["errors"] += 1
-
-            # Determine health status
             success_rate = self._calculate_success_rate()
             status = self._determine_health_status(
                 is_healthy=is_healthy, success_rate=success_rate, response_time=response_time
             )
-
-            # Calculate uptime
             uptime = 0.0
             if self._started_at:
                 uptime = (datetime.now(UTC) - self._started_at).total_seconds()
-
-            return ServiceHealth(
-                service_type=self._service_type,
-                status=status,
-                last_check=datetime.now(UTC),
-                response_time=response_time,
-                error_count=self._health_stats["errors"],
-                success_rate=success_rate,
-                last_error=self._health_stats.get("last_error"),
-                uptime=uptime,
-                memory_usage=0,  # TODO: Implement memory monitoring
-            )
-
         except Exception as e:
             response_time = time.time() - start_time
             error_msg = f"Health check failed: {e}"
-
             self._health_stats["errors"] += 1
             self._health_stats["last_error"] = error_msg
             self._health_stats["last_response_time"] = response_time
-
             self._logger.warning("Health check failed for %s: %s", self.name, error_msg)
-
             return ServiceHealth(
                 service_type=self._service_type,
                 status=HealthStatus.UNHEALTHY,
@@ -219,6 +166,18 @@ class BaseServiceProvider(ServiceProvider, ABC):
                 success_rate=self._calculate_success_rate(),
                 last_error=error_msg,
                 uptime=0.0,
+            )
+        else:
+            return ServiceHealth(
+                service_type=self._service_type,
+                status=status,
+                last_check=datetime.now(UTC),
+                response_time=response_time,
+                error_count=self._health_stats["errors"],
+                success_rate=success_rate,
+                last_error=self._health_stats.get("last_error"),
+                uptime=uptime,
+                memory_usage=0,
             )
 
     def record_operation(self, *, success: bool, error: str | None = None) -> None:
@@ -246,10 +205,8 @@ class BaseServiceProvider(ServiceProvider, ABC):
         """Validate provider configuration."""
         if not self._config.provider:
             raise ServiceInitializationError("Provider name is required")
-
         if self._config.timeout <= 0:
             raise ServiceInitializationError("Timeout must be positive")
-
         if self._config.max_retries < 0:
             raise ServiceInitializationError("Max retries cannot be negative")
 
@@ -257,7 +214,6 @@ class BaseServiceProvider(ServiceProvider, ABC):
         """Start periodic health monitoring."""
         if self._health_check_task:
             return
-
         self._health_check_task = asyncio.create_task(self._health_monitor_loop())
 
     async def _health_monitor_loop(self) -> None:
@@ -267,9 +223,8 @@ class BaseServiceProvider(ServiceProvider, ABC):
                 await asyncio.wait_for(
                     self._shutdown_event.wait(), timeout=self._config.health_check_interval
                 )
-                break  # Shutdown requested
+                break
             except TimeoutError:
-                # Time for health check
                 try:
                     await self.health_check()
                 except Exception as e:
@@ -288,7 +243,6 @@ class BaseServiceProvider(ServiceProvider, ABC):
         """Determine health status based on metrics."""
         if not is_healthy:
             return HealthStatus.UNHEALTHY
-
         if success_rate < 0.5:
             return HealthStatus.UNHEALTHY
         if success_rate < 0.8 or response_time > self._config.timeout * 0.8:
