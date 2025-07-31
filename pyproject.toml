@@ -78,6 +78,7 @@ dev = [
     "uv_build>=0.8.2,<0.9.0",
     "uv>=0.8.2,<0.9.0",
     "ipython>=9.4.0",
+    "jsonlines>=4.0.0",
 ]
 typing = ["pylance>=0.32.0"]
 

@@ -16,7 +16,7 @@ TODO: Add interactive prompt for contributors.
 
 import json
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 from concurrent.futures import ThreadPoolExecutor
@@ -45,7 +45,16 @@ CONTRIBUTORS = Parameter(
     "--contributor",
     consume_multiple=True,
     help="Name and email of the contributor(s) to add. May be provided multiple times, or as a json list.",
+    negative=(),
     json_list=True,
+)
+
+INTERACTIVE = Parameter(
+    "-i",
+    "--interactive",
+    action="store_true",
+    negative=(),
+    help="Run the script in interactive mode, prompting for contributors.",
 )
 
 app = App(

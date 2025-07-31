@@ -27,6 +27,24 @@ uv = "latest"
 [env]
 GH_REPO="knitli/code-weaver-mcp"
 
+[hooks]
+enter = """
+#!/bin/bash
+echo "Setting up CodeWeaver MCP environment..."
+chmod +x scripts/*.{sh,py} &>/dev/null &&
+mise run activate &&
+mise run setup &&
+mise run update-tools &&
+alias jj='jj --no-pager' &&
+alias git='git --no-pager' &&
+"""
+
+leave = """
+echo "Exiting CodeWeaver MCP environment..."
+eval "$(mise deactivate)" &>/dev/null &&
+echo "Environment deactivated."
+"""
+
 [tasks]
 
 # Development setup
@@ -35,7 +53,8 @@ setup = """
 mise trust -y &&
 mise install -y &&
 mise reshim &&
-eval "$(mise activate)" &&
+mise run activate &&
+echo "Initializing CodeWeaver MCP..."
 hk init --mise &&
 echo "Setting up development environment..."
 uv venv --allow-existing .venv &&
@@ -44,12 +63,22 @@ uv sync --all-groups &&
 echo "✅ Development environment ready!"
 """
 
+update-tools = """
+#!/bin/bash
+echo "Updating tools..."
+mise upgrade -yq &&
+mise self-update -yq &&
+mise reshim &&
+mise prune -yq
+"""
+
 install = "uv sync --all-groups"
 
 # Code quality and formatting
 fix = """
 #!/bin/bash
 echo "Fixing code issues..."
+ruff check --select I --fix . &&
 ruff check --fix --unsafe-fixes . &&
 ruff format . &&
 hk fix &&
@@ -180,3 +209,7 @@ hk fix &&
 git add . &&
 hk check
 """
+
+[tasks.activate]
+run = """eval "$(mise activate)" &>/dev/null"""
+hide = true

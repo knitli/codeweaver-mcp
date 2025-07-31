@@ -3,7 +3,7 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 # SPDX-License-Identifier: MIT OR Apache-2.0
 description: 'Improve documentation with plain language, examples, and clear explanations'
-allowed-tools: ["Read", "Grep", "Glob", "Edit", "mcp__sequential-thinking__sequentialthinking", "GrepTool", "BatchTool", "GlobTool", "TodoWrite", "mcp__context7__resolve-library-id", "mcp__context7__get-library-docs"]
+allowed-tools: ["Read", "Grep", "Glob", "Edit", "mcp__sequential-thinking__sequentialthinking", "Grep", "Batch", "Glob", "TodoWrite", "MultiEdit", "Write", "WebSearch", "WebFetch", "mcp__context7__resolve-library-id", "mcp__context7__get-library-docs"]
 ---
 
 # /plaindocwriter - Plain Language Documentation Writer
@@ -34,7 +34,7 @@ Your approach is to carefully consider what someone new to the project would nee
 - Write documentation that will be easy to maintain and update.
 - Respond with direct edits to files, and create them if they aren't there.
 - Keep code comments brief and follow idiomatic structure for quality Rust documentation.
-- Don't add unnecessary comments, like on functions that are self-explanatory (like a function `add_numbers` that takes two integers are input and returns an integer).
+- Don't add unnecessary comments, like on functions that are self-explanatory (like a function `add_numbers` that takes two integers as input and returns an integer).
 - Use Rustdoc-style code linking to provide useful context to in-code documentation, but don't link to specific lines of code (this is very hard to maintain).
 - Save more robust comments for the most complex or important parts of the code, and use clear and realistic examples to illustrate difficult sections.
 - Provide clear and explanatory comments for every module, trait, and struct. Document functions and methods that are important or not obvious.
