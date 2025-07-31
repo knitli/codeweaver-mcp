@@ -243,15 +243,33 @@ class IntentServiceBridge(BaseServiceProvider):
     async def _get_intent_orchestrator(self):
         """Get IntentOrchestrator service from services manager."""
         try:
-            return
+            if not self.services_manager:
+                self.logger.warning("ServicesManager not available")
+                return None
+            
+            orchestrator = await self.services_manager.get_service("intent_orchestrator")
+            if orchestrator:
+                self.logger.debug("IntentOrchestrator service retrieved successfully")
+            else:
+                self.logger.info("IntentOrchestrator service not registered with ServicesManager")
+            return orchestrator
         except Exception as e:
             self.logger.warning("Failed to get IntentOrchestrator service: %s", e)
-            return
+            return None
 
     async def _get_auto_indexing_service(self):
         """Get AutoIndexingService from services manager."""
         try:
-            return
+            if not self.services_manager:
+                self.logger.warning("ServicesManager not available")
+                return None
+                
+            indexing_service = await self.services_manager.get_service("auto_indexing")
+            if indexing_service:
+                self.logger.debug("AutoIndexingService retrieved successfully")
+            else:
+                self.logger.info("AutoIndexingService not registered with ServicesManager")
+            return indexing_service
         except Exception as e:
             self.logger.warning("Failed to get AutoIndexingService: %s", e)
-            return
+            return None

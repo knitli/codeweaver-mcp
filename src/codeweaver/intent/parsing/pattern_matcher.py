@@ -108,6 +108,7 @@ class PatternBasedParser:
                 "normalized_text": normalized_text,
                 "background_indexing_note": "Indexing handled automatically in background",
             }
+            from datetime import UTC, datetime
             parsed_intent = ParsedIntent(
                 intent_type=intent_type,
                 primary_target=primary_target,
@@ -116,6 +117,7 @@ class PatternBasedParser:
                 confidence=confidence,
                 filters=filters,
                 metadata=metadata,
+                parsed_at=datetime.now(UTC),
             )
             self.logger.debug(
                 "Parsed intent: type=%s, target=%s, confidence=%.2f",

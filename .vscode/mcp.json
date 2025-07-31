@@ -1,0 +1,89 @@
+{
+    "inputs": [
+        {
+            "description": "GitHub Personal Access Token",
+            "id": "github_mcp_pat",
+            "password": true,
+            "type": "promptString"
+        },
+        {
+            "description": "Tavily API Key",
+            "id": "tavily_api_key",
+            "password": true,
+            "type": "promptString"
+        }
+    ],
+    "servers": {
+        "browser-debug-tools": {
+            "args": ["--bun", "@agentdeskai/browser-tools-server@latest"],
+            "command": "bunx",
+            "type": "stdio"
+        },
+        "console-ninja": {
+            "args": ["--bun", "~/.console-ninja/mcp/"],
+            "command": "bunx",
+            "type": "stdio"
+        },
+        "context7": {
+            "args": ["--bun", "@upstash/context7-mcp@latest"],
+            "command": "bunx",
+            "type": "stdio"
+        },
+        "fetch": {
+            "args": ["mcp-server-fetch"],
+            "command": "uvx"
+        },
+        "filesystem": {
+            "args": [
+                "--bun",
+                "@modelcontextprotocol/server-filesystem",
+                "${workspaceFolder}"
+            ],
+            "command": "bunx"
+        },
+        "github-remote": {
+            "headers": {
+                "Authorization": "Bearer ${input:github_mcp_pat}"
+            },
+            "type": "http",
+            "url": "https://api.githubcopilot.com/mcp/"
+        },
+        "playwright": {
+            "args": [
+                "--bun",
+                "@playwright/mcp@latest",
+                "--browser",
+                "/mnt/c/Users/bm-sv/scoop/shims/chromium.exe"
+            ],
+            "command": "bunx"
+        },
+        "sequential-thinking": {
+            "args": [
+                "--bun",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "command": "bunx",
+            "type": "stdio"
+        },
+        "mem0-memory-mcp": {
+            "command": "bunx",
+            "args": [
+                "--bun",
+                "@smithery/cli@latest",
+                "run",
+                "@mem0ai/mem0-memory-mcp",
+                "--key",
+                "${env:MEM0}",
+                "--profile",
+                "${env:SMITHERY_PROFILE}"
+            ]
+        },
+        "tavily": {
+            "command": "bunx",
+            "args": ["--bun", "tavily-mcp@latest"],
+            "env": {
+                "TAVILY_API_KEY": "${input:tavily_api_key}",
+            }
+        }
+    }
+}

@@ -56,7 +56,7 @@ class ServiceBridge(Middleware):
         if tool_name in service_mappings:
             for context_key, service_type in service_mappings[tool_name].items():
                 try:
-                    if service := self._services_manager.get_service(service_type):
+                    if service := await self._services_manager.get_service(service_type):
                         context.fastmcp_context.set_state_value(context_key, service)
                         self._logger.debug("Injected %s service into context", service_type.value)
                     else:

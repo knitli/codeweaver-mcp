@@ -348,6 +348,42 @@ class IntentServiceConfig(ServiceConfig):
     max_workflow_steps: Annotated[int, Field(gt=0, description="Maximum workflow steps")] = 10
     workflow_step_timeout: Annotated[float, Field(gt=0, description="Per-step timeout")] = 15.0
 
+    # Performance optimization settings
+    circuit_breaker_enabled: Annotated[bool, Field(description="Enable circuit breaker")] = True
+    circuit_breaker_threshold: Annotated[
+        int, Field(ge=1, description="Circuit breaker failure threshold")
+    ] = 5
+    circuit_breaker_reset_time: Annotated[
+        float, Field(gt=0, description="Circuit breaker reset time in seconds")
+    ] = 60.0
+    
+    # Monitoring and metrics integration
+    enable_performance_monitoring: Annotated[
+        bool, Field(description="Enable comprehensive performance monitoring")
+    ] = True
+    enable_telemetry_tracking: Annotated[
+        bool, Field(description="Enable telemetry tracking for intents")
+    ] = True
+    enable_metrics_collection: Annotated[
+        bool, Field(description="Enable detailed metrics collection")
+    ] = True
+    
+    # Concurrency settings
+    max_concurrent_intents: Annotated[
+        int, Field(gt=0, description="Maximum concurrent intent processing")
+    ] = 10
+    
+    # Performance thresholds
+    performance_excellent_threshold: Annotated[
+        float, Field(gt=0, description="Excellent performance threshold in seconds")
+    ] = 0.1
+    performance_good_threshold: Annotated[
+        float, Field(gt=0, description="Good performance threshold in seconds")
+    ] = 0.5
+    performance_acceptable_threshold: Annotated[
+        float, Field(gt=0, description="Acceptable performance threshold in seconds")
+    ] = 2.0
+
 
 class AutoIndexingConfig(ServiceConfig):
     """Configuration for background auto-indexing services."""

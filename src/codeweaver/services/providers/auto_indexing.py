@@ -243,6 +243,27 @@ class AutoIndexingService(BaseServiceProvider):
             self.observer.stop()
             self.observer.join()
 
+    async def trigger_indexing(self, path: str) -> bool:
+        """
+        Trigger background indexing for a given path.
+        
+        This method can be called from the intent bridge to start background
+        indexing operations without exposing indexing to LLM users.
+        
+        Args:
+            path: Path to index
+            
+        Returns:
+            True if indexing was triggered successfully
+        """
+        try:
+            self._logger.info("Triggering background indexing for path: %s", path)
+            await self.start_monitoring(path)
+            return True
+        except Exception as e:
+            self._logger.error("Failed to trigger background indexing for %s: %s", path, e)
+            return False
+
     async def _index_path_initial(self, path: str) -> None:
         """Perform initial indexing of a path using existing services."""
         if not all([self.filtering_service, self.chunking_service]):

@@ -291,6 +291,38 @@ class CodeWeaverServer:
             """Get information about supported languages and capabilities."""
             return await self._get_supported_languages_handler(ctx)
 
+        @self.mcp.tool()
+        async def process_intent(ctx: Context, intent: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+            """
+            Process natural language intent and return appropriate results.
+
+            Args:
+                intent: Natural language description (SEARCH, UNDERSTAND, or ANALYZE)
+                context: Optional context for the request
+
+            Returns:
+                Structured result with data, metadata, and execution info
+
+            Examples:
+                - "find authentication functions" (SEARCH)
+                - "understand the database connection architecture" (UNDERSTAND)
+                - "analyze performance bottlenecks in the API layer" (ANALYZE)
+
+            Note: Indexing happens automatically in background - no INDEX intent needed
+            """
+            return await self._process_intent_handler(ctx, intent, context or {})
+
+        @self.mcp.tool()
+        async def get_intent_capabilities(ctx: Context) -> dict[str, Any]:
+            """
+            Get information about supported intent types and capabilities.
+
+            Returns:
+                Information about what types of requests can be processed
+                (INDEX not included - handled automatically in background)
+            """
+            return await self._get_intent_capabilities_handler(ctx)
+
         logger.info("MCP tools registered successfully")
 
     async def _search_code_handler(
@@ -450,6 +482,144 @@ class CodeWeaverServer:
             "middleware_services": middleware_info,
             "extensibility": component_info,
         }
+
+    async def _process_intent_handler(self, ctx: Context, intent: str, context: dict[str, Any]) -> dict[str, Any]:
+        """Process natural language intent through the intent layer."""
+        try:
+            # Get intent bridge from context or services manager
+            intent_bridge = await self._get_intent_bridge()
+            if not intent_bridge:
+                return {
+                    "success": False,
+                    "error": "Intent service not available",
+                    "data": None,
+                    "metadata": {
+                        "fallback_suggestion": "Try using the existing tools: search_code, ast_grep_search",
+                        "background_indexing": False,
+                    },
+                    "suggestions": [
+                        "The intent layer is not yet fully initialized",
+                        "Try using search_code for basic search operations",
+                        "Use ast_grep_search for structural code patterns",
+                    ],
+                }
+
+            # Create enhanced context from FastMCP context
+            enhanced_context = {
+                **context,
+                "fastmcp_context": ctx,
+                "server_components": self._components,
+                "services_manager": self.services_manager,
+            }
+
+            # Process intent through the bridge
+            result = await intent_bridge.process_intent(intent, enhanced_context)
+            
+            # Convert IntentResult to dictionary format
+            return {
+                "success": result.success,
+                "data": result.data,
+                "error_message": result.error_message if not result.success else None,
+                "metadata": {
+                    **result.metadata,
+                    "strategy_used": result.strategy_used,
+                    "execution_time": getattr(result, 'execution_time', None),
+                    "server_type": "services_integrated",
+                    "intent_layer_version": "1.0.0",
+                },
+                "suggestions": result.suggestions if not result.success else None,
+            }
+
+        except Exception as e:
+            logger.exception("Intent processing failed in handler")
+            return {
+                "success": False,
+                "error": f"Intent processing failed: {e}",
+                "data": None,
+                "metadata": {
+                    "error_type": type(e).__name__,
+                    "fallback_available": True,
+                },
+                "suggestions": [
+                    "Try rephrasing your request",
+                    "Use more specific keywords",
+                    "Try the search_code tool directly",
+                ],
+            }
+
+    async def _get_intent_capabilities_handler(self, ctx: Context) -> dict[str, Any]:
+        """Get intent layer capabilities and status."""
+        try:
+            # Get intent bridge
+            intent_bridge = await self._get_intent_bridge()
+            if not intent_bridge:
+                return {
+                    "available": False,
+                    "error": "Intent service not available",
+                    "supported_intents": [],
+                    "background_indexing": False,
+                    "fallback_tools": ["search_code", "ast_grep_search", "get_supported_languages"],
+                }
+
+            # Get capabilities from the bridge
+            capabilities = await intent_bridge.get_intent_capabilities()
+            
+            # Add server-level information
+            capabilities.update({
+                "server_type": "services_integrated",
+                "intent_layer_version": "1.0.0",
+                "mcp_tools": {
+                    "process_intent": "Natural language intent processing",
+                    "get_intent_capabilities": "Intent system capabilities",
+                    "search_code": "Direct code search (fallback)",
+                    "ast_grep_search": "Structural code search (fallback)",
+                },
+                "background_services": {
+                    "auto_indexing": bool(await self._get_auto_indexing_service()),
+                    "intent_orchestrator": bool(await self._get_intent_orchestrator()),
+                },
+            })
+
+            return capabilities
+
+        except Exception as e:
+            logger.exception("Failed to get intent capabilities")
+            return {
+                "available": False,
+                "error": f"Capabilities query failed: {e}",
+                "supported_intents": [],
+                "background_indexing": False,
+            }
+
+    async def _get_intent_bridge(self):
+        """Get intent bridge from services manager."""
+        try:
+            if not self.services_manager:
+                return None
+            return await self.services_manager.get_service("intent_bridge")
+        except Exception as e:
+            logger.warning("Failed to get intent bridge: %s", e)
+            return None
+
+    async def _get_intent_orchestrator(self):
+        """Get intent orchestrator from services manager."""
+        try:
+            if not self.services_manager:
+                return None
+            return await self.services_manager.get_service("intent_orchestrator")
+        except Exception as e:
+            logger.warning("Failed to get intent orchestrator: %s", e)
+            return None
+
+    async def _get_auto_indexing_service(self):
+        """Get auto-indexing service from services manager."""
+        try:
+            if not self.services_manager:
+                return None
+            return await self.services_manager.get_service("auto_indexing")
+        except Exception as e:
+            logger.warning("Failed to get auto-indexing service: %s", e)
+            return None
 
     async def run(self) -> None:
         """Run the server."""

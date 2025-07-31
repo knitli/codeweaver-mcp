@@ -88,6 +88,9 @@ class ServicesManager:
             # Create optional services if enabled
             await self._create_optional_services()
 
+            # NEW: Create intent layer services
+            await self._create_intent_services()
+
             # NEW: Create and register middleware services
             await self._create_middleware_services()
 
@@ -168,8 +171,11 @@ class ServicesManager:
         service = self._services.get(ServiceType.TELEMETRY)
         return service or None
 
-    def get_service(self, service_type: ServiceType) -> ServiceProvider | None:
-        """Get any service by type."""
+    async def get_service(self, service_type: ServiceType | str) -> ServiceProvider | None:
+        """Get any service by type or string identifier."""
+        if isinstance(service_type, str):
+            # Handle string keys for special services like intent_bridge
+            return self._services.get(service_type)
         return self._services.get(service_type)
 
     def list_active_services(self) -> dict[ServiceType, ServiceProvider]:
@@ -374,6 +380,24 @@ class ServicesManager:
 
             self._logger.info("Middleware service providers registered")
 
+            # NEW: Register intent layer service providers
+            from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
+            from codeweaver.services.providers.auto_indexing import AutoIndexingService
+            from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
+
+            # Register intent services
+            self._registry.register_provider(
+                ServiceType.INTENT, "intent_orchestrator", IntentOrchestrator
+            )
+            self._registry.register_provider(
+                ServiceType.AUTO_INDEXING, "auto_indexing", AutoIndexingService
+            )
+            self._registry.register_provider(
+                ServiceType.INTENT, "intent_bridge", IntentServiceBridge
+            )
+
+            self._logger.info("Intent layer service providers registered")
+
             # Register telemetry service provider
             from codeweaver.services.providers.telemetry import PostHogTelemetryProvider
 
@@ -436,6 +460,41 @@ class ServicesManager:
                     self._logger.warning(
                         "Failed to create optional service %s: %s", service_type.value, e
                     )
+
+    async def _create_intent_services(self) -> None:
+        """Create intent layer services if enabled."""
+        intent_services = ServiceType.get_intent_services()
+
+        for service_type in intent_services:
+            config = self._get_service_config(service_type)
+            if config.enabled:
+                try:
+                    service = await self._registry.create_service(service_type, config)
+                    self._services[service_type] = service
+                    self._logger.info("Intent service created: %s", service_type.value)
+                except Exception as e:
+                    error_msg = f"Failed to create intent service {service_type.value}: {e}"
+                    self._logger.exception(error_msg)
+                    # Intent services are important for alpha functionality
+                    raise ServiceCreationError(service_type, str(e)) from e
+            else:
+                self._logger.warning("Intent service disabled: %s", service_type.value)
+
+        # Create intent bridge with services manager dependency
+        if self._config.intent.enabled:
+            try:
+                from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
+                
+                intent_bridge = IntentServiceBridge(services_manager=self)
+                await intent_bridge.initialize()
+                self._services["intent_bridge"] = intent_bridge
+                self._logger.info("Intent bridge created and initialized")
+            except Exception as e:
+                error_msg = f"Failed to create intent bridge: {e}"
+                self._logger.exception(error_msg)
+                raise ServiceCreationError("intent_bridge", str(e)) from e
+
+        self._logger.info("Intent layer services created")
 
     async def _create_middleware_services(self) -> None:
         """Create and register middleware services with FastMCP server."""
