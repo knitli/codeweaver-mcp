@@ -470,7 +470,7 @@ class StrategyRegistry:
 
 ### 5. Configuration Integration (Hierarchy-Compliant)
 
-**Location**: `src/codeweaver/_types/config.py` (Enhanced)
+**Location**: `src/codeweaver/types/config.py` (Enhanced)
 
 ```python
 from codeweaver.types import BaseServiceConfig

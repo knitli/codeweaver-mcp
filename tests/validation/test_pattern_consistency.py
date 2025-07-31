@@ -195,9 +195,7 @@ class TestProviderPatternConsistency:
             f"check_availability should have 1 parameter, got {len(params)}: {params}"
         )
 
-        assert params[0] == "capability", (
-            f"Parameter should be 'capability', got '{params[0]}'"
-        )
+        assert params[0] == "capability", f"Parameter should be 'capability', got '{params[0]}'"
 
         # Check return type annotation
         return_annotation = sig.return_annotation

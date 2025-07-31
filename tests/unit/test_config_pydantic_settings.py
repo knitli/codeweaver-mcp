@@ -73,7 +73,9 @@ class TestCodeWeaverConfig:
             assert config.server.log_level == "DEBUG"
             assert config.chunking.max_chunk_size == 2000
             assert config.chunking.min_chunk_size == 100
-            assert config.indexing.batch_size == 8  # Default is 8 in new system, environment override may not work for indexing due to profile system
+            assert (
+                config.indexing.batch_size == 8
+            )  # Default is 8 in new system, environment override may not work for indexing due to profile system
             assert config.backend.provider == "qdrant"  # Default backend from profile system
             assert config.backend.url == "http://test.example.com"
             assert config.backend.api_key == "test-api-key"
@@ -93,7 +95,9 @@ class TestCodeWeaverConfig:
             config = CodeWeaverConfig()
 
             assert config.data_sources.enabled is False
-            assert config.data_sources.default_source_type == "ast_grep"  # Updated default in new system
+            assert (
+                config.data_sources.default_source_type == "ast_grep"
+            )  # Updated default in new system
             assert config.rate_limiting.max_retries == 10
 
     def test_configuration_validation(self):

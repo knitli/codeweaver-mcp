@@ -3,7 +3,8 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 [settings]
-idiomatic_version_file_enable_tools = "[]"
+idiomatic_version_file_enable_tools = []
+
 [tools]
 ast-grep = "latest"
 gh = "latest"
@@ -102,7 +103,7 @@ echo "Running tests in watch mode..."
 uv run pytest tests/ -f --tb=short
 """
 
-# Building and packaging  
+# Building and packaging
 build = """
 #!/bin/bash
 echo "Building package..."
@@ -175,9 +176,7 @@ echo "✅ All CI checks passed!"
 pre-commit = """
 #!/bin/bash
 echo "Running pre-commit checks..."
-hk fix && 
+hk fix &&
 git add . &&
 hk check
 """
-
-

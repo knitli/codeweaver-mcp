@@ -320,6 +320,71 @@ class TelemetryServiceConfig(ServiceConfig):
     max_local_events: Annotated[int, Field(ge=0, description="Max local events to store")] = 10000
 
 
+class IntentServiceConfig(ServiceConfig):
+    """Configuration for intent orchestration services."""
+
+    provider: str = "intent_orchestrator"
+    default_strategy: Annotated[str, Field(description="Default strategy")] = "adaptive"
+    confidence_threshold: Annotated[
+        float, Field(ge=0.0, le=1.0, description="Minimum confidence threshold")
+    ] = 0.6
+    max_execution_time: Annotated[float, Field(gt=0, description="Maximum execution time")] = 30.0
+    debug_mode: Annotated[bool, Field(description="Enable debug mode")] = False
+    cache_ttl: Annotated[int, Field(gt=0, description="Cache TTL in seconds")] = 3600
+
+    # Parser configuration
+    use_nlp_fallback: Annotated[bool, Field(description="Enable NLP fallback parser")] = False
+    pattern_matching: Annotated[bool, Field(description="Enable pattern matching")] = True
+
+    # Strategy configuration
+    enable_strategy_performance_tracking: Annotated[
+        bool, Field(description="Enable strategy performance tracking")
+    ] = True
+    strategy_selection_timeout: Annotated[
+        float, Field(gt=0, description="Strategy selection timeout")
+    ] = 5.0
+
+    # Workflow configuration
+    max_workflow_steps: Annotated[int, Field(gt=0, description="Maximum workflow steps")] = 10
+    workflow_step_timeout: Annotated[float, Field(gt=0, description="Per-step timeout")] = 15.0
+
+
+class AutoIndexingConfig(ServiceConfig):
+    """Configuration for background auto-indexing services."""
+
+    provider: str = "auto_indexing"
+    watch_patterns: Annotated[list[str], Field(description="File patterns to watch")] = Field(
+        default_factory=lambda: ["**/*.py", "**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx"]
+    )
+    ignore_patterns: Annotated[list[str], Field(description="Patterns to ignore")] = Field(
+        default_factory=lambda: [".git", "node_modules", "__pycache__", "*.pyc", ".DS_Store"]
+    )
+    debounce_delay: Annotated[float, Field(ge=0, description="Debounce delay for file changes")] = (
+        1.0
+    )
+    max_file_size: Annotated[int, Field(gt=0, description="Maximum file size to index")] = (
+        1048576  # 1MB
+    )
+
+    # Monitoring configuration
+    initial_scan_enabled: Annotated[bool, Field(description="Enable initial path scanning")] = True
+    recursive_monitoring: Annotated[bool, Field(description="Enable recursive monitoring")] = True
+    watch_for_new_directories: Annotated[bool, Field(description="Watch for new directories")] = (
+        True
+    )
+
+    # Performance settings
+    max_concurrent_indexing: Annotated[int, Field(gt=0, description="Max concurrent indexing")] = 5
+    indexing_batch_size: Annotated[int, Field(gt=0, description="Indexing batch size")] = 10
+    indexing_queue_size: Annotated[int, Field(gt=0, description="Max indexing queue size")] = 1000
+
+    # Error handling
+    max_indexing_failures: Annotated[int, Field(ge=0, description="Max indexing failures")] = 10
+    failure_retry_delay: Annotated[float, Field(ge=0, description="Retry delay after failure")] = (
+        5.0
+    )
+
+
 class ServicesConfig(BaseModel):
     """Root configuration for all services."""
 
@@ -360,6 +425,14 @@ class ServicesConfig(BaseModel):
     )
     telemetry: Annotated[TelemetryServiceConfig, Field(description="Telemetry config")] = Field(
         default_factory=TelemetryServiceConfig
+    )
+
+    # Intent layer services
+    intent: Annotated[IntentServiceConfig, Field(description="Intent orchestration config")] = (
+        Field(default_factory=IntentServiceConfig)
+    )
+    auto_indexing: Annotated[AutoIndexingConfig, Field(description="Auto-indexing config")] = Field(
+        default_factory=AutoIndexingConfig
     )
 
     # Global service settings

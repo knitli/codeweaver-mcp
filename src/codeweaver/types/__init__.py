@@ -98,6 +98,21 @@ from codeweaver.types.factories import (
     ValidationResult,
 )
 
+# Intent types
+from codeweaver.types.intent import (
+    Complexity,
+    IntentError,
+    IntentParsingError,
+    IntentResult,
+    IntentStrategy,
+    IntentType,
+    ParsedIntent,
+    Scope,
+    ServiceIntegrationError,
+    StrategyExecutionError,
+    StrategySelectionError,
+)
+
 # Provider capabilities and registry
 # Provider types from providers module
 from codeweaver.types.providers import (
@@ -142,6 +157,7 @@ from codeweaver.types.services import (
     FilteringServiceConfig,
     FilteringStats,
     HealthStatus,
+    IntentServiceConfig,
     LoggingService,
     LoggingServiceConfig,
     MetricsService,
@@ -259,6 +275,20 @@ __all_factory_types__ = (
     "ValidationResult",
 )
 
+_all_intent_types__ = (
+    "Complexity",
+    "IntentError",
+    "IntentParsingError",
+    "IntentResult",
+    "IntentStrategy",
+    "IntentType",
+    "ParsedIntent",
+    "Scope",
+    "ServiceIntegrationError",
+    "StrategyExecutionError",
+    "StrategySelectionError",
+)
+
 __all_provider_types__ = (
     "PROVIDER_REGISTRY",
     "CohereModels",
@@ -294,6 +324,7 @@ __all_service_types__ = (
     "FilteringServiceConfig",
     "FilteringStats",
     "HealthStatus",
+    "IntentServiceConfig",
     "LoggingService",
     "LoggingServiceConfig",
     "MetricsService",
@@ -370,6 +401,7 @@ __all__ = (
     "CohereModels",
     "CohereRerankModels",
     "CollectionInfo",
+    "Complexity",
     "ComponentCreationError",
     "ComponentInstances",
     "ComponentLifecycle",
@@ -413,6 +445,12 @@ __all__ = (
     "IndexType",
     "InitializationContext",
     "InitializationResult",
+    "IntentError",
+    "IntentParsingError",
+    "IntentResult",
+    "IntentServiceConfig",
+    "IntentStrategy",
+    "IntentType",
     "Language",
     "LoggingService",
     "LoggingServiceConfig",
@@ -422,6 +460,7 @@ __all__ = (
     "MonitoringService",
     "MonitoringServiceConfig",
     "OpenAIModels",
+    "ParsedIntent",
     "PerformanceMode",
     "PluginError",
     "PluginInfo",
@@ -442,6 +481,7 @@ __all__ = (
     "RegistrationResult",
     "RerankProviderBase",
     "RerankResult",
+    "Scope",
     "SearchComplexity",
     "SearchFilter",
     "SearchResult",
@@ -453,6 +493,7 @@ __all__ = (
     "ServiceHealth",
     "ServiceInitializationError",
     "ServiceInstanceInfo",
+    "ServiceIntegrationError",
     "ServiceNotFoundError",
     "ServiceNotReadyError",
     "ServiceProvider",
@@ -470,6 +511,8 @@ __all__ = (
     "SourceProviderInfo",
     "SparseIndexType",
     "StorageType",
+    "StrategyExecutionError",
+    "StrategySelectionError",
     "T",
     "TelemetryService",
     "TelemetryServiceConfig",

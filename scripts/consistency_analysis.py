@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Refined Protocol Consistency Analysis.
 
 More targeted analysis that considers the actual architecture and usage patterns.

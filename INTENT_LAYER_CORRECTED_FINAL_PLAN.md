@@ -134,7 +134,7 @@ src/codeweaver/intent/workflows/
 
 src/codeweaver/intent/recovery/
 ├── fallback_handler.py       # Uses existing exception patterns
-└── error_categories.py       # Extends _types.exceptions hierarchy
+└── error_categories.py       # Extends types.exceptions hierarchy
 ```
 
 **Success Criteria**:
@@ -571,7 +571,7 @@ src/codeweaver/intent/
 │   └── steps.py                   # Individual workflow steps
 ├── recovery/
 │   ├── fallback_handler.py        # Uses existing exception patterns
-│   └── error_categories.py        # Extends _types.exceptions
+│   └── error_categories.py        # Extends types.exceptions
 ├── config/
 │   └── intent_config.py           # IntentServiceConfig/AutoIndexingConfig
 └── middleware/

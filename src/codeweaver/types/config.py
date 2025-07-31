@@ -57,6 +57,10 @@ class ServiceType(BaseEnum):
     METRICS = "metrics"
     TELEMETRY = "telemetry"
 
+    # Intent layer services
+    INTENT = "intent"
+    AUTO_INDEXING = "auto_indexing"
+
     @classmethod
     def get_core_services(cls) -> tuple["ServiceType"]:
         """Get core services required for basic operation."""
@@ -73,12 +77,18 @@ class ServiceType(BaseEnum):
         return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS, cls.TELEMETRY)
 
     @classmethod
+    def get_intent_services(cls) -> tuple["ServiceType"]:
+        """Get intent layer services for natural language processing."""
+        return (cls.INTENT, cls.AUTO_INDEXING)
+
+    @classmethod
     def get_all_services(cls) -> tuple["ServiceType"]:
         """Get all available service types."""
         return (
             *cls.get_core_services(),
             *cls.get_middleware_services(),
             *cls.get_optional_services(),
+            *cls.get_intent_services(),
         )
 
 
