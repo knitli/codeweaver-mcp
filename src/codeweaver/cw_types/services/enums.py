@@ -28,7 +28,7 @@ class ValidationSeverity(BaseEnum):
 
 class MemoryUsage(BaseEnum):
     """Memory usage categories for service providers."""
-    
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"

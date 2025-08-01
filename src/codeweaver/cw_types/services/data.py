@@ -11,7 +11,6 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 
-from codeweaver.cw_types.base_enum import BaseEnum
 from codeweaver.cw_types.config import ServiceType
 from codeweaver.cw_types.services.enums import (
     HealthStatus,

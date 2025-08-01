@@ -214,9 +214,9 @@ class CohereModel(ModelCapabilityEnum):
         return {
             self.EMBED_V4: 1536,
             self.EMBED_ENGLISH_V3: 1024,
-            self.EMBED_MULTILINGUAL_V4: 1024,
-            self.EMBED_ENGLISH_LIGHT_V4: 384,
-            self.EMBED_MULTILINGUAL_LIGHT_V4: 384,
+            self.EMBED_MULTILINGUAL_V3: 1024,
+            self.EMBED_ENGLISH_LIGHT_V3: 384,
+            self.EMBED_MULTILINGUAL_LIGHT_V3: 384,
         }[self]
 
     @property
