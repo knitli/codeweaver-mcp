@@ -26,10 +26,6 @@ from codeweaver.cw_types.services.data import (
     DirectoryStats,
     FileMetadata,
     FilteringStats,
-    HealthStatus,
-    MemoryUsage,
-    PerformanceProfile,
-    ProviderStatus,
     ServiceCapabilities,
     ServiceHealth,
     ServiceInstanceInfo,
@@ -38,9 +34,15 @@ from codeweaver.cw_types.services.data import (
     ServicesHealthReport,
     ValidationErrorData,
     ValidationRule,
-    ValidationSeverity,
     ValidationStats,
     ValidationWarning,
+)
+from codeweaver.cw_types.services.enums import (
+    HealthStatus,
+    MemoryUsage,
+    PerformanceProfile,
+    ProviderStatus,
+    ValidationSeverity,
 )
 from codeweaver.cw_types.services.exceptions import (
     AccessDeniedError,

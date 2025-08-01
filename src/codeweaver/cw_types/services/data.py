@@ -11,18 +11,18 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, Field
 
-from codeweaver.cw_types import BaseEnum, ServiceType
+from codeweaver.cw_types.base_enum import BaseEnum
+from codeweaver.cw_types.config import ServiceType
+from codeweaver.cw_types.services.enums import (
+    HealthStatus,
+    MemoryUsage,
+    PerformanceProfile,
+    ProviderStatus,
+    ValidationSeverity,
+)
 
 
 # Health monitoring types
-class HealthStatus(BaseEnum):
-    """Health status of a service or system."""
-
-    HEALTHY = "healthy"
-    DEGRADED = "degraded"
-    UNHEALTHY = "unhealthy"
-    UNKNOWN = "unknown"
-
 
 class ServiceHealth(BaseModel):
     """Health status of a service."""
@@ -137,14 +137,6 @@ class DirectoryStats(BaseModel):
 
 
 # Validation types
-class ValidationSeverity(BaseEnum):
-    """Severity levels for validation errors and warnings."""
-
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    CRITICAL = "critical"
-
 
 class ValidationErrorData(BaseModel):
     """A validation error."""
@@ -190,23 +182,6 @@ class ValidationRule(BaseModel):
     )
 
 
-class MemoryUsage(BaseEnum):
-    """Memory usage categories for service providers."""
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-
-
-# TODO: This is kind of a useless characterization as-is... are we talking about how
-# much resources the service needs to run? Idle? Or are we setting a "performance mode"?
-# the name suggests the latter, but the description suggests the former.
-class PerformanceProfile(BaseEnum):
-    """Performance profiles for service providers."""
-
-    STANDARD = "standard"
-    HIGH_PERFORMANCE = "high_performance"
-    LOW_LATENCY = "low_latency"
-    RESOURCE_EFFICIENT = "resource_efficient"
 
 
 # Service provider information
@@ -223,14 +198,7 @@ class ServiceCapabilities(BaseModel):
     )
 
 
-class ProviderStatus(BaseEnum):
-    """Status of a service provider."""
 
-    REGISTERED = "registered"
-    INITIALIZING = "initializing"
-    READY = "ready"
-    ERROR = "error"
-    DEPRECATED = "deprecated"
 
 
 class ServiceProviderInfo(BaseModel):
