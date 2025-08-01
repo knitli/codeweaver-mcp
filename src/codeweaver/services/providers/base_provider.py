@@ -13,7 +13,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     HealthStatus,
     ProviderStatus,
     ServiceCapabilities,

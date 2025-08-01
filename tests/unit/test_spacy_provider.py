@@ -11,7 +11,7 @@ import pytest
 
 from codeweaver.providers.config import SpaCyProviderConfig
 from codeweaver.providers.nlp.spacy import SpaCyProvider
-from codeweaver.cw_types import ProviderType
+from codeweaver.types import ProviderType
 
 
 class TestSpaCyProvider:
@@ -81,7 +81,7 @@ class TestSpaCyProvider:
     # Provider registration tests
     def test_provider_registration(self):
         """Test that provider is properly registered."""
-        from codeweaver.cw_types.providers.registry import PROVIDER_REGISTRY
+        from codeweaver.types.providers.registry import PROVIDER_REGISTRY
 
         # Check that spaCy provider is in registry
         assert ProviderType.SPACY in PROVIDER_REGISTRY

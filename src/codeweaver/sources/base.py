@@ -19,7 +19,7 @@ from typing import Annotated, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
 from codeweaver.utils.decorators import require_implementation
 
 

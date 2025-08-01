@@ -4,40 +4,44 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 """
-Exception classes for the CodeWeaver factory system.
+Factory exceptions moved to codeweaver.types to avoid circular imports.
 
-Provides a comprehensive hierarchy of exceptions for different types of
-factory-related errors with clear categorization and recovery guidance.
+This module is kept for backwards compatibility but should not be used.
+Import factory exceptions from codeweaver.types instead.
 """
 
+import warnings
 
-class CodeWeaverFactoryError(Exception):
-    """Base exception for factory-related errors."""
+def __getattr__(name: str):
+    """Provide backwards compatibility for moved exceptions."""
+    if name in [
+        "CodeWeaverFactoryError",
+        "ComponentCreationError", 
+        "ComponentNotFoundError",
+        "ComponentUnavailableError",
+        "PluginError",
+        "RegistrationError", 
+        "ValidationError",
+    ]:
+        warnings.warn(
+            f"Importing {name} from codeweaver.factories.exceptions is deprecated. "
+            f"Import from codeweaver.types instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        # Import at runtime to avoid circular dependency
+        from codeweaver.types import __dict__ as types_dict
+        return types_dict[name]
+    
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
-
-class ConfigurationError(CodeWeaverFactoryError):
-    """Configuration validation or processing error."""
-
-
-class ComponentNotFoundError(CodeWeaverFactoryError):
-    """Requested component not found in registry."""
-
-
-class ComponentUnavailableError(CodeWeaverFactoryError):
-    """Component found but not available for use."""
-
-
-class ComponentCreationError(CodeWeaverFactoryError):
-    """Error during component creation."""
-
-
-class PluginError(CodeWeaverFactoryError):
-    """Plugin-related error."""
-
-
-class RegistrationError(CodeWeaverFactoryError):
-    """Component registration error."""
-
-
-class ValidationError(CodeWeaverFactoryError):
-    """Validation failure error."""
+# For backwards compatibility, we'll keep the old names but warn about deprecation
+__all__ = [
+    "CodeWeaverFactoryError",
+    "ComponentCreationError", 
+    "ComponentNotFoundError",
+    "ComponentUnavailableError",
+    "PluginError",
+    "RegistrationError",
+    "ValidationError",
+]

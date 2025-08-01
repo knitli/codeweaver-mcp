@@ -24,7 +24,7 @@ from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -483,9 +483,17 @@ class CodeWeaverFactory:
     def _initialize_builtin_services(self) -> None:
         """Initialize built-in service provider registrations."""
         from codeweaver.services.providers.chunking import ChunkingService
+        from codeweaver.services.providers.context_intelligence import FastMCPContextMiningProvider
         from codeweaver.services.providers.file_filtering import FilteringService
-        from codeweaver.cw_types import ServiceCapabilities
+        from codeweaver.services.providers.implicit_learning import (
+            BehavioralPatternLearningProvider,
+        )
+        from codeweaver.services.providers.zero_shot_optimization import (
+            ContextAdequacyOptimizationProvider,
+        )
+        from codeweaver.types import ServiceCapabilities
 
+        # Core services
         self._service_registry.register_provider(
             ServiceType.CHUNKING,
             "fastmcp_chunking",
@@ -512,7 +520,48 @@ class CodeWeaverFactory:
                 performance_profile="standard",
             ),
         )
-        logger.info("Built-in service providers registered")
+
+        # Phase 3 Intent layer services - LLM-focused optimization
+        self._service_registry.register_provider(
+            ServiceType.IMPLICIT_LEARNING,
+            "behavioral_pattern_learning",
+            BehavioralPatternLearningProvider,
+            ServiceCapabilities(
+                supports_streaming=False,
+                supports_batch=True,
+                supports_async=True,
+                max_concurrency=5,
+                memory_usage="medium",
+                performance_profile="standard",
+            ),
+        )
+        self._service_registry.register_provider(
+            ServiceType.CONTEXT_INTELLIGENCE,
+            "fastmcp_context_mining",
+            FastMCPContextMiningProvider,
+            ServiceCapabilities(
+                supports_streaming=False,
+                supports_batch=True,
+                supports_async=True,
+                max_concurrency=10,
+                memory_usage="low",
+                performance_profile="high_performance",
+            ),
+        )
+        self._service_registry.register_provider(
+            ServiceType.ZERO_SHOT_OPTIMIZATION,
+            "context_adequacy_optimization",
+            ContextAdequacyOptimizationProvider,
+            ServiceCapabilities(
+                supports_streaming=False,
+                supports_batch=True,
+                supports_async=True,
+                max_concurrency=8,
+                memory_usage="medium",
+                performance_profile="standard",
+            ),
+        )
+        logger.info("Built-in service providers registered (including Phase 3 intent layer services)")
 
     def _discover_and_register_plugins(self) -> None:
         """Discover and register available plugins."""

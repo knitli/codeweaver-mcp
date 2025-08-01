@@ -10,8 +10,8 @@ import logging
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import IntentResult, ServiceIntegrationError, ServiceType
-from codeweaver.cw_types.services.config import ServiceConfig
+from codeweaver.types import IntentResult, ServiceIntegrationError, ServiceType
+from codeweaver.types.services.config import ServiceConfig
 
 
 class IntentServiceBridge(BaseServiceProvider):
@@ -100,6 +100,7 @@ class IntentServiceBridge(BaseServiceProvider):
             return True
 
     async def process_intent(self, user_input: str, context: dict[str, Any]) -> IntentResult:
+        # sourcery skip: use-fstring-for-concatenation
         """
         Process intent through the orchestrator.
 

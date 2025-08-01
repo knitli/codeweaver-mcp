@@ -13,7 +13,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver.cw_types import DimensionSize
+from codeweaver.types import DimensionSize
 
 
 class ProviderConfig(BaseModel):

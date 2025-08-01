@@ -22,7 +22,7 @@ from typing import Any
 from pydantic import ConfigDict, Field, field_validator
 
 from codeweaver.sources.base import AbstractDataSource, SourceConfig, SourceWatcher
-from codeweaver.cw_types import CodeChunk, ContentItem, ContentType, SourceCapabilities, SourceProvider
+from codeweaver.types import CodeChunk, ContentItem, ContentType, SourceCapabilities, SourceProvider
 
 
 logger = logging.getLogger(__name__)

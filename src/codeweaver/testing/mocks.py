@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from codeweaver.sources import AbstractDataSource, SourceConfig, SourceWatcher
-from codeweaver.cw_types import (
+from codeweaver.types import (
     CollectionInfo,
     ContentItem,
     DistanceMetric,

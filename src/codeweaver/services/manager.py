@@ -19,10 +19,12 @@ if TYPE_CHECKING:
 from codeweaver.factories.service_registry import ServiceRegistry
 from codeweaver.services.providers.chunking import ChunkingService
 from codeweaver.services.providers.file_filtering import FilteringService
-from codeweaver.cw_types import (
+from codeweaver.types import (
     CacheService,
+    ContextIntelligenceService,
     ErrorHandlingService,
     HealthStatus,
+    ImplicitLearningService,
     LoggingService,
     MetricsService,
     MonitoringService,
@@ -38,6 +40,7 @@ from codeweaver.cw_types import (
     TelemetryService,
     TimingService,
     ValidationService,
+    ZeroShotOptimizationService,
 )
 
 
@@ -171,11 +174,24 @@ class ServicesManager:
         service = self._services.get(ServiceType.TELEMETRY)
         return service or None
 
+    def get_implicit_learning_service(self) -> "ImplicitLearningService | None":
+        """Get the implicit learning service if available."""
+        service = self._services.get(ServiceType.IMPLICIT_LEARNING)
+        return service or None
+
+    def get_context_intelligence_service(self) -> "ContextIntelligenceService | None":
+        """Get the context intelligence service if available."""
+        service = self._services.get(ServiceType.CONTEXT_INTELLIGENCE)
+        return service or None
+
+    def get_zero_shot_optimization_service(self) -> "ZeroShotOptimizationService | None":
+        """Get the zero-shot optimization service if available."""
+        service = self._services.get(ServiceType.ZERO_SHOT_OPTIMIZATION)
+        return service or None
+
     async def get_service(self, service_type: ServiceType | str) -> ServiceProvider | None:
         """Get any service by type or string identifier."""
-        if isinstance(service_type, str):
-            # Handle string keys for special services like intent_bridge
-            return self._services.get(service_type)
+        # Handle string keys for special services like intent_bridge
         return self._services.get(service_type)
 
     def list_active_services(self) -> dict[ServiceType, ServiceProvider]:
@@ -285,7 +301,7 @@ class ServicesManager:
             except Exception as e:
                 self._logger.warning("Health check failed for %s: %s", service_type.value, e)
                 # Create unhealthy status for failed check
-                from codeweaver.cw_types import ServiceHealth
+                from codeweaver.types import ServiceHealth
 
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,

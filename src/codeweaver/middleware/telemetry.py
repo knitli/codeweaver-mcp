@@ -13,7 +13,7 @@ from typing import Any
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
-from codeweaver.cw_types import TelemetryService
+from codeweaver.types import TelemetryService
 
 
 class TelemetryMiddleware(Middleware):
@@ -175,14 +175,12 @@ class TelemetryMiddleware(Middleware):
 
         word_count = len(query.split())
         has_operators = any(op in query for op in ["AND", "OR", "NOT", "+", "-"])
+        if word_count > 10 or has_operators:
+            return "complex"
         has_quotes = '"' in query or "'" in query
         has_wildcards = "*" in query or "?" in query
 
-        if word_count > 10 or has_operators:
-            return "complex"
-        if word_count > 3 or has_quotes or has_wildcards:
-            return "medium"
-        return "simple"
+        return "medium" if word_count > 3 or has_quotes or has_wildcards else "simple"
 
     def _assess_pattern_complexity(self, pattern: str) -> str:
         """Assess the complexity of an AST grep pattern."""
@@ -191,15 +189,13 @@ class TelemetryMiddleware(Middleware):
 
         # Count special AST grep constructs
         ast_constructs = ["$_", "$A", "$B", "$C", "kind:", "has:", "inside:", "follows:"]
-        construct_count = sum(1 for construct in ast_constructs if construct in pattern)
+        construct_count = sum(construct in pattern for construct in ast_constructs)
 
         line_count = len(pattern.split("\n"))
 
         if construct_count > 3 or line_count > 10:
             return "complex"
-        if construct_count > 1 or line_count > 3:
-            return "medium"
-        return "simple"
+        return "medium" if construct_count > 1 or line_count > 3 else "simple"
 
 
 class TelemetryMiddlewareProvider:

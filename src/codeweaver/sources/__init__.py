@@ -40,7 +40,7 @@ from codeweaver.sources.config import DataSourcesConfig
 from codeweaver.sources.factory import SourceFactory, get_source_factory
 from codeweaver.sources.filesystem import FileSystemSource, FileSystemSourceConfig
 from codeweaver.sources.integration import DataSourceManager
-from codeweaver.cw_types import (
+from codeweaver.types import (
     SOURCE_PROVIDERS,
     APIType,
     AuthType,

@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic.dataclasses import dataclass
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     IntentError,
     IntentParsingError,
     IntentResult,

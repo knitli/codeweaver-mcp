@@ -21,7 +21,7 @@ except ImportError:
     posthog = None
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import ServiceType, TelemetryService, TelemetryServiceConfig
+from codeweaver.types import ServiceType, TelemetryService, TelemetryServiceConfig
 
 
 class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
@@ -406,6 +406,201 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         except Exception as e:
             self._logger.warning("Failed to flush events: %s", e)
             self._stats["events_failed"] += len(events_to_send)
+
+    async def track_learning_signal(
+        self,
+        intent_hash: str,
+        satisfaction_score: float,
+        metadata: dict[str, Any]
+    ) -> None:
+        """Track learning signals for implicit learning analysis."""
+        if not self._enabled:
+            return
+
+        # Use existing telemetry patterns for privacy compliance
+        learning_event = {
+            "event": "intent_learning_signal",
+            "properties": {
+                "intent_hash": intent_hash,
+                "satisfaction_score": satisfaction_score,
+                "response_time": metadata.get("response_time"),
+                "strategy_used": metadata.get("strategy"),
+                "success": metadata.get("success", False),
+                "learning_weight": metadata.get("learning_weight", 0.0),
+                # Sanitized metadata following existing patterns
+                **self._sanitize_metadata(metadata)
+            }
+        }
+
+        await self.track_event("intent_learning_signal", learning_event["properties"])
+
+    async def track_zero_shot_optimization(
+        self,
+        optimization_type: str,
+        before_metrics: dict[str, Any],
+        after_metrics: dict[str, Any]
+    ) -> None:
+        """Track zero-shot optimization effectiveness."""
+        if not self._enabled:
+            return
+
+        improvement_score = self._calculate_improvement_score(before_metrics, after_metrics)
+        metrics_delta = self._calculate_metrics_delta(before_metrics, after_metrics)
+
+        optimization_event = {
+            "event": "zero_shot_optimization",
+            "properties": {
+                "optimization_type": optimization_type,
+                "improvement_score": improvement_score,
+                "metrics_delta": metrics_delta,
+                "before_success_probability": before_metrics.get("success_probability", 0.0),
+                "after_success_probability": after_metrics.get("success_probability", 0.0),
+            }
+        }
+
+        await self.track_event("zero_shot_optimization", optimization_event["properties"])
+
+    async def track_context_intelligence(
+        self,
+        llm_profile: dict[str, Any],
+        context_adequacy: dict[str, Any]
+    ) -> None:
+        """Track context intelligence analysis results."""
+        if not self._enabled:
+            return
+
+        # Sanitize LLM profile data for privacy
+        sanitized_profile = {
+            "identified_model": llm_profile.get("identified_model"),
+            "confidence": llm_profile.get("confidence", 0.0),
+            "has_timing_data": bool(llm_profile.get("timing_characteristics")),
+            "behavioral_features_count": len(llm_profile.get("behavioral_features", {})),
+        }
+
+        intelligence_event = {
+            "event": "context_intelligence_analysis",
+            "properties": {
+                **sanitized_profile,
+                "context_adequacy_score": context_adequacy.get("score", 0.0),
+                "context_richness": context_adequacy.get("richness_score", 0.0),
+                "context_clarity": context_adequacy.get("clarity_score", 0.0),
+                "missing_elements_count": len(context_adequacy.get("missing_elements", [])),
+            }
+        }
+
+        await self.track_event("context_intelligence_analysis", intelligence_event["properties"])
+
+    async def track_behavioral_pattern(
+        self,
+        pattern_type: str,
+        pattern_confidence: float,
+        frequency: int,
+        success_correlation: float
+    ) -> None:
+        """Track identified behavioral patterns."""
+        if not self._enabled:
+            return
+
+        pattern_event = {
+            "event": "behavioral_pattern_identified",
+            "properties": {
+                "pattern_type": pattern_type,
+                "pattern_confidence": pattern_confidence,
+                "frequency": frequency,
+                "success_correlation": success_correlation,
+                "pattern_quality": self._assess_pattern_quality(
+                    pattern_confidence, frequency, success_correlation
+                ),
+            }
+        }
+
+        await self.track_event("behavioral_pattern_identified", pattern_event["properties"])
+
+    def _sanitize_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
+        """Sanitize metadata for privacy-compliant telemetry."""
+        sanitized = {}
+
+        # Allow safe metadata fields
+        safe_fields = {
+            "response_time", "strategy", "success", "learning_weight",
+            "optimization_type", "confidence", "complexity_score",
+            "adequacy_score", "pattern_type", "frequency"
+        }
+
+        for key, value in metadata.items():
+            if key in safe_fields:
+                sanitized[key] = value
+            elif key.endswith(("_hash", "_id")):
+                # Keep hashed/anonymized identifiers
+                sanitized[key] = value
+            elif isinstance(value, int | float | bool):
+                # Keep numeric and boolean values
+                sanitized[key] = value
+
+        return sanitized
+
+    def _calculate_improvement_score(
+        self,
+        before_metrics: dict[str, Any],
+        after_metrics: dict[str, Any]
+    ) -> float:
+        """Calculate overall improvement score from metrics comparison."""
+        # Key metrics to compare
+        key_metrics = ["success_probability", "context_adequacy", "confidence"]
+
+        improvements = []
+        for metric in key_metrics:
+            before_val = before_metrics.get(metric, 0.0)
+            after_val = after_metrics.get(metric, 0.0)
+
+            if before_val > 0:
+                improvement = (after_val - before_val) / before_val
+                improvements.append(improvement)
+
+        if not improvements:
+            return 0.0
+
+        # Return average improvement, clamped to [-1.0, 1.0]
+        avg_improvement = sum(improvements) / len(improvements)
+        return max(-1.0, min(1.0, avg_improvement))
+
+    def _calculate_metrics_delta(
+        self,
+        before_metrics: dict[str, Any],
+        after_metrics: dict[str, Any]
+    ) -> dict[str, float]:
+        """Calculate delta between before and after metrics."""
+        delta = {}
+
+        # Compare numeric metrics
+        for key, before_val in before_metrics.items():
+            if key in after_metrics:
+                after_val = after_metrics[key]
+
+                if isinstance(before_val, int | float) and isinstance(after_val, int | float):
+                    delta[f"{key}_delta"] = after_val - before_val
+
+        return delta
+
+    def _assess_pattern_quality(
+        self,
+        confidence: float,
+        frequency: int,
+        success_correlation: float
+    ) -> str:
+        """Assess the quality of a behavioral pattern."""
+        # Quality scoring based on multiple factors
+        quality_score = (
+            confidence * 0.4 +
+            min(frequency / 10.0, 1.0) * 0.3 +
+            abs(success_correlation) * 0.3
+        )
+
+        if quality_score >= 0.8:
+            return "excellent"
+        if quality_score >= 0.6:
+            return "good"
+        return "fair" if quality_score >= 0.4 else "poor"
 
     async def get_telemetry_stats(self) -> dict[str, Any]:
         """Get telemetry collection statistics."""

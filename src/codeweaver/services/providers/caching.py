@@ -23,7 +23,7 @@ from typing import Any
 from pydantic.dataclasses import dataclass
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
+from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)
@@ -105,8 +105,8 @@ class CachingService(BaseServiceProvider):
         """Generate a cache key from data."""
         if isinstance(key_data, str):
             return key_data
-        json_str = json.dumps(key_data, sort_keys=True, default=str)
-        return hashlib.sha256(json_str.encode()).hexdigest()
+        serialized_json = json.dumps(key_data, sort_keys=True, default=str)
+        return hashlib.sha256(serialized_json.encode()).hexdigest()
 
     def _estimate_size(self, value: Any) -> int:
         """Estimate size of value in bytes."""
@@ -183,8 +183,7 @@ class CachingService(BaseServiceProvider):
         """
         cache_key = self._generate_cache_key(key)
         async with self._lock:
-            entry = self._cache.pop(cache_key, None)
-            if entry:
+            if entry := self._cache.pop(cache_key, None):
                 self._total_size_bytes -= entry.size_bytes
                 return True
             return False
@@ -201,10 +200,8 @@ class CachingService(BaseServiceProvider):
         while (
             len(self._cache) >= self.config.max_size
             or self._total_size_bytes + new_size > max_size_bytes
-        ):
-            if not self._cache:
-                break
-            oldest_key, oldest_entry = self._cache.popitem(last=False)
+        ) and self._cache:
+            _oldest_key, oldest_entry = self._cache.popitem(last=False)
             self._total_size_bytes -= oldest_entry.size_bytes
             self._evictions += 1
 
@@ -223,9 +220,9 @@ class CachingService(BaseServiceProvider):
         """Remove expired entries."""
         async with self._lock:
             expired_keys = []
-            for key, entry in self._cache.items():
-                if entry.is_expired():
-                    expired_keys.append(key)
+            expired_keys.extend(
+                key for key, entry in self._cache.items() if entry.is_expired()
+            )
             for key in expired_keys:
                 entry = self._cache.pop(key)
                 self._total_size_bytes -= entry.size_bytes

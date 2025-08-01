@@ -18,12 +18,13 @@ import time
 
 from typing import Any
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import HybridSearchBackend, VectorBackend
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource, SourceCapability, SourceConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     CollectionInfo,
     ContentItem,
     DistanceMetric,

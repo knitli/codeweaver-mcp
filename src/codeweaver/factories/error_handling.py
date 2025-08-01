@@ -19,10 +19,10 @@ from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
     ComponentType,
@@ -48,7 +48,7 @@ class ErrorContext:
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-@dataclass
+@dataclass(config=ConfigDict(arbitrary_types_allowed=True))
 class FactoryError(CodeWeaverFactoryError):
     """Comprehensive error information."""
 

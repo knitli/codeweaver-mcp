@@ -81,6 +81,8 @@ dist/
 *.log
 *.log.*
 *.sig
+htmlcov/
+**/htmlcov/
 
 .DS_Store
 *.swp

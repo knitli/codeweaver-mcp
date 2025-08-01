@@ -24,7 +24,7 @@ from codeweaver.providers.base import (
     RerankProviderBase,
 )
 from codeweaver.providers.config import EmbeddingProviderConfig, RerankingProviderConfig
-from codeweaver.cw_types import EmbeddingProviderInfo, ProviderCapability, ProviderType
+from codeweaver.types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 
 
 logger = logging.getLogger(__name__)

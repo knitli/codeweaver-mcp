@@ -24,7 +24,7 @@ from codeweaver.providers.base import (
     LocalEmbeddingProvider,
     RerankProvider,
 )
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BackendCapabilities,
     BackendConnectionError,
     CapabilityQueryMixin,
@@ -243,7 +243,7 @@ class BackendFactory(CapabilityQueryMixin):
             }
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
-        from codeweaver.cw_types import get_all_backend_capabilities
+        from codeweaver.types import get_all_backend_capabilities
 
         all_capabilities = get_all_backend_capabilities()
         planned_providers = {
@@ -266,7 +266,7 @@ class BackendFactory(CapabilityQueryMixin):
         Returns:
             Dictionary mapping backend names to their capabilities
         """
-        from codeweaver.cw_types import get_all_backend_capabilities
+        from codeweaver.types import get_all_backend_capabilities
 
         return get_all_backend_capabilities()
 

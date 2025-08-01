@@ -14,7 +14,7 @@ from typing import Any
 
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
     DirectoryNotFoundError,
     DirectoryStats,
     FileMetadata,

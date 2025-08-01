@@ -11,7 +11,7 @@ import time
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
     CacheService,
     HealthStatus,
     IntentParsingError,
@@ -179,98 +179,41 @@ class IntentOrchestrator(BaseServiceProvider):
         Returns:
             Result of intent processing with data and metadata
         """
-        start_time = time.time()
-        self._intent_stats["total_processed"] += 1
-        self._intent_stats["concurrent_requests"] += 1
-        operation_id = f"intent_{int(start_time * 1000)}"
+        # Setup processing context
+        start_time, operation_id = self._setup_processing_context()
 
         # Circuit breaker check
         if await self._is_circuit_breaker_open():
-            self._intent_stats["concurrent_requests"] -= 1
+            self._finalize_processing_context()
             return await self._circuit_breaker_fallback(intent_text)
 
         try:
             self._logger.debug("Processing intent: %s", intent_text[:100])
 
-            # Record metrics - start of processing
-            if self.metrics_service:
-                await self.metrics_service.increment_counter(
-                    "intent.requests.total", tags={"operation": "process_intent"}
-                )
+            # Record start metrics
+            await self._record_start_metrics()
 
             # Check cache first
-            cache_key = self._generate_cache_key(intent_text)
-            cached_result = None
-            if self.cache_service:
-                cached_result = await self.cache_service.get(cache_key)
-                if cached_result:
-                    self._intent_stats["cached_hits"] += 1
-                    execution_time = time.time() - start_time
+            cached_result = await self._check_cache_for_intent(intent_text, start_time)
+            if cached_result:
+                self._finalize_processing_context()
+                return cached_result
 
-                    # Record cache hit metrics
-                    if self.metrics_service:
-                        await self.metrics_service.record_timing(
-                            "intent.processing.cache_hit",
-                            execution_time * 1000,
-                            tags={"cached": "true"},
-                        )
-                        await self.metrics_service.increment_counter("intent.cache.hits")
-
-                    # Track telemetry for cache hit
-                    if self.telemetry_service:
-                        await self.telemetry_service.track_performance(
-                            operation="intent_processing",
-                            duration=execution_time,
-                            metadata={"cache_hit": True, "intent_type": "cached"},
-                        )
-
-                    self._intent_stats["concurrent_requests"] -= 1
-                    self._logger.debug("Cache hit for intent")
-                    return cached_result
-                self._intent_stats["cache_misses"] += 1
-                if self.metrics_service:
-                    await self.metrics_service.increment_counter("intent.cache.misses")
-
-            # Parse and execute intent
-            parsed_intent = await self._parse_intent(intent_text)
-
-            if not self._validate_parsed_intent(parsed_intent):
-                self._raise_intent_error(
-                    IntentParsingError, f"Invalid parsed intent: {parsed_intent}"
-                )
-
-            result = await self._execute_strategy(parsed_intent, context)
+            # Core intent processing
+            parsed_intent, result = await self._process_core_intent(intent_text, context)
             execution_time = time.time() - start_time
 
             # Update performance statistics
             self._update_performance_stats(execution_time, success=result.success)
 
             # Enhance result metadata
-            result.execution_time = execution_time
-            result.metadata.update({
-                "intent_orchestrator": "v1.1.0",
-                "cache_used": bool(self.cache_service),
-                "monitoring_enabled": bool(self.metrics_service),
-                "operation_id": operation_id,
-                "performance_tier": self._get_performance_tier(execution_time),
-            })
+            self._enhance_result_metadata(result, execution_time, operation_id)
 
             # Cache successful results
-            if self.cache_service and result.success:
-                await self.cache_service.set(
-                    cache_key,
-                    result,
-                    ttl=self._intent_config.cache_ttl,
-                    tags=["intent", parsed_intent.intent_type.value],
-                )
+            await self._store_cache_result(intent_text, result, parsed_intent)
 
-            # Record comprehensive metrics
-            await self._record_processing_metrics(
-                parsed_intent, result, execution_time, operation_id
-            )
-
-            # Track telemetry
-            await self._track_telemetry(parsed_intent, result, execution_time)
+            # Record success metrics and telemetry
+            await self._record_success_metrics(parsed_intent, result, execution_time, operation_id)
 
             # Reset circuit breaker on success
             if result.success:
@@ -278,34 +221,12 @@ class IntentOrchestrator(BaseServiceProvider):
 
         except Exception as e:
             execution_time = time.time() - start_time
-            self._intent_stats["failed_intents"] += 1
-            self._circuit_breaker_failures += 1
-            self._last_circuit_breaker_failure = time.time()
+            return await self._handle_processing_error(intent_text, context, e, execution_time)
+        else:
+            return result
 
-            # Record failure metrics
-            if self.metrics_service:
-                await self.metrics_service.increment_counter(
-                    "intent.requests.failed", tags={"error_type": type(e).__name__}
-                )
-                await self.metrics_service.record_timing(
-                    "intent.processing.failed", execution_time * 1000
-                )
-
-            # Track error telemetry
-            if self.telemetry_service:
-                await self.telemetry_service.track_error(
-                    error_type=type(e).__name__,
-                    error_category="intent_processing",
-                    operation="process_intent",
-                    error_message=str(e),
-                )
-
-            self._logger.exception("Intent processing failed: %s", e)
-            return await self._execute_fallback(intent_text, context, e, execution_time)
         finally:
-            self._intent_stats["concurrent_requests"] -= 1
-
-        return result
+            self._finalize_processing_context()
 
     async def _parse_intent(self, intent_text: str) -> ParsedIntent:
         """Parse intent text into structured format."""
@@ -434,6 +355,53 @@ class IntentOrchestrator(BaseServiceProvider):
 
         return f"intent:{hashlib.md5(intent_text.encode()).hexdigest()}"  # noqa: S324
 
+    async def _check_cache_for_intent(self, intent_text: str, start_time: float) -> IntentResult | None:
+        """Check cache for existing intent result and record metrics."""
+        if not self.cache_service:
+            return None
+
+        cache_key = self._generate_cache_key(intent_text)
+        cached_result = await self.cache_service.get(cache_key)
+
+        if cached_result:
+            self._intent_stats["cached_hits"] += 1
+            execution_time = time.time() - start_time
+
+            # Record cache hit metrics
+            if self.metrics_service:
+                await self.metrics_service.record_timing(
+                    "intent.processing.cache_hit",
+                    execution_time * 1000,
+                    tags={"cached": "true"},
+                )
+                await self.metrics_service.increment_counter("intent.cache.hits")
+
+            # Track telemetry for cache hit
+            if self.telemetry_service:
+                await self.telemetry_service.track_performance(
+                    operation="intent_processing",
+                    duration=execution_time,
+                    metadata={"cache_hit": True, "intent_type": "cached"},
+                )
+
+            self._logger.debug("Cache hit for intent")
+            return cached_result
+        self._intent_stats["cache_misses"] += 1
+        if self.metrics_service:
+            await self.metrics_service.increment_counter("intent.cache.misses")
+        return None
+
+    async def _store_cache_result(self, intent_text: str, result: IntentResult, parsed_intent: ParsedIntent) -> None:
+        """Store successful result in cache."""
+        if self.cache_service and result.success:
+            cache_key = self._generate_cache_key(intent_text)
+            await self.cache_service.set(
+                cache_key,
+                result,
+                ttl=self._intent_config.cache_ttl,
+                tags=["intent", parsed_intent.intent_type.value],
+            )
+
     async def _get_cache_service(self) -> CacheService | None:
         """Get cache service through dependency injection."""
         # TODO: Implement proper service manager integration
@@ -493,7 +461,7 @@ class IntentOrchestrator(BaseServiceProvider):
             strategy_used="circuit_breaker_fallback",
         )
 
-    def _update_performance_stats(self, execution_time: float, success: bool) -> None:
+    def _update_performance_stats(self, execution_time: float, *, success: bool) -> None:
         """Update internal performance statistics."""
         if success:
             self._intent_stats["successful_intents"] += 1
@@ -616,6 +584,101 @@ class IntentOrchestrator(BaseServiceProvider):
 
         except Exception as e:
             self._logger.warning("Failed to track telemetry: %s", e)
+
+    async def _record_start_metrics(self) -> None:
+        """Record metrics at the start of intent processing."""
+        if self.metrics_service:
+            await self.metrics_service.increment_counter(
+                "intent.requests.total", tags={"operation": "process_intent"}
+            )
+
+    async def _record_success_metrics(
+        self,
+        parsed_intent: ParsedIntent,
+        result: IntentResult,
+        execution_time: float,
+        operation_id: str
+    ) -> None:
+        """Record all success-related metrics and telemetry."""
+        # Record processing metrics
+        await self._record_processing_metrics(parsed_intent, result, execution_time, operation_id)
+
+        # Track telemetry
+        await self._track_telemetry(parsed_intent, result, execution_time)
+
+    async def _record_failure_metrics(self, error: Exception, execution_time: float) -> None:
+        """Record failure metrics and telemetry."""
+        if self.metrics_service:
+            await self.metrics_service.increment_counter(
+                "intent.requests.failed", tags={"error_type": type(error).__name__}
+            )
+            await self.metrics_service.record_timing(
+                "intent.processing.failed", execution_time * 1000
+            )
+
+        # Track error telemetry
+        if self.telemetry_service:
+            await self.telemetry_service.track_error(
+                error_type=type(error).__name__,
+                error_category="intent_processing",
+                operation="process_intent",
+                error_message=str(error),
+            )
+
+    def _setup_processing_context(self) -> tuple[float, str]:
+        """Setup processing context and return start time and operation ID."""
+        start_time = time.time()
+        operation_id = f"intent_{int(start_time * 1000)}"
+        self._intent_stats["total_processed"] += 1
+        self._intent_stats["concurrent_requests"] += 1
+        return start_time, operation_id
+
+    def _finalize_processing_context(self) -> None:
+        """Clean up processing context."""
+        self._intent_stats["concurrent_requests"] -= 1
+
+    async def _process_core_intent(self, intent_text: str, context: dict[str, Any]) -> tuple[ParsedIntent, IntentResult]:
+        """Parse intent and execute strategy (core processing logic)."""
+        # Parse intent
+        parsed_intent = await self._parse_intent(intent_text)
+
+        if not self._validate_parsed_intent(parsed_intent):
+            self._raise_intent_error(
+                IntentParsingError, f"Invalid parsed intent: {parsed_intent}"
+            )
+
+        # Execute strategy
+        result = await self._execute_strategy(parsed_intent, context)
+        return parsed_intent, result
+
+    async def _handle_processing_error(
+        self,
+        intent_text: str,
+        context: dict[str, Any],
+        error: Exception,
+        execution_time: float
+    ) -> IntentResult:
+        """Handle processing errors with comprehensive error tracking and fallback."""
+        self._intent_stats["failed_intents"] += 1
+        self._circuit_breaker_failures += 1
+        self._last_circuit_breaker_failure = time.time()
+
+        # Record failure metrics
+        await self._record_failure_metrics(error, execution_time)
+
+        self._logger.warning("Intent processing failed.")
+        return await self._execute_fallback(intent_text, context, error, execution_time)
+
+    def _enhance_result_metadata(self, result: IntentResult, execution_time: float, operation_id: str) -> None:
+        """Enhance result with metadata and performance information."""
+        result.execution_time = execution_time
+        result.metadata.update({
+            "intent_orchestrator": "v1.1.0",
+            "cache_used": bool(self.cache_service),
+            "monitoring_enabled": bool(self.metrics_service),
+            "operation_id": operation_id,
+            "performance_tier": self._get_performance_tier(execution_time),
+        })
 
     async def get_capabilities(self) -> dict[str, Any]:
         """Get enhanced intent orchestrator capabilities."""

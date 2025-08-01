@@ -12,11 +12,11 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from pydantic import Field, PositiveFloat, NonNegativeInt
+from pydantic import Field, NonNegativeInt, PositiveFloat
 from pydantic.dataclasses import dataclass
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
+from codeweaver.types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
 
 
 @dataclass
@@ -403,28 +403,6 @@ class WorkflowOrchestrator(BaseServiceProvider):
 
     async def health_check(self) -> ServiceHealth:
         """Enhanced health check with workflow-specific metrics."""
-        base_health = await super().health_check()
-        base_health.metadata = {
-            "total_workflows": self._execution_stats["total_workflows"],
-            "success_rate": self._execution_stats["successful_workflows"]
-            / max(1, self._execution_stats["total_workflows"]),
-            "avg_workflow_time": self._execution_stats["avg_workflow_time"],
-            "total_steps_executed": self._execution_stats["total_steps_executed"],
-            "registered_steps": len(self._step_registry),
-            "workflow_templates": len(self._workflow_templates),
-        }
-        return base_health
-
-    def get_orchestrator_stats(self) -> dict[str, Any]:
-        """Get comprehensive orchestrator statistics."""
-        return {
-            "execution_stats": self._execution_stats.copy(),
-            "registry_info": {
-                "registered_steps": len(self._step_registry),
-                "workflow_templates": len(self._workflow_templates),
-            },
-            "health_status": self.status.value,
-        }
         base_health = await super().health_check()
         base_health.metadata = {
             "total_workflows": self._execution_stats["total_workflows"],

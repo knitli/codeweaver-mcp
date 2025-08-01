@@ -18,7 +18,7 @@ from typing import Annotated, Any, ClassVar
 from pydantic import Field
 
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentInfo,
     ComponentNotFoundError,
     ComponentRegistration,

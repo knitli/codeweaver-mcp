@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import BackendFactory, HybridSearchBackend, VectorBackend
@@ -51,7 +52,7 @@ class TestConfiguration:
     test_timeout_seconds: int = 60
     mock_latency_ms: float = 10.0
     mock_error_rate: float = 0.0
-    test_documents: list[str] = Field
+    test_documents: list[str] = Field(
         default_factory=lambda: [
             "This is a test document about machine learning algorithms.",
             "Python is a popular programming language for data science.",
@@ -60,7 +61,7 @@ class TestConfiguration:
             "Retrieval augmented generation improves LLM performance.",
         ]
     )
-    test_queries: list[str] = Field
+    test_queries: list[str] = Field(
         default_factory=lambda: ["machine learning", "python programming", "vector search"]
     )
     config_overrides: dict[str, Any] = Field(default_factory=dict)
@@ -212,7 +213,7 @@ class IntegrationTestSuite:
                 "priority": 1,
                 "config": self.config.config_overrides.get("data_source_config", {}),
             }
-            from codeweaver.cw_types import SourceProvider
+            from codeweaver.types import SourceProvider
 
             source_factory = SourceFactory()
             source_type = SourceProvider(self.config.data_source_type)

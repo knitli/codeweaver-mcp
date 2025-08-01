@@ -13,7 +13,7 @@ enabling seamless integration of different embedding, reranking, and NLP service
 from abc import ABC, abstractmethod
 from typing import Any, Protocol, runtime_checkable
 
-from codeweaver.cw_types import EmbeddingProviderInfo, IntentType, RerankResult
+from codeweaver.types import EmbeddingProviderInfo, IntentType, RerankResult
 from codeweaver.utils.decorators import require_implementation
 
 

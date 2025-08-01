@@ -15,6 +15,7 @@ import logging
 
 from typing import Any
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import BackendConfig, BackendFactory, VectorBackend
@@ -33,7 +34,7 @@ from codeweaver.testing import (
     MockRerankProvider,
     MockVectorBackend,
 )
-from codeweaver.cw_types import ProviderType
+from codeweaver.types import ProviderType
 
 
 logger = logging.getLogger(__name__)
@@ -106,7 +107,7 @@ class FactoryPatternValidator:
 
         # Register mock providers
         from codeweaver.providers.factory import ProviderRegistry
-        from codeweaver.cw_types import EmbeddingProviderInfo, ProviderCapabilities, ProviderCapability
+        from codeweaver.types import EmbeddingProviderInfo, ProviderCapabilities, ProviderCapability
 
         # Create mock provider info
         mock_provider_info = EmbeddingProviderInfo(
@@ -535,7 +536,7 @@ class FactoryPatternValidator:
                 """A mock provider class for testing registration."""
 
             from codeweaver.providers.factory import ProviderRegistry
-            from codeweaver.cw_types import (
+            from codeweaver.types import (
                 EmbeddingProviderInfo,
                 ProviderCapabilities,
                 ProviderCapability,

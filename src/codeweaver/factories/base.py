@@ -16,7 +16,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentConfig,
     BaseComponentInfo,
     ComponentType,

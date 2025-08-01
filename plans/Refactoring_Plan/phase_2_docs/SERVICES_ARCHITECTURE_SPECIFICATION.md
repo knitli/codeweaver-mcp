@@ -99,7 +99,7 @@ Service contracts define the interface between plugins and service implementatio
 ```python
 from typing import Protocol, runtime_checkable
 from pathlib import Path
-from codeweaver.cw_types import CodeChunk, ContentItem
+from codeweaver.types import CodeChunk, ContentItem
 
 @runtime_checkable
 class ChunkingService(Protocol):

@@ -243,7 +243,7 @@ CodeWeaver implements a comprehensive service layer that provides clean abstract
 
 ```python
 # Example: Creating and using services
-from codeweaver.cw_types import ServiceType, ServicesConfig
+from codeweaver.types import ServiceType, ServicesConfig
 from codeweaver.services.manager import ServicesManager
 
 # Initialize services
@@ -281,7 +281,7 @@ service_bridge = ServiceBridge(services_manager)
 Services are configured through a hierarchical configuration system:
 
 ```python
-from codeweaver.cw_types import ServicesConfig, ChunkingServiceConfig
+from codeweaver.types import ServicesConfig, ChunkingServiceConfig
 
 # Configure services
 services_config = ServicesConfig(
@@ -321,7 +321,7 @@ Implement custom services by extending the base provider and implementing the se
 
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import ValidationService
+from codeweaver.types import ValidationService
 
 class CustomValidationProvider(BaseServiceProvider, ValidationService):
     async def _initialize_provider(self) -> None:
@@ -485,7 +485,7 @@ The codebase follows a strict type organization system to maintain consistency a
 
 #### **Import Guidelines**
 
-- **For centralized types**: `from codeweaver.cw_types import TypeName, AnotherType`
+- **For centralized types**: `from codeweaver.types import TypeName, AnotherType`
 - **For module-specific types**: Import from the specific module where they're defined
 - **Avoid circular imports**: Types in `_types/` should not import from other modules except for essential dependencies
 

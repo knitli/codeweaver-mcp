@@ -18,7 +18,7 @@ import logging
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -39,7 +39,7 @@ from codeweaver.providers.config import (
     SpaCyProviderConfig,
     VoyageConfig,
 )
-from codeweaver.cw_types import ComponentType, ServicesConfig
+from codeweaver.types import ComponentType, ServicesConfig
 
 
 logger = logging.getLogger(__name__)
@@ -889,8 +889,10 @@ class ConfigManager:
             return result
         try:
             self._load_from_default_path(path, result)
-        except Exception as e:
+        except ConfigurationError as e:
             result["errors"].append(f"Configuration validation failed: {e}")
+        except Exception as e:
+            result["errors"].append(f"Unexpected error during configuration validation: {e}")
         return result
 
     def _load_from_default_path(self, path, result) -> None:
@@ -935,16 +937,19 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
         return (init_settings, env_settings, toml_settings, dotenv_settings, file_secret_settings)
 
 
-class ConfigurationError(Exception):
-    """Configuration-related errors."""
+# Configuration exceptions moved to codeweaver.types to avoid circular imports
+# Import at module level but use TYPE_CHECKING pattern if this creates issues
+from typing import TYPE_CHECKING
 
-
-class ProfileError(ConfigurationError):
-    """Profile-related configuration errors."""
-
-
-class PluginConfigurationError(ConfigurationError):
-    """Plugin configuration errors."""
+if not TYPE_CHECKING:
+    # Import at runtime to avoid circular dependency during module initialization
+    def _get_config_exceptions():
+        from codeweaver.types import ConfigurationError, ProfileError, PluginConfigurationError
+        return ConfigurationError, ProfileError, PluginConfigurationError
+    
+    ConfigurationError, ProfileError, PluginConfigurationError = _get_config_exceptions()
+else:
+    from codeweaver.types import ConfigurationError, ProfileError, PluginConfigurationError
 
 
 def setup_development_config() -> CodeWeaverConfig:
@@ -1068,8 +1073,10 @@ class ConfigSchema:
         """Validate a configuration dictionary against the schema."""
         try:
             CodeWeaverConfig(**config_dict)
-        except Exception as e:
+        except (ValidationError, ConfigurationError) as e:
             return {"valid": False, "errors": [str(e)]}
+        except Exception as e:
+            return {"valid": False, "errors": [f"Unexpected validation error: {str(e)}"]}
         else:
             return {"valid": True, "errors": []}
 

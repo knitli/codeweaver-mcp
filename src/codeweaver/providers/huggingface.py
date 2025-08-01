@@ -16,7 +16,7 @@ from typing import Any
 
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import HuggingFaceConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,

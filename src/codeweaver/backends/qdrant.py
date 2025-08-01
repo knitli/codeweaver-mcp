@@ -30,7 +30,7 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,

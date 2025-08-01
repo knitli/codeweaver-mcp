@@ -19,7 +19,7 @@ from typing import Protocol, runtime_checkable
 from codeweaver.backends.base import VectorBackend
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.sources.base import DataSource
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseCapabilities,
     BaseComponentConfig,
     BaseComponentInfo,

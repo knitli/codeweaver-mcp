@@ -97,7 +97,7 @@ def get_static_provider_info(cls) -> EmbeddingProviderInfo:
 ```python
 # ✅ CORRECT: Inherit from appropriate base class
 from codeweaver.providers.base import CombinedProvider
-from codeweaver.cw_types import EmbeddingProvider, RerankingProvider
+from codeweaver.types import EmbeddingProvider, RerankingProvider
 
 class VoyageAIProvider(CombinedProvider):
     """VoyageAI provider supporting both embeddings and reranking."""
@@ -344,7 +344,7 @@ class ExampleConfig(BaseProviderConfig):
 ### 1. Consistent Exception Types
 
 ```python
-from codeweaver.cw_types import (
+from codeweaver.types import (
     ProviderError,
     ConfigurationError,
     ServiceUnavailableError,
@@ -567,7 +567,7 @@ class TestExampleProvider:
     # Availability tests
     def test_check_availability_success(self):
         """Test availability checking for supported capabilities."""
-        from codeweaver.cw_types import ProviderCapability
+        from codeweaver.types import ProviderCapability
 
         available, error = ExampleProvider.check_availability(ProviderCapability.EMBEDDING)
         assert available is True
@@ -575,7 +575,7 @@ class TestExampleProvider:
 
     def test_check_availability_unsupported(self):
         """Test availability checking for unsupported capabilities."""
-        from codeweaver.cw_types import ProviderCapability
+        from codeweaver.types import ProviderCapability
 
         available, error = ExampleProvider.check_availability(ProviderCapability.CLASSIFICATION)
         assert available is False
@@ -660,7 +660,7 @@ class TestExampleProviderIntegration:
 
 ```python
 # At the end of each component module
-from codeweaver.cw_types import register_provider_class, ProviderType
+from codeweaver.types import register_provider_class, ProviderType
 
 # Register the provider in the registry
 register_provider_class(ProviderType.EXAMPLE, ExampleProvider)

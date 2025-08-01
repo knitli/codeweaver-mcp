@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from codeweaver.services import ServiceBridge, ServiceCoordinator, ServicesManager
-from codeweaver.cw_types import ServicesConfig, ServiceType
+from codeweaver.types import ServicesConfig, ServiceType
 
 
 @pytest.mark.asyncio
@@ -150,7 +150,7 @@ async def test_service_factory_integration():
 
     try:
         from codeweaver.factories.codeweaver_factory import CodeWeaverFactory
-        from codeweaver.cw_types import ChunkingServiceConfig, FilteringServiceConfig
+        from codeweaver.types import ChunkingServiceConfig, FilteringServiceConfig
 
         # Create factory
         factory = CodeWeaverFactory()

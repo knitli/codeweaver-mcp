@@ -18,7 +18,7 @@ from typing import Annotated, Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from codeweaver.sources.base import AbstractDataSource, SourceWatcher
-from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability
+from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 from codeweaver.utils.decorators import not_implemented
 
 

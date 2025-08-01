@@ -20,12 +20,13 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import VectorBackend
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource, SourceConfig
-from codeweaver.cw_types import DistanceMetric, VectorPoint
+from codeweaver.types import DistanceMetric, VectorPoint
 
 
 logger = logging.getLogger(__name__)
@@ -257,8 +258,8 @@ class BenchmarkSuite:
                     query_vectors = [v.vector for v in test_vectors[:10]]
 
                     async def batch_search_func(
-                        b: VectorBackend, vectors=query_vectors
-                    ) -> list[VectorPoint]:
+                        b: VectorBackend, vectors: list[list[float]] = query_vectors
+                    ) -> list[list[float]]:
                         tasks = [b.search_vectors(collection_name, qv, limit=5) for qv in vectors]
                         return await asyncio.gather(*tasks)
 

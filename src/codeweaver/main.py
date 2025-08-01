@@ -43,6 +43,11 @@ from typing import TYPE_CHECKING
 from codeweaver.config import get_config_manager
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
 from codeweaver.server import create_server
+from codeweaver.types import (
+    BackendConnectionError,
+    ComponentCreationError,
+    ConfigurationError,
+)
 
 
 if TYPE_CHECKING:
@@ -121,9 +126,22 @@ async def main() -> None:
         print("\n🔧 Example config:")
         print(config_manager.get_example_config() if config_manager else "")
         return
+    except ConfigurationError as e:
+        logger.error("❌ Configuration error: %s", e)
+        print(f"❌ Configuration error: {e}")
+        print("\n💡 Please check your configuration files:")
+        print("   - .local.codeweaver.toml (workspace)")
+        print("   - .codeweaver/.codeweaver.toml (repository)")
+        print("   - ~/.config/codeweaver/config.toml (user)")
+        return
+    except (ComponentCreationError, BackendConnectionError) as e:
+        logger.error("❌ Component setup error: %s", e)
+        print(f"❌ Component setup error: {e}")
+        print("\n💡 Please check your provider settings and backend connectivity")
+        return
     except Exception as e:
-        logger.exception("❌ Startup error")
-        print(f"❌ Error starting server: {e}")
+        logger.exception("❌ Unexpected startup error")
+        print(f"❌ Unexpected error starting server: {e}")
         return
 
 

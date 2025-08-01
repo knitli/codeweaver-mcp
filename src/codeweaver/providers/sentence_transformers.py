@@ -16,7 +16,7 @@ from typing import Any
 
 from codeweaver.providers.base import LocalEmbeddingProvider
 from codeweaver.providers.config import SentenceTransformersConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,

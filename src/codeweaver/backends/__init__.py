@@ -24,7 +24,7 @@ from codeweaver.backends.config import (
 )
 from codeweaver.backends.factory import BackendConfig, BackendFactory
 from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BackendAuthError,
     BackendCollectionNotFoundError,
     BackendConnectionError,

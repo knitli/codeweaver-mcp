@@ -17,7 +17,7 @@ from typing import Any
 
 from codeweaver.providers.base import LocalNLPProvider
 from codeweaver.providers.config import SpaCyProviderConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     EmbeddingProviderInfo,
     IntentType,
     NLPCapability,
@@ -565,7 +565,7 @@ class SpaCyProvider(LocalNLPProvider):
 
 
 # Register the provider in the global registry
-from codeweaver.cw_types import ProviderType, register_provider_class
+from codeweaver.types import ProviderType, register_provider_class
 
 
 register_provider_class(ProviderType.SPACY, SpaCyProvider)

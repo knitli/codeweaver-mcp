@@ -14,7 +14,7 @@ from typing import Any
 
 from codeweaver.middleware.chunking import ChunkingMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
     ChunkingError,
     ChunkingService,
     ChunkingServiceConfig,

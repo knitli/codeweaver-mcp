@@ -244,7 +244,7 @@ from abc import ABC, abstractmethod
 from docarray import BaseDoc, DocList
 from docarray.index.abstract import BaseDocIndex
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     CollectionInfo,
     DistanceMetric,
     SearchFilter,
@@ -634,7 +634,7 @@ from typing import Any, Annotated, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 from codeweaver.backends.config import BackendConfig
-from codeweaver.cw_types import DistanceMetric
+from codeweaver.types import DistanceMetric
 
 
 class DocArraySchemaConfig(BaseModel):

@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
-from codeweaver.cw_types import IntentResult, ServiceIntegrationError, ServiceType
+from codeweaver.types import IntentResult, ServiceIntegrationError, ServiceType
 
 
 class TestIntentServiceBridge:

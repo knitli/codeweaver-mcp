@@ -22,7 +22,7 @@ from codeweaver.factories.registry import ComponentRegistry, get_global_registry
 from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -81,7 +81,7 @@ class CodeWeaverFactory:
         try:
             from codeweaver.backends.qdrant import QdrantBackend
             from codeweaver.factories.registry import BackendInfo
-            from codeweaver.cw_types import BackendCapabilities
+            from codeweaver.types import BackendCapabilities
 
             backend_info = BackendInfo(
                 name="qdrant",
@@ -112,7 +112,7 @@ class CodeWeaverFactory:
         try:
             from codeweaver.factories.registry import SourceInfo
             from codeweaver.sources.filesystem import FileSystemSource
-            from codeweaver.cw_types import SourceCapabilities
+            from codeweaver.types import SourceCapabilities
 
             source_info = SourceInfo(
                 name="filesystem",
@@ -146,7 +146,7 @@ class CodeWeaverFactory:
             from codeweaver.services.providers.chunking import ChunkingService
             from codeweaver.services.providers.file_filtering import FileFilteringService
             from codeweaver.services.providers.rate_limiting import RateLimitingService
-            from codeweaver.cw_types import (
+            from codeweaver.types import (
                 MemoryUsage,
                 PerformanceProfile,
                 ServiceCapabilities,
@@ -395,8 +395,6 @@ class CodeWeaverFactory:
         Returns:
             ValidationResult with validation details
         """
-        from pydantic.dataclasses import dataclass
-        from pydantic import Field
         errors = []
         warnings = []
         try:
@@ -459,7 +457,7 @@ class CodeWeaverFactory:
         """Get services context for component creation."""
         services = {}
         try:
-            from codeweaver.cw_types import ServiceType
+            from codeweaver.types import ServiceType
 
             service_definitions = dict(zip(ServiceType.members(), ServiceType.get_values(), strict=False))
             for service_type, service_key in service_definitions.items():

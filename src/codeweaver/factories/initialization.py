@@ -18,10 +18,11 @@ import time
 from abc import abstractmethod
 from typing import Any, Protocol
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.factories.error_handling import ErrorHandler
-from codeweaver.cw_types import (
+from codeweaver.types import (
     BaseComponentConfig,
     ComponentLifecycle,
     ComponentState,

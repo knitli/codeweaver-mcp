@@ -17,10 +17,11 @@ import time
 from collections import defaultdict
 from typing import Any
 
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
+from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)

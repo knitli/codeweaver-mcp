@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 from codeweaver.backends.base import VectorBackend
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.sources.base import DataSource
-from codeweaver.cw_types import ComponentInstances, ExtensibilityConfig
+from codeweaver.types import ComponentInstances, ExtensibilityConfig
 
 
 if TYPE_CHECKING:

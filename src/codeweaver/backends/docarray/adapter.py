@@ -15,7 +15,7 @@ from docarray import BaseDoc, DocList
 from docarray.index.abstract import BaseDocIndex
 
 from codeweaver.backends import HybridSearchBackend, VectorBackend
-from codeweaver.cw_types import CollectionInfo, DistanceMetric, SearchFilter, SearchResult, VectorPoint
+from codeweaver.types import CollectionInfo, DistanceMetric, SearchFilter, SearchResult, VectorPoint
 
 
 logger = logging.getLogger(__name__)

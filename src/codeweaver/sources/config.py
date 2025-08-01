@@ -17,7 +17,7 @@ from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver.cw_types import SourceProvider
+from codeweaver.types import SourceProvider
 
 
 logger = logging.getLogger(__name__)

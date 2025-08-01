@@ -146,7 +146,7 @@ def create_qdrant_docarray_backend(
     **kwargs: Any,
 ) -> QdrantDocArrayBackend:
     """Create a Qdrant DocArray backend with simplified configuration."""
-    from codeweaver.cw_types import ProviderKind
+    from codeweaver.types import ProviderKind
 
     config = QdrantDocArrayConfig(
         provider="docarray_qdrant",

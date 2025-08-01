@@ -14,7 +14,8 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
+    AutoIndexingConfig,
     ChunkingService,
     ContentItem,
     FilteringService,
@@ -23,7 +24,6 @@ from codeweaver.cw_types import (
     ServiceIntegrationError,
     ServiceType,
 )
-from codeweaver.cw_types.services.config import AutoIndexingConfig
 
 
 class CodebaseChangeHandler(FileSystemEventHandler):
@@ -226,7 +226,7 @@ class AutoIndexingService(BaseServiceProvider):
             self.watched_paths.add(path)
             self._logger.info("Started monitoring path: %s", path)
         except Exception as e:
-            self._logger.exception("Failed to start monitoring path %s: %s", path, e)
+            self._logger.exception("Failed to start monitoring path %s.", path)
             raise ServiceIntegrationError(f"Failed to start monitoring {path}: {e}") from e
 
     async def stop_monitoring(self, path: str | None = None) -> None:
@@ -262,8 +262,8 @@ class AutoIndexingService(BaseServiceProvider):
         try:
             self._logger.info("Triggering background indexing for path: %s", path)
             await self.start_monitoring(path)
-        except Exception as e:
-            self._logger.exception("Failed to trigger background indexing for %s: %s", path, e)
+        except Exception:
+            self._logger.exception("Failed to trigger background indexing for %s", path)
             return False
         else:
             return True
@@ -283,8 +283,8 @@ class AutoIndexingService(BaseServiceProvider):
                 except asyncio.QueueFull:
                     self._logger.warning("Indexing queue full, skipping file: %s", file_path)
                     break
-        except Exception as e:
-            self._logger.exception("Failed to perform initial indexing of %s: %s", path, e)
+        except Exception:
+            self._logger.exception("Failed to perform initial indexing of %s", path)
 
     async def _index_single_file(self, file_path: Path) -> None:
         """Index a single file."""
@@ -320,8 +320,8 @@ class AutoIndexingService(BaseServiceProvider):
             except asyncio.CancelledError:
                 self._logger.debug("Indexing worker %s cancelled", worker_name)
                 break
-            except Exception as e:
-                self._logger.exception("Indexing worker %s error: %s", worker_name, e)
+            except Exception:
+                self._logger.exception("Indexing worker %s error.", worker_name)
 
     async def _process_file_for_indexing(self, file_path: Path, worker_name: str) -> None:
         """Process a single file for indexing."""

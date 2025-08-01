@@ -10,7 +10,7 @@ import re
 
 from typing import Any
 
-from codeweaver.cw_types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
+from codeweaver.types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
 
 
 class PatternBasedParser:

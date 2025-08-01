@@ -79,7 +79,7 @@ class TestDocArrayIntegration:
     def test_backend_creation_still_works(self):
         """Test that backend creation still works for non-DocArray backends."""
         from codeweaver.backends.factory import BackendConfig
-        from codeweaver.cw_types import ProviderKind
+        from codeweaver.types import ProviderKind
 
         # This should work for standard Qdrant
         config = BackendConfig(
@@ -105,7 +105,7 @@ class TestDocArrayWithDependencies:
     def test_docarray_config_factory(self):
         """Test DocArray configuration factory."""
         from codeweaver.backends.docarray.config import DocArrayConfigFactory
-        from codeweaver.cw_types import ProviderKind
+        from codeweaver.types import ProviderKind
 
         backends = DocArrayConfigFactory.get_supported_backends()
         assert "docarray_qdrant" in backends

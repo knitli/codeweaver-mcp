@@ -7,7 +7,7 @@
 
 import logging
 
-from codeweaver.cw_types import IntentType
+from codeweaver.types import IntentType
 
 
 class BasicConfidenceScorer:

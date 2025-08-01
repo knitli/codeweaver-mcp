@@ -23,7 +23,7 @@ from fastmcp import Context, FastMCP
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
 from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
 from codeweaver.services.manager import ServicesManager
-from codeweaver.cw_types import ContentSearchResult, ExtensibilityConfig
+from codeweaver.types import ContentSearchResult, ExtensibilityConfig
 
 
 if TYPE_CHECKING:

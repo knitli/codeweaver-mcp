@@ -22,7 +22,7 @@ from codeweaver.utils.decorators import not_implemented
 
 
 if TYPE_CHECKING:
-    from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability
+    from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
 
 
 logger = logging.getLogger(__name__)
@@ -151,7 +151,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
     @classmethod
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if web crawler source is available for the given capability."""
-        from codeweaver.cw_types import SourceCapability
+        from codeweaver.types import SourceCapability
 
         # Web crawler supports most capabilities but requires HTTP and parsing libraries
         supported_capabilities = {
@@ -190,8 +190,9 @@ class WebCrawlerSourceProvider(AbstractDataSource):
 
         return False, f"Capability {capability.value} not supported by WebCrawler source"
 
-    def get_capabilities(self) -> SourceCapabilities:
+    def get_capabilities(self) -> "SourceCapabilities":
         """Get capabilities supported by web crawler source."""
+        from codeweaver.types import SourceCapabilities
         return SourceCapabilities(
             supports_content_discovery=True,
             supports_content_reading=True,

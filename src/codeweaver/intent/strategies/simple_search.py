@@ -10,7 +10,7 @@ import logging
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
     Complexity,
     IntentResult,
     IntentStrategy,
@@ -18,7 +18,7 @@ from codeweaver.cw_types import (
     ParsedIntent,
     ServiceType,
 )
-from codeweaver.cw_types.services.config import ServiceConfig
+from codeweaver.types.services.config import ServiceConfig
 
 
 class SimpleSearchStrategy(BaseServiceProvider, IntentStrategy):

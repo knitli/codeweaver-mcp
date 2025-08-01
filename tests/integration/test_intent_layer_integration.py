@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from codeweaver.services.manager import ServicesManager
-from codeweaver.cw_types import (
+from codeweaver.types import (
     AutoIndexingConfig,
     IntentResult,
     IntentServiceConfig,

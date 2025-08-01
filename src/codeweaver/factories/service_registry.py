@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.cw_types import (
+from codeweaver.types import (
     DuplicateProviderError,
     ProviderNotFoundError,
     ProviderRegistrationError,

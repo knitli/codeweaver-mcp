@@ -12,7 +12,7 @@ import time
 
 from typing import Any
 
-from codeweaver.cw_types import (
+from codeweaver.types import (
     IntentStrategy,
     ParsedIntent,
     ServiceIntegrationError,

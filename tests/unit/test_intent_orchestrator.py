@@ -10,7 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
-from codeweaver.cw_types import (
+from codeweaver.types import (
     Complexity,
     HealthStatus,
     IntentResult,
