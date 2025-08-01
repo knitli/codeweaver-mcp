@@ -17,9 +17,9 @@ from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 from codeweaver.backends import VectorBackend
+from codeweaver.cw_types import ComponentInstances, ExtensibilityConfig
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource
-from codeweaver.types import ComponentInstances, ExtensibilityConfig
 
 
 if TYPE_CHECKING:

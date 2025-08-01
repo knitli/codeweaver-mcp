@@ -11,7 +11,7 @@ import sys
 
 
 MODULES_TO_CHECK = (
-    "codeweaver.types",
+    "codeweaver.cw_types",
     "codeweaver.factories",
     "codeweaver.providers",
     "codeweaver.backends",

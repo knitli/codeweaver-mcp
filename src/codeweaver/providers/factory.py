@@ -16,6 +16,7 @@ from typing import ClassVar
 
 from pydantic.dataclasses import dataclass
 
+from codeweaver.cw_types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
@@ -24,7 +25,6 @@ from codeweaver.providers.base import (
     RerankProviderBase,
 )
 from codeweaver.providers.config import EmbeddingProviderConfig, RerankingProviderConfig
-from codeweaver.types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 
 
 logger = logging.getLogger(__name__)
@@ -306,7 +306,10 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("VoyageAI provider not available")
         try:
-            from codeweaver.providers.providers.openai import OpenAICompatibleProvider, OpenAIProvider
+            from codeweaver.providers.providers.openai import (
+                OpenAICompatibleProvider,
+                OpenAIProvider,
+            )
 
             cls.register_embedding_provider(
                 "openai", OpenAIProvider, OpenAIProvider.get_static_provider_info()
@@ -327,7 +330,9 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("Cohere provider not available")
         try:
-            from codeweaver.providers.providers.sentence_transformers import SentenceTransformersProvider
+            from codeweaver.providers.providers.sentence_transformers import (
+                SentenceTransformersProvider,
+            )
 
             cls.register_embedding_provider(
                 "sentence-transformers",

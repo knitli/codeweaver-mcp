@@ -22,8 +22,8 @@ from typing import Any
 
 from pydantic.dataclasses import dataclass
 
+from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)
@@ -220,9 +220,7 @@ class CachingService(BaseServiceProvider):
         """Remove expired entries."""
         async with self._lock:
             expired_keys = []
-            expired_keys.extend(
-                key for key, entry in self._cache.items() if entry.is_expired()
-            )
+            expired_keys.extend(key for key, entry in self._cache.items() if entry.is_expired())
             for key in expired_keys:
                 entry = self._cache.pop(key)
                 self._total_size_bytes -= entry.size_bytes

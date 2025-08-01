@@ -12,7 +12,7 @@ import re
 from re import Pattern
 from typing import Any, ClassVar, Protocol, runtime_checkable
 
-from codeweaver.types import IntentParsingError, ParsedIntent
+from codeweaver.cw_types import IntentParsingError, ParsedIntent
 
 
 def _raise_intent_error(message: str) -> None:

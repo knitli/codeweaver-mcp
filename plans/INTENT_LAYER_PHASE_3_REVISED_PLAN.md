@@ -39,7 +39,7 @@ Replace traditional feedback with behavioral pattern analysis:
 
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceType, ImplicitLearningConfig
+from codeweaver.cw_types import ServiceType, ImplicitLearningConfig
 
 class ImplicitLearningService(BaseServiceProvider):
     """Learn from LLM behavioral patterns without explicit feedback."""

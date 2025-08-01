@@ -8,8 +8,10 @@ import logging
 
 from typing import Any
 
-from codeweaver.backends.factory import BackendFactory
-from codeweaver.config import DocArrayBackendConfig, DocArrayConfigFactory
+from codeweaver.backends.providers.docarray.config import (
+    DocArrayBackendConfig,
+    DocArrayConfigFactory,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -20,14 +22,23 @@ def create_docarray_backend(config: DocArrayBackendConfig) -> Any:
     provider = str(config.provider).lower()
 
     if provider == "docarray_qdrant":
-        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend
+        from codeweaver.backends.providers.docarray.qdrant import QdrantDocArrayBackend
 
         return QdrantDocArrayBackend(config)
-    if provider == "docarray_pinecone":
-        # Future implementation
-        raise NotImplementedError("DocArray Pinecone backend not yet implemented")
+    # Future implementations
+    if provider == "docarray_elasticsearch":
+        raise NotImplementedError("DocArray Elasticsearch backend not yet implemented")
+    if provider == "docarray_milvus":
+        raise NotImplementedError("DocArray Milvus backend not yet implemented")
+    if provider == "docarray_redis":
+        raise NotImplementedError("DocArray Redis backend not yet implemented")
+    if provider == "docarray_epsilla":
+        raise NotImplementedError("DocArray EPSilla backend not yet implemented")
+    if provider == "docarray_hnsw":
+        raise NotImplementedError("DocArray HnSw backend not yet implemented")
+    if provider == "docarray_inmemory":
+        raise NotImplementedError("DocArray InMemoryExactNNIndex backend not yet implemented")
     if provider == "docarray_weaviate":
-        # Future implementation
         raise NotImplementedError("DocArray Weaviate backend not yet implemented")
     raise ValueError(f"Unsupported DocArray backend provider: {provider}")
 
@@ -36,7 +47,8 @@ def register_docarray_backends() -> None:
     """Register DocArray backends with the main factory."""
     try:
         # Register Qdrant DocArray backend
-        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend
+        from codeweaver.backends.factory import BackendFactory
+        from codeweaver.backends.providers.docarray.qdrant import QdrantDocArrayBackend
 
         if missing_deps := QdrantDocArrayBackend._check_dependencies():
             logger.warning(

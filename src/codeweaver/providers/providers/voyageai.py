@@ -16,9 +16,7 @@ import time
 
 from typing import Any
 
-from codeweaver.providers.base import CombinedProvider
-from codeweaver.providers.config import VoyageConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -26,6 +24,8 @@ from codeweaver.types import (
     get_provider_registry_entry,
     register_provider_class,
 )
+from codeweaver.providers.base import CombinedProvider
+from codeweaver.providers.config import VoyageConfig
 
 
 try:

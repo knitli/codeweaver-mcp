@@ -44,21 +44,29 @@ class TestDocArrayIntegration:
     def test_docarray_imports_fail_gracefully_when_not_installed(self):
         """Test that DocArray imports fail gracefully without dependencies."""
         with pytest.raises(ImportError):
-            from codeweaver.backends.docarray.config import DocArrayConfigFactory  # noqa: F401
+            from codeweaver.backends.providers.docarray.config import (
+                DocArrayConfigFactory,  # noqa: F401
+            )
 
         with pytest.raises(ImportError):
-            from codeweaver.backends.docarray.schema import SchemaTemplates  # noqa: F401
+            from codeweaver.backends.providers.docarray.schema import SchemaTemplates  # noqa: F401
 
         with pytest.raises(ImportError):
-            from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend  # noqa: F401
+            from codeweaver.backends.providers.docarray.qdrant import (
+                QdrantDocArrayBackend,  # noqa: F401
+            )
 
     @pytest.mark.skipif(not DOCARRAY_AVAILABLE, reason="DocArray not installed")
     def test_docarray_imports_work_when_installed(self):
         """Test that DocArray imports work when dependencies are available."""
         # These should not raise ImportError when DocArray is installed
-        from codeweaver.backends.docarray.config import DocArrayConfigFactory  # noqa: F401
-        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend  # noqa: F401
-        from codeweaver.backends.docarray.schema import SchemaTemplates  # noqa: F401
+        from codeweaver.backends.providers.docarray.config import (
+            DocArrayConfigFactory,  # noqa: F401
+        )
+        from codeweaver.backends.providers.docarray.qdrant import (
+            QdrantDocArrayBackend,  # noqa: F401
+        )
+        from codeweaver.backends.providers.docarray.schema import SchemaTemplates  # noqa: F401
 
     def test_main_factory_always_works(self):
         """Test that main factory works regardless of DocArray availability."""
@@ -78,8 +86,8 @@ class TestDocArrayIntegration:
 
     def test_backend_creation_still_works(self):
         """Test that backend creation still works for non-DocArray backends."""
-        from codeweaver.backends.factory import BackendConfig
-        from codeweaver.types import ProviderKind
+        from codeweaver.backends.base_config import BackendConfig
+        from codeweaver.cw_types import ProviderKind
 
         # This should work for standard Qdrant
         config = BackendConfig(
@@ -104,8 +112,8 @@ class TestDocArrayWithDependencies:
 
     def test_docarray_config_factory(self):
         """Test DocArray configuration factory."""
-        from codeweaver.backends.docarray.config import DocArrayConfigFactory
-        from codeweaver.types import ProviderKind
+        from codeweaver.backends.providers.docarray.config import DocArrayConfigFactory
+        from codeweaver.cw_types import ProviderKind
 
         backends = DocArrayConfigFactory.get_supported_backends()
         assert "docarray_qdrant" in backends
@@ -120,7 +128,7 @@ class TestDocArrayWithDependencies:
 
     def test_schema_templates(self):
         """Test document schema templates."""
-        from codeweaver.backends.docarray.schema import SchemaTemplates
+        from codeweaver.backends.providers.docarray.schema import SchemaTemplates
 
         # Test code search schema
         code_schema = SchemaTemplates.code_search_schema(512)
@@ -132,7 +140,7 @@ class TestDocArrayWithDependencies:
 
     def test_qdrant_backend_dependencies(self):
         """Test Qdrant backend dependency checking."""
-        from codeweaver.backends.docarray.qdrant import QdrantDocArrayBackend
+        from codeweaver.backends.providers.docarray.qdrant import QdrantDocArrayBackend
 
         missing_deps = QdrantDocArrayBackend._check_dependencies()
         assert isinstance(missing_deps, list)

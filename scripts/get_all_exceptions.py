@@ -26,6 +26,7 @@ def find_builtin_usage_in_source(module: ModuleType, builtins: set[str]) -> set[
 
         class ExceptionVisitor(ast.NodeVisitor):
             """AST visitor to find built-in exception usage."""
+
             def visit_Raise(self, node):
                 """Handle raise statements and exception calls."""
                 # Handle raise statements: raise ValueError("message")
@@ -51,7 +52,9 @@ def find_builtin_usage_in_source(module: ModuleType, builtins: set[str]) -> set[
             def visit_FunctionDef(self, node):
                 """Check function signatures for exception annotations."""
                 # Check function signatures for exception annotations
-                if node.returns and (isinstance(node.returns, ast.Name) and node.returns.id in builtins):
+                if node.returns and (
+                    isinstance(node.returns, ast.Name) and node.returns.id in builtins
+                ):
                     found_exceptions.add((module.__name__, node.returns.id))
                 self.generic_visit(node)
 
@@ -76,7 +79,9 @@ def safe_walk_packages(package, prefix) -> "iter[pkgutil.ModuleInfo]":
         yield from pkgutil.walk_packages(package.__path__, prefix, onerror=onerror)
 
 
-def scan_source_files_for_exceptions(base_path: str, builtin_exceptions: set[str]) -> tuple[set[tuple[str, str]], list[str]]:
+def scan_source_files_for_exceptions(
+    base_path: str, builtin_exceptions: set[str]
+) -> tuple[set[tuple[str, str]], list[str]]:
     """Scan Python source files directly for exception usage and definitions."""
     import ast
     import os
@@ -92,11 +97,12 @@ def scan_source_files_for_exceptions(base_path: str, builtin_exceptions: set[str
 
             tree = ast.parse(source)
             relative_path = py_file.relative_to(base_path)
-            module_name = str(relative_path.with_suffix('')).replace(os.sep, '.')
+            module_name = str(relative_path.with_suffix("")).replace(os.sep, ".")
 
             # Find builtin exception usage
             class ExceptionVisitor(ast.NodeVisitor):
                 """AST visitor to find exception usage and definitions."""
+
                 def visit_Raise(self, node: ast.Raise, module_name: str = module_name):
                     """Handle raise statements to find exceptions."""
                     if isinstance(node.exc, ast.Call) and isinstance(node.exc.func, ast.Name):
@@ -106,7 +112,9 @@ def scan_source_files_for_exceptions(base_path: str, builtin_exceptions: set[str
                         builtin_usage.add((module_name, node.exc.id))
                     self.generic_visit(node)
 
-                def visit_ExceptHandler(self, node: ast.Raise, module_name: str = module_name) -> None:
+                def visit_ExceptHandler(
+                    self, node: ast.Raise, module_name: str = module_name
+                ) -> None:
                     """Handle except clauses to find exception types."""
                     if node.type:
                         if isinstance(node.type, ast.Name) and node.type.id in builtin_exceptions:
@@ -121,11 +129,19 @@ def scan_source_files_for_exceptions(base_path: str, builtin_exceptions: set[str
                     """Handle class definitions to find custom exceptions."""
                     # Find custom exception classes
                     for base in node.bases:
-                        if isinstance(base, ast.Name) and base.id == 'Exception':
+                        if isinstance(base, ast.Name) and base.id == "Exception":
                             if node.name not in builtin_exceptions:
                                 custom_exceptions.append(f"{module_name}.{node.name}")
-                        elif isinstance(base, ast.Attribute) and hasattr(base, 'attr') and (base.attr in ['Exception', 'Error'] or base.attr.endswith(('Error', 'Exception'))) and node.name not in builtin_exceptions:
-                                custom_exceptions.append(f"{module_name}.{node.name}")
+                        elif (
+                            isinstance(base, ast.Attribute)
+                            and hasattr(base, "attr")
+                            and (
+                                base.attr in ["Exception", "Error"]
+                                or base.attr.endswith(("Error", "Exception"))
+                            )
+                            and node.name not in builtin_exceptions
+                        ):
+                            custom_exceptions.append(f"{module_name}.{node.name}")
                     self.generic_visit(node)
 
             visitor = ExceptionVisitor()
@@ -150,13 +166,17 @@ def main() -> None:  # sourcery skip: extract-duplicate-method
         return
 
     # Get builtin exceptions
-    if hasattr(__builtins__, '__dict__'):
-        builtin_exceptions = {e for e in __builtins__.__dict__ if e.endswith(("Error", "Exception"))}
+    if hasattr(__builtins__, "__dict__"):
+        builtin_exceptions = {
+            e for e in __builtins__.__dict__ if e.endswith(("Error", "Exception"))
+        }
     else:
         builtin_exceptions = {e for e in __builtins__ if e.endswith(("Error", "Exception"))}
 
     # Scan source files directly
-    builtin_usage, custom_exceptions = scan_source_files_for_exceptions(str(source_path), builtin_exceptions)
+    builtin_usage, custom_exceptions = scan_source_files_for_exceptions(
+        str(source_path), builtin_exceptions
+    )
 
     print(f"Scanned Python files in {source_path}\n")
 
@@ -164,7 +184,7 @@ def main() -> None:  # sourcery skip: extract-duplicate-method
     print(f"Found {len(custom_exceptions)} custom exceptions:\n")
     print("Custom Exceptions:")
     print("------------------")
-    for exc in sorted(custom_exceptions, key=lambda x: x.split('.')[-1].lower()):
+    for exc in sorted(custom_exceptions, key=lambda x: x.split(".")[-1].lower()):
         print(f"{exc.split('.')[-1]}\npath: {exc}\n")
 
     if builtin_usage:

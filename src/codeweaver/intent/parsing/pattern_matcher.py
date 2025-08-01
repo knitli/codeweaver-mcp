@@ -10,7 +10,7 @@ import re
 
 from typing import Any
 
-from codeweaver.types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
+from codeweaver.cw_types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
 
 
 class PatternBasedParser:
@@ -337,8 +337,4 @@ class PatternBasedParser:
 
     def _get_matched_patterns(self, text: str, intent_type: IntentType) -> list[str]:
         """Get list of patterns that matched the text."""
-        matched = []
-        for pattern in self.patterns[f"{intent_type.value}_patterns"]:
-            if re.search(pattern, text):
-                matched.append(pattern)
-        return matched
+        return [pattern for pattern in self.patterns[f"{intent_type.value}_patterns"] if re.search(pattern, text)]

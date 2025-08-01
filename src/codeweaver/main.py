@@ -1,11 +1,3 @@
-# sourcery skip: avoid-global-variables
-# !/usr/bin/env python3
-
-# SPDX-FileCopyrightText: 2025 Knitli Inc.
-# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
-#
-# SPDX-License-Identifier: MIT OR Apache-2.0
-
 """
 CodeWeaver Extensible MCP Server with Plugin Architecture.
 
@@ -41,19 +33,14 @@ import logging
 from typing import TYPE_CHECKING
 
 from codeweaver.config import get_config_manager
+from codeweaver.cw_types import BackendConnectionError, ComponentCreationError, ConfigurationError
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
 from codeweaver.server import create_server
-from codeweaver.types import BackendConnectionError, ComponentCreationError, ConfigurationError
 
 
 if TYPE_CHECKING:
     from codeweaver.server import CodeWeaverServer
-
-
 logger = logging.getLogger(__name__)
-
-
-# Global server instance (initialized lazily)
 server_instance = None
 config_manager = None
 
@@ -65,50 +52,33 @@ def get_server_instance() -> "CodeWeaverServer":
         if config_manager is None:
             config_manager = get_config_manager()
         config = config_manager.get_config()
-
-        # Create the new clean server implementation
         server_instance = create_server(config)
-
-        # Log server type
         logger.info("Created CodeWeaverServer with plugin system and FastMCP middleware")
-
     return server_instance
 
 
 async def main() -> None:
     """Main entry point with configuration management."""
     global config_manager
-
     try:
-        # Initialize configuration manager
         config_manager = get_config_manager()
         config = config_manager.get_config()
-
-        # Configure logging based on config
         logging.basicConfig(
             level=getattr(logging, config.server.log_level),
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
-
         logger.info("Starting Code Weaver MCP Server...")
         logger.info("Server version: %s", config.server.server_version)
         logger.info("Embedding provider: %s", config.get_effective_embedding_provider())
         logger.info("Collection name: %s", config.backend.collection_name)
-
-        # Pre-initialize server to show which type will be used
         server = get_server_instance()
         logger.info("Server type: %s", type(server).__name__)
-
-        # Check ast-grep availability
         if AST_GREP_AVAILABLE:
             logger.info("✅ ast-grep available - using tree-sitter parsing for 20+ languages")
         else:
             logger.warning("⚠️  ast-grep not available - using fallback parsing")
             logger.info("Install with: uv add ast-grep-py")
-
-        # Run the clean server (which handles its own FastMCP instance)
         await server.run()
-
     except ValueError as e:
         logger.exception("❌ Configuration error")
         print(f"\n❌ Configuration error: {e}")
@@ -123,7 +93,7 @@ async def main() -> None:
         print(config_manager.get_example_config() if config_manager else "")
         return
     except ConfigurationError as e:
-        logger.error("❌ Configuration error: %s", e)
+        logger.exception("❌ Configuration error")
         print(f"❌ Configuration error: {e}")
         print("\n💡 Please check your configuration files:")
         print("   - .local.codeweaver.toml (workspace)")
@@ -131,7 +101,7 @@ async def main() -> None:
         print("   - ~/.config/codeweaver/config.toml (user)")
         return
     except (ComponentCreationError, BackendConnectionError) as e:
-        logger.error("❌ Component setup error: %s", e)
+        logger.exception("❌ Component setup error")
         print(f"❌ Component setup error: {e}")
         print("\n💡 Please check your provider settings and backend connectivity")
         return

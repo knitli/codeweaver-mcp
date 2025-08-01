@@ -14,8 +14,7 @@ from fastmcp.server.middleware.logging import LoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ErrorHandlingService,
     ErrorHandlingServiceConfig,
     LoggingService,
@@ -26,6 +25,7 @@ from codeweaver.types import (
     TimingService,
     TimingServiceConfig,
 )
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class FastMCPLoggingProvider(BaseServiceProvider, LoggingService):

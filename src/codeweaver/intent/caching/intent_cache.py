@@ -11,7 +11,7 @@ import time
 
 from typing import Any
 
-from codeweaver.types import IntentResult, ParsedIntent
+from codeweaver.cw_types import IntentResult, ParsedIntent
 
 
 class IntentCacheManager:

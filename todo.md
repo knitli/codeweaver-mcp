@@ -38,6 +38,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 - Add semantic search patterns for all ast-grep supported languages
 - Add support other languages (not English)
 - Index and search code comments
+- Add redis, milvus, weaviate, epsilla, elasticsearch, HnSw, InMemoryExactNNIndex for DocArray
 
 ## Performance and Scalability
 

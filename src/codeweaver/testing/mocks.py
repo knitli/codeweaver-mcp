@@ -21,8 +21,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from codeweaver.sources import AbstractDataSource, SourceConfig, SourceWatcher
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CollectionInfo,
     ContentItem,
     DistanceMetric,
@@ -35,6 +34,7 @@ from codeweaver.types import (
     SourceCapability,
     VectorPoint,
 )
+from codeweaver.sources import AbstractDataSource, SourceConfig, SourceWatcher
 
 
 logger = logging.getLogger(__name__)

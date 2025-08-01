@@ -19,9 +19,7 @@ from typing import Annotated, Any, ClassVar, Literal, TypeVar
 from pydantic import Field
 
 from codeweaver.backends import VectorBackend
-from codeweaver.services import BaseServiceProvider
-from codeweaver.sources import DataSource
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BackendCapabilities,
     BaseComponentInfo,
     ComponentRegistration,
@@ -41,6 +39,8 @@ from codeweaver.types import (
     SourceCapabilities,
     ValidationResult,
 )
+from codeweaver.services import BaseServiceProvider
+from codeweaver.sources import DataSource
 
 
 logger = logging.getLogger(__name__)

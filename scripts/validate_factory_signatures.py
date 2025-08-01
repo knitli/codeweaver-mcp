@@ -82,9 +82,7 @@ def check_package_signatures(package_path: Path, method_name: str, expected_sig:
 
             method_pattern = rf"(async\s+)?def\s+{method_name}\s*\([^)]*\)\s*(?:->\s*[^:]*)?:"
             if matches := re.findall(method_pattern, content):
-                # Extract the full signature
-                match = re.search(method_pattern, content)
-                if match:
+                if match := re.search(method_pattern, content):
                     actual_sig = match.group(0).strip()
                     if actual_sig != expected_sig.strip():
                         violations.append(f"{py_file.name}: {actual_sig}")

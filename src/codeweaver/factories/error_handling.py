@@ -22,7 +22,7 @@ from typing import Any
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
     ComponentType,

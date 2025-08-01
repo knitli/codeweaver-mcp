@@ -28,6 +28,17 @@ content_items = await source.discover_content(config)
 """
 
 # Import new types
+from codeweaver.cw_types import (
+    SOURCE_PROVIDERS,
+    APIType,
+    AuthType,
+    ContentType,
+    DatabaseType,
+    SourceCapabilities,
+    SourceCapability,
+    SourceProvider,
+    SourceProviderInfo,
+)
 from codeweaver.sources.base import (
     AbstractDataSource,
     DataSource,
@@ -49,17 +60,6 @@ from codeweaver.sources.providers import (
     GitRepositorySourceProvider,
     WebCrawlerSourceConfig,
     WebCrawlerSourceProvider,
-)
-from codeweaver.types import (
-    SOURCE_PROVIDERS,
-    APIType,
-    AuthType,
-    ContentType,
-    DatabaseType,
-    SourceCapabilities,
-    SourceCapability,
-    SourceProvider,
-    SourceProviderInfo,
 )
 
 

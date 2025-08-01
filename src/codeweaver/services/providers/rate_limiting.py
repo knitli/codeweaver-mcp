@@ -20,8 +20,8 @@ from typing import Any
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)

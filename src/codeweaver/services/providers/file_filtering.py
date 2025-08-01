@@ -12,9 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from codeweaver.middleware.filtering import FileFilteringMiddleware
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     DirectoryNotFoundError,
     DirectoryStats,
     FileMetadata,
@@ -25,6 +23,8 @@ from codeweaver.types import (
     ServiceCapabilities,
     ServiceType,
 )
+from codeweaver.middleware.filtering import FileFilteringMiddleware
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class FilteringService(BaseServiceProvider, FilteringService):

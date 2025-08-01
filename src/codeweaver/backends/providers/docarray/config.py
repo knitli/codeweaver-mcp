@@ -7,8 +7,8 @@ from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver.backends.factory import BackendConfig
-from codeweaver.types import BaseEnum
+from codeweaver.backends.base_config import BackendConfig
+from codeweaver.cw_types import BaseEnum
 
 
 class DocArraySchemaConfig(BaseModel):
@@ -123,23 +123,6 @@ class QdrantDocArrayConfig(DocArrayBackendConfig):
         return defaults | v
 
 
-class PineconeDocArrayConfig(DocArrayBackendConfig):
-    """Pinecone-specific DocArray configuration."""
-
-    provider: str = Field(default="docarray_pinecone", frozen=True)
-
-    # Pinecone-specific settings
-    environment: str = Field(description="Pinecone environment")
-    index_type: str = Field(default="approximated", description="Index type")
-
-    @field_validator("db_config", mode="before")
-    @classmethod
-    def set_pinecone_defaults(cls, v: dict[str, Any]) -> dict[str, Any]:
-        """Set Pinecone-specific default configuration."""
-        defaults = {"metric": "cosine", "shards": 1, "replicas": 1}
-        return defaults | v
-
-
 class WeaviateDocArrayConfig(DocArrayBackendConfig):
     """Weaviate-specific DocArray configuration."""
 
@@ -161,7 +144,6 @@ class DocArrayBackendKind(BaseEnum):
     """Enumeration of supported DocArray backend types."""
 
     QDRANT = "docarray_qdrant"
-    PINECONE = "docarray_pinecone"
     WEAVIATE = "docarray_weaviate"
 
     @property
@@ -170,8 +152,6 @@ class DocArrayBackendKind(BaseEnum):
         match self:
             case DocArrayBackendKind.QDRANT:
                 return QdrantDocArrayConfig
-            case DocArrayBackendKind.PINECONE:
-                return PineconeDocArrayConfig
             case DocArrayBackendKind.WEAVIATE:
                 return WeaviateDocArrayConfig
             case _:

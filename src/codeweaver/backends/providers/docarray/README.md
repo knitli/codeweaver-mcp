@@ -40,8 +40,8 @@ CodeWeaver Factory System
 ### Basic Configuration
 
 ```python
-from codeweaver.backends.docarray.config import DocArrayConfigFactory
-from codeweaver.types import ProviderKind
+from codeweaver.backends.providers.docarray.config import DocArrayConfigFactory
+from codeweaver.cw_types import ProviderKind
 
 # Create DocArray Qdrant backend configuration
 config = DocArrayConfigFactory.create_config(
@@ -55,7 +55,7 @@ config = DocArrayConfigFactory.create_config(
 ### Schema Templates
 
 ```python
-from codeweaver.backends.docarray.schema import SchemaTemplates
+from codeweaver.backends.providers.docarray.schema import SchemaTemplates
 
 # Code search optimized schema
 code_schema = SchemaTemplates.code_search_schema(512)
@@ -70,7 +70,7 @@ multimodal_schema = SchemaTemplates.multimodal_schema(512)
 ### Custom Schemas
 
 ```python
-from codeweaver.backends.docarray.schema import DocumentSchemaGenerator, SchemaConfig
+from codeweaver.backends.providers.docarray.schema import DocumentSchemaGenerator, SchemaConfig
 
 # Create custom schema configuration
 config = SchemaConfig(

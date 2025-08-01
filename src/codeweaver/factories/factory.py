@@ -16,12 +16,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from codeweaver.backends import BackendConfig, VectorBackend
-from codeweaver.factories.base import create_factory_context
-from codeweaver.factories.registry import ComponentRegistry, get_global_registry
-from codeweaver.providers import EmbeddingProvider
-from codeweaver.providers import ProviderFactory as ExistingProviderFactory
-from codeweaver.sources import DataSource, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -29,6 +24,11 @@ from codeweaver.types import (
     ServiceType,
     ValidationResult,
 )
+from codeweaver.factories.base import create_factory_context
+from codeweaver.factories.registry import ComponentRegistry, get_global_registry
+from codeweaver.providers import EmbeddingProvider
+from codeweaver.providers import ProviderFactory as ExistingProviderFactory
+from codeweaver.sources import DataSource, SourceConfig
 
 
 if TYPE_CHECKING:
@@ -79,8 +79,8 @@ class CodeWeaverFactory:
         """Initialize built-in backend components."""
         try:
             from codeweaver.backends.providers.qdrant import QdrantBackend
+            from codeweaver.cw_types import BackendCapabilities
             from codeweaver.factories.registry import BackendInfo
-            from codeweaver.types import BackendCapabilities
 
             backend_info = BackendInfo(
                 name="qdrant",
@@ -109,9 +109,9 @@ class CodeWeaverFactory:
     def _initialize_builtin_sources(self) -> None:
         """Initialize built-in source components."""
         try:
+            from codeweaver.cw_types import SourceCapabilities
             from codeweaver.factories.registry import SourceInfo
             from codeweaver.sources.providers.filesystem import FileSystemSource
-            from codeweaver.types import SourceCapabilities
 
             source_info = SourceInfo(
                 name="filesystem",
@@ -140,17 +140,17 @@ class CodeWeaverFactory:
     def _initialize_builtin_services(self) -> None:
         """Initialize built-in service components."""
         try:
-            from codeweaver.services.providers.auto_indexing import AutoIndexingService
-            from codeweaver.services.providers.caching import CachingService
-            from codeweaver.services.providers.chunking import ChunkingService
-            from codeweaver.services.providers.file_filtering import FileFilteringService
-            from codeweaver.services.providers.rate_limiting import RateLimitingService
-            from codeweaver.types import (
+            from codeweaver.cw_types import (
                 MemoryUsage,
                 PerformanceProfile,
                 ServiceCapabilities,
                 ServiceType,
             )
+            from codeweaver.services.providers.auto_indexing import AutoIndexingService
+            from codeweaver.services.providers.caching import CachingService
+            from codeweaver.services.providers.chunking import ChunkingService
+            from codeweaver.services.providers.file_filtering import FileFilteringService
+            from codeweaver.services.providers.rate_limiting import RateLimitingService
 
             self.registry.register_service_provider(
                 service_type=ServiceType.CHUNKING,
@@ -163,7 +163,7 @@ class CodeWeaverFactory:
                     supports_async=True,
                     max_concurrency=10,
                     memory_usage=MemoryUsage.LOW,
-                    performance_profile=PerformanceProfile.STANDARD
+                    performance_profile=PerformanceProfile.STANDARD,
                 ),
             )
             self.registry.register_service_provider(
@@ -221,8 +221,13 @@ class CodeWeaverFactory:
                     performance_profile=PerformanceProfile.RESOURCE_EFFICIENT,
                 ),
             )
-            if self._config.services and self._config.services.telemetry and self._config.services.telemetry.enabled:
+            if (
+                self._config.services
+                and self._config.services.telemetry
+                and self._config.services.telemetry.enabled
+            ):
                 from codeweaver.services.providers.telemetry import TelemetryService
+
                 self.registry.register_service_provider(
                     service_type=ServiceType.TELEMETRY,
                     provider_name="default",
@@ -456,9 +461,11 @@ class CodeWeaverFactory:
         """Get services context for component creation."""
         services = {}
         try:
-            from codeweaver.types import ServiceType
+            from codeweaver.cw_types import ServiceType
 
-            service_definitions = dict(zip(ServiceType.members(), ServiceType.get_values(), strict=False))
+            service_definitions = dict(
+                zip(ServiceType.members(), ServiceType.get_values(), strict=False)
+            )
             for service_type, service_key in service_definitions.items():
                 if self._config.services.get("") is False:
                     service = await self._create_service_safely(service_type, service_key)

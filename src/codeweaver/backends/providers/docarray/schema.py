@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 from docarray import BaseDoc
-from docarray.typing import AndArray
+from docarray.typing import NdArray
 from pydantic import Field, create_model
 
 
@@ -92,7 +92,7 @@ class DocumentSchemaGenerator:
         return {
             "id": (str, Field(description="Unique document identifier")),
             "content": (str, Field(description="Document text content")),
-            "embedding": (AndArray[embedding_dim], Field(description="Dense vector embedding")),
+            "embedding": (NdArray[embedding_dim], Field(description="Dense vector embedding")),
             "metadata": (
                 dict[str, Any],
                 Field(default_factory=dict, description="Document metadata"),
@@ -170,8 +170,8 @@ class SchemaTemplates:
             embedding_dimension=embedding_dim,
             include_sparse_vectors=True,
             custom_fields={
-                "image_embedding": (AndArray[embedding_dim], Field(description="Image embedding")),
-                "text_embedding": (AndArray[embedding_dim], Field(description="Text embedding")),
+                "image_embedding": (NdArray[embedding_dim], Field(description="Image embedding")),
+                "text_embedding": (NdArray[embedding_dim], Field(description="Text embedding")),
                 "image_url": (str | None, Field(default=None, description="Image URL")),
             },
         )

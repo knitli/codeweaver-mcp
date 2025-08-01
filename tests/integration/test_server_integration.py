@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from codeweaver.config import get_config
+from codeweaver.cw_types import ExtensibilityConfig
 from codeweaver.server import CodeWeaverServer
-from codeweaver.types import ExtensibilityConfig
 
 
 class TestCodeWeaverServer:

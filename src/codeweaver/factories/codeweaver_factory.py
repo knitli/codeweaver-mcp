@@ -15,15 +15,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from codeweaver.backends import BackendConfig, VectorBackend
-from codeweaver.factories.backend_registry import BackendRegistry
-from codeweaver.factories.error_handling import ErrorHandler, GracefulDegradationManager
-from codeweaver.factories.initialization import FactoryInitializer
-from codeweaver.factories.plugin_protocols import PluginDiscoveryEngine
-from codeweaver.factories.source_registry import SourceRegistry
-from codeweaver.providers import EmbeddingProvider
-from codeweaver.providers import ProviderFactory as ExistingProviderFactory
-from codeweaver.sources import DataSource, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -33,6 +25,14 @@ from codeweaver.types import (
     ServiceType,
     ValidationResult,
 )
+from codeweaver.factories.backend_registry import BackendRegistry
+from codeweaver.factories.error_handling import ErrorHandler, GracefulDegradationManager
+from codeweaver.factories.initialization import FactoryInitializer
+from codeweaver.factories.plugin_protocols import PluginDiscoveryEngine
+from codeweaver.factories.source_registry import SourceRegistry
+from codeweaver.providers import EmbeddingProvider
+from codeweaver.providers import ProviderFactory as ExistingProviderFactory
+from codeweaver.sources import DataSource, SourceConfig
 
 
 if TYPE_CHECKING:
@@ -481,6 +481,7 @@ class CodeWeaverFactory:
 
     def _initialize_builtin_services(self) -> None:
         """Initialize built-in service provider registrations."""
+        from codeweaver.cw_types import ServiceCapabilities
         from codeweaver.services.providers.chunking import ChunkingService
         from codeweaver.services.providers.context_intelligence import FastMCPContextMiningProvider
         from codeweaver.services.providers.file_filtering import FilteringService
@@ -490,7 +491,6 @@ class CodeWeaverFactory:
         from codeweaver.services.providers.zero_shot_optimization import (
             ContextAdequacyOptimizationProvider,
         )
-        from codeweaver.types import ServiceCapabilities
 
         # Core services
         self._service_registry.register_provider(
@@ -560,7 +560,9 @@ class CodeWeaverFactory:
                 performance_profile="standard",
             ),
         )
-        logger.info("Built-in service providers registered (including Phase 3 intent layer services)")
+        logger.info(
+            "Built-in service providers registered (including Phase 3 intent layer services)"
+        )
 
     def _discover_and_register_plugins(self) -> None:
         """Discover and register available plugins."""

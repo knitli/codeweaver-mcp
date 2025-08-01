@@ -34,7 +34,7 @@ This corrected phase restructures SpaCy as a **Provider** following CodeWeaver's
 
 ### 1. SpaCy as Provider Architecture
 - **SpaCy Provider**: Located in `src/codeweaver/providers/nlp/` following provider patterns
-- **Protocol-Based Interface**: Universal [`NLPProvider`](src/codeweaver.types/providers/nlp.py) protocol for extensibility
+- **Protocol-Based Interface**: Universal [`NLPProvider`](src/codeweaver.cw_types/providers/nlp.py) protocol for extensibility
 - **Factory Integration**: Registered with provider factory system
 - **Configuration-Driven**: Full TOML/environment variable configuration using pydantic-settings
 - **Multiple Implementations**: Support for different SpaCy models and custom training
@@ -58,15 +58,15 @@ This corrected phase restructures SpaCy as a **Provider** following CodeWeaver's
 
 #### Deliverables
 
-**1. NLP Provider Configuration Models** (`src/codeweaver.types/providers/nlp.py`)
+**1. NLP Provider Configuration Models** (`src/codeweaver.cw_types/providers/nlp.py`)
 ```python
 from typing import Annotated, Any
 from pydantic import BaseModel, ConfigDict, Field
 from pathlib import Path
 
-from codeweaver.types.providers.enums import NLPCapability, NLPModelSize
-from codeweaver.types.intent import IntentType
-from codeweaver.types.config import BaseComponentConfig
+from codeweaver.cw_types.providers.enums import NLPCapability, NLPModelSize
+from codeweaver.cw_types.intent import IntentType
+from codeweaver.cw_types.config import BaseComponentConfig
 
 
 class DomainPattern(BaseModel):
@@ -261,11 +261,11 @@ from typing import Any, Protocol, runtime_checkable
 import logging
 from pathlib import Path
 
-from codeweaver.types.providers.nlp import (
+from codeweaver.cw_types.providers.nlp import (
     SpaCyProviderConfig, NLPResult, NLPModelInfo, NLPCapability,
     NLPModelSize, DomainPattern, DomainPatternsConfig
 )
-from codeweaver.types.intent import IntentType
+from codeweaver.cw_types.intent import IntentType
 
 logger = logging.getLogger(__name__)
 
@@ -885,7 +885,7 @@ class SpaCyTrainingManager:
 ```python
 # Add to existing ConfigManager class
 
-from codeweaver.types.providers.nlp import SpaCyProviderConfig, DomainPatternsConfig
+from codeweaver.cw_types.providers.nlp import SpaCyProviderConfig, DomainPatternsConfig
 
 class NLPConfig(BaseModel):
     """NLP provider configuration using pydantic-settings patterns."""
@@ -1080,11 +1080,11 @@ This corrected plan now properly aligns with your established pydantic-settings 
   - ✅ Added LocalNLPProvider for local inference providers
   - ✅ Full async/await support with proper error handling
 
-  codeweaver.types/providers/capabilities.py:
+  codeweaver.cw_types/providers/capabilities.py:
   - ✅ Extended ProviderCapabilities with NLP support fields
   - ✅ Added supports_nlp, default_nlp_model, supported_nlp_models
 
-  codeweaver.types/providers/registry.py:
+  codeweaver.cw_types/providers/registry.py:
   - ✅ Added complete spaCy provider registry entry with capabilities matrix
   - ✅ Included 4 spaCy models (sm/md/lg/trf) with proper dimensions
   - ✅ Configured for local inference, no API key required
@@ -1127,7 +1127,7 @@ This corrected plan now properly aligns with your established pydantic-settings 
   Needed:
   # In provider factory initialization
   from codeweaver.providers.nlp import SpaCyProvider
-  from codeweaver.types.providers.registry import register_provider_class, ProviderType
+  from codeweaver.cw_types.providers.registry import register_provider_class, ProviderType
 
   register_provider_class(ProviderType.SPACY, SpaCyProvider)
 
@@ -1185,7 +1185,7 @@ This corrected plan now properly aligns with your established pydantic-settings 
 
   Modified Files:
   - src/codeweaver/providers/base.py (added NLP protocols)
-  - src/codeweaver.types/providers/capabilities.py (added NLP capabilities)
-  - src/codeweaver.types/providers/registry.py (added spaCy registry entry)
+  - src/codeweaver.cw_types/providers/capabilities.py (added NLP capabilities)
+  - src/codeweaver.cw_types/providers/registry.py (added spaCy registry entry)
 
   The spaCy NLP provider is architecturally sound and ready for integration with the intent layer services when you're ready to proceed with Phase 3!

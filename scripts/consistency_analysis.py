@@ -287,15 +287,13 @@ def generate_refined_report(
     report.append("## Executive Summary\n")
     report.append("This analysis focuses on:")
     report.append("1. **Factory utility methods** that need consistency across packages")
-    report.extend(
-        (
-            "2. **Service implementations** and their BaseServiceProvider compliance",
-            "3. **Protocol specificity** - not all components need all protocols",
-            "4. **Test coverage** for methods that might change\n",
-            "## Factory Utility Methods Analysis\n",
-            "These methods need consistency because they're used by factories and service managers:\n",
-        )
-    )
+    report.extend((
+        "2. **Service implementations** and their BaseServiceProvider compliance",
+        "3. **Protocol specificity** - not all components need all protocols",
+        "4. **Test coverage** for methods that might change\n",
+        "## Factory Utility Methods Analysis\n",
+        "These methods need consistency because they're used by factories and service managers:\n",
+    ))
     for method_name, usage in factory_methods.items():
         report.append(f"### {method_name}")
 
@@ -360,16 +358,14 @@ def generate_refined_report(
     report.append(
         "1. **Service BaseServiceProvider compliance**: Ensure all services inherit from BaseServiceProvider"
     )
-    report.extend(
-        (
-            "2. **Factory utility method consistency**: Standardize signatures for methods used by factories",
-            "3. **Test coverage**: Add tests for utility methods that lack coverage\n",
-            "### 🔧 Medium Priority",
-            "1. **Protocol-specific validation**: Don't force all protocols on all implementations",
-            "2. **Factory integration**: Ensure factory methods actually use the utility methods",
-            "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n",
-        )
-    )
+    report.extend((
+        "2. **Factory utility method consistency**: Standardize signatures for methods used by factories",
+        "3. **Test coverage**: Add tests for utility methods that lack coverage\n",
+        "### 🔧 Medium Priority",
+        "1. **Protocol-specific validation**: Don't force all protocols on all implementations",
+        "2. **Factory integration**: Ensure factory methods actually use the utility methods",
+        "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n",
+    ))
     report.append("### 💡 Low Priority")
     report.append(
         "1. **Service-specific protocols**: ChunkingService only for chunking services, etc."

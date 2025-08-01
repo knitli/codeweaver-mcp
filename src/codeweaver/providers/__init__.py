@@ -10,6 +10,13 @@ Provides extensible abstractions for multiple embedding and reranking providers
 with unified interfaces, registry system, and backward compatibility.
 """
 
+from codeweaver.cw_types import (
+    EmbeddingProviderInfo,
+    ProviderCapabilities,
+    ProviderCapability,
+    ProviderType,
+    RerankResult,
+)
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.providers.custom import (
     EnhancedProviderRegistry,
@@ -27,13 +34,6 @@ from codeweaver.providers.providers import (
     OpenAICompatibleProvider,
     SentenceTransformersProvider,
     VoyageAIProvider,
-)
-from codeweaver.types import (
-    EmbeddingProviderInfo,
-    ProviderCapabilities,
-    ProviderCapability,
-    ProviderType,
-    RerankResult,
 )
 
 

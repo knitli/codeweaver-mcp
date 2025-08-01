@@ -9,14 +9,14 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from codeweaver.services.manager import ServicesManager
-from codeweaver.types import (
+from codeweaver.cw_types import (
     AutoIndexingConfig,
     IntentResult,
     IntentServiceConfig,
     ServicesConfig,
     ServiceType,
 )
+from codeweaver.services.manager import ServicesManager
 
 
 @pytest.mark.integration
@@ -319,10 +319,7 @@ class TestIntentLayerPerformance:
         start_time = time.time()
 
         tasks = []
-        tasks.extend(
-            intent_bridge.process_intent(f"find function {i}", {})
-            for i in range(10)
-        )
+        tasks.extend(intent_bridge.process_intent(f"find function {i}", {}) for i in range(10))
         # Process all intents
         import asyncio
 

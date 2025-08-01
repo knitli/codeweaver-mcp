@@ -22,9 +22,7 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import HybridSearchBackend, VectorBackend
-from codeweaver.providers import EmbeddingProvider, RerankProvider
-from codeweaver.sources import DataSource, SourceCapability, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CollectionInfo,
     ContentItem,
     DistanceMetric,
@@ -34,6 +32,8 @@ from codeweaver.types import (
     SearchResult,
     VectorPoint,
 )
+from codeweaver.providers import EmbeddingProvider, RerankProvider
+from codeweaver.sources import DataSource, SourceCapability, SourceConfig
 
 
 logger = logging.getLogger(__name__)

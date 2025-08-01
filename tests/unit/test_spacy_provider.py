@@ -9,9 +9,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from codeweaver.cw_types import ProviderType
 from codeweaver.providers.config import SpaCyProviderConfig
 from codeweaver.providers.nlp.spacy import SpaCyProvider
-from codeweaver.types import ProviderType
 
 
 class TestSpaCyProvider:
@@ -42,14 +42,14 @@ class TestSpaCyProvider:
     def test_provider_has_required_properties(self, provider: SpaCyProvider):
         """Test that provider has all required properties."""
         required_properties = ["provider_name", "model_name", "max_batch_size"]
-# sourcery skip: no-loop-in-tests
+        # sourcery skip: no-loop-in-tests
         for prop_name in required_properties:
             assert hasattr(provider, prop_name), f"Missing property: {prop_name}"
 
     def test_provider_has_required_methods(self):
         """Test that provider has all required methods."""
         required_methods = ["initialize", "shutdown", "process_text", "health_check"]
-# sourcery skip: no-loop-in-tests
+        # sourcery skip: no-loop-in-tests
         for method_name in required_methods:
             assert hasattr(SpaCyProvider, method_name), f"Missing method: {method_name}"
             assert callable(getattr(SpaCyProvider, method_name))
@@ -81,7 +81,7 @@ class TestSpaCyProvider:
     # Provider registration tests
     def test_provider_registration(self):
         """Test that provider is properly registered."""
-        from codeweaver.types.providers.registry import PROVIDER_REGISTRY
+        from codeweaver.cw_types.providers.registry import PROVIDER_REGISTRY
 
         # Check that spaCy provider is in registry
         assert ProviderType.SPACY in PROVIDER_REGISTRY

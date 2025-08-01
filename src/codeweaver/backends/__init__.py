@@ -16,15 +16,28 @@ from codeweaver.backends.base import (
     TransactionalBackend,
     VectorBackend,
 )
+from codeweaver.backends.base_config import BackendConfig
 from codeweaver.backends.config import (
     EXAMPLE_CONFIGS,
     BackendConfigExtended,
     create_backend_config_from_env,
     get_provider_specific_config,
 )
-from codeweaver.backends.factory import BackendConfig, BackendFactory
-from codeweaver.backends.providers import QdrantBackend, QdrantHybridBackend
-from codeweaver.types import (
+from codeweaver.backends.factory import BackendFactory
+from codeweaver.backends.providers import (
+    BaseDocArrayAdapter,
+    DocArrayConfigFactory,
+    DocArrayHybridAdapter,
+    DocumentSchemaGenerator,
+    QdrantBackend,
+    QdrantDocArrayBackend,
+    QdrantHybridBackend,
+    SchemaConfig,
+    SchemaTemplates,
+    create_docarray_backend,
+    register_docarray_backends,
+)
+from codeweaver.cw_types import (
     BackendAuthError,
     BackendCollectionNotFoundError,
     BackendConnectionError,
@@ -59,17 +72,26 @@ __all__ = [
     "BackendFactory",
     "BackendUnsupportedOperationError",
     "BackendVectorDimensionMismatchError",
+    "BaseDocArrayAdapter",
     "CollectionInfo",
     "DistanceMetric",
+    "DocArrayConfigFactory",
+    "DocArrayHybridAdapter",
+    "DocumentSchemaGenerator",
     "FilterCondition",
     "HybridSearchBackend",
     "QdrantBackend",
+    "QdrantDocArrayBackend",
     "QdrantHybridBackend",
+    "SchemaConfig",
+    "SchemaTemplates",
     "SearchResult",
     "StreamingBackend",
     "TransactionalBackend",
     "VectorBackend",
     "VectorPoint",
     "create_backend_config_from_env",
+    "create_docarray_backend",
     "get_provider_specific_config",
+    "register_docarray_backends",
 ]

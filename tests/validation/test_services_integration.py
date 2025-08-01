@@ -20,7 +20,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from codeweaver.types import HealthStatus, ServiceHealth
+from codeweaver.cw_types import HealthStatus, ServiceHealth
 
 
 @pytest.mark.validation

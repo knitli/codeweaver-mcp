@@ -11,8 +11,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     OptimizationStrategy,
     OptimizedIntentPlan,
     ServiceType,
@@ -20,6 +19,7 @@ from codeweaver.types import (
     ZeroShotOptimizationService,
     ZeroShotOptimizationServiceConfig,
 )
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class ContextAdequacyPredictor:
@@ -27,12 +27,7 @@ class ContextAdequacyPredictor:
 
     def __init__(self):
         """Initialize the context adequacy predictor."""
-        self.adequacy_thresholds = {
-            "excellent": 0.9,
-            "good": 0.7,
-            "acceptable": 0.5,
-            "poor": 0.3
-        }
+        self.adequacy_thresholds = {"excellent": 0.9, "good": 0.7, "acceptable": 0.5, "poor": 0.3}
 
     async def assess(self, intent: str, context: dict[str, Any]) -> float:
         """Assess context adequacy for zero-shot success."""
@@ -55,7 +50,7 @@ class ContextAdequacyPredictor:
             ("specific terms", ["find", "get", "analyze", "explain", "create", "show"]),
             ("technical terms", ["function", "class", "method", "variable", "file", "directory"]),
             ("scope indicators", ["in", "from", "within", "inside", "under", "across"]),
-            ("filter terms", ["type", "kind", "format", "extension", "containing", "matching"])
+            ("filter terms", ["type", "kind", "format", "extension", "containing", "matching"]),
         ]
 
         intent_lower = intent.lower()
@@ -76,8 +71,9 @@ class ContextAdequacyPredictor:
         if not required_elements:
             return 0.8  # Default score if no specific requirements
 
-        present_elements = sum(bool(self._has_context_element(element, context))
-                           for element in required_elements)
+        present_elements = sum(
+            bool(self._has_context_element(element, context)) for element in required_elements
+        )
         return present_elements / len(required_elements)
 
     def _assess_context_relevance(self, intent: str, context: dict[str, Any]) -> float:
@@ -120,14 +116,13 @@ class ContextAdequacyPredictor:
             "focus": ["focus", "aspect", "area", "type", "kind", "category"],
             "topic": ["topic", "subject", "concept", "theme"],
             "requirements": ["requirements", "specs", "criteria", "rules"],
-            "specifications": ["specifications", "details", "parameters", "config"]
+            "specifications": ["specifications", "details", "parameters", "config"],
         }
 
         possible_keys = element_mappings.get(element, [element])
 
         return any(
-            any(key in context_key.lower() for key in possible_keys)
-            for context_key in context
+            any(key in context_key.lower() for key in possible_keys) for context_key in context
         )
 
     def _calculate_keyword_relevance(self, text: str, intent_keywords: set[str]) -> float:
@@ -149,9 +144,7 @@ class SuccessPatternDatabase:
         self.pattern_frequencies: dict[str, int] = {}
 
     async def get_similar_patterns(
-        self,
-        intent: str,
-        contextual_features: dict[str, Any]
+        self, intent: str, contextual_features: dict[str, Any]
     ) -> dict[str, Any]:
         """Get similar patterns from the database."""
         intent_signature = self._generate_intent_signature(intent)
@@ -161,9 +154,7 @@ class SuccessPatternDatabase:
         similar_patterns = []
         for pattern_data in self.patterns.values():
             similarity = self._calculate_similarity(
-                intent_signature,
-                context_signature,
-                pattern_data
+                intent_signature, context_signature, pattern_data
             )
             if similarity > 0.6:  # Threshold for similarity
                 similar_patterns.append((similarity, pattern_data))
@@ -173,15 +164,15 @@ class SuccessPatternDatabase:
             return {
                 "average_success_rate": 0.6,
                 "strategy_confidence": 0.5,
-                "top_strategies": ["adaptive", "simple_search"]
+                "top_strategies": ["adaptive", "simple_search"],
             }
 
         # Calculate weighted averages
         total_weight = sum(similarity for similarity, _ in similar_patterns)
-        weighted_success_rate = sum(
-            similarity * pattern["success_rate"]
-            for similarity, pattern in similar_patterns
-        ) / total_weight
+        weighted_success_rate = (
+            sum(similarity * pattern["success_rate"] for similarity, pattern in similar_patterns)
+            / total_weight
+        )
 
         # Get most common strategies
         strategy_counts = {}
@@ -190,24 +181,17 @@ class SuccessPatternDatabase:
                 strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
 
         top_strategies = sorted(
-            strategy_counts.keys(),
-            key=lambda x: strategy_counts[x],
-            reverse=True
+            strategy_counts.keys(), key=lambda x: strategy_counts[x], reverse=True
         )[:3]
 
         return {
             "average_success_rate": weighted_success_rate,
             "strategy_confidence": min(len(similar_patterns) / 10.0, 1.0),
-            "top_strategies": top_strategies
+            "top_strategies": top_strategies,
         }
 
     async def store_pattern(
-        self,
-        intent: str,
-        context: dict[str, Any],
-        *,
-        success: bool,
-        strategy: str
+        self, intent: str, context: dict[str, Any], *, success: bool, strategy: str
     ) -> None:
         """Store a new success pattern."""
         pattern_id = self._generate_pattern_id(intent, context)
@@ -233,7 +217,7 @@ class SuccessPatternDatabase:
                 "frequency": 1,
                 "success_rate": 1.0 if success else 0.0,
                 "successful_strategies": [strategy] if success and strategy else [],
-                "created_at": datetime.now(UTC)
+                "created_at": datetime.now(UTC),
             }
 
     def _generate_intent_signature(self, intent: str) -> str:
@@ -286,10 +270,7 @@ class SuccessPatternDatabase:
         return hashlib.sha256(pattern.encode()).hexdigest()[:16]
 
     def _calculate_similarity(
-        self,
-        intent_sig: str,
-        context_sig: str,
-        pattern_data: dict[str, Any]
+        self, intent_sig: str, context_sig: str, pattern_data: dict[str, Any]
     ) -> float:
         """Calculate similarity between current request and stored pattern."""
         # Intent similarity
@@ -301,7 +282,7 @@ class SuccessPatternDatabase:
         # Frequency weighting (more frequent patterns are more reliable)
         frequency_weight = min(pattern_data["frequency"] / 10.0, 1.0)
 
-        return (intent_similarity * 0.5 + context_similarity * 0.3 + frequency_weight * 0.2)
+        return intent_similarity * 0.5 + context_similarity * 0.3 + frequency_weight * 0.2
 
 
 class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizationService):
@@ -333,14 +314,14 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
                 "success_threshold": self._config.success_threshold,
                 "optimization_aggressiveness": self._config.optimization_aggressiveness,
                 "enable_success_prediction": self._config.enable_success_prediction,
-            }
+            },
         )
 
     async def _shutdown_provider(self) -> None:
         """Shutdown the context adequacy optimization provider."""
         self._logger.info(
             "Context adequacy optimization provider shutdown. Cached %d optimization plans.",
-            len(self._optimization_cache)
+            len(self._optimization_cache),
         )
 
     async def _check_health(self) -> bool:
@@ -349,10 +330,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         return len(self._optimization_cache) <= 10000  # Prevent memory issues
 
     async def optimize_for_zero_shot_success(
-        self,
-        ctx: Any,
-        intent: str,
-        available_context: dict[str, Any],
+        self, ctx: Any, intent: str, available_context: dict[str, Any]
     ) -> OptimizedIntentPlan:
         """Optimize intent processing for first-attempt success."""
         # Check cache first
@@ -364,24 +342,20 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
                 return cached_plan
 
         # Predict zero-shot success probability
-        success_prediction = await self._predict_zero_shot_success(
-            ctx, intent, available_context
-        )
+        success_prediction = await self._predict_zero_shot_success(ctx, intent, available_context)
 
         optimization_plan = OptimizedIntentPlan(
             original_intent=intent,
             success_probability=success_prediction.probability,
             optimizations=[],
             enhanced_context=available_context.copy(),
-            optimization_metadata={"prediction": success_prediction.dict()}
+            optimization_metadata={"prediction": success_prediction.dict()},
         )
 
         # Apply optimizations if success probability is low
         if success_prediction.probability < self._config.success_threshold:
             await self._apply_optimizations(
-                optimization_plan,
-                success_prediction,
-                available_context
+                optimization_plan, success_prediction, available_context
             )
 
         # Cache the optimization plan
@@ -390,18 +364,13 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         return optimization_plan
 
     async def predict_success_probability(
-        self,
-        intent: str,
-        context: dict[str, Any]
+        self, intent: str, context: dict[str, Any]
     ) -> SuccessPrediction:
         """Predict likelihood of zero-shot success."""
         return await self._predict_zero_shot_success(None, intent, context)
 
     async def _predict_zero_shot_success(
-        self,
-        ctx: Any,
-        intent: str,
-        context: dict[str, Any],
+        self, ctx: Any, intent: str, context: dict[str, Any]
     ) -> SuccessPrediction:
         """Predict likelihood of zero-shot success."""
         # Extract contextual features
@@ -420,7 +389,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
             context_adequacy=context_adequacy,
             historical_success=historical_patterns["average_success_rate"],
             intent_clarity=contextual_features.get("clarity_score", 0.7),
-            contextual_richness=contextual_features.get("richness_score", 0.5)
+            contextual_richness=contextual_features.get("richness_score", 0.5),
         )
 
         # Identify missing context elements
@@ -440,40 +409,39 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
             strategy_confidence=historical_patterns["strategy_confidence"],
             missing_context=missing_context,
             recommended_strategies=recommended_strategies,
-            risk_factors=risk_factors
+            risk_factors=risk_factors,
         )
 
     async def _apply_optimizations(
         self,
         plan: OptimizedIntentPlan,
         prediction: SuccessPrediction,
-        available_context: dict[str, Any]
+        available_context: dict[str, Any],
     ) -> None:
         """Apply optimizations to improve success probability."""
         optimization_count = 0
         max_optimizations = self._config.max_optimization_attempts
 
         # Context enrichment optimization
-        if (self._config.enable_context_enrichment and
-            prediction.context_adequacy < 0.7 and
-            optimization_count < max_optimizations):
-
+        if (
+            self._config.enable_context_enrichment
+            and prediction.context_adequacy < 0.7
+            and optimization_count < max_optimizations
+        ):
             context_optimizations = await self._suggest_context_enrichment(
-                plan.original_intent,
-                available_context,
-                prediction.missing_context
+                plan.original_intent, available_context, prediction.missing_context
             )
             plan.optimizations.extend(context_optimizations)
             optimization_count += len(context_optimizations)
 
         # Strategy selection optimization
-        if (self._config.enable_strategy_optimization and
-            prediction.strategy_confidence < 0.8 and
-            optimization_count < max_optimizations):
-
+        if (
+            self._config.enable_strategy_optimization
+            and prediction.strategy_confidence < 0.8
+            and optimization_count < max_optimizations
+        ):
             strategy_optimizations = await self._suggest_strategy_improvements(
-                plan.original_intent,
-                prediction.recommended_strategies
+                plan.original_intent, prediction.recommended_strategies
             )
             plan.optimizations.extend(strategy_optimizations)
             optimization_count += len(strategy_optimizations)
@@ -487,10 +455,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
                 plan.fallback_strategies = optimization.metadata.get("fallback_strategies", [])
 
     async def _suggest_context_enrichment(
-        self,
-        intent: str,
-        context: dict[str, Any],
-        missing_elements: list[str]
+        self, intent: str, context: dict[str, Any], missing_elements: list[str]
     ) -> list[OptimizationStrategy]:
         """Suggest context enrichment optimizations."""
         optimizations = []
@@ -501,20 +466,18 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
                 description=f"Add missing context element: {element}",
                 priority=1,
                 expected_improvement=0.2,  # Estimate 20% improvement per element
-                implementation_cost=0.1,   # Low cost for context additions
+                implementation_cost=0.1,  # Low cost for context additions
                 metadata={
                     "missing_element": element,
-                    "context_additions": self._generate_context_suggestions(element, intent)
-                }
+                    "context_additions": self._generate_context_suggestions(element, intent),
+                },
             )
             optimizations.append(optimization)
 
         return optimizations
 
     async def _suggest_strategy_improvements(
-        self,
-        intent: str,
-        recommended_strategies: list[str]
+        self, intent: str, recommended_strategies: list[str]
     ) -> list[OptimizationStrategy]:
         """Suggest strategy selection optimizations."""
         optimizations = []
@@ -528,11 +491,11 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
                 description=f"Use recommended strategy: {primary_strategy}",
                 priority=1,
                 expected_improvement=0.3,  # Estimate 30% improvement
-                implementation_cost=0.0,   # No cost for strategy selection
+                implementation_cost=0.0,  # No cost for strategy selection
                 metadata={
                     "recommended_strategy": primary_strategy,
-                    "fallback_strategies": fallback_strategies
-                }
+                    "fallback_strategies": fallback_strategies,
+                },
             )
             optimizations.append(optimization)
 
@@ -545,7 +508,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
             "query": {"search_terms": self._extract_search_terms(intent)},
             "target": {"target_type": "function", "include_related": True},
             "focus": {"analysis_focus": "implementation", "detail_level": "detailed"},
-            "filters": {"file_types": ["py", "js", "ts"], "exclude_tests": False}
+            "filters": {"file_types": ["py", "js", "ts"], "exclude_tests": False},
         }
 
         return element_suggestions.get(element, {})
@@ -555,19 +518,31 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         import re
 
         # Remove common words
-        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+        }
 
         # Extract meaningful words
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', intent.lower())
+        words = re.findall(r"\b[a-zA-Z]{3,}\b", intent.lower())
         search_terms = [word for word in words if word not in stop_words]
 
         return search_terms[:5]  # Limit to 5 terms
 
     async def _extract_contextual_features(
-        self,
-        ctx: Any,
-        intent: str,
-        context: dict[str, Any]
+        self, ctx: Any, intent: str, context: dict[str, Any]
     ) -> dict[str, Any]:
         """Extract contextual features for success prediction."""
         features = {"clarity_score": self._assess_intent_clarity(intent)}
@@ -576,7 +551,9 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
 
         # Context analysis
         features["richness_score"] = self._assess_context_richness(context)
-        features["completeness_score"] = await self.context_adequacy_predictor.assess(intent, context)
+        features["completeness_score"] = await self.context_adequacy_predictor.assess(
+            intent, context
+        )
 
         # Session features (if available)
         if ctx:
@@ -599,9 +576,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         has_action = any(word in intent.lower() for word in action_words)
         # Specificity indicators
         specific_terms = ["function", "class", "file", "method", "variable", "component"]
-        specificity_score = min(
-            (sum(term in intent.lower() for term in specific_terms) / 3.0), 1.0
-        )
+        specificity_score = min((sum(term in intent.lower() for term in specific_terms) / 3.0), 1.0)
         clarity_factors = [length_score, 1.0 if has_action else 0.6, specificity_score]
         return sum(clarity_factors) / len(clarity_factors)
 
@@ -679,7 +654,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         context_adequacy: float,
         historical_success: float,
         intent_clarity: float,
-        contextual_richness: float
+        contextual_richness: float,
     ) -> float:
         """Calculate composite success probability."""
         # Weighted combination based on configuration
@@ -687,7 +662,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
             "context_adequacy": self._config.context_adequacy_weight,
             "historical_success": self._config.historical_success_weight,
             "intent_clarity": 0.2,  # Remaining weight split
-            "contextual_richness": 0.2
+            "contextual_richness": 0.2,
         }
 
         # Normalize weights to sum to 1.0
@@ -695,10 +670,10 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         normalized_weights = {k: v / total_weight for k, v in weights.items()}
 
         success_probability = (
-            context_adequacy * normalized_weights["context_adequacy"] +
-            historical_success * normalized_weights["historical_success"] +
-            intent_clarity * normalized_weights["intent_clarity"] +
-            contextual_richness * normalized_weights["contextual_richness"]
+            context_adequacy * normalized_weights["context_adequacy"]
+            + historical_success * normalized_weights["historical_success"]
+            + intent_clarity * normalized_weights["intent_clarity"]
+            + contextual_richness * normalized_weights["contextual_richness"]
         )
 
         return min(max(success_probability, 0.0), 1.0)
@@ -711,9 +686,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         missing_elements.extend(
             element
             for element in required_elements
-            if not self.context_adequacy_predictor._has_context_element(
-                element, context
-            )
+            if not self.context_adequacy_predictor._has_context_element(element, context)
         )
         return missing_elements
 
@@ -722,7 +695,7 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         intent: str,
         context: dict[str, Any],
         success_probability: float,
-        features: dict[str, Any]
+        features: dict[str, Any],
     ) -> list[str]:
         """Identify risk factors that might reduce success."""
         risk_factors = []

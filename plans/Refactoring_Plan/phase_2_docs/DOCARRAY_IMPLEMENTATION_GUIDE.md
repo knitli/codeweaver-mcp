@@ -48,7 +48,7 @@ import logging
 from typing import Any, Annotated, get_type_hints
 
 from docarray import BaseDoc
-from docarray.typing import AndArray
+from docarray.typing import NdArray
 from pydantic import Field, create_model
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class DocumentSchemaGenerator:
                 Field(description="Document text content")
             ),
             "embedding": (
-                AndArray[embedding_dim],
+                NdArray[embedding_dim],
                 Field(description="Dense vector embedding")
             ),
             "metadata": (
@@ -219,8 +219,8 @@ class SchemaTemplates:
             embedding_dimension=embedding_dim,
             include_sparse_vectors=True,
             custom_fields={
-                "image_embedding": (AndArray[embedding_dim], Field(description="Image embedding")),
-                "text_embedding": (AndArray[embedding_dim], Field(description="Text embedding")),
+                "image_embedding": (NdArray[embedding_dim], Field(description="Image embedding")),
+                "text_embedding": (NdArray[embedding_dim], Field(description="Text embedding")),
                 "image_url": (str | None, Field(default=None, description="Image URL")),
             }
         )
@@ -244,7 +244,7 @@ from abc import ABC, abstractmethod
 from docarray import BaseDoc, DocList
 from docarray.index.abstract import BaseDocIndex
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CollectionInfo,
     DistanceMetric,
     SearchFilter,
@@ -634,7 +634,7 @@ from typing import Any, Annotated, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 from codeweaver.backends.config import BackendConfig
-from codeweaver.types import DistanceMetric
+from codeweaver.cw_types import DistanceMetric
 
 
 class DocArraySchemaConfig(BaseModel):

@@ -10,9 +10,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from codeweaver.config import CodeWeaverConfig
+from codeweaver.cw_types import ServicesConfig
 from codeweaver.server import CodeWeaverServer
 from codeweaver.services.manager import ServicesManager
-from codeweaver.types import ServicesConfig
 
 
 @pytest.mark.integration

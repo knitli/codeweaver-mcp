@@ -13,7 +13,7 @@ from typing import Any
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
-from codeweaver.types import TelemetryService
+from codeweaver.cw_types import TelemetryService
 
 
 class TelemetryMiddleware(Middleware):

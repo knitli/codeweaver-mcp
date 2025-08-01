@@ -124,7 +124,7 @@ mock_mode = true  # Events are simulated, not sent to PostHog
 
 ### Basic Usage with Telemetry Enabled
 ```python
-from codeweaver.types import ServicesConfig, TelemetryServiceConfig
+from codeweaver.cw_types import ServicesConfig, TelemetryServiceConfig
 
 # Configure telemetry
 telemetry_config = TelemetryServiceConfig(

@@ -14,15 +14,15 @@ import logging
 
 from typing import Any
 
-from codeweaver.providers.base import EmbeddingProviderBase
-from codeweaver.providers.config import HuggingFaceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
     get_provider_registry_entry,
     register_provider_class,
 )
+from codeweaver.providers.base import EmbeddingProviderBase
+from codeweaver.providers.config import HuggingFaceConfig
 from codeweaver.utils.decorators import feature_flag_required
 
 

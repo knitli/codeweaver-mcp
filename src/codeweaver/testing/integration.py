@@ -213,7 +213,7 @@ class IntegrationTestSuite:
                 "priority": 1,
                 "config": self.config.config_overrides.get("data_source_config", {}),
             }
-            from codeweaver.types import SourceProvider
+            from codeweaver.cw_types import SourceProvider
 
             source_factory = SourceFactory()
             source_type = SourceProvider(self.config.data_source_type)

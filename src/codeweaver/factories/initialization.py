@@ -21,14 +21,14 @@ from typing import Any, Protocol
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from codeweaver.factories.error_handling import ErrorHandler
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentLifecycle,
     ComponentState,
     InitializationContext,
     InitializationResult,
 )
+from codeweaver.factories.error_handling import ErrorHandler
 
 
 logger = logging.getLogger(__name__)

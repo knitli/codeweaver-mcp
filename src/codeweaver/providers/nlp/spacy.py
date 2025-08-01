@@ -15,15 +15,15 @@ import logging
 
 from typing import Any
 
-from codeweaver.providers.base import LocalNLPProvider
-from codeweaver.providers.config import SpaCyProviderConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     IntentType,
     NLPCapability,
     NLPModelSize,
     ProviderCapabilities,
 )
+from codeweaver.providers.base import LocalNLPProvider
+from codeweaver.providers.config import SpaCyProviderConfig
 
 
 logger = logging.getLogger(__name__)
@@ -565,7 +565,7 @@ class SpaCyProvider(LocalNLPProvider):
 
 
 # Register the provider in the global registry
-from codeweaver.types import ProviderType, register_provider_class
+from codeweaver.cw_types import ProviderType, register_provider_class
 
 
 register_provider_class(ProviderType.SPACY, SpaCyProvider)

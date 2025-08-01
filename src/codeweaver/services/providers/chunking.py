@@ -12,9 +12,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
-from codeweaver.middleware.chunking import ChunkingMiddleware
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ChunkingError,
     ChunkingService,
     ChunkingServiceConfig,
@@ -26,6 +24,8 @@ from codeweaver.types import (
     ServiceType,
     UnsupportedLanguageError,
 )
+from codeweaver.middleware.chunking import ChunkingMiddleware
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class ChunkingService(BaseServiceProvider, ChunkingService):

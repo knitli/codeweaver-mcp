@@ -19,6 +19,11 @@ from codeweaver.backends.providers.docarray.config import (
     DocArrayConfigFactory,
     DocArraySchemaConfig,
 )
+from codeweaver.backends.providers.docarray.factory import (
+    create_docarray_backend,
+    register_docarray_backends,
+)
+from codeweaver.backends.providers.docarray.qdrant import QdrantDocArrayBackend
 from codeweaver.backends.providers.docarray.schema import (
     DocumentSchemaGenerator,
     SchemaConfig,
@@ -34,6 +39,9 @@ __all__ = [
     "DocArrayHybridAdapter",
     "DocArraySchemaConfig",
     "DocumentSchemaGenerator",
+    "QdrantDocArrayBackend",
     "SchemaConfig",
     "SchemaTemplates",
+    "create_docarray_backend",
+    "register_docarray_backends",
 ]

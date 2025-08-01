@@ -20,8 +20,8 @@ try:
 except ImportError:
     posthog = None
 
+from codeweaver.cw_types import ServiceType, TelemetryService, TelemetryServiceConfig
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceType, TelemetryService, TelemetryServiceConfig
 
 
 class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
@@ -408,10 +408,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             self._stats["events_failed"] += len(events_to_send)
 
     async def track_learning_signal(
-        self,
-        intent_hash: str,
-        satisfaction_score: float,
-        metadata: dict[str, Any]
+        self, intent_hash: str, satisfaction_score: float, metadata: dict[str, Any]
     ) -> None:
         """Track learning signals for implicit learning analysis."""
         if not self._enabled:
@@ -428,17 +425,14 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 "success": metadata.get("success", False),
                 "learning_weight": metadata.get("learning_weight", 0.0),
                 # Sanitized metadata following existing patterns
-                **self._sanitize_metadata(metadata)
-            }
+                **self._sanitize_metadata(metadata),
+            },
         }
 
         await self.track_event("intent_learning_signal", learning_event["properties"])
 
     async def track_zero_shot_optimization(
-        self,
-        optimization_type: str,
-        before_metrics: dict[str, Any],
-        after_metrics: dict[str, Any]
+        self, optimization_type: str, before_metrics: dict[str, Any], after_metrics: dict[str, Any]
     ) -> None:
         """Track zero-shot optimization effectiveness."""
         if not self._enabled:
@@ -455,15 +449,13 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 "metrics_delta": metrics_delta,
                 "before_success_probability": before_metrics.get("success_probability", 0.0),
                 "after_success_probability": after_metrics.get("success_probability", 0.0),
-            }
+            },
         }
 
         await self.track_event("zero_shot_optimization", optimization_event["properties"])
 
     async def track_context_intelligence(
-        self,
-        llm_profile: dict[str, Any],
-        context_adequacy: dict[str, Any]
+        self, llm_profile: dict[str, Any], context_adequacy: dict[str, Any]
     ) -> None:
         """Track context intelligence analysis results."""
         if not self._enabled:
@@ -485,7 +477,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 "context_richness": context_adequacy.get("richness_score", 0.0),
                 "context_clarity": context_adequacy.get("clarity_score", 0.0),
                 "missing_elements_count": len(context_adequacy.get("missing_elements", [])),
-            }
+            },
         }
 
         await self.track_event("context_intelligence_analysis", intelligence_event["properties"])
@@ -495,7 +487,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         pattern_type: str,
         pattern_confidence: float,
         frequency: int,
-        success_correlation: float
+        success_correlation: float,
     ) -> None:
         """Track identified behavioral patterns."""
         if not self._enabled:
@@ -511,7 +503,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 "pattern_quality": self._assess_pattern_quality(
                     pattern_confidence, frequency, success_correlation
                 ),
-            }
+            },
         }
 
         await self.track_event("behavioral_pattern_identified", pattern_event["properties"])
@@ -522,9 +514,16 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
 
         # Allow safe metadata fields
         safe_fields = {
-            "response_time", "strategy", "success", "learning_weight",
-            "optimization_type", "confidence", "complexity_score",
-            "adequacy_score", "pattern_type", "frequency"
+            "response_time",
+            "strategy",
+            "success",
+            "learning_weight",
+            "optimization_type",
+            "confidence",
+            "complexity_score",
+            "adequacy_score",
+            "pattern_type",
+            "frequency",
         }
 
         for key, value in metadata.items():
@@ -540,9 +539,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         return sanitized
 
     def _calculate_improvement_score(
-        self,
-        before_metrics: dict[str, Any],
-        after_metrics: dict[str, Any]
+        self, before_metrics: dict[str, Any], after_metrics: dict[str, Any]
     ) -> float:
         """Calculate overall improvement score from metrics comparison."""
         # Key metrics to compare
@@ -565,9 +562,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         return max(-1.0, min(1.0, avg_improvement))
 
     def _calculate_metrics_delta(
-        self,
-        before_metrics: dict[str, Any],
-        after_metrics: dict[str, Any]
+        self, before_metrics: dict[str, Any], after_metrics: dict[str, Any]
     ) -> dict[str, float]:
         """Calculate delta between before and after metrics."""
         delta = {}
@@ -583,17 +578,12 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
         return delta
 
     def _assess_pattern_quality(
-        self,
-        confidence: float,
-        frequency: int,
-        success_correlation: float
+        self, confidence: float, frequency: int, success_correlation: float
     ) -> str:
         """Assess the quality of a behavioral pattern."""
         # Quality scoring based on multiple factors
         quality_score = (
-            confidence * 0.4 +
-            min(frequency / 10.0, 1.0) * 0.3 +
-            abs(success_correlation) * 0.3
+            confidence * 0.4 + min(frequency / 10.0, 1.0) * 0.3 + abs(success_correlation) * 0.3
         )
 
         if quality_score >= 0.8:

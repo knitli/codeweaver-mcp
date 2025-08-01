@@ -10,8 +10,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from codeweaver.services import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     DuplicateProviderError,
     ProviderNotFoundError,
     ProviderRegistrationError,
@@ -26,6 +25,7 @@ from codeweaver.types import (
     ServiceRegistryHealth,
     ServiceType,
 )
+from codeweaver.services import BaseServiceProvider
 
 
 class ServiceRegistry:

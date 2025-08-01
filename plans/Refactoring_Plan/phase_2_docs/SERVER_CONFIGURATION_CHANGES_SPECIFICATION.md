@@ -28,7 +28,7 @@ Add services configuration to the main CodeWeaver configuration:
 
 ```python
 # Add to imports
-from codeweaver.types import ServicesConfig
+from codeweaver.cw_types import ServicesConfig
 
 class CodeWeaverConfig(BaseSettings):
     """Main configuration for CodeWeaver."""
@@ -473,7 +473,7 @@ Examples:
 import pytest
 from pydantic import ValidationError
 
-from codeweaver.types import ServicesConfig, LoggingServiceConfig
+from codeweaver.cw_types import ServicesConfig, LoggingServiceConfig
 from codeweaver.config import CodeWeaverConfig, ConfigMigration
 
 

@@ -49,7 +49,7 @@ from fastmcp import Middleware, MiddlewareContext
 from pathlib import Path
 from typing import Dict, Any, List
 import ast_grep_py as ag
-from codeweaver.types import CodeChunk
+from codeweaver.cw_types import CodeChunk
 
 class ChunkingMiddleware(Middleware):
     """FastMCP middleware for code chunking services."""

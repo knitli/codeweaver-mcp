@@ -17,15 +17,15 @@ import time
 
 from typing import Any
 
-from codeweaver.providers.base import EmbeddingProviderBase
-from codeweaver.providers.config import OpenAICompatibleConfig, OpenAIConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     OpenAIModel,
     ProviderCapability,
     ProviderType,
     register_provider_class,
 )
+from codeweaver.providers.base import EmbeddingProviderBase
+from codeweaver.providers.config import OpenAICompatibleConfig, OpenAIConfig
 from codeweaver.utils.decorators import feature_flag_required
 
 

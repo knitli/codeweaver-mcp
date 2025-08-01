@@ -17,9 +17,7 @@ from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from codeweaver.backends import VectorBackend
-from codeweaver.providers import EmbeddingProvider, RerankProvider
-from codeweaver.sources import DataSource
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseCapabilities,
     BaseComponentConfig,
     BaseComponentInfo,
@@ -27,6 +25,8 @@ from codeweaver.types import (
     PluginInfo,
     ValidationResult,
 )
+from codeweaver.providers import EmbeddingProvider, RerankProvider
+from codeweaver.sources import DataSource
 
 
 logger = logging.getLogger(__name__)

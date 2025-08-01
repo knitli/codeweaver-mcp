@@ -13,8 +13,7 @@ from pathlib import Path
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     AutoIndexingConfig,
     ChunkingService,
     ContentItem,
@@ -24,6 +23,7 @@ from codeweaver.types import (
     ServiceIntegrationError,
     ServiceType,
 )
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class CodebaseChangeHandler(FileSystemEventHandler):

@@ -22,7 +22,7 @@ from codeweaver.utils.decorators import not_implemented
 
 
 if TYPE_CHECKING:
-    from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability
+    from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability
 
 
 logger = logging.getLogger(__name__)
@@ -151,7 +151,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
     @classmethod
     def check_availability(cls, capability: "SourceCapability") -> tuple[bool, str | None]:
         """Check if web crawler source is available for the given capability."""
-        from codeweaver.types import SourceCapability
+        from codeweaver.cw_types import SourceCapability
 
         # Web crawler supports most capabilities but requires HTTP and parsing libraries
         supported_capabilities = {
@@ -192,7 +192,8 @@ class WebCrawlerSourceProvider(AbstractDataSource):
 
     def get_capabilities(self) -> "SourceCapabilities":
         """Get capabilities supported by web crawler source."""
-        from codeweaver.types import SourceCapabilities
+        from codeweaver.cw_types import SourceCapabilities
+
         return SourceCapabilities(
             supports_content_discovery=True,
             supports_content_reading=True,
@@ -203,7 +204,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             supports_content_deduplication=True,
         )
 
-    async def discover_content(self, config: WebCrawlerSourceConfig) -> list[ContentItem]:
+    async def discover_content(self, config: WebCrawlerSourceConfig) -> "list[ContentItem]":
         """Discover content by crawling websites.
 
         Args:
@@ -233,7 +234,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             )
         raise ValueError("start_urls is required for web crawler source")
 
-    async def read_content(self, item: ContentItem) -> str:
+    async def read_content(self, item: "ContentItem") -> str:
         """Read content from a web page.
 
         Args:
@@ -260,7 +261,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         raise NotImplementedError("Web content reading not yet implemented")
 
     async def watch_changes(
-        self, config: WebCrawlerSourceConfig, callback: Callable[[list[ContentItem]], None]
+        self, config: WebCrawlerSourceConfig, callback: "Callable[[list[ContentItem]], None]"
     ) -> SourceWatcher:
         """Set up web content change watching.
 
@@ -324,7 +325,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
 
         return True
 
-    async def get_content_metadata(self, item: ContentItem) -> dict[str, Any]:
+    async def get_content_metadata(self, item: "ContentItem") -> dict[str, Any]:
         """Get detailed metadata for web content.
 
         Args:

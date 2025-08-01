@@ -12,8 +12,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BehavioralPatterns,
     ImplicitFeedback,
     ImplicitLearningService,
@@ -24,6 +23,7 @@ from codeweaver.types import (
     ServiceType,
     SessionSignals,
 )
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class SessionPatternTracker:
@@ -40,11 +40,7 @@ class SessionPatternTracker:
         # In a production system, this would load patterns from persistent storage
 
     async def track_session_interaction(
-        self,
-        session_id: str,
-        intent: str,
-        result: IntentResult,
-        context: dict[str, Any],
+        self, session_id: str, intent: str, result: IntentResult, context: dict[str, Any]
     ) -> SessionSignals:
         """Track an interaction within a session."""
         if session_id not in self._session_data:
@@ -109,8 +105,9 @@ class SessionPatternTracker:
         interaction_score = min(len(interactions) / 10.0, 1.0)  # Max score at 10 interactions
 
         # Calculate success rate
-        successful_interactions = sum(bool(interaction["result"].success)
-                                  for interaction in interactions)
+        successful_interactions = sum(
+            bool(interaction["result"].success) for interaction in interactions
+        )
         success_rate = successful_interactions / len(interactions)
 
         # Combine scores
@@ -124,9 +121,9 @@ class SatisfactionSignalDetector:
         """Initialize the satisfaction signal detector."""
         self._response_time_thresholds = {
             "excellent": 0.5,  # < 500ms
-            "good": 2.0,       # < 2s
+            "good": 2.0,  # < 2s
             "acceptable": 5.0,  # < 5s
-            "poor": float("inf")
+            "poor": float("inf"),
         }
 
     async def initialize(self) -> None:
@@ -158,15 +155,15 @@ class SatisfactionSignalDetector:
             result_quality_score=result_quality_score,
             follow_up_pattern_score=follow_up_score,
             session_completion_score=session_completion_score,
-            overall_satisfaction=0.0  # Will be calculated below
+            overall_satisfaction=0.0,  # Will be calculated below
         )
 
         # Weighted combination
         overall_satisfaction = (
-            response_time_score * 0.25 +
-            result_quality_score * 0.35 +
-            follow_up_score * 0.25 +
-            session_completion_score * 0.15
+            response_time_score * 0.25
+            + result_quality_score * 0.35
+            + follow_up_score * 0.25
+            + session_completion_score * 0.15
         )
 
         satisfaction_signals.overall_satisfaction = overall_satisfaction
@@ -207,9 +204,7 @@ class SatisfactionSignalDetector:
             return 1.0  # No follow-ups = likely satisfied
 
         # Analyze follow-up patterns
-        refinement_patterns = [
-            "more", "another", "different", "better", "explain", "show", "find"
-        ]
+        refinement_patterns = ["more", "another", "different", "better", "explain", "show", "find"]
 
         refinement_count = sum(
             any(pattern in query.lower() for pattern in refinement_patterns)
@@ -256,7 +251,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
                 "satisfaction_threshold": self._config.satisfaction_threshold,
                 "learning_rate": self._config.learning_rate,
                 "pattern_retention_days": self._config.pattern_retention_days,
-            }
+            },
         )
 
     async def _shutdown_provider(self) -> None:
@@ -264,14 +259,15 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         # In production, save patterns to persistent storage
         self._logger.info(
             "Behavioral pattern learning provider shutdown. Learned %d patterns.",
-            len(self._pattern_database)
+            len(self._pattern_database),
         )
 
     async def _check_health(self) -> bool:
         """Check if the learning service is healthy."""
         # Check if we're collecting learning signals and patterns are being updated
         recent_signals = [
-            signal for signal in self._learning_signals
+            signal
+            for signal in self._learning_signals
             if (datetime.now(UTC) - signal.created_at).total_seconds() < 3600  # Last hour
         ]
 
@@ -287,14 +283,16 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
     ) -> ImplicitFeedback:
         """Analyze interaction for implicit satisfaction signals."""
         # Extract session information from context
-        session_signals = await self._extract_session_signals(ctx, intent, result, response_metadata)
+        session_signals = await self._extract_session_signals(
+            ctx, intent, result, response_metadata
+        )
 
         # Analyze response timing and follow-up patterns
         satisfaction_probability = await self.satisfaction_detector.calculate_satisfaction(
             intent=intent,
             result=result,
             response_time=response_metadata.get("response_time", 0.0),
-            session_signals=session_signals
+            session_signals=session_signals,
         )
 
         # Create satisfaction signals
@@ -307,7 +305,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
                 session_signals.follow_up_queries
             ),
             session_completion_score=session_signals.response_engagement,
-            overall_satisfaction=satisfaction_probability
+            overall_satisfaction=satisfaction_probability,
         )
 
         # Calculate learning weight based on confidence and novelty
@@ -325,7 +323,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
             learning_weight=learning_weight,
             confidence=self._calculate_confidence(session_signals, satisfaction_probability),
             session_signals=session_signals,
-            satisfaction_signals=satisfaction_signals
+            satisfaction_signals=satisfaction_signals,
         )
 
         # Store learning signal for telemetry
@@ -343,9 +341,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
 
         return feedback
 
-    async def extract_behavioral_patterns(
-        self, session_data: dict[str, Any]
-    ) -> BehavioralPatterns:
+    async def extract_behavioral_patterns(self, session_data: dict[str, Any]) -> BehavioralPatterns:
         """Extract behavioral patterns from session data."""
         # Generate pattern ID based on session characteristics
         pattern_id = self._generate_pattern_id(session_data)
@@ -362,7 +358,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
             frequency=session_data.get("frequency", 1),
             confidence=confidence,
             context_features=context_features,
-            success_correlation=success_correlation
+            success_correlation=success_correlation,
         )
 
         # Store pattern in database
@@ -371,11 +367,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         return pattern
 
     async def _extract_session_signals(
-        self,
-        ctx: Any,
-        intent: str,
-        result: IntentResult,
-        metadata: dict[str, Any]
+        self, ctx: Any, intent: str, result: IntentResult, metadata: dict[str, Any]
     ) -> SessionSignals:
         """Extract session signals from FastMCP context."""
         # Generate or extract session ID
@@ -390,7 +382,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
             session_id=session_id,
             intent=intent,
             result=result,
-            context={"user_agent": user_agent, "timing": request_timing}
+            context={"user_agent": user_agent, "timing": request_timing},
         )
 
     def _get_session_id(self, ctx: Any) -> str:
@@ -400,7 +392,11 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
 
         # Generate session ID from context attributes
         session_data = []
-        if hasattr(ctx, "request") and ctx.request and (hasattr(ctx.request, "client") and ctx.request.client):
+        if (
+            hasattr(ctx, "request")
+            and ctx.request
+            and (hasattr(ctx.request, "client") and ctx.request.client)
+        ):
             session_data.append(str(ctx.request.client.host))
 
         if hasattr(ctx, "user_agent"):
@@ -441,13 +437,15 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         return timing
 
     def _calculate_learning_weight(
-        self,
-        satisfaction_probability: float,
-        session_signals: SessionSignals
+        self, satisfaction_probability: float, session_signals: SessionSignals
     ) -> float:
         """Calculate learning weight based on confidence and novelty."""
         # Higher weight for more confident satisfaction signals
-        confidence_weight = satisfaction_probability if satisfaction_probability > 0.5 else (1.0 - satisfaction_probability)
+        confidence_weight = (
+            satisfaction_probability
+            if satisfaction_probability > 0.5
+            else (1.0 - satisfaction_probability)
+        )
 
         # Higher weight for sessions with more interactions (more data)
         interaction_weight = min(session_signals.interaction_count / 10.0, 1.0)
@@ -456,14 +454,14 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         engagement_weight = session_signals.response_engagement
 
         # Combine weights
-        learning_weight = (confidence_weight * 0.5) + (interaction_weight * 0.3) + (engagement_weight * 0.2)
+        learning_weight = (
+            (confidence_weight * 0.5) + (interaction_weight * 0.3) + (engagement_weight * 0.2)
+        )
 
         return min(learning_weight, 1.0)
 
     def _calculate_confidence(
-        self,
-        session_signals: SessionSignals,
-        satisfaction_probability: float
+        self, session_signals: SessionSignals, satisfaction_probability: float
     ) -> float:
         """Calculate confidence in the satisfaction assessment."""
         # More interactions = higher confidence
@@ -475,14 +473,18 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         # Engagement indicates more reliable signals
         engagement_confidence = session_signals.response_engagement
 
-        return (interaction_confidence * 0.4) + (satisfaction_confidence * 0.4) + (engagement_confidence * 0.2)
+        return (
+            (interaction_confidence * 0.4)
+            + (satisfaction_confidence * 0.4)
+            + (engagement_confidence * 0.2)
+        )
 
     async def _extract_improvement_signals(
         self,
         intent: str,
         result: IntentResult,
         session_signals: SessionSignals,
-        satisfaction_probability: float
+        satisfaction_probability: float,
     ) -> dict[str, Any]:
         """Extract signals for areas of improvement."""
         improvement_signals = {}
@@ -512,10 +514,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         return improvement_signals
 
     async def _update_behavioral_patterns(
-        self,
-        intent: str,
-        feedback: ImplicitFeedback,
-        session_signals: SessionSignals
+        self, intent: str, feedback: ImplicitFeedback, session_signals: SessionSignals
     ) -> None:
         """Update behavioral patterns based on learning signals."""
         # Extract pattern features from intent and session
@@ -525,7 +524,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
             "satisfaction_level": self._categorize_satisfaction(feedback.satisfaction_probability),
             "user_agent_hash": hashlib.sha256(
                 (session_signals.user_agent or "unknown").encode()
-            ).hexdigest()[:8]
+            ).hexdigest()[:8],
         }
 
         # Create or update pattern
@@ -539,8 +538,8 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
             # Update success correlation with learning rate
             new_success = 1.0 if feedback.satisfaction_probability > 0.7 else 0.0
             pattern.success_correlation = (
-                pattern.success_correlation * (1 - self._config.learning_rate) +
-                new_success * self._config.learning_rate
+                pattern.success_correlation * (1 - self._config.learning_rate)
+                + new_success * self._config.learning_rate
             )
         else:
             # Create new pattern
@@ -550,7 +549,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
                 frequency=1,
                 confidence=feedback.confidence,
                 context_features=pattern_features,
-                success_correlation=1.0 if feedback.satisfaction_probability > 0.7 else 0.0
+                success_correlation=1.0 if feedback.satisfaction_probability > 0.7 else 0.0,
             )
             self._pattern_database[pattern_id] = pattern
 
@@ -613,9 +612,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
         return session_data.get("success_rate", 0.5)
 
     async def _track_learning_signal(
-        self,
-        learning_signal: LearningSignal,
-        metadata: dict[str, Any]
+        self, learning_signal: LearningSignal, metadata: dict[str, Any]
     ) -> None:
         """Track learning signal via telemetry service."""
         if not self.telemetry_service:
@@ -632,7 +629,7 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
                         "strategy": learning_signal.strategy_used,
                         "success": learning_signal.success,
                         "learning_weight": learning_signal.learning_weight,
-                    }
+                    },
                 )
         except Exception as e:
             self._logger.warning("Failed to track learning signal: %s", e)

@@ -15,8 +15,8 @@ from typing import Annotated, Any
 from pydantic import Field, NonNegativeInt, PositiveFloat
 from pydantic.dataclasses import dataclass
 
+from codeweaver.cw_types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
 
 
 @dataclass
@@ -26,14 +26,25 @@ class WorkflowStep:
     name: Annotated[str, Field(description="Name of the workflow step.")]
 
     handler: Annotated[Callable, Field(description="Function to execute for this step.")]
-    required: Annotated[bool, Field(description="Whether this step is required for workflow success.")] = True
-    timeout: Annotated[PositiveFloat, Field(description="Maximum time allowed for this step in seconds.")] = 30.0
-    retry_count: Annotated[NonNegativeInt, Field(description="Number of retries allowed for this step.")] = 0
-    dependencies: Annotated[
-        list[str], Field(description="Names of steps that must complete before this step.")
-    ] | None = None
+    required: Annotated[
+        bool, Field(description="Whether this step is required for workflow success.")
+    ] = True
+    timeout: Annotated[
+        PositiveFloat, Field(description="Maximum time allowed for this step in seconds.")
+    ] = 30.0
+    retry_count: Annotated[
+        NonNegativeInt, Field(description="Number of retries allowed for this step.")
+    ] = 0
+    dependencies: (
+        Annotated[
+            list[str], Field(description="Names of steps that must complete before this step.")
+        ]
+        | None
+    ) = None
 
-    metadata: Annotated[dict[str, Any], Field(description="Additional metadata for the step")] | None = None
+    metadata: (
+        Annotated[dict[str, Any], Field(description="Additional metadata for the step")] | None
+    ) = None
 
     def __post_init__(self):
         """Initialize default values."""
@@ -49,10 +60,18 @@ class WorkflowDefinition:
 
     name: Annotated[str, Field(description="Name of the workflow.")]
     steps: Annotated[list[WorkflowStep], Field(description="List of steps to execute in order.")]
-    description: Annotated[str, Field(description="Human-readable description of the workflow.")] = ""
-    timeout: Annotated[float, Field(description="Maximum time allowed for entire workflow in seconds.")] = 300.0
-    allow_partial_success: Annotated[bool, Field(description="Whether to continue if optional steps fail.")] = True
-    metadata: Annotated[dict[str, Any], Field(description="Additional metadata for the workflow.")] | None = None
+    description: Annotated[
+        str, Field(description="Human-readable description of the workflow.")
+    ] = ""
+    timeout: Annotated[
+        float, Field(description="Maximum time allowed for entire workflow in seconds.")
+    ] = 300.0
+    allow_partial_success: Annotated[
+        bool, Field(description="Whether to continue if optional steps fail.")
+    ] = True
+    metadata: (
+        Annotated[dict[str, Any], Field(description="Additional metadata for the workflow.")] | None
+    ) = None
 
     def __post_init__(self):
         """Initialize default values."""
@@ -68,7 +87,9 @@ class WorkflowStepResult:
     success: Annotated[bool, Field(description="Whether the step succeeded.")]
     data: Annotated[Any, Field(description="Result data from the step.")]
     error_message: Annotated[str, Field(description="Error message if step failed.")] | None = None
-    execution_time: Annotated[float, Field(description="Time taken to execute the step in seconds.")] = 0.0
+    execution_time: Annotated[
+        float, Field(description="Time taken to execute the step in seconds.")
+    ] = 0.0
     retry_count: Annotated[int, Field(description="Number of retries that were performed.")] = 0
     executed_at: Annotated[datetime, Field(description="When the step was executed.")] | None = None
 
@@ -84,13 +105,26 @@ class WorkflowResult:
 
     workflow_name: Annotated[str, Field(description="Name of the workflow that was executed.")]
     success: Annotated[bool, Field(description="Whether the overall workflow succeeded.")]
-    steps: Annotated[list[WorkflowStepResult], Field(description="Results from all executed steps.")]
-    total_execution_time: Annotated[float, Field(description="Total time taken for the workflow in seconds.")] = 0.0
-    completed_steps: Annotated[int, Field(description="Number of steps that completed successfully.")] = 0
+    steps: Annotated[
+        list[WorkflowStepResult], Field(description="Results from all executed steps.")
+    ]
+    total_execution_time: Annotated[
+        float, Field(description="Total time taken for the workflow in seconds.")
+    ] = 0.0
+    completed_steps: Annotated[
+        int, Field(description="Number of steps that completed successfully.")
+    ] = 0
     failed_steps: Annotated[int, Field(description="Number of steps that failed.")] = 0
-    error_message: Annotated[str, Field(description="Overall error message if workflow failed.")] | None = None
-    metadata: Annotated[dict[str, Any], Field(description="Additional metadata from workflow execution.")] | None = None
-    executed_at: Annotated[datetime, Field(description="When the workflow was executed.")] | None = None
+    error_message: (
+        Annotated[str, Field(description="Overall error message if workflow failed.")] | None
+    ) = None
+    metadata: (
+        Annotated[dict[str, Any], Field(description="Additional metadata from workflow execution.")]
+        | None
+    ) = None
+    executed_at: (
+        Annotated[datetime, Field(description="When the workflow was executed.")] | None
+    ) = None
 
     def __post_init__(self):
         """Initialize calculated values."""

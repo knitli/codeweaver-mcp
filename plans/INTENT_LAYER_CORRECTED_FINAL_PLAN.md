@@ -179,7 +179,7 @@ src/codeweaver/intent/recovery/
 ### 1. Intent Orchestrator (Service-Compliant)
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceHealth, ServiceStatus, IntentResult
+from codeweaver.cw_types import ServiceHealth, ServiceStatus, IntentResult
 
 class IntentOrchestrator(BaseServiceProvider):
     """Service-compliant orchestrator integrated with ServicesManager."""
@@ -372,7 +372,7 @@ class AutoIndexingService(BaseServiceProvider):
 
 ### 3. Configuration Integration (Hierarchy-Compliant)
 ```python
-from codeweaver.types import BaseServiceConfig
+from codeweaver.cw_types import BaseServiceConfig
 from typing import Annotated
 from pydantic import Field
 

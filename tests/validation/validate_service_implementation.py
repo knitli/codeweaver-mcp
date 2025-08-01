@@ -14,10 +14,10 @@ def validate_protocol_compliance() -> bool:
     print("🔍 Validating Protocol Compliance")
 
     try:
+        from codeweaver.cw_types import ServiceProvider  # noqa: F401
         from codeweaver.services.providers.base_provider import BaseServiceProvider
         from codeweaver.services.providers.chunking import ChunkingService
         from codeweaver.services.providers.file_filtering import FilteringService
-        from codeweaver.types import ServiceProvider  # noqa: F401
 
         # Check base provider implements ServiceProvider protocol
         base_methods = set(dir(BaseServiceProvider))
@@ -74,7 +74,7 @@ def validate_type_system() -> bool:  # sourcery skip: extract-method
     print("🏗️ Validating Type System")
 
     try:
-        from codeweaver.types import (  # noqa: F401
+        from codeweaver.cw_types import (  # noqa: F401
             ChunkingService,
             FilteringService,
             ServiceConfig,
@@ -92,7 +92,7 @@ def validate_type_system() -> bool:  # sourcery skip: extract-method
         print(f"   ✅ Optional services: {[s.value for s in optional_services]}")
 
         # Check service configurations exist
-        from codeweaver.types import (  # noqa: F401
+        from codeweaver.cw_types import (  # noqa: F401
             ChunkingServiceConfig,
             FilteringServiceConfig,
             ServicesConfig,
@@ -101,7 +101,7 @@ def validate_type_system() -> bool:  # sourcery skip: extract-method
         print("   ✅ Service configuration types available")
 
         # Check service exceptions
-        from codeweaver.types import (
+        from codeweaver.cw_types import (
             ChunkingError,  # noqa: F401
             FilteringError,  # noqa: F401
             ServiceCreationError,  # noqa: F401
@@ -164,9 +164,9 @@ def validate_middleware_bridge() -> bool:
     print("🌉 Validating Middleware Bridge")
 
     try:
+        from codeweaver.cw_types import ServicesConfig
         from codeweaver.services.manager import ServicesManager
         from codeweaver.services.middleware_bridge import ServiceBridge, ServiceCoordinator
-        from codeweaver.types import ServicesConfig
 
         # Check bridge can be instantiated
         config = ServicesConfig()

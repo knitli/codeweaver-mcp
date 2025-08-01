@@ -16,10 +16,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from fastmcp import FastMCP
 
-from codeweaver.factories.service_registry import ServiceRegistry
-from codeweaver.services.providers.chunking import ChunkingService
-from codeweaver.services.providers.file_filtering import FilteringService
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CacheService,
     ContextIntelligenceService,
     ErrorHandlingService,
@@ -42,6 +39,9 @@ from codeweaver.types import (
     ValidationService,
     ZeroShotOptimizationService,
 )
+from codeweaver.factories.service_registry import ServiceRegistry
+from codeweaver.services.providers.chunking import ChunkingService
+from codeweaver.services.providers.file_filtering import FilteringService
 
 
 class ServicesManager:
@@ -301,7 +301,7 @@ class ServicesManager:
             except Exception as e:
                 self._logger.warning("Health check failed for %s: %s", service_type.value, e)
                 # Create unhealthy status for failed check
-                from codeweaver.types import ServiceHealth
+                from codeweaver.cw_types import ServiceHealth
 
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,

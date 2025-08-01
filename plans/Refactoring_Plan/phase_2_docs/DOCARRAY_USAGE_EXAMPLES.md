@@ -34,7 +34,7 @@ This document provides comprehensive usage examples for CodeWeaver's DocArray in
 
 import asyncio
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 
 async def basic_qdrant_example():
     # Create factory with DocArray support
@@ -114,7 +114,7 @@ asyncio.run(basic_qdrant_example())
 import asyncio
 import os
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import PineconeDocArrayConfig
+from codeweaver.backends.providers.docarray.config import PineconeDocArrayConfig
 
 async def pinecone_document_search():
     factory = CodeWeaverFactory(enable_docarray=True)
@@ -203,7 +203,7 @@ asyncio.run(pinecone_document_search())
 
 import asyncio
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 
 class CodeSearchExample:
     def __init__(self):
@@ -394,7 +394,7 @@ asyncio.run(run_code_search_example())
 
 import asyncio
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 from codeweaver.backends.base import HybridSearchBackend
 
 class HybridCodeSearch:
@@ -629,7 +629,7 @@ asyncio.run(run_hybrid_search_example())
 import asyncio
 import logging
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import (
+from codeweaver.backends.providers.docarray.config import (
     QdrantDocArrayConfig,
     PineconeDocArrayConfig,
     DocArrayBackendConfig
@@ -761,7 +761,7 @@ import statistics
 from pydantic.dataclasses import dataclass
 from typing import List, Dict, Any
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 
 @dataclass
 class PerformanceMetrics:

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Source Providers for CodeWeaver."""
+
 from codeweaver.sources.providers.database import DatabaseSourceConfig, DatabaseSourceProvider
 from codeweaver.sources.providers.filesystem import (
     FileSystemSource,

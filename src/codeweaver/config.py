@@ -27,6 +27,7 @@ from pydantic_settings import (
 )
 
 from codeweaver.backends.config import BackendConfigExtended
+from codeweaver.cw_types import ComponentType, ServicesConfig
 from codeweaver.providers.config import (
     CohereConfig,
     CombinedProviderConfig,
@@ -39,7 +40,6 @@ from codeweaver.providers.config import (
     SpaCyProviderConfig,
     VoyageConfig,
 )
-from codeweaver.types import ComponentType, ServicesConfig
 
 
 logger = logging.getLogger(__name__)
@@ -937,19 +937,21 @@ class CodeWeaverConfigWithFile(CodeWeaverConfig):
         return (init_settings, env_settings, toml_settings, dotenv_settings, file_secret_settings)
 
 
-# Configuration exceptions moved to codeweaver.types to avoid circular imports
+# Configuration exceptions moved to codeweaver.cw_types to avoid circular imports
 # Import at module level but use TYPE_CHECKING pattern if this creates issues
 from typing import TYPE_CHECKING
+
 
 if not TYPE_CHECKING:
     # Import at runtime to avoid circular dependency during module initialization
     def _get_config_exceptions():
-        from codeweaver.types import ConfigurationError, ProfileError, PluginConfigurationError
+        from codeweaver.cw_types import ConfigurationError, PluginConfigurationError, ProfileError
+
         return ConfigurationError, ProfileError, PluginConfigurationError
-    
+
     ConfigurationError, ProfileError, PluginConfigurationError = _get_config_exceptions()
 else:
-    from codeweaver.types import ConfigurationError, ProfileError, PluginConfigurationError
+    from codeweaver.cw_types import ConfigurationError
 
 
 def setup_development_config() -> CodeWeaverConfig:
@@ -1076,7 +1078,7 @@ class ConfigSchema:
         except (ValidationError, ConfigurationError) as e:
             return {"valid": False, "errors": [str(e)]}
         except Exception as e:
-            return {"valid": False, "errors": [f"Unexpected validation error: {str(e)}"]}
+            return {"valid": False, "errors": [f"Unexpected validation error: {e!s}"]}
         else:
             return {"valid": True, "errors": []}
 

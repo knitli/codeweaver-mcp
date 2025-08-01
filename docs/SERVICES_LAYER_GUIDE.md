@@ -44,7 +44,7 @@ Services are injected into plugin operations through the context parameter:
 
 ```python
 from codeweaver.services.manager import ServicesManager
-from codeweaver.types import ServiceHealth, ServiceStatus
+from codeweaver.cw_types import ServiceHealth, ServiceStatus
 
 class ExamplePlugin:
     async def process_content(self, content: str, context: dict) -> ProcessedContent:
@@ -209,7 +209,7 @@ Create custom services by extending the base provider:
 
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceHealth, ServiceStatus
+from codeweaver.cw_types import ServiceHealth, ServiceStatus
 
 class CustomCacheService(BaseServiceProvider):
     """Custom caching service implementation."""

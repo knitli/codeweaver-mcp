@@ -39,10 +39,18 @@ readme = { file= "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
 dependencies = [
     "ast-grep-py>=0.39.1",
+    "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
-    "rignore>=0.6.4",
-    "pydantic>=2.11.7",
+    "posthog>=6.3.0",
     "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "rignore>=0.6.4",
+    "spacy>=3.8.7",
+    "tomli-w>=1.2.0",
+    "voyageai>=0.3.4",
+    "watchdog>=6.0.0",
 ]
 
 [project.scripts]
@@ -56,10 +64,11 @@ Issues = "https://github.com/knitli/codeweaver-mcp/issues"
 Repository = "https://github.com/knitli/codeweaver-mcp"
 
 [build-system]
-requires = ["uv_build>=0.8.2,<0.9.0"]
-build-backend = "uv_build"
+requires = ["hatchling>=1.14.1"]
+build-backend = "hatchling.build"
 
 [dependency-groups]
+build = ["hatchling>=1.14.1"]
 test = [
     "docarray>=0.40.1",
     "pytest>=8.4.1",
@@ -95,7 +104,7 @@ typing = ["pylance>=0.32.0"]
 [project.optional-dependencies]
 
 default = [
-    "cylopts>=3.22.5",
+    "cyclopts>=3.22.5",
     "posthog>=6.3.0",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
@@ -106,7 +115,7 @@ default = [
     ]
 
 default-no-telemetry = [
-    "cylopts>=3.22.5",
+    "cyclopts>=3.22.5",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
     "spacy>=3.8.7",
@@ -146,14 +155,26 @@ backend-qdrant = ["qdrant-client>=1.15.0"]
 
 # DocArray options
 backend-docarray = ["docarray>=0.40.1"]
-backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
-backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
-backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
-backend-docarray-redis = ["docarray[redis]>=0.40.1"]
-backend-docarray-jax = ["docarray[jax]>=0.40.1"]
+backend-docarray-elasticsearch = ["docarray[elasticsearch]>=0.40.1"]
 backend-docarray-epsilla = ["docarray[epsilla]>=0.40.1"]
-backend-docarray-mongo = ["docarray[mongo]>=0.40.1"]
+backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
+backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
+backend-docarray-redis = ["docarray[redis]>=0.40.1"]
+backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
 
+
+[tool.hatch.build.targets.wheel]
+artifacts = ["*.so", "src/**"]
+packages = ["src/codeweaver"]
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/**",
+    "pyproject.toml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE-2.0",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

@@ -10,16 +10,16 @@ from unittest.mock import Mock
 
 import pytest
 
-from codeweaver.services.providers.context_intelligence import FastMCPContextMiningProvider
-from codeweaver.services.providers.implicit_learning import BehavioralPatternLearningProvider
-from codeweaver.services.providers.zero_shot_optimization import ContextAdequacyOptimizationProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ContextIntelligenceServiceConfig,
     ImplicitLearningServiceConfig,
     IntentResult,
     ServiceType,
     ZeroShotOptimizationServiceConfig,
 )
+from codeweaver.services.providers.context_intelligence import FastMCPContextMiningProvider
+from codeweaver.services.providers.implicit_learning import BehavioralPatternLearningProvider
+from codeweaver.services.providers.zero_shot_optimization import ContextAdequacyOptimizationProvider
 
 
 class TestImplicitLearningService:
@@ -38,10 +38,7 @@ class TestImplicitLearningService:
     @pytest.fixture
     def learning_service(self, service_config):
         """Create implicit learning service instance."""
-        return BehavioralPatternLearningProvider(
-            ServiceType.IMPLICIT_LEARNING,
-            service_config
-        )
+        return BehavioralPatternLearningProvider(ServiceType.IMPLICIT_LEARNING, service_config)
 
     @pytest.mark.asyncio
     async def test_service_initialization(self, learning_service):
@@ -66,7 +63,7 @@ class TestImplicitLearningService:
             data=["result1", "result2"],
             metadata={"strategy": "test"},
             executed_at=datetime.now(UTC),
-            execution_time=1.5
+            execution_time=1.5,
         )
 
         # Test analysis
@@ -74,7 +71,7 @@ class TestImplicitLearningService:
             ctx=mock_ctx,
             intent="test intent",
             result=intent_result,
-            response_metadata={"response_time": 1.5, "strategy_used": "test"}
+            response_metadata={"response_time": 1.5, "strategy_used": "test"},
         )
 
         assert feedback is not None
@@ -92,7 +89,7 @@ class TestImplicitLearningService:
             "frequency": 3,
             "success_rate": 0.8,
             "avg_response_time": 1.2,
-            "duration_minutes": 15.0
+            "duration_minutes": 15.0,
         }
 
         pattern = await learning_service.extract_behavioral_patterns(session_data)
@@ -119,10 +116,7 @@ class TestContextIntelligenceService:
     @pytest.fixture
     def intelligence_service(self, service_config):
         """Create context intelligence service instance."""
-        return FastMCPContextMiningProvider(
-            ServiceType.CONTEXT_INTELLIGENCE,
-            service_config
-        )
+        return FastMCPContextMiningProvider(ServiceType.CONTEXT_INTELLIGENCE, service_config)
 
     @pytest.mark.asyncio
     async def test_service_initialization(self, intelligence_service):
@@ -156,11 +150,7 @@ class TestContextIntelligenceService:
         await intelligence_service._initialize_provider()
 
         intent = "find all functions in the authentication module"
-        context = {
-            "scope": "module",
-            "target": "authentication",
-            "query": "functions"
-        }
+        context = {"scope": "module", "target": "authentication", "query": "functions"}
 
         adequacy = await intelligence_service.analyze_context_adequacy(intent, context)
 
@@ -189,8 +179,7 @@ class TestZeroShotOptimizationService:
     def optimization_service(self, service_config):
         """Create zero-shot optimization service instance."""
         return ContextAdequacyOptimizationProvider(
-            ServiceType.ZERO_SHOT_OPTIMIZATION,
-            service_config
+            ServiceType.ZERO_SHOT_OPTIMIZATION, service_config
         )
 
     @pytest.mark.asyncio
@@ -206,11 +195,7 @@ class TestZeroShotOptimizationService:
         await optimization_service._initialize_provider()
 
         intent = "analyze the performance of the database queries"
-        context = {
-            "target": "database",
-            "scope": "project",
-            "focus": "performance"
-        }
+        context = {"target": "database", "scope": "project", "focus": "performance"}
 
         prediction = await optimization_service.predict_success_probability(intent, context)
 
@@ -235,9 +220,7 @@ class TestZeroShotOptimizationService:
         context = {"query": "authentication"}
 
         plan = await optimization_service.optimize_for_zero_shot_success(
-            ctx=mock_ctx,
-            intent=intent,
-            available_context=context
+            ctx=mock_ctx, intent=intent, available_context=context
         )
 
         assert plan is not None
@@ -260,9 +243,7 @@ class TestZeroShotOptimizationService:
         context = {}  # Empty context should result in low success probability
 
         plan = await optimization_service.optimize_for_zero_shot_success(
-            ctx=mock_ctx,
-            intent=intent,
-            available_context=context
+            ctx=mock_ctx, intent=intent, available_context=context
         )
 
         assert plan is not None
@@ -310,9 +291,7 @@ class TestServiceIntegration:
 
         # 2. Zero-shot optimization creates a plan
         optimization_plan = await optimization_service.optimize_for_zero_shot_success(
-            ctx=mock_ctx,
-            intent=intent,
-            available_context=initial_context
+            ctx=mock_ctx, intent=intent, available_context=initial_context
         )
 
         # 3. Simulate execution result
@@ -321,7 +300,7 @@ class TestServiceIntegration:
             data=["auth_function_1", "auth_function_2"],
             metadata={"strategy": "adaptive"},
             executed_at=datetime.now(UTC),
-            execution_time=2.1
+            execution_time=2.1,
         )
 
         # 4. Implicit learning analyzes the outcome
@@ -332,8 +311,8 @@ class TestServiceIntegration:
             response_metadata={
                 "response_time": 2.1,
                 "strategy_used": "adaptive",
-                "success_probability": optimization_plan.success_probability
-            }
+                "success_probability": optimization_plan.success_probability,
+            },
         )
 
         # Verify the integration worked
@@ -351,9 +330,21 @@ class TestServiceIntegration:
 async def test_service_health_checks():
     """Test health checks for all Phase 3 services."""
     configs = [
-        (ServiceType.IMPLICIT_LEARNING, ImplicitLearningServiceConfig(), BehavioralPatternLearningProvider),
-        (ServiceType.CONTEXT_INTELLIGENCE, ContextIntelligenceServiceConfig(), FastMCPContextMiningProvider),
-        (ServiceType.ZERO_SHOT_OPTIMIZATION, ZeroShotOptimizationServiceConfig(), ContextAdequacyOptimizationProvider),
+        (
+            ServiceType.IMPLICIT_LEARNING,
+            ImplicitLearningServiceConfig(),
+            BehavioralPatternLearningProvider,
+        ),
+        (
+            ServiceType.CONTEXT_INTELLIGENCE,
+            ContextIntelligenceServiceConfig(),
+            FastMCPContextMiningProvider,
+        ),
+        (
+            ServiceType.ZERO_SHOT_OPTIMIZATION,
+            ZeroShotOptimizationServiceConfig(),
+            ContextAdequacyOptimizationProvider,
+        ),
     ]
 
     for service_type, config, provider_class in configs:

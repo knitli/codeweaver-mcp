@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Providers for CodeWeaver's Providers Component."""
+
 from codeweaver.providers.providers.cohere import CohereProvider
 from codeweaver.providers.providers.huggingface import HuggingFaceProvider
 from codeweaver.providers.providers.openai import OpenAICompatibleProvider

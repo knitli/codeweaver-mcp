@@ -24,9 +24,9 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import VectorBackend
+from codeweaver.cw_types import DistanceMetric, VectorPoint
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource, SourceConfig
-from codeweaver.types import DistanceMetric, VectorPoint
 
 
 logger = logging.getLogger(__name__)

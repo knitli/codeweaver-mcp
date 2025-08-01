@@ -12,14 +12,14 @@ import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ContextAdequacy,
     ContextIntelligenceService,
     ContextIntelligenceServiceConfig,
     LLMProfile,
     ServiceType,
 )
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class LLMModelDetector:
@@ -32,18 +32,18 @@ class LLMModelDetector:
             "claude": {
                 "indicators": ["claude", "anthropic", "thinking", "comprehensive"],
                 "timing_patterns": {"avg_response_time": (0.5, 3.0)},
-                "request_patterns": ["detailed", "thorough", "structured"]
+                "request_patterns": ["detailed", "thorough", "structured"],
             },
             "gpt": {
                 "indicators": ["openai", "gpt", "chatgpt", "assistant"],
                 "timing_patterns": {"avg_response_time": (0.3, 2.0)},
-                "request_patterns": ["concise", "direct", "helpful"]
+                "request_patterns": ["concise", "direct", "helpful"],
             },
             "gemini": {
                 "indicators": ["google", "gemini", "bard"],
                 "timing_patterns": {"avg_response_time": (0.4, 2.5)},
-                "request_patterns": ["analytical", "precise", "factual"]
-            }
+                "request_patterns": ["analytical", "precise", "factual"],
+            },
         }
 
     async def identify_model(self, behavioral_features: dict[str, Any]) -> tuple[str | None, float]:
@@ -61,38 +61,30 @@ class LLMModelDetector:
         return (best_match, best_confidence) if best_confidence > 0.6 else (None, 0.0)
 
     def _calculate_model_confidence(
-        self,
-        features: dict[str, Any],
-        signature: dict[str, Any]
+        self, features: dict[str, Any], signature: dict[str, Any]
     ) -> float:
         """Calculate confidence that features match a model signature."""
         # Check user agent indicators
         user_agent = features.get("user_agent", "").lower()
-        indicator_matches = sum(
-            indicator in user_agent for indicator in signature["indicators"]
-        )
+        indicator_matches = sum(indicator in user_agent for indicator in signature["indicators"])
         indicator_confidence = indicator_matches / len(signature["indicators"])
         confidence_factors = [indicator_confidence * 0.4]
         # Check timing patterns
         timing_confidence = self._check_timing_patterns(
-            features.get("timing", {}),
-            signature["timing_patterns"]
+            features.get("timing", {}), signature["timing_patterns"]
         )
         confidence_factors.append(timing_confidence * 0.3)
 
         # Check request patterns
         request_confidence = self._check_request_patterns(
-            features.get("request_patterns", []),
-            signature["request_patterns"]
+            features.get("request_patterns", []), signature["request_patterns"]
         )
         confidence_factors.append(request_confidence * 0.3)
 
         return sum(confidence_factors)
 
     def _check_timing_patterns(
-        self,
-        timing_data: dict[str, float],
-        expected_patterns: dict[str, tuple[float, float]]
+        self, timing_data: dict[str, float], expected_patterns: dict[str, tuple[float, float]]
     ) -> float:
         """Check if timing data matches expected patterns."""
         if not timing_data or not expected_patterns:
@@ -111,21 +103,14 @@ class LLMModelDetector:
         return matches / total_checks if total_checks > 0 else 0.5
 
     def _check_request_patterns(
-        self,
-        request_patterns: list[str],
-        expected_patterns: list[str]
+        self, request_patterns: list[str], expected_patterns: list[str]
     ) -> float:
         """Check if request patterns match expected patterns."""
         if not request_patterns or not expected_patterns:
             return 0.5  # Neutral confidence
 
         matches = sum(
-            any(
-
-                    pattern in req_pattern.lower()
-                    for req_pattern in request_patterns
-
-            )
+            any(pattern in req_pattern.lower() for req_pattern in request_patterns)
             for pattern in expected_patterns
         )
 
@@ -141,14 +126,11 @@ class ContextAdequacyPredictor:
             "search": ["query", "scope", "filters"],
             "analysis": ["target", "depth", "focus"],
             "explanation": ["topic", "detail_level", "audience"],
-            "implementation": ["requirements", "constraints", "technology"]
+            "implementation": ["requirements", "constraints", "technology"],
         }
 
     async def assess(
-        self,
-        intent: str,
-        context: dict[str, Any],
-        contextual_features: dict[str, Any]
+        self, intent: str, context: dict[str, Any], contextual_features: dict[str, Any]
     ) -> ContextAdequacy:
         """Assess adequacy of available context for intent processing."""
         # Classify intent type
@@ -168,7 +150,9 @@ class ContextAdequacyPredictor:
                 missing_elements.append(element)
 
         # Calculate adequacy score
-        adequacy_score = len(present_elements) / len(required_elements) if required_elements else 1.0
+        adequacy_score = (
+            len(present_elements) / len(required_elements) if required_elements else 1.0
+        )
 
         # Calculate richness score (amount of detail in present elements)
         richness_score = self._calculate_richness_score(context, present_elements)
@@ -184,7 +168,7 @@ class ContextAdequacyPredictor:
             missing_elements=missing_elements,
             richness_score=richness_score,
             clarity_score=clarity_score,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     def _classify_intent_type(self, intent: str) -> str:
@@ -193,11 +177,15 @@ class ContextAdequacyPredictor:
 
         if any(word in intent_lower for word in ["find", "search", "look", "get", "list"]):
             return "search"
-        if any(word in intent_lower for word in ["analyze", "review", "check", "examine", "assess"]):
+        if any(
+            word in intent_lower for word in ["analyze", "review", "check", "examine", "assess"]
+        ):
             return "analysis"
         if any(word in intent_lower for word in ["explain", "describe", "what", "how", "why"]):
             return "explanation"
-        if any(word in intent_lower for word in ["create", "build", "implement", "develop", "make"]):
+        if any(
+            word in intent_lower for word in ["create", "build", "implement", "develop", "make"]
+        ):
             return "implementation"
         return "general"
 
@@ -207,24 +195,32 @@ class ContextAdequacyPredictor:
             "query": lambda: bool(intent.strip()),
             "scope": lambda: any(key in context for key in ["scope", "path", "directory", "file"]),
             "filters": lambda: any(key in context for key in ["filters", "language", "file_type"]),
-            "target": lambda: any(key in context for key in ["target", "component", "function", "class"]),
+            "target": lambda: any(
+                key in context for key in ["target", "component", "function", "class"]
+            ),
             "depth": lambda: any(key in context for key in ["depth", "detail", "level"]),
             "focus": lambda: any(key in context for key in ["focus", "aspect", "area"]),
             "topic": lambda: any(key in context for key in ["topic", "subject", "concept"]),
-            "detail_level": lambda: any(key in context for key in ["detail", "depth", "complexity"]),
+            "detail_level": lambda: any(
+                key in context for key in ["detail", "depth", "complexity"]
+            ),
             "audience": lambda: any(key in context for key in ["audience", "level", "experience"]),
-            "requirements": lambda: any(key in context for key in ["requirements", "specs", "criteria"]),
-            "constraints": lambda: any(key in context for key in ["constraints", "limitations", "bounds"]),
-            "technology": lambda: any(key in context for key in ["technology", "framework", "language"])
+            "requirements": lambda: any(
+                key in context for key in ["requirements", "specs", "criteria"]
+            ),
+            "constraints": lambda: any(
+                key in context for key in ["constraints", "limitations", "bounds"]
+            ),
+            "technology": lambda: any(
+                key in context for key in ["technology", "framework", "language"]
+            ),
         }
 
         check_func = element_checks.get(element)
         return check_func() if check_func else False
 
     def _calculate_richness_score(
-        self,
-        context: dict[str, Any],
-        present_elements: list[str]
+        self, context: dict[str, Any], present_elements: list[str]
     ) -> float:
         """Calculate richness score based on detail in present elements."""
         if not present_elements:
@@ -245,11 +241,7 @@ class ContextAdequacyPredictor:
 
         return sum(richness_factors) / len(richness_factors) if richness_factors else 0.3
 
-    def _generate_recommendations(
-        self,
-        missing_elements: list[str],
-        intent_type: str
-    ) -> list[str]:
+    def _generate_recommendations(self, missing_elements: list[str], intent_type: str) -> list[str]:
         """Generate recommendations for improving context."""
         recommendations = []
 
@@ -265,7 +257,7 @@ class ContextAdequacyPredictor:
             "audience": "Indicate the target audience or expertise level",
             "requirements": "Provide clear requirements or specifications",
             "constraints": "Specify any constraints or limitations",
-            "technology": "Identify the technology stack or framework"
+            "technology": "Identify the technology stack or framework",
         }
 
         recommendations.extend(
@@ -314,14 +306,14 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
                 "llm_identification_enabled": self._config.llm_identification_enabled,
                 "behavioral_fingerprinting": self._config.behavioral_fingerprinting,
                 "privacy_mode": self._config.privacy_mode,
-            }
+            },
         )
 
     async def _shutdown_provider(self) -> None:
         """Shutdown the FastMCP context mining provider."""
         self._logger.info(
             "FastMCP context mining provider shutdown. Tracked %d sessions.",
-            len(self._session_profiles)
+            len(self._session_profiles),
         )
 
     async def _check_health(self) -> bool:
@@ -348,7 +340,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
             "session_id": session_id,
             "user_agent": self._get_user_agent(ctx),
             "request_timing": self._get_request_timing(ctx),
-            "interaction_patterns": []
+            "interaction_patterns": [],
         }
 
         # Analyze HTTP patterns if available
@@ -374,7 +366,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
             confidence=confidence,
             request_patterns=behavioral_features.get("request_patterns", []),
             timing_characteristics=behavioral_features.get("timing", {}),
-            behavioral_features=behavioral_features
+            behavioral_features=behavioral_features,
         )
 
         # Store profile
@@ -386,9 +378,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         return profile
 
     async def analyze_context_adequacy(
-        self,
-        intent: str,
-        available_context: dict[str, Any]
+        self, intent: str, available_context: dict[str, Any]
     ) -> ContextAdequacy:
         """Analyze adequacy of available context for intent processing."""
         # Extract contextual features
@@ -405,7 +395,11 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         # Generate session ID from context attributes
         session_data = []
 
-        if hasattr(ctx, "request") and ctx.request and (hasattr(ctx.request, "client") and ctx.request.client):
+        if (
+            hasattr(ctx, "request")
+            and ctx.request
+            and (hasattr(ctx.request, "client") and ctx.request.client)
+        ):
             client_info = f"{ctx.request.client.host}:{ctx.request.client.port}"
             session_data.append(client_info)
 
@@ -419,6 +413,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         if self._config.privacy_mode == "strict":
             # Generate random session ID for strict privacy
             import uuid
+
             return str(uuid.uuid4())[:16]
         # Use direct identifiers (less private)
         return "|".join(session_data)[:16] if session_data else "anonymous"
@@ -476,8 +471,14 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
 
         # List of headers that are safe to include
         safe_header_names = {
-            "content-type", "accept", "accept-encoding", "accept-language",
-            "cache-control", "connection", "host", "user-agent"
+            "content-type",
+            "accept",
+            "accept-encoding",
+            "accept-language",
+            "cache-control",
+            "connection",
+            "host",
+            "user-agent",
         }
 
         for name, value in headers.items():
@@ -501,7 +502,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
             ua_hash = hashlib.sha256(user_agent.encode()).hexdigest()[:8]
             return f"client_{ua_hash}"
         # Keep user agent but remove potential sensitive info
-        return re.sub(r'\b\d+\.\d+\.\d+\b', 'x.x.x', user_agent)  # Remove version numbers
+        return re.sub(r"\b\d+\.\d+\.\d+\b", "x.x.x", user_agent)  # Remove version numbers
 
     async def _extract_behavioral_features(self, profile_data: dict[str, Any]) -> dict[str, Any]:
         """Extract behavioral features from profile data."""
@@ -509,7 +510,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
             "user_agent": profile_data.get("user_agent", ""),
             "timing": profile_data.get("request_timing", {}),
             "request_patterns": [],
-            "interaction_patterns": profile_data.get("interaction_patterns", [])
+            "interaction_patterns": profile_data.get("interaction_patterns", []),
         }
 
         if user_agent := features["user_agent"]:
@@ -562,9 +563,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         return patterns
 
     async def _extract_contextual_features(
-        self,
-        intent: str,
-        context: dict[str, Any]
+        self, intent: str, context: dict[str, Any]
     ) -> dict[str, Any]:
         """Extract contextual features for adequacy assessment."""
         features = {"clarity_score": self._assess_intent_clarity(intent)}
@@ -605,9 +604,7 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         element_count = len(context)
         element_score = min(element_count / 5.0, 1.0)  # Max score at 5 elements
         # Depth of context elements
-        total_content_length = sum(
-            len(str(value)) for value in context.values()
-        )
+        total_content_length = sum(len(str(value)) for value in context.values())
         depth_score = min(total_content_length / 500.0, 1.0)  # Max score at 500 chars
         richness_factors = [element_score, depth_score]
         # Variety of context types
@@ -626,8 +623,17 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
         complexity_factors = [connector_score]
         # Technical terms
         technical_terms = [
-            "function", "class", "method", "variable", "algorithm", "pattern",
-            "implementation", "architecture", "framework", "library", "api"
+            "function",
+            "class",
+            "method",
+            "variable",
+            "algorithm",
+            "pattern",
+            "implementation",
+            "architecture",
+            "framework",
+            "library",
+            "api",
         ]
         tech_count = sum(term in intent.lower() for term in technical_terms)
         tech_score = min(tech_count / 3.0, 1.0)
@@ -662,7 +668,8 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
 
         # Remove old profiles
         expired_sessions = [
-            session_id for session_id, profile in self._session_profiles.items()
+            session_id
+            for session_id, profile in self._session_profiles.items()
             if profile.created_at < cutoff_time
         ]
 

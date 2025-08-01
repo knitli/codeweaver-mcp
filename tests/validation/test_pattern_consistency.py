@@ -43,7 +43,9 @@ def get_all_provider_classes():
 
         provider_classes.append(HuggingFaceProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.providers.sentence_transformers import SentenceTransformersProvider
+        from codeweaver.providers.providers.sentence_transformers import (
+            SentenceTransformersProvider,
+        )
 
         provider_classes.append(SentenceTransformersProvider)
     return provider_classes

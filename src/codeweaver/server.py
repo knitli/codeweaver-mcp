@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
 
+from codeweaver.cw_types import ContentSearchResult, ExtensibilityConfig
 from codeweaver.factories import ExtensibilityManager
 from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
 from codeweaver.services import ServicesManager
-from codeweaver.types import ContentSearchResult, ExtensibilityConfig
 
 
 if TYPE_CHECKING:

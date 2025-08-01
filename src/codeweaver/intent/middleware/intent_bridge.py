@@ -9,9 +9,9 @@ import logging
 
 from typing import Any
 
+from codeweaver.cw_types import IntentResult, ServiceIntegrationError, ServiceType
+from codeweaver.cw_types.services.config import ServiceConfig
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import IntentResult, ServiceIntegrationError, ServiceType
-from codeweaver.types.services.config import ServiceConfig
 
 
 class IntentServiceBridge(BaseServiceProvider):

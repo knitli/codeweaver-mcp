@@ -3,15 +3,19 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Backend providers for CodeWeaver."""
-from codeweaver.backends.providers import QdrantBackend, QdrantHybridBackend
+
 from codeweaver.backends.providers.docarray import (
     BaseDocArrayAdapter,
     DocArrayConfigFactory,
     DocArrayHybridAdapter,
     DocumentSchemaGenerator,
+    QdrantDocArrayBackend,
     SchemaConfig,
     SchemaTemplates,
+    create_docarray_backend,
+    register_docarray_backends,
 )
+from codeweaver.backends.providers.qdrant import QdrantBackend, QdrantHybridBackend
 
 
 __all__ = (
@@ -20,7 +24,10 @@ __all__ = (
     "DocArrayHybridAdapter",
     "DocumentSchemaGenerator",
     "QdrantBackend",
+    "QdrantDocArrayBackend",
     "QdrantHybridBackend",
     "SchemaConfig",
     "SchemaTemplates",
+    "create_docarray_backend",
+    "register_docarray_backends",
 )

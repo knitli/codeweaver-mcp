@@ -26,7 +26,7 @@ from codeweaver.config import (
     ProfileConfig,
     ProfileError,
 )
-from codeweaver.types import ComponentType
+from codeweaver.cw_types import ComponentType
 
 
 @pytest.mark.unit

@@ -9,8 +9,7 @@ import logging
 
 from typing import Any
 
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     Complexity,
     IntentResult,
     IntentStrategy,
@@ -18,7 +17,8 @@ from codeweaver.types import (
     ParsedIntent,
     ServiceType,
 )
-from codeweaver.types.services.config import ServiceConfig
+from codeweaver.cw_types.services.config import ServiceConfig
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class AnalysisWorkflowStrategy(BaseServiceProvider, IntentStrategy):
@@ -59,7 +59,8 @@ class AnalysisWorkflowStrategy(BaseServiceProvider, IntentStrategy):
     async def _check_health(self) -> bool:
         """Check strategy health."""
         try:
-            from codeweaver.server import ast_grep_search_handler, search_code_handler
+            # TODO: Implement health checks for required handlers
+            pass
         except ImportError:
             self.logger.warning("Required handlers not available")
             return False

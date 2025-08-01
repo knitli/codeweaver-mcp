@@ -7,8 +7,8 @@ SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
-**Version**: 1.0.0  
-**Date**: 2025-01-26  
+**Version**: 1.0.0
+**Date**: 2025-01-26
 **Purpose**: Complete configuration reference for DocArray integration
 
 ## Overview
@@ -21,7 +21,7 @@ This reference provides comprehensive configuration options for DocArray backend
 
 ```python
 from codeweaver import CodeWeaverFactory
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 
 # Create factory with DocArray support
 factory = CodeWeaverFactory(enable_docarray=True)
@@ -138,7 +138,7 @@ schema_config = {
 # Includes these fields automatically:
 # - id: str
 # - content: str
-# - embedding: AndArray[512]
+# - embedding: NdArray[512]
 # - metadata: dict[str, Any]
 # - sparse_vector: dict[str, float]
 # - keywords: list[str]
@@ -162,7 +162,7 @@ schema_config = {
 # Includes these fields automatically:
 # - id: str
 # - content: str
-# - embedding: AndArray[768]
+# - embedding: NdArray[768]
 # - metadata: dict[str, Any]
 # - meta_title: str
 # - meta_author: str
@@ -179,8 +179,8 @@ schema_config = {
     "embedding_dimension": 512,
     "include_sparse_vectors": True,
     "custom_fields": {
-        "image_embedding": ("AndArray[512]", "Image embedding vector"),
-        "text_embedding": ("AndArray[512]", "Text embedding vector"),
+        "image_embedding": ("NdArray[512]", "Image embedding vector"),
+        "text_embedding": ("NdArray[512]", "Text embedding vector"),
         "image_url": ("str | None", "Image URL"),
     }
 }
@@ -223,15 +223,15 @@ schema_config = {
     },
     "custom_fields": {
         "code_ast": (
-            "dict[str, Any]", 
+            "dict[str, Any]",
             Field(description="Abstract syntax tree representation")
         ),
         "git_hash": (
-            "str | None", 
+            "str | None",
             Field(default=None, description="Git commit hash")
         ),
         "last_modified": (
-            "str", 
+            "str",
             Field(description="Last modification timestamp")
         ),
     },
@@ -244,25 +244,25 @@ schema_config = {
 ### Qdrant DocArray Backend
 
 ```python
-from codeweaver.backends.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
 
 config = QdrantDocArrayConfig(
     # Basic connection
     url="http://localhost:6333",
     api_key="your-api-key",
     collection_name="codeweaver",
-    
+
     # Schema configuration
     schema_config={
         "embedding_dimension": 512,
         "include_sparse_vectors": True,
         "schema_template": "code_search",
     },
-    
+
     # Qdrant-specific settings
     prefer_grpc=False,
     grpc_port=6334,
-    
+
     # Database configuration
     db_config={
         "distance": "Cosine",
@@ -270,19 +270,19 @@ config = QdrantDocArrayConfig(
         "retry_total": 3,
         "prefer_grpc": False,
     },
-    
+
     # Runtime configuration
     runtime_config={
         "batch_size": 100,
         "scroll_size": 1000,
     },
-    
+
     # Performance settings
     batch_size=100,
     enable_async=True,
     connection_timeout=30.0,
     retry_attempts=3,
-    
+
     # Feature flags
     enable_hybrid_search=True,
     enable_compression=False,
@@ -293,14 +293,14 @@ config = QdrantDocArrayConfig(
 ### Pinecone DocArray Backend
 
 ```python
-from codeweaver.backends.docarray.config import PineconeDocArrayConfig
+from codeweaver.backends.providers.docarray.config import PineconeDocArrayConfig
 
 config = PineconeDocArrayConfig(
     # Basic connection
     api_key="your-pinecone-api-key",
     environment="us-west1-gcp",
     index_name="codeweaver-index",
-    
+
     # Schema configuration
     schema_config={
         "embedding_dimension": 1536,  # OpenAI ada-002
@@ -311,11 +311,11 @@ config = PineconeDocArrayConfig(
             "timestamp": "str",
         },
     },
-    
+
     # Pinecone-specific settings
     environment="us-west1-gcp",
     index_type="approximated",
-    
+
     # Database configuration
     db_config={
         "metric": "cosine",
@@ -324,13 +324,13 @@ config = PineconeDocArrayConfig(
         "pods": 1,
         "pod_type": "p1.x1",
     },
-    
+
     # Performance settings
     batch_size=100,
     enable_async=True,
     connection_timeout=60.0,
     retry_attempts=5,
-    
+
     # Feature flags
     enable_hybrid_search=False,  # No native support
     enable_compression=True,
@@ -341,24 +341,24 @@ config = PineconeDocArrayConfig(
 ### Weaviate DocArray Backend
 
 ```python
-from codeweaver.backends.docarray.config import WeaviateDocArrayConfig
+from codeweaver.backends.providers.docarray.config import WeaviateDocArrayConfig
 
 config = WeaviateDocArrayConfig(
     # Basic connection
     url="http://localhost:8080",
     api_key="your-weaviate-api-key",
-    
+
     # Schema configuration
     schema_config={
         "embedding_dimension": 768,
         "include_sparse_vectors": True,
         "schema_template": "semantic_search",
     },
-    
+
     # Weaviate-specific settings
     class_name="CodeWeaverDoc",
     vectorizer=None,  # Use external embeddings
-    
+
     # Database configuration
     db_config={
         "startup_period": 5,
@@ -366,19 +366,19 @@ config = WeaviateDocArrayConfig(
             "X-Cohere-Api-Key": "your-cohere-key",  # If using Cohere
         },
     },
-    
+
     # Runtime configuration
     runtime_config={
         "consistency_level": "ALL",
         "timeout": ("5s", "10s"),
     },
-    
+
     # Performance settings
     batch_size=50,
     enable_async=True,
     connection_timeout=30.0,
     retry_attempts=3,
-    
+
     # Feature flags
     enable_hybrid_search=True,  # Native BM25 support
     enable_compression=False,
@@ -558,8 +558,8 @@ include_sparse_vectors = true
 schema_template = "multimodal"
 
 [backend.schema_config.custom_fields]
-image_embedding = ["AndArray[768]", "Image CLIP embedding"]
-text_embedding = ["AndArray[768]", "Text CLIP embedding"]
+image_embedding = ["NdArray[768]", "Image CLIP embedding"]
+text_embedding = ["NdArray[768]", "Text CLIP embedding"]
 image_url = ["str | None", "Image URL"]
 
 [backend.db_config]
@@ -573,7 +573,7 @@ consistency_level = "QUORUM"
 DocArray backends perform comprehensive configuration validation:
 
 ```python
-from codeweaver.backends.docarray.config import DocArrayConfigFactory
+from codeweaver.backends.providers.docarray.config import DocArrayConfigFactory
 
 # Validate configuration
 backend_type = "docarray_qdrant"
@@ -631,7 +631,7 @@ curl -f http://localhost:8080/v1/meta      # Weaviate
 ```python
 # Enable debug logging
 import logging
-logging.getLogger("codeweaver.backends.docarray").setLevel(logging.DEBUG)
+logging.getLogger("codeweaver.backends.providers.docarray").setLevel(logging.DEBUG)
 ```
 
 #### Performance Issues
@@ -646,7 +646,7 @@ enable_compression = true  # For large vectors
 #### Schema Issues
 ```python
 # Validate schema before use
-from codeweaver.backends.docarray.schema import DocumentSchemaGenerator
+from codeweaver.backends.providers.docarray.schema import DocumentSchemaGenerator
 
 try:
     schema = DocumentSchemaGenerator.create_schema(config)

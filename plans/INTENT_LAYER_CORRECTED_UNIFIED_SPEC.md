@@ -57,7 +57,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceHealth, ServiceStatus, IntentResult
+from codeweaver.cw_types import ServiceHealth, ServiceStatus, IntentResult
 
 class IntentOrchestrator(BaseServiceProvider):
     """Service-compliant orchestrator following existing patterns."""
@@ -280,7 +280,7 @@ class AutoIndexingService(BaseServiceProvider):
 ```python
 from enum import Enum
 from pydantic.dataclasses import dataclass
-from codeweaver.types import IntentType, Scope, Complexity
+from codeweaver.cw_types import IntentType, Scope, Complexity
 
 # NO INDEX INTENT TYPE - Only SEARCH, UNDERSTAND, ANALYZE
 class IntentType(Enum):
@@ -391,7 +391,7 @@ class PatternBasedParser:
 
 ```python
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
-from codeweaver.types import IntentStrategy
+from codeweaver.cw_types import IntentStrategy
 
 class StrategyRegistry:
     """Strategy registry integrated with existing ExtensibilityManager."""
@@ -470,10 +470,10 @@ class StrategyRegistry:
 
 ### 5. Configuration Integration (Hierarchy-Compliant)
 
-**Location**: `src/codeweaver.types/config.py` (Enhanced)
+**Location**: `src/codeweaver.cw_types/config.py` (Enhanced)
 
 ```python
-from codeweaver.types import BaseServiceConfig
+from codeweaver.cw_types import BaseServiceConfig
 from typing import Annotated
 from pydantic import Field, BaseModel
 
@@ -742,7 +742,7 @@ async def get_intent_capabilities_tool() -> dict[str, Any]:
 
 ### Error Categories (Using Existing Hierarchy)
 ```python
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ServiceError,
     ConfigurationError,
     ServiceUnavailableError
@@ -874,7 +874,7 @@ This corrected unified specification ensures full architectural compliance while
 3. **Factory Integration**: Uses existing `ExtensibilityManager` for strategy registration
 4. **Configuration Hierarchy**: Properly extends `ServicesConfig` without conflicts
 5. **FastMCP Integration**: Uses existing `ServiceBridge` patterns with no breaking changes
-6. **Error Handling**: Follows established exception hierarchy and recovery patterns (e.g. services exceptions in `codeweaver.types/services/exceptions`)
+6. **Error Handling**: Follows established exception hierarchy and recovery patterns (e.g. services exceptions in `codeweaver.cw_types/services/exceptions`)
 7. **Testing Framework**: Integrates with existing testing utilities and patterns
 
 **Expected Outcome**: A production-ready intent layer that transforms the LLM user experience from 4 complex tools to 1-2 intuitive tools, with completely transparent background indexing, while preserving the architectural integrity and extensibility that makes CodeWeaver powerful for developers.
