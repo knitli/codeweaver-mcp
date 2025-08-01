@@ -163,11 +163,11 @@ jobs:
         - 📦 Wheel distribution (.whl)
         - 📦 Source distribution (.tar.gz)
 
-        **Full Changelog**: https://github.com/knitli/code-weaver-mcp/compare/$PREVIOUS_TAG...$CURRENT_TAG
+        **Full Changelog**: https://github.com/knitli/codeweaver-mcp/compare/$PREVIOUS_TAG...$CURRENT_TAG
         EOF
 
         if [ -z "$PREVIOUS_TAG" ]; then
-          sed -i 's|**Full Changelog**: .*|**Full Changelog**: https://github.com/knitli/code-weaver-mcp/commits/'$CURRENT_TAG'|' release_notes.md
+          sed -i 's|**Full Changelog**: .*|**Full Changelog**: https://github.com/knitli/codeweaver-mcp/commits/'$CURRENT_TAG'|' release_notes.md
         fi
 
     - name: Create GitHub Release

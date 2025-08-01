@@ -46,7 +46,7 @@ class SourceFactory:
         """Register all built-in source implementations."""
         try:
             # File system source (always available)
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.providers.filesystem import FileSystemSource
 
             # Register with provider registry
             SOURCE_PROVIDERS[SourceProvider.FILESYSTEM] = SourceProviderInfo(

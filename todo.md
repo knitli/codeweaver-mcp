@@ -23,12 +23,14 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 - Ensure consistency of error usage across the codebase -- we have a lot of errors defined... are we using them?
 - Ensure consistency in health_check implementation -- should return ServiceHealth object across providers, sources, services, etc
   - Add similar implementations across sources, providers, backends, factories
-- propagate fastmcp request context to the intent layer
-  - Are we using it effectively? At all?
 - ensure create_service_context methods implemented in all service providers and enhanced service context propagates to the intent layer
 - Add similar enhanced context to other components and ensure they propagate to the intent layer
 - Ensure auto-indexing is using the file filter service
 - swap out `Requests` usage with `httpx` in all places (already indirect dependency from fastmcp which uses starlette)
+
+## Prompting
+
+- Setup proper prompting where needed for fastmcp
 
 ## Expand Baseline Functionality
 

@@ -10,8 +10,8 @@ site_name: CodeWeaver Documentation
 site_description: Extensible semantic code search with plugin architecture - Official Documentation
 site_author: Knitli Inc.
 site_url: https://docs.codeweaver.dev
-repo_url: https://github.com/knitli/code-weaver-mcp
-repo_name: knitli/code-weaver-mcp
+repo_url: https://github.com/knitli/codeweaver-mcp
+repo_name: knitli/codeweaver-mcp
 edit_uri: edit/main/docs/
 
 # Copyright and Legal
@@ -387,7 +387,7 @@ extra:
           data: 1
           note: >-
             Thanks for your feedback! Help us improve by
-            <a href="https://github.com/knitli/code-weaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+            <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
               telling us what you found helpful
             </a>.
         - icon: material/thumb-down-outline
@@ -395,14 +395,14 @@ extra:
           data: 0
           note: >-
             Thanks for your feedback! Help us improve by
-            <a href="https://github.com/knitli/code-weaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+            <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
               telling us what we can do better
             </a>.
 
   # Social links
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/knitli/code-weaver-mcp
+      link: https://github.com/knitli/codeweaver-mcp
       name: GitHub Repository
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/codeweaver/

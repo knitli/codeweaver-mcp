@@ -18,9 +18,9 @@ from typing import Annotated, Any, ClassVar, Literal, TypeVar
 
 from pydantic import Field
 
-from codeweaver.backends.base import VectorBackend
-from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.sources.base import DataSource
+from codeweaver.backends import VectorBackend
+from codeweaver.services import BaseServiceProvider
+from codeweaver.sources import DataSource
 from codeweaver.types import (
     BackendCapabilities,
     BaseComponentInfo,

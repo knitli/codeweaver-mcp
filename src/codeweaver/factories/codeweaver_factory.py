@@ -14,16 +14,15 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.config import BackendConfig
+from codeweaver.backends import BackendConfig, VectorBackend
 from codeweaver.factories.backend_registry import BackendRegistry
 from codeweaver.factories.error_handling import ErrorHandler, GracefulDegradationManager
 from codeweaver.factories.initialization import FactoryInitializer
 from codeweaver.factories.plugin_protocols import PluginDiscoveryEngine
 from codeweaver.factories.source_registry import SourceRegistry
-from codeweaver.providers.base import EmbeddingProvider
-from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
-from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.providers import EmbeddingProvider
+from codeweaver.providers import ProviderFactory as ExistingProviderFactory
+from codeweaver.sources import DataSource, SourceConfig
 from codeweaver.types import (
     BaseComponentConfig,
     ComponentCreationError,

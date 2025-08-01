@@ -66,8 +66,8 @@ CodeWeaver is designed to be intuitive and easy to use. We prioritize developer 
 uv add codeweaver
 
 # Or install from source
-git clone https://github.com/knitli/code-weaver-mcp.git
-cd code-weaver-mcp
+git clone https://github.com/knitli/codeweaver-mcp.git
+cd codeweaver-mcp
 uv sync
 ```
 
@@ -562,8 +562,8 @@ CodeWeaver looks for config files in several locations. Create a `.codeweaver.to
 ### Getting Help
 
 - 📚 Check our [documentation](docs/)
-- 🐛 Report bugs on [GitHub Issues](https://github.com/knitli/code-weaver-mcp/issues)
-- 💬 Join discussions on [GitHub Discussions](https://github.com/knitli/code-weaver-mcp/discussions)
+- 🐛 Report bugs on [GitHub Issues](https://github.com/knitli/codeweaver-mcp/issues)
+- 💬 Join discussions on [GitHub Discussions](https://github.com/knitli/codeweaver-mcp/discussions)
 - 📧 Email support: support@knit.li
 
 ## 🙏 Acknowledgments
@@ -597,7 +597,7 @@ MIT OR Apache-2.0 License - see [LICENSE](LICENSE) for details.
 
 If CodeWeaver helps you navigate your codebase more effectively, give us a star! ⭐ If it doesn't, please open an issue or contribute to make it better.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=knitli/code-weaver-mcp&type=Date)](https://star-history.com/#knitli/code-weaver-mcp&Date) <-- look how sad it is! Please help us change that! 🙏
+[![Star History Chart](https://api.star-history.com/svg?repos=knitli/codeweaver-mcp&type=Date)](https://star-history.com/#knitli/codeweaver-mcp&Date) <-- look how sad it is! Please help us change that! 🙏
 
 ---
 

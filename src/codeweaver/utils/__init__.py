@@ -9,11 +9,12 @@ from codeweaver.utils.decorators import (
     not_implemented,
     require_implementation,
 )
-from codeweaver.utils.helpers import walk_down_to_git_root
+from codeweaver.utils.helpers import in_codeweaver_clone, walk_down_to_git_root
 
 
 __all__ = [
     "feature_flag_required",
+    "in_codeweaver_clone",
     "not_implemented",
     "require_implementation",
     "walk_down_to_git_root",

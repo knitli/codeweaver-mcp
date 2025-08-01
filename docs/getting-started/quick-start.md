@@ -45,7 +45,7 @@ Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of th
 === "From Source"
     ```bash
     # Clone repository
-    git clone https://github.com/knitli/code-weaver-mcp.git
+    git clone https://github.com/knitli/codeweaver-mcp.git
     cd codeweaver-mcp
 
     # Install with uv

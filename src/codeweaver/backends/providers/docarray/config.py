@@ -7,7 +7,7 @@ from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver.backends import BackendConfig
+from codeweaver.backends.factory import BackendConfig
 from codeweaver.types import BaseEnum
 
 

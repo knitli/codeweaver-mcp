@@ -7,9 +7,9 @@ import logging
 
 from typing import Any
 
-from codeweaver.config import QdrantDocArrayConfig
-from codeweaver.schema import DocumentSchemaGenerator, SchemaTemplates
-from codeweaver.sources import DocArrayHybridAdapter
+from codeweaver.backends.providers.docarray.adapter import DocArrayHybridAdapter
+from codeweaver.backends.providers.docarray.config import QdrantDocArrayConfig
+from codeweaver.backends.providers.docarray.schema import DocumentSchemaGenerator, SchemaTemplates
 
 
 logger = logging.getLogger(__name__)

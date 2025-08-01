@@ -3,7 +3,7 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
+# sourcery skip: dont-import-test-modules
 """
 Comprehensive validation runner for CodeWeaver Phase 5 implementation.
 

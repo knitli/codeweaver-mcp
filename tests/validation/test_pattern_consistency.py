@@ -27,23 +27,23 @@ def get_all_provider_classes():
     provider_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.voyage import VoyageAIProvider
+        from codeweaver.providers.providers.voyageai import VoyageAIProvider
 
         provider_classes.append(VoyageAIProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.openai import OpenAIProvider
+        from codeweaver.providers.providers.openai import OpenAIProvider
 
         provider_classes.append(OpenAIProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.cohere import CohereProvider
+        from codeweaver.providers.providers.cohere import CohereProvider
 
         provider_classes.append(CohereProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.huggingface import HuggingFaceProvider
+        from codeweaver.providers.providers.huggingface import HuggingFaceProvider
 
         provider_classes.append(HuggingFaceProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.sentence_transformers import SentenceTransformersProvider
+        from codeweaver.providers.providers.sentence_transformers import SentenceTransformersProvider
 
         provider_classes.append(SentenceTransformersProvider)
     return provider_classes
@@ -54,7 +54,7 @@ def get_all_backend_classes():
     backend_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.backends.qdrant import QdrantBackend
+        from codeweaver.backends.providers.qdrant import QdrantBackend
 
         backend_classes.append(QdrantBackend)
     return backend_classes
@@ -65,7 +65,7 @@ def get_all_source_classes():
     source_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.sources.filesystem import FileSystemSource
+        from codeweaver.sources.providers.filesystem import FileSystemSource
 
         source_classes.append(FileSystemSource)
     with contextlib.suppress(ImportError):
@@ -73,7 +73,7 @@ def get_all_source_classes():
 
         source_classes.append(APISource)
     with contextlib.suppress(ImportError):
-        from codeweaver.sources.git import GitSource
+        from codeweaver.sources.providers.git import GitSource
 
         source_classes.append(GitSource)
     return source_classes

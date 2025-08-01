@@ -17,7 +17,7 @@ from typing import Annotated, Any, ClassVar, Literal, TypeVar
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from codeweaver.backends.base import HybridSearchBackend, VectorBackend
-from codeweaver.backends.qdrant import QdrantHybridBackend
+from codeweaver.backends.providers.qdrant import QdrantHybridBackend
 from codeweaver.providers.base import (
     CombinedProvider,
     EmbeddingProvider,
@@ -318,7 +318,7 @@ class BackendFactory(CapabilityQueryMixin):
 def _register_default_backends() -> None:
     """Register the default backend implementations."""
     try:
-        from codeweaver.backends.qdrant import QdrantHybridBackend
+        from codeweaver.backends.providers.qdrant import QdrantHybridBackend
 
         BackendFactory.register_backend("qdrant", QdrantHybridBackend, supports_hybrid=True)
         logger.info("Registered Qdrant backend")

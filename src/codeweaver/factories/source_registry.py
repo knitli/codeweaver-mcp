@@ -17,7 +17,7 @@ from typing import Annotated, Any, ClassVar
 
 from pydantic import Field
 
-from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.sources import DataSource, SourceConfig
 from codeweaver.types import (
     BaseComponentInfo,
     ComponentNotFoundError,
@@ -318,7 +318,7 @@ class SourceRegistry:
 
         try:
             # Register filesystem source
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.providers.filesystem import FileSystemSource
 
             filesystem_capabilities = SourceCapabilities(
                 supports_content_discovery=True,

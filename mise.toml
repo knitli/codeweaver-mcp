@@ -25,7 +25,7 @@ typos = "latest"
 uv = "latest"
 
 [env]
-GH_REPO="knitli/code-weaver-mcp"
+GH_REPO="knitli/codeweaver-mcp"
 
 [hooks]
 enter = """

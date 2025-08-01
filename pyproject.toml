@@ -5,46 +5,55 @@
 
 [project]
 authors = [
-    { name = "Knitli Inc.", email = "knitli@knit.li" },
+    { name = "Knitli Inc." },
     { name = "Adam Poulemanos", email = "adam@knit.li" },
 ]
-name = "codeweaver"
+name = "codeweaver-mcp"
 license = { text = "MIT OR Apache-2.0" }
-keywords = [
-    "code-indexing",
-    "code-search",
-    "ast-grep",
-    "qdrant",
-    "mcp",
-    "plugin",
-    "middleware",
-    "voyageai",
-    "code-embeddings",
-    "semantic-search",
-    "tree-sitter",
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Text Processing :: Indexing",
+    "Topic :: Utilities",
+    "Typing :: Typed",
 ]
 
 version = "0.1.0"
 description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
-readme = "README.md"
+readme = { file= "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
 dependencies = [
     "ast-grep-py>=0.39.1",
     "fastmcp>=2.10.6",
-    "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
-    "watchdog>=6.0.0",
-    "voyageai>=0.3.4",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
-    "rich>=14.0.0",
-    "posthog>=6.3.0",
-    "spacy>=3.8.7",
 ]
-
 
 [project.scripts]
 code-weaver = "codeweaver:main"
+
+[project.urls]
+Changelog = "https://github.com/knitli/codeweaver-mcp/blob/main/CHANGELOG.md"
+Documentation = "https://dev.knitli.com/codeweaver"
+Homepage = "https://dev.knitli.com"
+Issues = "https://github.com/knitli/codeweaver-mcp/issues"
+Repository = "https://github.com/knitli/codeweaver-mcp"
 
 [build-system]
 requires = ["uv_build>=0.8.2,<0.9.0"]
@@ -82,6 +91,69 @@ dev = [
     "jsonlines>=4.0.0",
 ]
 typing = ["pylance>=0.32.0"]
+
+[project.optional-dependencies]
+
+default = [
+    "cylopts>=3.22.5",
+    "posthog>=6.3.0",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "spacy>=3.8.7",
+    "tomli-w>=1.2.0",
+    "voyageai>=0.3.4",
+    "watchdog>=6.0.0",
+    ]
+
+default-no-telemetry = [
+    "cylopts>=3.22.5",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "spacy>=3.8.7",
+    "tomli-w>=1.2.0",
+    "voyageai>=0.3.4",
+    "watchdog>=6.0.0",
+]
+
+default-minimal = [
+    "qdrant-client>=1.15.0",
+    "voyageai>=0.3.4",
+]
+
+cli = ["cyclopts>=3.22.5", "rich>=14.0.0", "tomli-w>=1.2.0"]
+
+# ==== Providers ====
+provider-cohere = ["cohere>=5.16.1"]
+provider-openai = ["openai>=1.98.0"]
+provider-huggingface = ["huggingface-hub>=0.34.3"]
+provider-sentence_transformers = ["sentence-transformers>=5.0.0"]
+provider-nlp-spacy = ["spacy>=3.8.7"]
+provider-nlp-spacy-transformers = ["spacy>=3.8.7", "spacy-curated-transformers>=0.3.1"]
+provider-voyageai = ["voyageai>=0.3.4"]
+
+# ==== Sources ====
+
+source-filesystem = ["watchdog>=6.0.0"]
+
+# Not fully implemented:
+# source-sqlmodel = ["sqlmodel>=0.0.24"]
+# source-git = ["gitpython>=3.1.45"]
+# source-github = ["PyGithub>=2.7.0"]
+# source-web = ["httpx>=0.28.1"]
+
+# ==== Backends ====
+backend-qdrant = ["qdrant-client>=1.15.0"]
+
+# DocArray options
+backend-docarray = ["docarray>=0.40.1"]
+backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
+backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
+backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
+backend-docarray-redis = ["docarray[redis]>=0.40.1"]
+backend-docarray-jax = ["docarray[jax]>=0.40.1"]
+backend-docarray-epsilla = ["docarray[epsilla]>=0.40.1"]
+backend-docarray-mongo = ["docarray[mongo]>=0.40.1"]
+
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -154,3 +226,44 @@ markers = [
 asyncio_mode = "auto"
 timeout = 300
 timeout_method = "thread"
+
+project.keywords = [
+    "ai",
+    "artificial intelligence",
+    "ast-grep",
+    "claude",
+    "code analysis",
+    "code embeddings",
+    "code indexing",
+    "code intelligence",
+    "code search",
+    "code understanding",
+    "codebase analysis",
+    "codebase management",
+    "codebase",
+    "cohere",
+    "docarray",
+    "extensible",
+    "fastmcp",
+    "framework",
+    "huggingface",
+    "large language models",
+    "llms",
+    "mcp protocol",
+    "mcp server",
+    "mcp",
+    "model context protocol",
+    "natural language processing",
+    "nlp",
+    "openai",
+    "platform",
+    "plugin architecture",
+    "pydantic",
+    "qdrant",
+    "search",
+    "semantic search",
+    "sentence-transformers",
+    "spacy",
+    "vector search",
+    "voyageai",
+]

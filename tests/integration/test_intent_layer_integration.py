@@ -319,9 +319,10 @@ class TestIntentLayerPerformance:
         start_time = time.time()
 
         tasks = []
-        for i in range(10):
-            tasks.append(intent_bridge.process_intent(f"find function {i}", {}))
-
+        tasks.extend(
+            intent_bridge.process_intent(f"find function {i}", {})
+            for i in range(10)
+        )
         # Process all intents
         import asyncio
 

@@ -18,3 +18,8 @@ def walk_down_to_git_root(path: Path) -> Path:
             return path
         path = path.parent
     raise FileNotFoundError("No .git directory found in the path hierarchy.")
+
+
+def in_codeweaver_clone(path: Path) -> bool:
+    """Check if the current repo is CodeWeaver."""
+    return "codeweaver" in str(path).lower() or "code-weaver" in str(path).lower()

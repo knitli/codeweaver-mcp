@@ -15,13 +15,12 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-from codeweaver.backends.base import VectorBackend
-from codeweaver.backends.config import BackendConfig
+from codeweaver.backends import BackendConfig, VectorBackend
 from codeweaver.factories.base import create_factory_context
 from codeweaver.factories.registry import ComponentRegistry, get_global_registry
-from codeweaver.providers.base import EmbeddingProvider
-from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
-from codeweaver.sources.base import DataSource, SourceConfig
+from codeweaver.providers import EmbeddingProvider
+from codeweaver.providers import ProviderFactory as ExistingProviderFactory
+from codeweaver.sources import DataSource, SourceConfig
 from codeweaver.types import (
     BaseComponentConfig,
     ComponentCreationError,
@@ -79,7 +78,7 @@ class CodeWeaverFactory:
     def _initialize_builtin_backends(self) -> None:
         """Initialize built-in backend components."""
         try:
-            from codeweaver.backends.qdrant import QdrantBackend
+            from codeweaver.backends.providers.qdrant import QdrantBackend
             from codeweaver.factories.registry import BackendInfo
             from codeweaver.types import BackendCapabilities
 
@@ -111,7 +110,7 @@ class CodeWeaverFactory:
         """Initialize built-in source components."""
         try:
             from codeweaver.factories.registry import SourceInfo
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.providers.filesystem import FileSystemSource
             from codeweaver.types import SourceCapabilities
 
             source_info = SourceInfo(

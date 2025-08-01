@@ -23,7 +23,7 @@ from codeweaver.backends.config import (
     get_provider_specific_config,
 )
 from codeweaver.backends.factory import BackendConfig, BackendFactory
-from codeweaver.backends.qdrant import QdrantBackend, QdrantHybridBackend
+from codeweaver.backends.providers import QdrantBackend, QdrantHybridBackend
 from codeweaver.types import (
     BackendAuthError,
     BackendCollectionNotFoundError,
@@ -41,7 +41,7 @@ from codeweaver.types import (
 
 # Try to import DocArray backends (optional)
 try:
-    from codeweaver.backends.docarray import factory as docarray_factory  # noqa: F401
+    from codeweaver.backends.providers.docarray import factory as docarray_factory  # noqa: F401
 
     _DOCARRAY_AVAILABLE = True
 except ImportError:
@@ -52,30 +52,23 @@ __all__ = [
     "EXAMPLE_CONFIGS",
     "BackendAuthError",
     "BackendCollectionNotFoundError",
-    # Configuration
     "BackendConfig",
     "BackendConfigExtended",
     "BackendConnectionError",
-    # Exceptions
     "BackendError",
-    # Factory
     "BackendFactory",
-    # Enums
     "BackendUnsupportedOperationError",
     "BackendVectorDimensionMismatchError",
     "CollectionInfo",
     "DistanceMetric",
     "FilterCondition",
     "HybridSearchBackend",
-    # Implementations
     "QdrantBackend",
     "QdrantHybridBackend",
     "SearchResult",
     "StreamingBackend",
     "TransactionalBackend",
-    # Core protocols
     "VectorBackend",
-    # Data structures
     "VectorPoint",
     "create_backend_config_from_env",
     "get_provider_specific_config",

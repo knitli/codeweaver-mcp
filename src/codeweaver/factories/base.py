@@ -21,12 +21,12 @@ from codeweaver.types import (
     BaseComponentInfo,
     ComponentType,
     PluginInfo,
+    T,
     ValidationResult,
 )
 
 
 logger = logging.getLogger(__name__)
-T = TypeVar("T")
 ConfigT = TypeVar("ConfigT", bound=BaseComponentConfig)
 InfoT = TypeVar("InfoT", bound=BaseComponentInfo)
 

@@ -8,7 +8,7 @@ import logging
 
 from typing import Any
 
-from codeweaver.backends import BackendFactory
+from codeweaver.backends.factory import BackendFactory
 from codeweaver.config import DocArrayBackendConfig, DocArrayConfigFactory
 
 

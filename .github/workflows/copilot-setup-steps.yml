@@ -37,8 +37,8 @@ jobs:
       - name: Setup Mise
         run: |
           current_dir=$(pwd)
-          if [[ $current_dir != *code-weaver-mcp ]]; then
-            cd code-weaver-mcp
+          if [[ $current_dir != *codeweaver-mcp ]]; then
+            cd codeweaver-mcp
           fi
           chmod -R +x scripts
 

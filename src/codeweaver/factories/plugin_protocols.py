@@ -16,9 +16,9 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
-from codeweaver.backends.base import VectorBackend
-from codeweaver.providers.base import EmbeddingProvider, RerankProvider
-from codeweaver.sources.base import DataSource
+from codeweaver.backends import VectorBackend
+from codeweaver.providers import EmbeddingProvider, RerankProvider
+from codeweaver.sources import DataSource
 from codeweaver.types import (
     BaseCapabilities,
     BaseComponentConfig,

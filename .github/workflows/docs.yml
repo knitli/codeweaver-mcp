@@ -80,8 +80,8 @@ jobs:
         site_name: CodeWeaver - Documentation Build Test
         site_description: Extensible semantic code search with plugin architecture
         site_author: Knitli Inc.
-        repo_url: https://github.com/knitli/code-weaver-mcp
-        repo_name: knitli/code-weaver-mcp
+        repo_url: https://github.com/knitli/codeweaver-mcp
+        repo_name: knitli/codeweaver-mcp
 
         theme:
           name: material
@@ -159,7 +159,7 @@ jobs:
   #     with:
   #       apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   #       accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-  #       projectName: code-weaver-mcp-docs
+  #       projectName: codeweaver-mcp-docs
   #       directory: site
   #       gitHubToken: ${{ secrets.GITHUB_TOKEN }}
   #

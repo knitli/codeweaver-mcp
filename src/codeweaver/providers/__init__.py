@@ -20,6 +20,14 @@ from codeweaver.providers.custom import (
     register_reranking_provider,
 )
 from codeweaver.providers.factory import ProviderFactory, ProviderRegistry, get_provider_factory
+from codeweaver.providers.nlp import SpaCyProvider
+from codeweaver.providers.providers import (
+    CohereProvider,
+    HuggingFaceProvider,
+    OpenAICompatibleProvider,
+    SentenceTransformersProvider,
+    VoyageAIProvider,
+)
 from codeweaver.types import (
     EmbeddingProviderInfo,
     ProviderCapabilities,
@@ -30,9 +38,12 @@ from codeweaver.types import (
 
 
 __all__ = [
+    "CohereProvider",
     "EmbeddingProvider",
     "EmbeddingProviderInfo",
     "EnhancedProviderRegistry",
+    "HuggingFaceProvider",
+    "OpenAICompatibleProvider",
     "ProviderCapabilities",
     "ProviderCapability",
     "ProviderFactory",
@@ -41,7 +52,10 @@ __all__ = [
     "ProviderType",
     "RerankProvider",
     "RerankResult",
+    "SentenceTransformersProvider",
+    "SpaCyProvider",
     "ValidationResult",
+    "VoyageAIProvider",
     "get_provider_factory",
     "register_combined_provider",
     "register_embedding_provider",

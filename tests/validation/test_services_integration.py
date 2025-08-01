@@ -115,15 +115,15 @@ def get_testable_provider_classes():
     provider_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.voyage import VoyageAIProvider
+        from codeweaver.providers.providers.voyageai import VoyageAIProvider
 
         provider_classes.append(VoyageAIProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.openai import OpenAIProvider
+        from codeweaver.providers.providers.openai import OpenAIProvider
 
         provider_classes.append(OpenAIProvider)
     with contextlib.suppress(ImportError):
-        from codeweaver.providers.cohere import CohereProvider
+        from codeweaver.providers.providers.cohere import CohereProvider
 
         provider_classes.append(CohereProvider)
     return provider_classes
@@ -134,7 +134,7 @@ def get_testable_backend_classes():
     backend_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.backends.qdrant import QdrantBackend
+        from codeweaver.backends.providers.qdrant import QdrantBackend
 
         backend_classes.append(QdrantBackend)
     return backend_classes
@@ -145,7 +145,7 @@ def get_testable_source_classes():
     source_classes = []
 
     with contextlib.suppress(ImportError):
-        from codeweaver.sources.filesystem import FileSystemSource
+        from codeweaver.sources.providers.filesystem import FileSystemSource
 
         source_classes.append(FileSystemSource)
     return source_classes

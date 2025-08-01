@@ -43,11 +43,7 @@ from typing import TYPE_CHECKING
 from codeweaver.config import get_config_manager
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
 from codeweaver.server import create_server
-from codeweaver.types import (
-    BackendConnectionError,
-    ComponentCreationError,
-    ConfigurationError,
-)
+from codeweaver.types import BackendConnectionError, ComponentCreationError, ConfigurationError
 
 
 if TYPE_CHECKING:

@@ -20,9 +20,9 @@ from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
 
-from codeweaver.factories.extensibility_manager import ExtensibilityManager
+from codeweaver.factories import ExtensibilityManager
 from codeweaver.middleware import ChunkingMiddleware, FileFilteringMiddleware
-from codeweaver.services.manager import ServicesManager
+from codeweaver.services import ServicesManager
 from codeweaver.types import ContentSearchResult, ExtensibilityConfig
 
 
@@ -129,7 +129,7 @@ class CodeWeaverServer:
             None,
         )
         if not filesystem_source:
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.providers.filesystem import FileSystemSource
 
             filesystem_source = FileSystemSource()
         self._components["filesystem_source"] = filesystem_source

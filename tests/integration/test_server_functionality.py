@@ -388,7 +388,7 @@ module.exports = { debounce, ApiClient };
             None,
         )
         if not filesystem_source:
-            from codeweaver.sources.filesystem import FileSystemSource
+            from codeweaver.sources.providers.filesystem import FileSystemSource
 
             filesystem_source = FileSystemSource()
 

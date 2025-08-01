@@ -298,7 +298,7 @@ class ProviderRegistry:
     def _register_builtin_providers(cls) -> None:
         """Register built-in providers."""
         try:
-            from codeweaver.providers.voyage import VoyageAIProvider
+            from codeweaver.providers.providers.voyageai import VoyageAIProvider
 
             cls.register_combined_provider(
                 "voyage-ai", VoyageAIProvider, VoyageAIProvider.get_static_provider_info()
@@ -306,7 +306,7 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("VoyageAI provider not available")
         try:
-            from codeweaver.providers.openai import OpenAICompatibleProvider, OpenAIProvider
+            from codeweaver.providers.providers.openai import OpenAICompatibleProvider, OpenAIProvider
 
             cls.register_embedding_provider(
                 "openai", OpenAIProvider, OpenAIProvider.get_static_provider_info()
@@ -319,7 +319,7 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("OpenAI providers not available")
         try:
-            from codeweaver.providers.cohere import CohereProvider
+            from codeweaver.providers.providers.cohere import CohereProvider
 
             cls.register_combined_provider(
                 "cohere", CohereProvider, CohereProvider.get_static_provider_info()
@@ -327,7 +327,7 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("Cohere provider not available")
         try:
-            from codeweaver.providers.sentence_transformers import SentenceTransformersProvider
+            from codeweaver.providers.providers.sentence_transformers import SentenceTransformersProvider
 
             cls.register_embedding_provider(
                 "sentence-transformers",
@@ -337,7 +337,7 @@ class ProviderRegistry:
         except ImportError:
             logger.debug("SentenceTransformers provider not available")
         try:
-            from codeweaver.providers.huggingface import HuggingFaceProvider
+            from codeweaver.providers.providers.huggingface import HuggingFaceProvider
 
             cls.register_embedding_provider(
                 "huggingface", HuggingFaceProvider, HuggingFaceProvider.get_static_provider_info()
