@@ -26,6 +26,7 @@ from codeweaver.factories.base import (
 )
 from codeweaver.factories.codeweaver_factory import CodeWeaverFactory as LegacyCodeWeaverFactory
 from codeweaver.factories.error_handling import FactoryError
+from codeweaver.factories.extensibility_manager import ExtensibilityManager
 from codeweaver.factories.factory import CodeWeaverFactory, get_global_factory, reset_global_factory
 from codeweaver.factories.plugin_protocols import BackendPlugin, ProviderPlugin, SourcePlugin
 from codeweaver.factories.registry import (
@@ -40,17 +41,15 @@ from codeweaver.factories.source_registry import SourceRegistry
 
 __all__ = [
     "BackendInfo",
-    # Plugin protocols (still used)
     "BackendPlugin",
-    # Legacy exports (deprecated - use new structure)
     "BackendRegistry",
     "BaseComponentFactory",
     "BaseRegistry",
-    # New consolidated structure (primary exports)
     "CodeWeaverFactory",
     "ComponentFactory",
     "ComponentRegistration",
     "ComponentRegistry",
+    "ExtensibilityManager",
     "FactoryContext",
     "FactoryError",
     "LegacyCodeWeaverFactory",
@@ -59,7 +58,6 @@ __all__ = [
     "SourceInfo",
     "SourcePlugin",
     "SourceRegistry",
-    # Factory utilities
     "create_factory_context",
     "get_global_factory",
     "get_global_registry",

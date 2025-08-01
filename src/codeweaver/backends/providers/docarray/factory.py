@@ -67,7 +67,3 @@ def register_docarray_backends() -> None:
             logger.info("Registered DocArray Qdrant backend")
     except ImportError as e:
         logger.warning("Failed to register DocArray backends: %s", e)
-
-
-# Auto-register backends on module import
-register_docarray_backends()

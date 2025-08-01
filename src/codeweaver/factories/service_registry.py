@@ -25,7 +25,7 @@ from codeweaver.cw_types import (
     ServiceRegistryHealth,
     ServiceType,
 )
-from codeweaver.services import BaseServiceProvider
+from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
 class ServiceRegistry:
