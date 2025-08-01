@@ -10,9 +10,8 @@ Consolidates all provider information in one place, eliminating hardcoded
 attributes scattered across provider implementations.
 """
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
-from pydantic.dataclasses import dataclass
 
 from codeweaver.cw_types.providers.capabilities import ProviderCapabilities
 from codeweaver.cw_types.providers.enums import (
@@ -30,8 +29,8 @@ from codeweaver.cw_types.providers.enums import (
 
 
 if TYPE_CHECKING:
-    from codeweaver.providers.base import EmbeddingProvider, NLPProvider, RerankProvider
     from codeweaver.cw_types.providers.enums import ModelCapabilityEnum
+    from codeweaver.providers.base import EmbeddingProvider, NLPProvider, RerankProvider
 
 
 @dataclass
@@ -87,8 +86,9 @@ class ProviderRegistryEntry:
         return self.implemented and self.provider_class is not None
 
 
-# Registry with full capability information
-PROVIDER_REGISTRY: dict[ProviderType, ProviderRegistryEntry] = {
+def _create_provider_registry() -> dict[ProviderType, ProviderRegistryEntry]:
+    """Create the provider registry with full capability information."""
+    return {
     ProviderType.VOYAGE_AI: ProviderRegistryEntry(
         provider_class=None,  # Will be set when VoyageAIProvider is imported
         capabilities=ProviderCapabilities(
@@ -257,7 +257,7 @@ PROVIDER_REGISTRY: dict[ProviderType, ProviderRegistryEntry] = {
             max_concurrent_requests=1,  # Local inference typically single-threaded
             requires_api_key=False,
             required_dependencies=["sentence-transformers"],
-            default_embedding_model=SentenceTransformerModel.ALL_MINILM_L6_V2,
+            default_embedding_model=SentenceTransformerModel.ALL_MINI_LM_L6_V2,
             supported_embedding_models=list(SentenceTransformerModel.members()),
             supported_reranking_models=[],
             native_dimensions=SentenceTransformerModel.member_dimension_map(),
@@ -301,8 +301,9 @@ PROVIDER_REGISTRY: dict[ProviderType, ProviderRegistryEntry] = {
             optional_dependencies=["spacy-curated-transformers"],
             default_nlp_model=SpaCyModel.EN_CORE_WEB_SM,
             supported_nlp_models=list(SpaCyModel.members()),
-            native_dimensions=SpaCyModel.member_dimension_map(),
-            native_context_length=SpaCyModel.member_context_length_map(),
+            # TODO: Fix the type mismatch for native_dimensions and native_context_length
+            # native_dimensions=SpaCyModel.member_dimension_map(),
+            # native_context_length=SpaCyModel.member_context_length_map(),
         ),
         provider_type=ProviderType.SPACY,
         display_name="spaCy",
@@ -317,6 +318,10 @@ PROVIDER_REGISTRY: dict[ProviderType, ProviderRegistryEntry] = {
         },
     ),
 }
+
+
+# Registry with full capability information
+PROVIDER_REGISTRY: dict[ProviderType, ProviderRegistryEntry] = _create_provider_registry()
 
 
 def get_provider_registry_entry(provider_type: ProviderType) -> ProviderRegistryEntry:
