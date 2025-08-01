@@ -12,6 +12,7 @@ from typing import Annotated, Any
 from pydantic import BaseModel, Field
 
 from codeweaver.cw_types.config import ServiceType
+# Import service-specific enums from the dedicated enums module to avoid circular dependencies
 from codeweaver.cw_types.services.enums import (
     HealthStatus,
     MemoryUsage,

@@ -3,7 +3,15 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
-"""Service-specific enums for CodeWeaver's services layer."""
+"""Service-specific enums for CodeWeaver's services layer.
+
+This module was created to resolve a circular dependency issue where services/data.py
+was importing from the main cw_types package, which in turn imported from services modules.
+
+By extracting enum classes to this separate module and having services/data.py import
+directly from base modules (base_enum, config) instead of the main cw_types package,
+the circular dependency is broken while preserving all typing improvements.
+"""
 
 from codeweaver.cw_types.base_enum import BaseEnum
 
