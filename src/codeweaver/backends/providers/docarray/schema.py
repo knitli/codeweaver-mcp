@@ -7,8 +7,19 @@ import logging
 
 from typing import Any
 
-from docarray import BaseDoc
-from docarray.typing import NdArray
+try:
+    from docarray import BaseDoc
+    from docarray.typing import NdArray
+    DOCARRAY_AVAILABLE = True
+except ImportError:
+    DOCARRAY_AVAILABLE = False
+    # Provide stub classes for when docarray is not available
+    class BaseDoc:
+        pass
+    
+    class NdArray:
+        pass
+
 from pydantic import Field, create_model
 
 

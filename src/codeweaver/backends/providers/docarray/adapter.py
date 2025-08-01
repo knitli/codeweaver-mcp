@@ -11,8 +11,21 @@ from abc import ABC, abstractmethod
 from itertools import starmap
 from typing import Any
 
-from docarray import BaseDoc, DocList
-from docarray.index.abstract import BaseDocIndex
+try:
+    from docarray import BaseDoc, DocList
+    from docarray.index.abstract import BaseDocIndex
+    DOCARRAY_AVAILABLE = True
+except ImportError:
+    DOCARRAY_AVAILABLE = False
+    # Provide stub classes for when docarray is not available
+    class BaseDoc:
+        pass
+    
+    class DocList:
+        pass
+    
+    class BaseDocIndex:
+        pass
 
 from codeweaver.backends.base import HybridSearchBackend, VectorBackend
 from codeweaver.cw_types import (
