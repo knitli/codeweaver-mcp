@@ -6,38 +6,51 @@
 
 from codeweaver.backends.providers.qdrant import QdrantBackend, QdrantHybridBackend
 
-# Conditional imports for optional docarray backends
+# Check if docarray is available first
 try:
-    from codeweaver.backends.providers.docarray import (
-        BaseDocArrayAdapter,
-        DocArrayConfigFactory,
-        DocArrayHybridAdapter,
-        DocumentSchemaGenerator,
-        QdrantDocArrayBackend,
-        SchemaConfig,
-        SchemaTemplates,
-        create_docarray_backend,
-        register_docarray_backends,
-    )
-    DOCARRAY_AVAILABLE = True
-    
-    __all__ = (
-        "BaseDocArrayAdapter",
-        "DocArrayConfigFactory",
-        "DocArrayHybridAdapter",
-        "DocumentSchemaGenerator",
-        "QdrantBackend",
-        "QdrantDocArrayBackend",
-        "QdrantHybridBackend",
-        "SchemaConfig",
-        "SchemaTemplates",
-        "create_docarray_backend",
-        "register_docarray_backends",
-    )
+    from codeweaver.backends.providers.docarray.adapter import DOCARRAY_AVAILABLE
 except ImportError:
     DOCARRAY_AVAILABLE = False
-    
+
+# Conditional imports for optional docarray backends
+if DOCARRAY_AVAILABLE:
+    try:
+        from codeweaver.backends.providers.docarray import (
+            BaseDocArrayAdapter,
+            DocArrayConfigFactory,
+            DocArrayHybridAdapter,
+            DocumentSchemaGenerator,
+            QdrantDocArrayBackend,
+            SchemaConfig,
+            SchemaTemplates,
+            create_docarray_backend,
+            register_docarray_backends,
+        )
+        
+        __all__ = (
+            "BaseDocArrayAdapter",
+            "DocArrayConfigFactory", 
+            "DocArrayHybridAdapter",
+            "DocumentSchemaGenerator",
+            "QdrantBackend",
+            "QdrantDocArrayBackend",
+            "QdrantHybridBackend",
+            "SchemaConfig",
+            "SchemaTemplates",
+            "create_docarray_backend",
+            "register_docarray_backends",
+            "DOCARRAY_AVAILABLE",
+        )
+    except ImportError:
+        DOCARRAY_AVAILABLE = False
+        __all__ = (
+            "QdrantBackend",
+            "QdrantHybridBackend",
+            "DOCARRAY_AVAILABLE",
+        )
+else:
     __all__ = (
         "QdrantBackend",
-        "QdrantHybridBackend",
+        "QdrantHybridBackend", 
+        "DOCARRAY_AVAILABLE",
     )

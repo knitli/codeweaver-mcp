@@ -24,19 +24,7 @@ from codeweaver.backends.config import (
     get_provider_specific_config,
 )
 from codeweaver.backends.factory import BackendFactory
-from codeweaver.backends.providers import (
-    BaseDocArrayAdapter,
-    DocArrayConfigFactory,
-    DocArrayHybridAdapter,
-    DocumentSchemaGenerator,
-    QdrantBackend,
-    QdrantDocArrayBackend,
-    QdrantHybridBackend,
-    SchemaConfig,
-    SchemaTemplates,
-    create_docarray_backend,
-    register_docarray_backends,
-)
+from codeweaver.backends.providers import QdrantBackend, QdrantHybridBackend, DOCARRAY_AVAILABLE
 from codeweaver.cw_types import (
     BackendAuthError,
     BackendCollectionNotFoundError,
@@ -51,16 +39,7 @@ from codeweaver.cw_types import (
     VectorPoint,
 )
 
-
-# Try to import DocArray backends (optional)
-try:
-    from codeweaver.backends.providers.docarray import factory as docarray_factory  # noqa: F401
-
-    _DOCARRAY_AVAILABLE = True
-except ImportError:
-    _DOCARRAY_AVAILABLE = False
-
-
+# Core exports that are always available
 __all__ = [
     "EXAMPLE_CONFIGS",
     "BackendAuthError",
@@ -72,26 +51,56 @@ __all__ = [
     "BackendFactory",
     "BackendUnsupportedOperationError",
     "BackendVectorDimensionMismatchError",
-    "BaseDocArrayAdapter",
     "CollectionInfo",
     "DistanceMetric",
-    "DocArrayConfigFactory",
-    "DocArrayHybridAdapter",
-    "DocumentSchemaGenerator",
     "FilterCondition",
     "HybridSearchBackend",
     "QdrantBackend",
-    "QdrantDocArrayBackend",
     "QdrantHybridBackend",
-    "SchemaConfig",
-    "SchemaTemplates",
     "SearchResult",
     "StreamingBackend",
     "TransactionalBackend",
     "VectorBackend",
     "VectorPoint",
     "create_backend_config_from_env",
-    "create_docarray_backend",
     "get_provider_specific_config",
-    "register_docarray_backends",
+    "DOCARRAY_AVAILABLE",
 ]
+
+# Conditional docarray imports
+if DOCARRAY_AVAILABLE:
+    try:
+        from codeweaver.backends.providers import (
+            BaseDocArrayAdapter,
+            DocArrayConfigFactory,
+            DocArrayHybridAdapter,
+            DocumentSchemaGenerator,
+            QdrantDocArrayBackend,
+            SchemaConfig,
+            SchemaTemplates,
+            create_docarray_backend,
+            register_docarray_backends,
+        )
+        
+        # Add docarray exports to __all__
+        __all__.extend([
+            "BaseDocArrayAdapter",
+            "DocArrayConfigFactory",
+            "DocArrayHybridAdapter",
+            "DocumentSchemaGenerator",
+            "QdrantDocArrayBackend",
+            "SchemaConfig",
+            "SchemaTemplates",
+            "create_docarray_backend",
+            "register_docarray_backends",
+        ])
+        
+        # Try to import DocArray backends factory (optional)
+        try:
+            from codeweaver.backends.providers.docarray import factory as docarray_factory  # noqa: F401
+        except ImportError:
+            pass
+            
+    except ImportError:
+        # DocArray imports failed despite DOCARRAY_AVAILABLE being True
+        pass
