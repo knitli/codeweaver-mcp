@@ -17,7 +17,7 @@ This plan provides a step-by-step implementation strategy for integrating FastMC
 #### Step 1.1: Create Type System Extensions
 **Files to create/modify:**
 - `src/codeweaver/_types/config.py` - Add middleware service types
-- `src/codeweaver/_types/service_config.py` - Add middleware service configurations  
+- `src/codeweaver/_types/service_config.py` - Add middleware service configurations
 - `src/codeweaver/_types/services.py` - Add middleware service protocols
 - `src/codeweaver/_types/service_data.py` - Update health report structure
 
@@ -209,7 +209,7 @@ This plan provides a step-by-step implementation strategy for integrating FastMC
 - `src/codeweaver/server.py` (factory function)
 
 **Tasks:**
-1. Update `create_clean_server` function to handle services config
+1. Update `create_server` function to handle services config
 2. Add configuration validation
 3. Update error handling for initialization failures
 
@@ -297,7 +297,7 @@ This plan provides a step-by-step implementation strategy for integrating FastMC
 
 ### Phase 2: Providers
 - [ ] Implement FastMCPLoggingProvider
-- [ ] Implement FastMCPTimingProvider  
+- [ ] Implement FastMCPTimingProvider
 - [ ] Implement FastMCPErrorHandlingProvider
 - [ ] Implement FastMCPRateLimitingProvider
 - [ ] Create unit tests for all providers

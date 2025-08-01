@@ -38,7 +38,7 @@ This phase delivers the foundational intent processing system that transforms Co
 **1. Intent Orchestrator Service** (`src/codeweaver/services/providers/intent_orchestrator.py`)
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceHealth, ServiceStatus, ServiceType
+from codeweaver.cw_types import ServiceHealth, ServiceStatus, ServiceType
 
 class IntentOrchestrator(BaseServiceProvider):
     """Service-compliant orchestrator for intent processing."""
@@ -87,7 +87,7 @@ class AutoIndexingService(BaseServiceProvider):
         ...
 ```
 
-**3. Configuration Extensions** (`src/codeweaver/types/services/config.py` enhanced)
+**3. Configuration Extensions** (`src/codeweaver.cw_types/services/config.py` enhanced)
 ```python
 class IntentServiceConfig(ServiceConfig):
     """Intent service configuration extending existing hierarchy."""
@@ -116,7 +116,7 @@ class ServicesConfig(BaseModel):
     auto_indexing: AutoIndexingConfig = AutoIndexingConfig()
 ```
 
-**4. Service Type Extensions** (`src/codeweaver/types/config.py` enhanced)
+**4. Service Type Extensions** (`src/codeweaver.cw_types/config.py` enhanced)
 ```python
 class ServiceType(BaseEnum):
     # Existing core services
@@ -133,10 +133,10 @@ class ServiceType(BaseEnum):
         return (cls.CHUNKING, cls.FILTERING, cls.INTENT)
 ```
 
-**5. Intent Data Types** (`src/codeweaver/types/intent/enums.py` and `src/codeweaver/types/intent/data.py`)
+**5. Intent Data Types** (`src/codeweaver.cw_types/intent/enums.py` and `src/codeweaver.cw_types/intent/data.py`)
 ```python
 from enum import Enum
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 
 class IntentType(Enum):
     """Intent types - NO INDEX support."""
@@ -179,7 +179,7 @@ class IntentResult:
 
 **1. Pattern-Based Parser** (`src/codeweaver/intent/parsing/pattern_matcher.py`)
 ```python
-from codeweaver.types import IntentType, Scope, Complexity
+from codeweaver.cw_types import IntentType, Scope, Complexity
 
 class PatternBasedParser:
     """Pattern-based parser without INDEX intent support."""
@@ -261,7 +261,7 @@ class IntentParserFactory:
 **1. Strategy Registry with ExtensibilityManager** (`src/codeweaver/intent/strategies/registry.py`)
 ```python
 from codeweaver.factories.extensibility_manager import ExtensibilityManager
-from codeweaver.types import IntentStrategy
+from codeweaver.cw_types import IntentStrategy
 
 class StrategyRegistry:
     """Strategy registry integrated with ExtensibilityManager."""
@@ -305,7 +305,7 @@ class StrategyRegistry:
 **Simple Search Strategy** (`src/codeweaver/intent/strategies/simple_search.py`)
 ```python
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import IntentStrategy
+from codeweaver.cw_types import IntentStrategy
 
 class SimpleSearchStrategy(BaseServiceProvider, IntentStrategy):
     """Simple search strategy for SEARCH intents."""
@@ -459,7 +459,7 @@ class WorkflowOrchestrator(BaseServiceProvider):
 
 **2. Error Handling System** (`src/codeweaver/intent/recovery/fallback_handler.py`)
 ```python
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ServiceError,
     IntentProcessingError,
     StrategyExecutionError,

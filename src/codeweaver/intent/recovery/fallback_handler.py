@@ -1,14 +1,19 @@
-"""Error handling and recovery system using existing exception hierarchy."""
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
 
+"""Error handling and recovery system using existing exception hierarchy."""
 
 import contextlib
 import logging
 
-from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from codeweaver.types import (
+from pydantic.dataclasses import dataclass
+
+from codeweaver.cw_types import (
     IntentError,
     IntentParsingError,
     IntentResult,

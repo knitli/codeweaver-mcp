@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Intent result caching using existing cache services."""
 
 import hashlib
@@ -6,7 +11,7 @@ import time
 
 from typing import Any
 
-from codeweaver.types import IntentResult, ParsedIntent
+from codeweaver.cw_types import IntentResult, ParsedIntent
 
 
 class IntentCacheManager:

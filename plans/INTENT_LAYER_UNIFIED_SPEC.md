@@ -57,7 +57,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 ```python
 from typing import Protocol
-from codeweaver.types import ServiceProvider, IntentResult
+from codeweaver.cw_types import ServiceProvider, IntentResult
 from codeweaver.services.manager import ServicesManager
 
 class IntentOrchestrator(BaseServiceProvider):

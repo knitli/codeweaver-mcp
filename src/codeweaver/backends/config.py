@@ -18,7 +18,7 @@ from uuid import uuid4
 from pydantic import ConfigDict, Field, field_validator
 
 from codeweaver.backends.factory import BackendConfig
-from codeweaver.types import BackendProvider, HybridFusionStrategy, ProviderKind, SparseIndexType
+from codeweaver.cw_types import BackendProvider, HybridFusionStrategy, ProviderKind, SparseIndexType
 
 
 class BackendConfigExtended(BackendConfig):

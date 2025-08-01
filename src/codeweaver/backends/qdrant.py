@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Qdrant vector database backend implementation.
 
@@ -25,7 +30,7 @@ from qdrant_client.models import (
     VectorParams,
 )
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BackendCollectionNotFoundError,
     BackendConnectionError,
     BackendError,
@@ -103,12 +108,12 @@ class QdrantBackend:
         should = []
         must_not = []
         if search_filter.must:
-            must.extend((self._convert_filter(sub_filter) for sub_filter in search_filter.must))
+            must.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.must)
         if search_filter.should:
-            should.extend((self._convert_filter(sub_filter) for sub_filter in search_filter.should))
+            should.extend(self._convert_filter(sub_filter) for sub_filter in search_filter.should)
         if search_filter.must_not:
             must_not.extend(
-                (self._convert_filter(sub_filter) for sub_filter in search_filter.must_not)
+                self._convert_filter(sub_filter) for sub_filter in search_filter.must_not
             )
         return Filter(must=conditions + must, should=should or None, must_not=must_not or None)
 

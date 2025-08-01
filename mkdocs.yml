@@ -17,18 +17,18 @@ edit_uri: edit/main/docs/
 # Copyright and Legal
 copyright: |
   Copyright &copy; 2025 Knitli Inc. Licensed under MIT OR Apache-2.0.
-  
+
 # Theme Configuration - Material Design
 theme:
   name: material
-  
+
   # Logo and Branding
   logo: assets/logo.svg
   favicon: assets/favicon.ico
-  
+
   # Language and Internationalization
   language: en
-  
+
   # Material Theme Features
   features:
     # Navigation Features
@@ -43,15 +43,15 @@ theme:
     - navigation.prune        # Prune navigation for performance
     - navigation.indexes      # Section index pages
     - navigation.top          # Back to top button
-    
+
     # Search Features
     - search.highlight        # Highlight search terms
     - search.share           # Share search results
     - search.suggest         # Search suggestions
-    
+
     # Header Features
     - header.autohide        # Auto-hide header on scroll
-    
+
     # Content Features
     - content.code.copy      # Copy code button
     - content.code.select    # Select code button
@@ -59,11 +59,11 @@ theme:
     - content.tabs.link      # Link content tabs
     - content.tooltips       # Content tooltips
     - content.footnote.tooltips  # Footnote tooltips
-    
+
     # Table of Contents
     - toc.follow            # Follow table of contents
     - toc.integrate         # Integrate TOC with navigation
-    
+
   # Color Palette
   palette:
     # Light mode
@@ -74,7 +74,7 @@ theme:
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    
+
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -83,12 +83,12 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  
+
   # Fonts
   font:
     text: Inter
     code: JetBrains Mono
-  
+
   # Custom CSS and JavaScript
   custom_dir: docs/overrides
 
@@ -102,7 +102,7 @@ nav:
     - Installation: getting-started/installation.md
     - Your First Search: getting-started/first-search.md
     - Configuration Basics: getting-started/configuration.md
-  
+
   # LEVEL 2: User Guides (Task-Oriented)
   - User Guide:
     - Overview: user-guide/index.md
@@ -112,7 +112,7 @@ nav:
     - MCP Integration: user-guide/mcp-integration.md
     - Performance Optimization: user-guide/performance.md
     - Troubleshooting: user-guide/troubleshooting.md
-  
+
   # LEVEL 3: Configuration (Deep Configuration)
   - Configuration:
     - Overview: configuration/index.md
@@ -123,7 +123,7 @@ nav:
     - Service Configuration: configuration/services.md
     - Advanced Settings: configuration/advanced.md
     - Migration Guide: configuration/migration.md
-  
+
   # LEVEL 4: Architecture (System Understanding)
   - Architecture:
     - Overview: architecture/index.md
@@ -135,7 +135,7 @@ nav:
     - Middleware: architecture/middleware.md
     - Type System: architecture/types.md
     - Design Decisions: architecture/decisions.md
-  
+
   # LEVEL 5: Plugin Development (Advanced Users)
   - Plugin Development:
     - Overview: plugins/index.md
@@ -154,15 +154,12 @@ nav:
       - Custom Provider: plugins/examples/custom-provider.md
       - Custom Backend: plugins/examples/custom-backend.md
       - Custom Service: plugins/examples/custom-service.md
-  
+
   # LEVEL 6: API Reference (Detailed Reference)
   - API Reference:
     - Overview: api/index.md
     - MCP Tools:
-      - index_codebase: api/tools/index-codebase.md
-      - search_code: api/tools/search-code.md
-      - ast_grep_search: api/tools/ast-grep-search.md
-      - get_supported_languages: api/tools/supported-languages.md
+      - process_intent: api/mcp/process-intent.md
     - Core APIs:
       - CodeWeaverFactory: api/core/factory.md
       - ConfigManager: api/core/config.md
@@ -177,7 +174,7 @@ nav:
       - Enums: api/types/enums.md
       - Exceptions: api/types/exceptions.md
       - Configuration: api/types/configuration.md
-  
+
   # LEVEL 7: Tutorials & Examples (Learning by Doing)
   - Tutorials:
     - Overview: tutorials/index.md
@@ -196,7 +193,7 @@ nav:
       - Code Review Assistant: tutorials/use-cases/code-review.md
       - Documentation Generator: tutorials/use-cases/doc-generator.md
       - Legacy Code Analysis: tutorials/use-cases/legacy-analysis.md
-  
+
   # LEVEL 8: Reference Materials (Quick Lookups)
   - Reference:
     - Language Support: reference/language-support.md
@@ -207,7 +204,7 @@ nav:
     - Error Codes: reference/error-codes.md
     - Performance Benchmarks: reference/benchmarks.md
     - Changelog: reference/changelog.md
-  
+
   # LEVEL 9: Community & Support (Ecosystem)
   - Community:
     - Contributing: community/contributing.md
@@ -222,7 +219,7 @@ plugins:
   # Search
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-      
+
   # Automatic API documentation generation
   - mkdocstrings:
       handlers:
@@ -234,30 +231,30 @@ plugins:
             show_root_toc_entry: true
             show_root_full_path: false
             show_object_full_path: false
-            
+
             # Member settings
             show_bases: true
             show_inheritance_diagram: true
             show_if_no_docstring: true
-            
+
             # Docstring settings
             docstring_style: google
             docstring_options:
               ignore_init_summary: true
               trim_doctest_flags: true
-              
+
             # Type annotation settings
             show_signature_annotations: true
             separate_signature: true
-            
+
             # Filter settings
             filters:
               - "!^_[^_]"  # Hide private members except __special__
-              
+
             # Rendering settings
             group_by_category: true
             heading_level: 2
-  
+
   # Git integration for last updated dates
   - git-revision-date-localized:
       enabled: !ENV [CI, false]
@@ -266,13 +263,13 @@ plugins:
       timezone: UTC
       locale: en
       strict: false
-  
+
   # Auto-generated navigation
   - awesome-pages:
       filename: .pages
       collapse_single_pages: true
       strict: false
-  
+
   # Minification for performance
   - minify:
       minify_html: true
@@ -281,18 +278,18 @@ plugins:
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
-  
+
   # Social cards generation
   - social:
       enabled: !ENV [CI, false]
       cards_layout_options:
         background_color: "#1976d2"
         font_family: Inter
-  
+
   # Tags for content organization
   - tags:
       tags_file: reference/tags.md
-  
+
   # RSS feed generation
   - rss:
       enabled: !ENV [CI, false]
@@ -318,7 +315,7 @@ markdown_extensions:
       title: "On this page"
       toc_depth: 3
   - tables                 # Tables
-  
+
   # PyMdown Extensions
   - pymdownx.arithmatex:   # Math notation
       generic: true
@@ -389,7 +386,7 @@ extra:
           name: This page was helpful
           data: 1
           note: >-
-            Thanks for your feedback! Help us improve by 
+            Thanks for your feedback! Help us improve by
             <a href="https://github.com/knitli/code-weaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
               telling us what you found helpful
             </a>.
@@ -397,11 +394,11 @@ extra:
           name: This page could be improved
           data: 0
           note: >-
-            Thanks for your feedback! Help us improve by 
+            Thanks for your feedback! Help us improve by
             <a href="https://github.com/knitli/code-weaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
               telling us what we can do better
             </a>.
-  
+
   # Social links
   social:
     - icon: fontawesome/brands/github
@@ -416,12 +413,12 @@ extra:
     - icon: fontawesome/solid/paper-plane
       link: mailto:support@codeweaver.dev
       name: Email Support
-  
+
   # Version management
   version:
     provider: mike
     default: latest
-  
+
   # Consent for cookies/analytics
   consent:
     title: Cookie consent

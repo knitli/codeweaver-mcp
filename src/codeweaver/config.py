@@ -1,3 +1,9 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# sourcery skip: do-not-use-staticmethod, lambdas-should-be-short
 """
 Configuration management for Code Weaver MCP server.
 
@@ -30,9 +36,10 @@ from codeweaver.providers.config import (
     OpenAIConfig,
     RerankingProviderConfig,
     SentenceTransformersConfig,
+    SpaCyProviderConfig,
     VoyageConfig,
 )
-from codeweaver.types import ComponentType, ServicesConfig
+from codeweaver.cw_types import ComponentType, ServicesConfig
 
 
 logger = logging.getLogger(__name__)
@@ -172,6 +179,9 @@ class ProviderConfig(BaseModel):
     )
     sentence_transformers: SentenceTransformersConfig | None = Field(
         default=None, description="Sentence Transformers provider configuration"
+    )
+    spacy: SpaCyProviderConfig | None = Field(
+        default=None, description="spaCy NLP provider configuration"
     )
     openai_compatible: OpenAICompatibleConfig | None = Field(
         default=None, description="OpenAI-compatible provider configuration"

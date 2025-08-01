@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Factory for creating vector database backends.
 
@@ -19,7 +24,7 @@ from codeweaver.providers.base import (
     LocalEmbeddingProvider,
     RerankProvider,
 )
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BackendCapabilities,
     BackendConnectionError,
     CapabilityQueryMixin,
@@ -238,7 +243,7 @@ class BackendFactory(CapabilityQueryMixin):
             }
             for provider, (backend_class, supports_hybrid) in cls._backends.items()
         }
-        from codeweaver.types import get_all_backend_capabilities
+        from codeweaver.cw_types import get_all_backend_capabilities
 
         all_capabilities = get_all_backend_capabilities()
         planned_providers = {
@@ -261,7 +266,7 @@ class BackendFactory(CapabilityQueryMixin):
         Returns:
             Dictionary mapping backend names to their capabilities
         """
-        from codeweaver.types import get_all_backend_capabilities
+        from codeweaver.cw_types import get_all_backend_capabilities
 
         return get_all_backend_capabilities()
 

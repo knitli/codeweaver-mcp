@@ -38,8 +38,8 @@ This specification defines the complete API contract for CodeWeaver's services l
 ```python
 from typing import Protocol, runtime_checkable, AsyncGenerator
 from pathlib import Path
-from codeweaver.types import CodeChunk, ChunkingStats
-from codeweaver.types import Language, ChunkingStrategy
+from codeweaver.cw_types import CodeChunk, ChunkingStats
+from codeweaver.cw_types import Language, ChunkingStrategy
 
 @runtime_checkable
 class ChunkingService(Protocol):

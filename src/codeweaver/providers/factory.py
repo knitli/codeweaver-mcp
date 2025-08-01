@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Provider factory and registry system for dynamic provider management.
 
@@ -7,8 +12,9 @@ with support for capability detection and configuration validation.
 
 import logging
 
-from dataclasses import dataclass
 from typing import ClassVar
+
+from pydantic.dataclasses import dataclass
 
 from codeweaver.providers.base import (
     CombinedProvider,
@@ -18,7 +24,7 @@ from codeweaver.providers.base import (
     RerankProviderBase,
 )
 from codeweaver.providers.config import EmbeddingProviderConfig, RerankingProviderConfig
-from codeweaver.types import EmbeddingProviderInfo, ProviderCapability, ProviderType
+from codeweaver.cw_types import EmbeddingProviderInfo, ProviderCapability, ProviderType
 
 
 logger = logging.getLogger(__name__)

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 # sourcery skip: no-complex-if-expressions
 """Adaptive fallback strategy for all intent types."""
 
@@ -6,7 +11,7 @@ import logging
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     Complexity,
     IntentResult,
     IntentStrategy,
@@ -14,7 +19,7 @@ from codeweaver.types import (
     ParsedIntent,
     ServiceType,
 )
-from codeweaver.types.services.config import ServiceConfig
+from codeweaver.cw_types.services.config import ServiceConfig
 
 
 class AdaptiveStrategy(BaseServiceProvider, IntentStrategy):

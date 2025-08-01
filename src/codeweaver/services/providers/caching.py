@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Caching service provider for CodeWeaver.
 
@@ -13,11 +18,12 @@ import logging
 import time
 
 from collections import OrderedDict
-from dataclasses import dataclass
 from typing import Any
 
+from pydantic.dataclasses import dataclass
+
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
+from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)

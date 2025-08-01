@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Base factory patterns and protocols for the CodeWeaver factory system.
 
@@ -11,7 +16,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     BaseComponentInfo,
     ComponentType,

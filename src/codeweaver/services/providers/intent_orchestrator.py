@@ -11,7 +11,7 @@ import time
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CacheService,
     HealthStatus,
     IntentParsingError,
@@ -64,7 +64,7 @@ class IntentOrchestrator(BaseServiceProvider):
             "cached_hits": 0,
             "cache_misses": 0,
             "avg_processing_time": 0.0,
-            "min_processing_time": float('inf'),
+            "min_processing_time": float("inf"),
             "max_processing_time": 0.0,
             "parsing_failures": 0,
             "strategy_failures": 0,
@@ -75,7 +75,7 @@ class IntentOrchestrator(BaseServiceProvider):
         self._circuit_breaker_threshold = config.circuit_breaker_threshold
         self._circuit_breaker_reset_time = config.circuit_breaker_reset_time
         self._last_circuit_breaker_failure = 0
-        
+
         # Performance thresholds
         self._performance_excellent_threshold = config.performance_excellent_threshold
         self._performance_good_threshold = config.performance_good_threshold
@@ -94,18 +94,20 @@ class IntentOrchestrator(BaseServiceProvider):
             }
             self.parser = IntentParserFactory.create(parser_config)
             self.strategy_registry = None
-            
+
             # Initialize monitoring and performance services
             self.cache_service = await self._get_cache_service()
             self.metrics_service = await self._get_metrics_service()
             self.monitoring_service = await self._get_monitoring_service()
             self.telemetry_service = await self._get_telemetry_service()
-            
+
             # Register this service with monitoring if available
             if self.monitoring_service:
                 await self.monitoring_service.add_service(ServiceType.INTENT, self)
-                
-            self._logger.info("Intent orchestrator initialized successfully with monitoring services")
+
+            self._logger.info(
+                "Intent orchestrator initialized successfully with monitoring services"
+            )
         except Exception as e:
             self._logger.exception("Failed to initialize intent orchestrator")
             raise ServiceIntegrationError(f"Intent orchestrator initialization failed: {e}") from e
@@ -120,21 +122,21 @@ class IntentOrchestrator(BaseServiceProvider):
             self._intent_stats["failed_intents"],
             self._intent_stats["cached_hits"],
         )
-        
+
         # Unregister from monitoring service
         if self.monitoring_service:
             try:
                 await self.monitoring_service.remove_service(ServiceType.INTENT)
             except Exception as e:
                 self._logger.warning("Failed to unregister from monitoring service: %s", e)
-                
+
         # Final telemetry flush
         if self.telemetry_service:
             try:
                 await self.telemetry_service.flush()
             except Exception as e:
                 self._logger.warning("Failed to flush telemetry: %s", e)
-        
+
         self.parser = None
         self.strategy_registry = None
         self.cache_service = None
@@ -181,22 +183,21 @@ class IntentOrchestrator(BaseServiceProvider):
         self._intent_stats["total_processed"] += 1
         self._intent_stats["concurrent_requests"] += 1
         operation_id = f"intent_{int(start_time * 1000)}"
-        
+
         # Circuit breaker check
         if await self._is_circuit_breaker_open():
             self._intent_stats["concurrent_requests"] -= 1
             return await self._circuit_breaker_fallback(intent_text)
-        
+
         try:
             self._logger.debug("Processing intent: %s", intent_text[:100])
-            
+
             # Record metrics - start of processing
             if self.metrics_service:
                 await self.metrics_service.increment_counter(
-                    "intent.requests.total", 
-                    tags={"operation": "process_intent"}
+                    "intent.requests.total", tags={"operation": "process_intent"}
                 )
-            
+
             # Check cache first
             cache_key = self._generate_cache_key(intent_text)
             cached_result = None
@@ -205,107 +206,105 @@ class IntentOrchestrator(BaseServiceProvider):
                 if cached_result:
                     self._intent_stats["cached_hits"] += 1
                     execution_time = time.time() - start_time
-                    
+
                     # Record cache hit metrics
                     if self.metrics_service:
                         await self.metrics_service.record_timing(
-                            "intent.processing.cache_hit", 
-                            execution_time * 1000, 
-                            tags={"cached": "true"}
+                            "intent.processing.cache_hit",
+                            execution_time * 1000,
+                            tags={"cached": "true"},
                         )
                         await self.metrics_service.increment_counter("intent.cache.hits")
-                    
+
                     # Track telemetry for cache hit
                     if self.telemetry_service:
                         await self.telemetry_service.track_performance(
                             operation="intent_processing",
                             duration=execution_time,
-                            metadata={"cache_hit": True, "intent_type": "cached"}
+                            metadata={"cache_hit": True, "intent_type": "cached"},
                         )
-                    
+
                     self._intent_stats["concurrent_requests"] -= 1
                     self._logger.debug("Cache hit for intent")
                     return cached_result
-                else:
-                    self._intent_stats["cache_misses"] += 1
-                    if self.metrics_service:
-                        await self.metrics_service.increment_counter("intent.cache.misses")
-            
+                self._intent_stats["cache_misses"] += 1
+                if self.metrics_service:
+                    await self.metrics_service.increment_counter("intent.cache.misses")
+
             # Parse and execute intent
             parsed_intent = await self._parse_intent(intent_text)
-            
+
             if not self._validate_parsed_intent(parsed_intent):
                 self._raise_intent_error(
                     IntentParsingError, f"Invalid parsed intent: {parsed_intent}"
                 )
-            
+
             result = await self._execute_strategy(parsed_intent, context)
             execution_time = time.time() - start_time
-            
+
             # Update performance statistics
             self._update_performance_stats(execution_time, success=result.success)
-            
+
             # Enhance result metadata
             result.execution_time = execution_time
             result.metadata.update({
-                "intent_orchestrator": "v1.1.0", 
+                "intent_orchestrator": "v1.1.0",
                 "cache_used": bool(self.cache_service),
                 "monitoring_enabled": bool(self.metrics_service),
                 "operation_id": operation_id,
-                "performance_tier": self._get_performance_tier(execution_time)
+                "performance_tier": self._get_performance_tier(execution_time),
             })
-            
+
             # Cache successful results
             if self.cache_service and result.success:
                 await self.cache_service.set(
-                    cache_key, result, 
+                    cache_key,
+                    result,
                     ttl=self._intent_config.cache_ttl,
-                    tags=["intent", parsed_intent.intent_type.value]
+                    tags=["intent", parsed_intent.intent_type.value],
                 )
-            
+
             # Record comprehensive metrics
             await self._record_processing_metrics(
                 parsed_intent, result, execution_time, operation_id
             )
-            
+
             # Track telemetry
             await self._track_telemetry(parsed_intent, result, execution_time)
-            
+
             # Reset circuit breaker on success
             if result.success:
                 self._circuit_breaker_failures = 0
-                
+
         except Exception as e:
             execution_time = time.time() - start_time
             self._intent_stats["failed_intents"] += 1
             self._circuit_breaker_failures += 1
             self._last_circuit_breaker_failure = time.time()
-            
+
             # Record failure metrics
             if self.metrics_service:
                 await self.metrics_service.increment_counter(
-                    "intent.requests.failed",
-                    tags={"error_type": type(e).__name__}
+                    "intent.requests.failed", tags={"error_type": type(e).__name__}
                 )
                 await self.metrics_service.record_timing(
-                    "intent.processing.failed", 
-                    execution_time * 1000
+                    "intent.processing.failed", execution_time * 1000
                 )
-            
+
             # Track error telemetry
             if self.telemetry_service:
                 await self.telemetry_service.track_error(
                     error_type=type(e).__name__,
                     error_category="intent_processing",
                     operation="process_intent",
-                    error_message=str(e)
+                    error_message=str(e),
                 )
-            
+
             self._logger.exception("Intent processing failed: %s", e)
             return await self._execute_fallback(intent_text, context, e, execution_time)
         finally:
             self._intent_stats["concurrent_requests"] -= 1
-            
+
         return result
 
     async def _parse_intent(self, intent_text: str) -> ParsedIntent:
@@ -352,6 +351,7 @@ class IntentOrchestrator(BaseServiceProvider):
     ) -> IntentResult:
         """Basic fallback execution until full strategy system is implemented."""
         from datetime import UTC, datetime
+
         return IntentResult(
             success=True,
             data={
@@ -395,6 +395,7 @@ class IntentOrchestrator(BaseServiceProvider):
                 "Contact support if the issue persists",
             ]
         from datetime import UTC, datetime
+
         return IntentResult(
             success=False,
             data=None,
@@ -437,48 +438,49 @@ class IntentOrchestrator(BaseServiceProvider):
         """Get cache service through dependency injection."""
         # TODO: Implement proper service manager integration
         return None
-        
+
     async def _get_metrics_service(self) -> MetricsService | None:
         """Get metrics service through dependency injection."""
         # TODO: Implement proper service manager integration
         return None
-        
+
     async def _get_monitoring_service(self) -> MonitoringService | None:
         """Get monitoring service through dependency injection."""
-        # TODO: Implement proper service manager integration  
+        # TODO: Implement proper service manager integration
         return None
-        
+
     async def _get_telemetry_service(self) -> TelemetryService | None:
         """Get telemetry service through dependency injection."""
         # TODO: Implement proper service manager integration
         return None
-    
+
     # Performance optimization methods
-    
+
     async def _is_circuit_breaker_open(self) -> bool:
         """Check if circuit breaker is open due to too many failures."""
         if self._circuit_breaker_failures < self._circuit_breaker_threshold:
             return False
-            
+
         # Check if enough time has passed to attempt reset
         if time.time() - self._last_circuit_breaker_failure > self._circuit_breaker_reset_time:
             self._circuit_breaker_failures = 0
             self._logger.info("Circuit breaker reset - attempting to process requests")
             return False
-            
+
         return True
-    
+
     async def _circuit_breaker_fallback(self, intent_text: str) -> IntentResult:
         """Handle requests when circuit breaker is open."""
         self._logger.warning("Circuit breaker is open - using fallback response")
         from datetime import UTC, datetime
+
         return IntentResult(
             success=False,
             data=None,
             metadata={
                 "circuit_breaker": "open",
                 "failure_count": self._circuit_breaker_failures,
-                "retry_after": self._circuit_breaker_reset_time
+                "retry_after": self._circuit_breaker_reset_time,
             },
             executed_at=datetime.now(UTC),
             execution_time=0.0,
@@ -486,18 +488,18 @@ class IntentOrchestrator(BaseServiceProvider):
             suggestions=[
                 "Wait a moment and try again",
                 "Try a simpler query",
-                "Check system status"
+                "Check system status",
             ],
-            strategy_used="circuit_breaker_fallback"
+            strategy_used="circuit_breaker_fallback",
         )
-    
+
     def _update_performance_stats(self, execution_time: float, success: bool) -> None:
         """Update internal performance statistics."""
         if success:
             self._intent_stats["successful_intents"] += 1
         else:
             self._intent_stats["failed_intents"] += 1
-            
+
         # Update timing statistics
         self._intent_stats["min_processing_time"] = min(
             self._intent_stats["min_processing_time"], execution_time
@@ -505,7 +507,7 @@ class IntentOrchestrator(BaseServiceProvider):
         self._intent_stats["max_processing_time"] = max(
             self._intent_stats["max_processing_time"], execution_time
         )
-        
+
         # Update rolling average
         total_successful = self._intent_stats["successful_intents"]
         if total_successful > 0:
@@ -513,73 +515,76 @@ class IntentOrchestrator(BaseServiceProvider):
             self._intent_stats["avg_processing_time"] = (
                 current_avg * (total_successful - 1) + execution_time
             ) / total_successful
-    
+
     def _get_performance_tier(self, execution_time: float) -> str:
         """Classify performance tier based on configurable execution time thresholds."""
         if execution_time < self._performance_excellent_threshold:
             return "excellent"
-        elif execution_time < self._performance_good_threshold:
-            return "good"  
-        elif execution_time < self._performance_acceptable_threshold:
+        if execution_time < self._performance_good_threshold:
+            return "good"
+        if execution_time < self._performance_acceptable_threshold:
             return "acceptable"
-        else:
-            return "slow"
-    
+        return "slow"
+
     async def _record_processing_metrics(
-        self, parsed_intent: ParsedIntent, result: IntentResult, 
-        execution_time: float, operation_id: str
+        self,
+        parsed_intent: ParsedIntent,
+        result: IntentResult,
+        execution_time: float,
+        operation_id: str,
     ) -> None:
         """Record comprehensive processing metrics."""
         if not self.metrics_service:
             return
-            
+
         try:
             # Basic timing metrics
             await self.metrics_service.record_timing(
-                "intent.processing.duration", 
+                "intent.processing.duration",
                 execution_time * 1000,
                 tags={
                     "intent_type": parsed_intent.intent_type.value,
                     "success": str(result.success).lower(),
-                    "strategy": result.strategy_used or "unknown"
-                }
+                    "strategy": result.strategy_used or "unknown",
+                },
             )
-            
+
             # Success/failure counters
-            metric_name = "intent.requests.successful" if result.success else "intent.requests.failed"
+            metric_name = (
+                "intent.requests.successful" if result.success else "intent.requests.failed"
+            )
             await self.metrics_service.increment_counter(
                 metric_name,
                 tags={
                     "intent_type": parsed_intent.intent_type.value,
-                    "complexity": parsed_intent.complexity.value
-                }
+                    "complexity": parsed_intent.complexity.value,
+                },
             )
-            
+
             # Performance tier metrics
             await self.metrics_service.increment_counter(
                 "intent.performance.tier",
                 tags={
                     "tier": self._get_performance_tier(execution_time),
-                    "intent_type": parsed_intent.intent_type.value
-                }
+                    "intent_type": parsed_intent.intent_type.value,
+                },
             )
-            
+
             # Record concurrent requests gauge
             await self.metrics_service.record_metric(
-                "intent.concurrent_requests",
-                float(self._intent_stats["concurrent_requests"])
+                "intent.concurrent_requests", float(self._intent_stats["concurrent_requests"])
             )
-            
+
         except Exception as e:
             self._logger.warning("Failed to record processing metrics: %s", e)
-    
+
     async def _track_telemetry(
         self, parsed_intent: ParsedIntent, result: IntentResult, execution_time: float
     ) -> None:
         """Track telemetry for intent processing."""
         if not self.telemetry_service:
             return
-            
+
         try:
             # Track performance
             await self.telemetry_service.track_performance(
@@ -591,10 +596,10 @@ class IntentOrchestrator(BaseServiceProvider):
                     "confidence": parsed_intent.confidence,
                     "success": result.success,
                     "strategy_used": result.strategy_used,
-                    "cache_hit": result.metadata.get("cache_hit", False)
-                }
+                    "cache_hit": result.metadata.get("cache_hit", False),
+                },
             )
-            
+
             # Track specific intent event
             await self.telemetry_service.track_event(
                 event_name="intent_processed",
@@ -605,10 +610,10 @@ class IntentOrchestrator(BaseServiceProvider):
                     "complexity": parsed_intent.complexity.value,
                     "confidence_score": parsed_intent.confidence,
                     "strategy": result.strategy_used,
-                    "performance_tier": self._get_performance_tier(execution_time)
-                }
+                    "performance_tier": self._get_performance_tier(execution_time),
+                },
             )
-            
+
         except Exception as e:
             self._logger.warning("Failed to track telemetry: %s", e)
 
@@ -617,7 +622,7 @@ class IntentOrchestrator(BaseServiceProvider):
         total_processed = self._intent_stats["total_processed"]
         success_rate = self._intent_stats["successful_intents"] / max(1, total_processed)
         cache_hit_rate = self._intent_stats["cached_hits"] / max(1, total_processed)
-        
+
         return {
             "intent_types": ["SEARCH", "UNDERSTAND", "ANALYZE"],
             "complexity_levels": ["SIMPLE", "MODERATE", "COMPLEX"],
@@ -642,7 +647,9 @@ class IntentOrchestrator(BaseServiceProvider):
                 "success_rate": success_rate,
                 "cache_hit_rate": cache_hit_rate,
                 "avg_processing_time": self._intent_stats["avg_processing_time"],
-                "min_processing_time": self._intent_stats["min_processing_time"] if total_processed > 0 else 0,
+                "min_processing_time": self._intent_stats["min_processing_time"]
+                if total_processed > 0
+                else 0,
                 "max_processing_time": self._intent_stats["max_processing_time"],
                 "concurrent_requests": self._intent_stats["concurrent_requests"],
             },
@@ -653,17 +660,20 @@ class IntentOrchestrator(BaseServiceProvider):
         # For now, use the base health check and log additional metrics
         # TODO: Consider extending ServiceHealth to include metadata field
         base_health = await super().health_check()
-        
+
         # Log comprehensive metrics for monitoring
         total_processed = self._intent_stats["total_processed"]
         success_rate = self._intent_stats["successful_intents"] / max(1, total_processed)
         cache_hit_rate = self._intent_stats["cached_hits"] / max(1, total_processed)
-        
+
         self._logger.debug(
             "Intent orchestrator health metrics: processed=%d, success_rate=%.2f, "
             "cache_hit_rate=%.2f, avg_time=%.3f, circuit_breaker_failures=%d",
-            total_processed, success_rate, cache_hit_rate,
-            self._intent_stats["avg_processing_time"], self._circuit_breaker_failures
+            total_processed,
+            success_rate,
+            cache_hit_rate,
+            self._intent_stats["avg_processing_time"],
+            self._circuit_breaker_failures,
         )
-        
+
         return base_health

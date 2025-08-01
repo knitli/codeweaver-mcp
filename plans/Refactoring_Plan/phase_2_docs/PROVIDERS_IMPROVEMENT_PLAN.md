@@ -113,7 +113,7 @@ RERANKING_CAPABILITY = "reranking"
 **File**: `src/codeweaver/_types/provider_registry.py`
 
 ```python
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from typing import TypeAlias
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 
@@ -191,7 +191,7 @@ class VoyageAIProvider(CombinedProvider):
 ### 2.3 Model Name Enums per Provider
 
 ```python
-class VoyageModels(Enum):
+class VoyageModel(Enum):
     """VoyageAI supported models."""
     CODE_3 = "voyage-code-3"
     VOYAGE_3 = "voyage-3"
@@ -217,7 +217,7 @@ class VoyageModels(Enum):
             return ModelFamily.CODE_EMBEDDING
         return ModelFamily.TEXT_EMBEDDING
 
-class VoyageRerankModels(Enum):
+class VoyageRerankModel(Enum):
     """VoyageAI reranking models."""
     RERANK_2 = "voyage-rerank-2"
     RERANK_LITE_1 = "voyage-rerank-lite-1"
@@ -287,9 +287,9 @@ class VoyageAIProvider(CombinedProvider):
 
         # Validate model is supported
         try:
-            VoyageModels(self.config.model)  # Will raise ValueError if invalid
+            VoyageModel(self.config.model)  # Will raise ValueError if invalid
         except ValueError:
-            supported = [m.value for m in VoyageModels]
+            supported = [m.value for m in VoyageModel]
             raise ValueError(f"Unsupported model: {self.config.model}. Supported: {supported}")
 ```
 

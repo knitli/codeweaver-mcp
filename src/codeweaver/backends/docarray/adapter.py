@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Universal adapter for DocArray backends to CodeWeaver protocols."""
 
 import logging
@@ -10,7 +15,7 @@ from docarray import BaseDoc, DocList
 from docarray.index.abstract import BaseDocIndex
 
 from codeweaver.backends import HybridSearchBackend, VectorBackend
-from codeweaver.types import CollectionInfo, DistanceMetric, SearchFilter, SearchResult, VectorPoint
+from codeweaver.cw_types import CollectionInfo, DistanceMetric, SearchFilter, SearchResult, VectorPoint
 
 
 logger = logging.getLogger(__name__)

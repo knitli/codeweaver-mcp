@@ -18,13 +18,14 @@ import statistics
 import time
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import VectorBackend
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource, SourceConfig
-from codeweaver.types import DistanceMetric, VectorPoint
+from codeweaver.cw_types import DistanceMetric, VectorPoint
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,7 @@ class BenchmarkResult:
     error_count: int = 0
 
     # Additional metadata
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     def __str__(self) -> str:
         return (

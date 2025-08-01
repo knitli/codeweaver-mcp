@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Middleware bridge for coordinating FastMCP middleware with service layer."""
 
 import logging
@@ -8,7 +13,7 @@ from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
 from codeweaver.services.manager import ServicesManager
-from codeweaver.types import ChunkingService, FilteringService, ServiceType
+from codeweaver.cw_types import ChunkingService, FilteringService, ServiceType
 
 
 class ServiceBridge(Middleware):

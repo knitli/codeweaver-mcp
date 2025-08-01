@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Integration testing framework for CodeWeaver.
 
@@ -10,9 +15,10 @@ import logging
 import tempfile
 import time
 
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import BackendFactory, HybridSearchBackend, VectorBackend
 from codeweaver.config import CodeWeaverConfig
@@ -45,7 +51,7 @@ class TestConfiguration:
     test_timeout_seconds: int = 60
     mock_latency_ms: float = 10.0
     mock_error_rate: float = 0.0
-    test_documents: list[str] = field(
+    test_documents: list[str] = Field
         default_factory=lambda: [
             "This is a test document about machine learning algorithms.",
             "Python is a popular programming language for data science.",
@@ -54,10 +60,10 @@ class TestConfiguration:
             "Retrieval augmented generation improves LLM performance.",
         ]
     )
-    test_queries: list[str] = field(
+    test_queries: list[str] = Field
         default_factory=lambda: ["machine learning", "python programming", "vector search"]
     )
-    config_overrides: dict[str, Any] = field(default_factory=dict)
+    config_overrides: dict[str, Any] = Field(default_factory=dict)
 
 
 @dataclass
@@ -67,11 +73,11 @@ class IntegrationTestResult:
     test_name: str
     success: bool
     duration_seconds: float
-    compliance_results: dict[str, ComplianceResult] = field(default_factory=dict)
-    performance_metrics: dict[str, float] = field(default_factory=dict)
-    workflow_results: dict[str, bool] = field(default_factory=dict)
-    errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
+    compliance_results: dict[str, ComplianceResult] = Field(default_factory=dict)
+    performance_metrics: dict[str, float] = Field(default_factory=dict)
+    workflow_results: dict[str, bool] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
     def __str__(self) -> str:
         status = "✅ PASS" if self.success else "❌ FAIL"
@@ -206,7 +212,7 @@ class IntegrationTestSuite:
                 "priority": 1,
                 "config": self.config.config_overrides.get("data_source_config", {}),
             }
-            from codeweaver.types import SourceProvider
+            from codeweaver.cw_types import SourceProvider
 
             source_factory = SourceFactory()
             source_type = SourceProvider(self.config.data_source_type)
@@ -362,7 +368,7 @@ class IntegrationTestSuite:
             logger.exception("Search workflow test failed")
             return False
         else:
-            return len(results) > 0 and all((r.score >= 0 for r in results))
+            return len(results) > 0 and all(r.score >= 0 for r in results)
 
     async def _test_rerank_workflow(self) -> bool:
         """Test rerank provider workflow."""
@@ -442,7 +448,7 @@ class IntegrationTestSuite:
             logger.exception("Hybrid search workflow test failed")
             return False
         else:
-            return len(results) > 0 and all((r.score >= 0 for r in results))
+            return len(results) > 0 and all(r.score >= 0 for r in results)
 
     async def _test_complete_pipeline(self) -> bool:
         """Test complete indexing and search pipeline."""

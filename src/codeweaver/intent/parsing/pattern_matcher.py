@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Pattern-based intent parser without INDEX support."""
 
 import logging
@@ -5,7 +10,7 @@ import re
 
 from typing import Any
 
-from codeweaver.types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
+from codeweaver.cw_types import Complexity, IntentParsingError, IntentType, ParsedIntent, Scope
 
 
 class PatternBasedParser:
@@ -109,6 +114,7 @@ class PatternBasedParser:
                 "background_indexing_note": "Indexing handled automatically in background",
             }
             from datetime import UTC, datetime
+
             parsed_intent = ParsedIntent(
                 intent_type=intent_type,
                 primary_target=primary_target,

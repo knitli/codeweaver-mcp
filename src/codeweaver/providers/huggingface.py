@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 HuggingFace provider implementation for embeddings.
 
@@ -11,7 +16,7 @@ from typing import Any
 
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import HuggingFaceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -94,7 +99,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "No HuggingFace API key provided. Rate limits will apply for public inference."
             )
 
-    def _init_local_model(self) -> None:
+    def _init_local_model(self) -> None:  # sourcery skip: extract-method
         """Initialize local transformers model."""
         if not TRANSFORMERS_AVAILABLE:
             raise ImportError("transformers and torch required for local models")

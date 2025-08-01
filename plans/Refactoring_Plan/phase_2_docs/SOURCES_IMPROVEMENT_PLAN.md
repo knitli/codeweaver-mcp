@@ -94,7 +94,7 @@ class SourceCapabilities(BaseModel):
 Following backend pattern:
 
 ```python
-from dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from typing import TypeAlias
 from codeweaver.sources.base import DataSource
 

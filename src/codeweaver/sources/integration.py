@@ -17,7 +17,7 @@ from typing import Any
 
 from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.types import ContentItem
+from codeweaver.cw_types import ContentItem
 
 
 logger = logging.getLogger(__name__)

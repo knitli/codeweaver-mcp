@@ -18,7 +18,7 @@ from pydantic import Field
 
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.config import BackendConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BackendCapabilities,
     BaseComponentInfo,
     ComponentNotFoundError,
@@ -281,7 +281,7 @@ class BackendRegistry:
             return
 
         # Import and register built-in backends
-        from codeweaver.types import get_all_backend_capabilities
+        from codeweaver.cw_types import get_all_backend_capabilities
 
         try:
             # Register Qdrant backend

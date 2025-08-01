@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 SentenceTransformers provider implementation for local embeddings.
 
@@ -11,7 +16,7 @@ from typing import Any
 
 from codeweaver.providers.base import LocalEmbeddingProvider
 from codeweaver.providers.config import SentenceTransformersConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,

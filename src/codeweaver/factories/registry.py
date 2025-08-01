@@ -21,7 +21,7 @@ from pydantic import Field
 from codeweaver.backends.base import VectorBackend
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 from codeweaver.sources.base import DataSource
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BackendCapabilities,
     BaseComponentInfo,
     ComponentRegistration,

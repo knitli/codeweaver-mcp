@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Spacy 3.7 Patterns
 
 Great — I’ll evaluate whether spaCy's pattern-based approaches (like EntityRuler) are still ideal in version 3.7+, and if curated transformers or other spaCy-native tools offer a more effective or flexible approach for intent classification and entity recognition. I’ll also update your usage examples to reflect current best practices with options for low-resource setups.

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 FastMCP middleware for file filtering services.
 
@@ -124,12 +129,9 @@ class FileFilteringMiddleware(Middleware):
             for pattern in patterns:
                 matches = base_path.rglob(pattern) if recursive else base_path.glob(pattern)
                 found_files.extend(
-                    (
-                        file_path
-                        for file_path in matches
-                        if file_path.is_file()
-                        and await self._should_include_file(file_path, base_path)
-                    )
+                    file_path
+                    for file_path in matches
+                    if file_path.is_file() and await self._should_include_file(file_path, base_path)
                 )
         except Exception:
             logger.exception("Fallback file discovery error")
@@ -166,7 +168,7 @@ class FileFilteringMiddleware(Middleware):
             logger.debug("File not under base path: %s", file_path)
             return False
         else:
-            return all((part not in self.excluded_dirs for part in relative_path.parts[:-1]))
+            return all(part not in self.excluded_dirs for part in relative_path.parts[:-1])
 
     def _has_allowed_extension(self, file_path: Path) -> bool:
         """Check if file has an allowed extension."""
@@ -179,10 +181,7 @@ class FileFilteringMiddleware(Middleware):
         if not self.additional_ignore_patterns:
             return False
         return any(
-            (
-                fnmatch.fnmatch(str(file_path), pattern)
-                for pattern in self.additional_ignore_patterns
-            )
+            fnmatch.fnmatch(str(file_path), pattern) for pattern in self.additional_ignore_patterns
         )
 
     def _matches_patterns(self, file_path: Path, patterns: list[str]) -> bool:
@@ -197,7 +196,7 @@ class FileFilteringMiddleware(Middleware):
     def _get_size_unit(self, parsed_size: str) -> str:
         """Extract size unit from a string like '1MB'."""
         if (
-            all((char.isdigit() for char in parsed_size))
+            all(char.isdigit() for char in parsed_size)
             or (parsed_size.endswith("B") and len(parsed_size) > 1 and parsed_size[-2].isdigit())
             or len(parsed_size) == 1
         ):
@@ -228,7 +227,7 @@ class FileFilteringMiddleware(Middleware):
         if not parsed_size:
             logger.warning("Empty size string provided, defaulting to 0B")
             return 0
-        if any((char.isalpha() for char in parsed_size)):
+        if any(char.isalpha() for char in parsed_size):
             if len(parsed_size) == 1:
                 return 0
             if parsed_size[-1] == "B" and parsed_size[-2].isdigit():

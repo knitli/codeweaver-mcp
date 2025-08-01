@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Strategy registry integrated with ExtensibilityManager."""
 
 import contextlib
@@ -7,7 +12,7 @@ import time
 
 from typing import Any
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     IntentStrategy,
     ParsedIntent,
     ServiceIntegrationError,

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Main CodeWeaver Factory orchestrator.
 
@@ -19,7 +24,7 @@ from codeweaver.factories.source_registry import SourceRegistry
 from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -479,7 +484,7 @@ class CodeWeaverFactory:
         """Initialize built-in service provider registrations."""
         from codeweaver.services.providers.chunking import ChunkingService
         from codeweaver.services.providers.file_filtering import FilteringService
-        from codeweaver.types import ServiceCapabilities
+        from codeweaver.cw_types import ServiceCapabilities
 
         self._service_registry.register_provider(
             ServiceType.CHUNKING,

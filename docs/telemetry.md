@@ -64,7 +64,7 @@ collect_sensitive_data = false    # CW_TELEMETRY_COLLECT_SENSITIVE_DATA
 
 # Event filtering
 track_indexing = true             # CW_TELEMETRY_TRACK_INDEXING
-track_search = true               # CW_TELEMETRY_TRACK_SEARCH  
+track_search = true               # CW_TELEMETRY_TRACK_SEARCH
 track_errors = true               # CW_TELEMETRY_TRACK_ERRORS
 track_performance = true          # CW_TELEMETRY_TRACK_PERFORMANCE
 
@@ -81,7 +81,7 @@ max_queue_size = 1000             # CW_TELEMETRY_MAX_QUEUE_SIZE
 - File count and language distribution
 - Processing time and success/failure status
 
-### Search Operations  
+### Search Operations
 - Query type (semantic vs AST grep)
 - Result count and search latency
 - Query complexity assessment (simple/medium/complex)
@@ -124,7 +124,7 @@ mock_mode = true  # Events are simulated, not sent to PostHog
 
 ### Basic Usage with Telemetry Enabled
 ```python
-from codeweaver.types import ServicesConfig, TelemetryServiceConfig
+from codeweaver.cw_types import ServicesConfig, TelemetryServiceConfig
 
 # Configure telemetry
 telemetry_config = TelemetryServiceConfig(
@@ -150,7 +150,7 @@ telemetry_config = TelemetryServiceConfig(
     enabled=True,
     anonymous_tracking=True,
     hash_file_paths=True,
-    hash_repository_names=True, 
+    hash_repository_names=True,
     sanitize_queries=True,
     collect_sensitive_data=False,
 )

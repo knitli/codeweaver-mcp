@@ -18,7 +18,7 @@ from typing import Any
 
 from codeweaver.providers.base import CombinedProvider
 from codeweaver.providers.config import VoyageConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -132,8 +132,7 @@ class VoyageAIProvider(CombinedProvider):
             if cached_result:
                 logger.debug("Cache hit for %s VoyageAI embeddings", len(texts))
                 return cached_result
-        rate_limiter = context.get("rate_limiting_service")
-        if rate_limiter:
+        if rate_limiter := context.get("rate_limiting_service"):
             await rate_limiter.acquire("voyage_ai", len(texts))
         else:
             await self._rate_limit()
@@ -169,8 +168,7 @@ class VoyageAIProvider(CombinedProvider):
             if cached_result:
                 logger.debug("Cache hit for VoyageAI query embedding")
                 return cached_result
-        rate_limiter = context.get("rate_limiting_service")
-        if rate_limiter:
+        if rate_limiter := context.get("rate_limiting_service"):
             await rate_limiter.acquire("voyage_ai", 1)
         else:
             await self._rate_limit()

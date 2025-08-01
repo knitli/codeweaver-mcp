@@ -17,7 +17,7 @@ from typing import Any
 
 from codeweaver.providers.base import CombinedProvider
 from codeweaver.providers.config import CohereConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,

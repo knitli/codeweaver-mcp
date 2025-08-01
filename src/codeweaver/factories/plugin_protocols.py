@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Universal plugin interface protocols for the CodeWeaver factory system.
 
@@ -14,7 +19,7 @@ from typing import Protocol, runtime_checkable
 from codeweaver.backends.base import VectorBackend
 from codeweaver.providers.base import EmbeddingProvider, RerankProvider
 from codeweaver.sources.base import DataSource
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseCapabilities,
     BaseComponentConfig,
     BaseComponentInfo,

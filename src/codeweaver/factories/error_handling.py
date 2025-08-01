@@ -17,10 +17,12 @@ import uuid
 
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from typing import Any
 
-from codeweaver.types import (
+from pydantic import Field
+from pydantic.dataclasses import dataclass
+
+from codeweaver.cw_types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
     ComponentType,
@@ -43,7 +45,7 @@ class ErrorContext:
     plugin_name: str | None = None
     file_path: str | None = None
     line_number: int | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 @dataclass
@@ -55,10 +57,10 @@ class FactoryError(CodeWeaverFactoryError):
     message: str
     context: ErrorContext
     exception: Exception | None = None
-    timestamp: float = field(default_factory=time.time)
+    timestamp: float = Field(default_factory=time.time)
     traceback: str | None = None
-    error_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    recovery_suggestions: list[str] = field(default_factory=list)
+    error_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    recovery_suggestions: list[str] = Field(default_factory=list)
     """Unique identifier for the error instance."""
 
     def __post_init__(self):
@@ -198,9 +200,9 @@ class ComponentFallbackResult:
     success: bool
     fallback_component: Any | None = None
     strategy_name: str | None = None
-    limitations: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-    errors: list[str] = field(default_factory=list)
+    limitations: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
 
 
 class GracefulDegradationManager:

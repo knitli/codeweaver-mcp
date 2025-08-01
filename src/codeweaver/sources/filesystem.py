@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 File system data source implementation for CodeWeaver.
 
@@ -17,7 +22,7 @@ from typing import Any
 from pydantic import ConfigDict, Field, field_validator
 
 from codeweaver.sources.base import AbstractDataSource, SourceConfig, SourceWatcher
-from codeweaver.types import CodeChunk, ContentItem, ContentType, SourceCapabilities, SourceProvider
+from codeweaver.cw_types import CodeChunk, ContentItem, ContentType, SourceCapabilities, SourceProvider
 
 
 logger = logging.getLogger(__name__)

@@ -35,8 +35,8 @@ import logging
 from abc import abstractmethod
 from typing import Any, Dict
 
-from codeweaver.types import ServiceConfig
-from codeweaver.types import ServiceProvider
+from codeweaver.cw_types import ServiceConfig
+from codeweaver.cw_types import ServiceProvider
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
@@ -98,8 +98,8 @@ from typing import Any, Deque, Dict, List
 
 from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
 
-from codeweaver.types import LoggingServiceConfig
-from codeweaver.types import LoggingService
+from codeweaver.cw_types import LoggingServiceConfig
+from codeweaver.cw_types import LoggingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -221,8 +221,8 @@ from typing import Any, Deque, Dict
 
 from fastmcp.server.middleware.timing import TimingMiddleware
 
-from codeweaver.types import TimingServiceConfig
-from codeweaver.types import TimingService
+from codeweaver.cw_types import TimingServiceConfig
+from codeweaver.cw_types import TimingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -369,8 +369,8 @@ from typing import Any, Deque, Dict, List
 
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware
 
-from codeweaver.types import ErrorHandlingServiceConfig
-from codeweaver.types import ErrorHandlingService
+from codeweaver.cw_types import ErrorHandlingServiceConfig
+from codeweaver.cw_types import ErrorHandlingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 
@@ -492,8 +492,8 @@ from typing import Any, Dict
 
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 
-from codeweaver.types import RateLimitingServiceConfig
-from codeweaver.types import RateLimitingService
+from codeweaver.cw_types import RateLimitingServiceConfig
+from codeweaver.cw_types import RateLimitingService
 from codeweaver.services.providers.middleware.base_middleware_provider import BaseMiddlewareProvider
 
 

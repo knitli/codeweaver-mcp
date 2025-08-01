@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """FastMCP filtering service provider."""
 
 import time
@@ -9,7 +14,7 @@ from typing import Any
 
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     DirectoryNotFoundError,
     DirectoryStats,
     FileMetadata,

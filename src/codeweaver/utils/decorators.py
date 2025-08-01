@@ -11,7 +11,7 @@ import logging
 
 from typing import Any
 
-from codeweaver.types import T
+from codeweaver.cw_types import T
 
 
 logger = logging.getLogger(__name__)

@@ -1,18 +1,24 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Unit tests for Intent Orchestrator service."""
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
 from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
-from codeweaver.types import (
-    IntentServiceConfig,
+from codeweaver.cw_types import (
+    Complexity,
+    HealthStatus,
     IntentResult,
+    IntentServiceConfig,
     IntentType,
     ParsedIntent,
     Scope,
-    Complexity,
     ServiceHealth,
-    HealthStatus,
     ServiceType,
 )
 
@@ -42,6 +48,7 @@ class TestIntentOrchestrator:
     def mock_parsed_intent(self):
         """Mock parsed intent for testing."""
         from datetime import UTC, datetime
+
         return ParsedIntent(
             intent_type=IntentType.SEARCH,
             primary_target="authentication functions",
@@ -56,18 +63,18 @@ class TestIntentOrchestrator:
     async def test_service_provider_compliance(self, intent_orchestrator):
         """Test compliance with BaseServiceProvider."""
         from codeweaver.services.providers.base_provider import BaseServiceProvider
-        
+
         assert isinstance(intent_orchestrator, BaseServiceProvider)
         assert intent_orchestrator.service_type == ServiceType.INTENT
 
     async def test_initialization(self, intent_orchestrator):
         """Test orchestrator initialization."""
-        with patch('codeweaver.intent.parsing.factory.IntentParserFactory.create') as mock_factory:
+        with patch("codeweaver.intent.parsing.factory.IntentParserFactory.create") as mock_factory:
             mock_parser = Mock()
             mock_factory.return_value = mock_parser
-            
+
             await intent_orchestrator._initialize_provider()
-            
+
             assert intent_orchestrator.parser == mock_parser
             mock_factory.assert_called_once()
 
@@ -76,7 +83,7 @@ class TestIntentOrchestrator:
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=Mock(spec=ParsedIntent))
         intent_orchestrator.parser = mock_parser
-        
+
         # Call health check through the base provider
         is_healthy = await intent_orchestrator._check_health()
         assert is_healthy is True
@@ -84,7 +91,7 @@ class TestIntentOrchestrator:
     async def test_health_check_unhealthy_no_parser(self, intent_orchestrator):
         """Test health check when parser is not available."""
         intent_orchestrator.parser = None
-        
+
         is_healthy = await intent_orchestrator._check_health()
         assert is_healthy is False
 
@@ -95,10 +102,10 @@ class TestIntentOrchestrator:
         mock_parser.parse = AsyncMock(return_value=mock_parsed_intent)
         intent_orchestrator.parser = mock_parser
         intent_orchestrator.strategy_registry = None  # No registry, should use fallback
-        
+
         # Process intent
         result = await intent_orchestrator.process_intent("find auth functions", {})
-        
+
         # Verify results
         assert isinstance(result, IntentResult)
         assert result.success is True
@@ -114,15 +121,15 @@ class TestIntentOrchestrator:
         mock_cache.get = AsyncMock(return_value=None)
         mock_cache.set = AsyncMock()
         intent_orchestrator.cache_service = mock_cache
-        
+
         # Setup parser mock
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=mock_parsed_intent)
         intent_orchestrator.parser = mock_parser
-        
+
         # Process intent
         result = await intent_orchestrator.process_intent("find auth functions", {})
-        
+
         # Verify caching was attempted
         mock_cache.get.assert_called_once()
         mock_cache.set.assert_called_once()
@@ -131,6 +138,7 @@ class TestIntentOrchestrator:
     async def test_process_intent_cache_hit(self, intent_orchestrator):
         """Test intent processing with cache hit."""
         from datetime import UTC, datetime
+
         cached_result = IntentResult(
             success=True,
             data={"cached": True},
@@ -139,19 +147,20 @@ class TestIntentOrchestrator:
             execution_time=0.1,
             strategy_used="cached",
         )
-        
+
         mock_cache = Mock()
         mock_cache.get = AsyncMock(return_value=cached_result)
         intent_orchestrator.cache_service = mock_cache
-        
+
         result = await intent_orchestrator.process_intent("cached query", {})
-        
+
         assert result == cached_result
         assert intent_orchestrator._intent_stats["cached_hits"] == 1
 
     async def test_no_index_intent_conversion(self, intent_orchestrator):
         """Test that INDEX intents are converted to SEARCH."""
         from datetime import UTC, datetime
+
         # Create a mock parsed intent with INDEX type
         index_intent = ParsedIntent(
             intent_type="INDEX",  # This should be converted
@@ -163,13 +172,13 @@ class TestIntentOrchestrator:
             metadata={},
             parsed_at=datetime.now(UTC),
         )
-        
+
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=index_intent)
         intent_orchestrator.parser = mock_parser
-        
+
         result = await intent_orchestrator.process_intent("index this codebase", {})
-        
+
         # Should be converted to SEARCH
         assert result.metadata.get("intent_type") != "INDEX"
         assert "background" in result.metadata.get("background_indexing_note", "").lower()
@@ -191,9 +200,9 @@ class TestIntentOrchestrator:
             "strategy_failures": 0,
             "concurrent_requests": 0,
         }
-        
+
         capabilities = await intent_orchestrator.get_capabilities()
-        
+
         assert "intent_types" in capabilities
         assert "SEARCH" in capabilities["intent_types"]
         assert "UNDERSTAND" in capabilities["intent_types"]
@@ -208,9 +217,9 @@ class TestIntentOrchestrator:
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(side_effect=Exception("Parse failed"))
         intent_orchestrator.parser = mock_parser
-        
+
         result = await intent_orchestrator.process_intent("invalid intent", {})
-        
+
         assert result.success is False
         assert "Intent processing failed" in result.error_message
         assert result.strategy_used == "error_fallback"
@@ -221,10 +230,10 @@ class TestIntentOrchestrator:
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=mock_parsed_intent)
         intent_orchestrator.parser = mock_parser
-        
+
         # Process successful intent
         result = await intent_orchestrator.process_intent("test intent", {})
-        
+
         assert intent_orchestrator._intent_stats["total_processed"] == 1
         assert intent_orchestrator._intent_stats["successful_intents"] == 1
         assert result.success is True
@@ -234,9 +243,9 @@ class TestIntentOrchestrator:
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=Mock(spec=ParsedIntent))
         intent_orchestrator.parser = mock_parser
-        
+
         health = await intent_orchestrator.health_check()
-        
+
         assert isinstance(health, ServiceHealth)
         assert health.status == HealthStatus.HEALTHY
         assert health.service_type == ServiceType.INTENT
@@ -246,19 +255,16 @@ class TestIntentOrchestrator:
     async def test_concurrent_processing(self, intent_orchestrator, mock_parsed_intent):
         """Test concurrent intent processing."""
         import asyncio
-        
+
         mock_parser = Mock()
         mock_parser.parse = AsyncMock(return_value=mock_parsed_intent)
         intent_orchestrator.parser = mock_parser
-        
+
         # Process multiple intents concurrently
-        tasks = [
-            intent_orchestrator.process_intent(f"intent {i}", {})
-            for i in range(5)
-        ]
-        
+        tasks = [intent_orchestrator.process_intent(f"intent {i}", {}) for i in range(5)]
+
         results = await asyncio.gather(*tasks)
-        
+
         # All should succeed
         assert all(result.success for result in results)
         assert intent_orchestrator._intent_stats["total_processed"] == 5
@@ -268,19 +274,20 @@ class TestIntentOrchestrator:
 @pytest.mark.integration
 class TestIntentOrchestratorIntegration:
     """Integration tests for intent orchestrator with real dependencies."""
-    
+
     async def test_with_real_parser(self):
         """Test orchestrator with real intent parser."""
         config = IntentServiceConfig(enabled=True)
         orchestrator = IntentOrchestrator(config)
-        
-        with patch('codeweaver.intent.parsing.factory.IntentParserFactory.create') as mock_factory:
+
+        with patch("codeweaver.intent.parsing.factory.IntentParserFactory.create") as mock_factory:
             from codeweaver.intent.parsing.pattern_matcher import PatternBasedParser
+
             mock_factory.return_value = PatternBasedParser()
-            
+
             await orchestrator._initialize_provider()
-            
+
             result = await orchestrator.process_intent("find authentication functions", {})
-            
+
             assert result.success is True
             assert result.metadata["intent_type"] in ["search", "understand", "analyze"]

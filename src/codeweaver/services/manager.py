@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from codeweaver.factories.service_registry import ServiceRegistry
 from codeweaver.services.providers.chunking import ChunkingService
 from codeweaver.services.providers.file_filtering import FilteringService
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CacheService,
     ErrorHandlingService,
     HealthStatus,
@@ -285,7 +285,7 @@ class ServicesManager:
             except Exception as e:
                 self._logger.warning("Health check failed for %s: %s", service_type.value, e)
                 # Create unhealthy status for failed check
-                from codeweaver.types import ServiceHealth
+                from codeweaver.cw_types import ServiceHealth
 
                 services_health[service_type] = ServiceHealth(
                     service_type=service_type,
@@ -381,9 +381,9 @@ class ServicesManager:
             self._logger.info("Middleware service providers registered")
 
             # NEW: Register intent layer service providers
-            from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
-            from codeweaver.services.providers.auto_indexing import AutoIndexingService
             from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
+            from codeweaver.services.providers.auto_indexing import AutoIndexingService
+            from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
 
             # Register intent services
             self._registry.register_provider(
@@ -484,7 +484,7 @@ class ServicesManager:
         if self._config.intent.enabled:
             try:
                 from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
-                
+
                 intent_bridge = IntentServiceBridge(services_manager=self)
                 await intent_bridge.initialize()
                 self._services["intent_bridge"] = intent_bridge

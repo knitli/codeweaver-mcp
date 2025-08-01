@@ -16,11 +16,12 @@ import logging
 import time
 
 from abc import abstractmethod
-from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from pydantic.dataclasses import dataclass
+
 from codeweaver.factories.error_handling import ErrorHandler
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentLifecycle,
     ComponentState,
@@ -40,8 +41,8 @@ class FactoryInitializationResult:
     total_duration_ms: float
     stage_results: list[InitializationResult]
     factory_state: ComponentState
-    errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 class InitializationStage(Protocol):

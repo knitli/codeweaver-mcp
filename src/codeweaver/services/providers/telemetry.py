@@ -21,7 +21,7 @@ except ImportError:
     posthog = None
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceType, TelemetryService, TelemetryServiceConfig
+from codeweaver.cw_types import ServiceType, TelemetryService, TelemetryServiceConfig
 
 
 class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):

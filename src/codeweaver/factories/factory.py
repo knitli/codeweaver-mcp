@@ -15,9 +15,6 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-
-if TYPE_CHECKING:
-    from codeweaver.services.manager import ServicesManager
 from codeweaver.backends.base import VectorBackend
 from codeweaver.backends.config import BackendConfig
 from codeweaver.factories.base import create_factory_context
@@ -25,7 +22,7 @@ from codeweaver.factories.registry import ComponentRegistry, get_global_registry
 from codeweaver.providers.base import EmbeddingProvider
 from codeweaver.providers.factory import ProviderFactory as ExistingProviderFactory
 from codeweaver.sources.base import DataSource, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     BaseComponentConfig,
     ComponentCreationError,
     ComponentNotFoundError,
@@ -38,6 +35,7 @@ from codeweaver.types import (
 if TYPE_CHECKING:
     from codeweaver.config import CodeWeaverConfig
     from codeweaver.server import CodeWeaverServer
+    from codeweaver.services.manager import ServicesManager
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +81,7 @@ class CodeWeaverFactory:
         try:
             from codeweaver.backends.qdrant import QdrantBackend
             from codeweaver.factories.registry import BackendInfo
-            from codeweaver.types import BackendCapabilities
+            from codeweaver.cw_types import BackendCapabilities
 
             backend_info = BackendInfo(
                 name="qdrant",
@@ -114,7 +112,7 @@ class CodeWeaverFactory:
         try:
             from codeweaver.factories.registry import SourceInfo
             from codeweaver.sources.filesystem import FileSystemSource
-            from codeweaver.types import SourceCapabilities
+            from codeweaver.cw_types import SourceCapabilities
 
             source_info = SourceInfo(
                 name="filesystem",
@@ -143,25 +141,44 @@ class CodeWeaverFactory:
     def _initialize_builtin_services(self) -> None:
         """Initialize built-in service components."""
         try:
+            from codeweaver.services.providers.auto_indexing import AutoIndexingService
             from codeweaver.services.providers.caching import CachingService
             from codeweaver.services.providers.chunking import ChunkingService
             from codeweaver.services.providers.file_filtering import FileFilteringService
             from codeweaver.services.providers.rate_limiting import RateLimitingService
-            from codeweaver.types import ServiceCapabilities, ServiceType
+            from codeweaver.cw_types import (
+                MemoryUsage,
+                PerformanceProfile,
+                ServiceCapabilities,
+                ServiceType,
+            )
 
             self.registry.register_service_provider(
                 service_type=ServiceType.CHUNKING,
                 provider_name="default",
                 provider_class=ChunkingService,
                 capabilities=ServiceCapabilities(
-                    supports_streaming=True, supports_batching=True, max_batch_size=100
+                    supports_streaming=True,
+                    supports_batching=True,
+                    max_batch_size=100,
+                    supports_async=True,
+                    max_concurrency=10,
+                    memory_usage=MemoryUsage.LOW,
+                    performance_profile=PerformanceProfile.STANDARD
                 ),
             )
             self.registry.register_service_provider(
                 service_type=ServiceType.FILE_FILTERING,
                 provider_name="default",
                 provider_class=FileFilteringService,
-                capabilities=ServiceCapabilities(supports_streaming=True, supports_batching=False),
+                capabilities=ServiceCapabilities(
+                    supports_streaming=True,
+                    supports_batching=False,
+                    supports_async=True,
+                    max_concurrency=5,
+                    memory_usage=MemoryUsage.LOW,
+                    performance_profile=PerformanceProfile.RESOURCE_EFFICIENT,
+                ),
             )
             self.registry.register_service_provider(
                 service_type=ServiceType.RATE_LIMITING,
@@ -172,6 +189,9 @@ class CodeWeaverFactory:
                     supports_batching=True,
                     max_batch_size=1000,
                     supports_async=True,
+                    max_concurrency=10,
+                    memory_usage=MemoryUsage.LOW,
+                    performance_profile=PerformanceProfile.RESOURCE_EFFICIENT,
                 ),
             )
             self.registry.register_service_provider(
@@ -183,8 +203,38 @@ class CodeWeaverFactory:
                     supports_batching=True,
                     max_batch_size=1000,
                     supports_async=True,
+                    max_concurrency=10,
+                    memory_usage=MemoryUsage.LOW,
+                    performance_profile=PerformanceProfile.RESOURCE_EFFICIENT,
                 ),
             )
+            self.registry.register_service_provider(
+                service_type=ServiceType.AUTO_INDEXING,
+                provider_name="default",
+                provider_class=AutoIndexingService,
+                capabilities=ServiceCapabilities(
+                    supports_streaming=True,
+                    supports_batching=True,
+                    max_batch_size=1000,
+                    supports_async=True,
+                    max_concurrency=10,
+                    memory_usage=MemoryUsage.LOW,
+                    performance_profile=PerformanceProfile.RESOURCE_EFFICIENT,
+                ),
+            )
+            if self._config.services and self._config.services.telemetry and self._config.services.telemetry.enabled:
+                from codeweaver.services.providers.telemetry import TelemetryService
+                self.registry.register_service_provider(
+                    service_type=ServiceType.TELEMETRY,
+                    provider_name="default",
+                    provider_class=TelemetryService,
+                    capabilities=ServiceCapabilities(
+                        supports_streaming=True,
+                        supports_batching=False,
+                        supports_async=True,
+                        memory_usage="low",
+                    ),
+                )
         except ImportError:
             logger.warning("Some service providers not available")
         except Exception:
@@ -345,6 +395,8 @@ class CodeWeaverFactory:
         Returns:
             ValidationResult with validation details
         """
+        from pydantic.dataclasses import dataclass
+        from pydantic import Field
         errors = []
         warnings = []
         try:
@@ -407,16 +459,12 @@ class CodeWeaverFactory:
         """Get services context for component creation."""
         services = {}
         try:
-            from codeweaver.types import ServiceType
+            from codeweaver.cw_types import ServiceType
 
-            service_definitions = [
-                (ServiceType.RATE_LIMITING, "rate_limiting_service"),
-                (ServiceType.CACHING, "caching_service"),
-                (ServiceType.CHUNKING, "chunking_service"),
-                (ServiceType.FILE_FILTERING, "filtering_service"),
-            ]
-            for service_type, service_key in service_definitions:
-                service = await self._create_service_safely(service_type, service_key)
+            service_definitions = dict(zip(ServiceType.members(), ServiceType.get_values(), strict=False))
+            for service_type, service_key in service_definitions.items():
+                if self._config.services.get("") is False:
+                    service = await self._create_service_safely(service_type, service_key)
                 if service:
                     services[service_key] = service
             if self.services_manager:

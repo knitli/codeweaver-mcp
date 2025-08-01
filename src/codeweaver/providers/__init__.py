@@ -20,7 +20,7 @@ from codeweaver.providers.custom import (
     register_reranking_provider,
 )
 from codeweaver.providers.factory import ProviderFactory, ProviderRegistry, get_provider_factory
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapabilities,
     ProviderCapability,

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Base protocols and data structures for CodeWeaver data source abstraction.
 
@@ -14,7 +19,7 @@ from typing import Annotated, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from codeweaver.types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
+from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability, SourceProvider
 from codeweaver.utils.decorators import require_implementation
 
 
@@ -252,10 +257,10 @@ class AbstractDataSource(ABC):
             if item.size and item.size > max_size_bytes:
                 logger.debug("Skipping large file: %s (%.1fMB)", item.path, item.size / 1024 / 1024)
                 continue
-            if exclude_patterns and any((pattern in item.path for pattern in exclude_patterns)):
+            if exclude_patterns and any(pattern in item.path for pattern in exclude_patterns):
                 logger.debug("Excluded by pattern: %s", item.path)
                 continue
-            if include_patterns and all((pattern not in item.path for pattern in include_patterns)):
+            if include_patterns and all(pattern not in item.path for pattern in include_patterns):
                 logger.debug("Not included by pattern: %s", item.path)
                 continue
             filtered_items.append(item)

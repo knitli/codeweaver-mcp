@@ -6,9 +6,9 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 # CodeWeaver Factories Module Architecture Specification
 
-**Document Version**: 1.0  
-**Date**: 2025-01-25  
-**Status**: Design Specification  
+**Document Version**: 1.0
+**Date**: 2025-01-25
+**Status**: Design Specification
 
 ## Executive Summary
 
@@ -73,7 +73,7 @@ CodeWeaverFactory (Orchestrator)
 @runtime_checkable
 class ComponentRegistry(Protocol):
     """Universal protocol for component registries."""
-    
+
     def register_component(
         self,
         name: str,
@@ -83,7 +83,7 @@ class ComponentRegistry(Protocol):
         *,
         validate: bool = True
     ) -> RegistrationResult
-    
+
     def get_component_info(self, name: str) -> BaseComponentInfo
     def get_capabilities(self, name: str) -> BaseCapabilities
     def list_available_components(self) -> dict[str, BaseComponentInfo]
@@ -101,7 +101,7 @@ class ComponentRegistration(Generic[T]):
     component_info: BaseComponentInfo
     is_available: bool = True
     unavailable_reason: str | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = Fielddefault_factory=dict)
 ```
 
 ### 2. Capability-Driven Architecture
@@ -134,16 +134,16 @@ class SourceCapability(BaseCapability):
 ```python
 class CapabilityManager:
     """Unified capability queries across all components."""
-    
+
     def get_component_capabilities(
-        self, 
-        component_type: ComponentType, 
+        self,
+        component_type: ComponentType,
         component_name: str
     ) -> BaseCapabilities:
         """Universal capability query pattern."""
         registry = self._get_registry(component_type)
         return registry.get_capabilities(component_name)
-    
+
     def supports_capability(
         self,
         component_type: ComponentType,
@@ -166,15 +166,15 @@ class CodeWeaverConfig(BaseModel):
         validate_assignment=True,
         frozen=False
     )
-    
+
     # Component configurations
     backend: BackendConfig
     providers: ProviderConfig
     sources: list[SourceConfig] = Field(default_factory=list)
-    
+
     # Factory settings
     factory: FactoryConfig = Field(default_factory=FactoryConfig)
-    
+
     # Plugin settings
     plugins: PluginConfig = Field(default_factory=PluginConfig)
 ```
@@ -187,13 +187,13 @@ class BaseComponentConfig(BaseModel):
         extra="allow",  # Allow component-specific extensions
         validate_assignment=True
     )
-    
+
     # Universal settings
     component_type: str
     enabled: bool = True
     name: str
     provider: str
-    
+
     # Plugin support
     custom_class: str | None = None
     custom_module: str | None = None
@@ -215,16 +215,16 @@ class PluginInfo:
 
 class PluginManager:
     """Universal plugin management."""
-    
+
     def discover_plugins(
-        self, 
+        self,
         plugin_directories: list[str] | None = None
     ) -> dict[ComponentType, list[PluginInfo]]:
         """Discover all available plugins."""
-        
+
     def register_plugin(self, plugin_info: PluginInfo) -> RegistrationResult:
         """Register a discovered plugin."""
-        
+
     def validate_plugin(self, plugin_info: PluginInfo) -> ValidationResult:
         """Validate plugin compatibility."""
 ```
@@ -234,15 +234,15 @@ class PluginManager:
 @runtime_checkable
 class PluginInterface(Protocol):
     """Universal plugin interface."""
-    
+
     @classmethod
     def get_plugin_info(cls) -> PluginInfo:
         """Get plugin metadata and capabilities."""
-        
+
     @classmethod
     def get_capabilities(cls) -> BaseCapabilities:
         """Get plugin capabilities."""
-        
+
     @classmethod
     def validate_config(cls, config: BaseComponentConfig) -> ValidationResult:
         """Validate plugin configuration."""
@@ -258,11 +258,11 @@ class PluginInterface(Protocol):
 class CodeWeaverFactory:
     """
     Main factory orchestrator for all CodeWeaver components.
-    
+
     Provides unified creation, configuration, and lifecycle management
     for backends, providers, and sources with plugin extensibility.
     """
-    
+
     def __init__(
         self,
         config: CodeWeaverConfig | None = None,
@@ -274,39 +274,39 @@ class CodeWeaverFactory:
         self._capability_manager = CapabilityManager(self._registries)
         self._plugin_manager = PluginManager() if enable_plugins else None
         self._dependency_resolver = DependencyResolver() if enable_dependency_injection else None
-        
+
         # Initialize plugin discovery
         if self._plugin_manager:
             self._discover_and_register_plugins()
-    
+
     def create_server(self, config: CodeWeaverConfig | None = None) -> CodeEmbeddingsServer:
         """Create a complete CodeWeaver server instance."""
         effective_config = config or self._config
-        
+
         # Validate configuration
         validation_result = self.validate_configuration(effective_config)
         if not validation_result.is_valid:
             raise ConfigurationError(validation_result.errors)
-        
+
         # Create components
         backend = self.create_backend(effective_config.backend)
         provider = self.create_provider(effective_config.providers)
         sources = [self.create_source(source_config) for source_config in effective_config.sources]
-        
+
         return CodeEmbeddingsServer(
             backend=backend,
             provider=provider,
             sources=sources
         )
-    
+
     def create_backend(self, config: BackendConfig) -> VectorBackend:
         """Create vector backend with unified factory pattern."""
         return self._create_component("backend", config)
-    
+
     def create_provider(self, config: ProviderConfig) -> EmbeddingProvider:
         """Create embedding provider with unified factory pattern."""
         return self._create_component("provider", config)
-    
+
     def create_source(self, config: SourceConfig) -> DataSource:
         """Create data source with unified factory pattern."""
         return self._create_component("source", config)
@@ -316,30 +316,30 @@ class CodeWeaverFactory:
 
 ```python
 def _create_component(
-    self, 
-    component_type: str, 
+    self,
+    component_type: str,
     config: BaseComponentConfig
 ) -> Any:
     """Unified component creation pattern."""
-    
+
     # Get registry and validate component exists
     registry = self._registries[component_type]
     if not registry.has_component(config.provider):
         raise ComponentNotFoundError(f"{component_type} '{config.provider}' not found")
-    
+
     # Check capabilities and validate configuration
     capabilities = registry.get_capabilities(config.provider)
     validation_result = self._validate_component_config(config, capabilities)
     if not validation_result.is_valid:
         raise ConfigurationError(validation_result.errors)
-    
+
     # Resolve dependencies
     dependencies = {}
     if self._dependency_resolver:
         dependencies = self._dependency_resolver.resolve_dependencies(
             component_type, config.provider
         )
-    
+
     # Create component instance
     component_class = registry.get_component_class(config.provider)
     return component_class(config=config, **dependencies)
@@ -350,10 +350,10 @@ def _create_component(
 ```python
 class UnifiedBackendRegistry(ComponentRegistry):
     """Backend registry following providers A+ pattern."""
-    
+
     _components: ClassVar[dict[str, ComponentRegistration[VectorBackend]]] = {}
     _initialized: ClassVar[bool] = False
-    
+
     @classmethod
     def register_component(
         cls,
@@ -365,16 +365,16 @@ class UnifiedBackendRegistry(ComponentRegistry):
         validate: bool = True
     ) -> RegistrationResult:
         """Register backend following providers pattern."""
-        
+
         # Validate component if requested
         if validate:
             validation_result = cls._validate_backend_class(component_class)
             if not validation_result.is_valid:
                 return RegistrationResult(success=False, errors=validation_result.errors)
-        
+
         # Check availability
         is_available, unavailable_reason = cls._check_component_availability(component_class)
-        
+
         # Create registration
         registration = ComponentRegistration(
             component_class=component_class,
@@ -383,7 +383,7 @@ class UnifiedBackendRegistry(ComponentRegistry):
             is_available=is_available,
             unavailable_reason=unavailable_reason
         )
-        
+
         cls._components[name] = registration
         return RegistrationResult(success=True)
 ```
@@ -397,7 +397,7 @@ class UnifiedBackendRegistry(ComponentRegistry):
 ```python
 class PluginDiscovery:
     """Advanced plugin discovery with multiple source support."""
-    
+
     def __init__(self):
         self._discovery_sources = [
             EntryPointDiscovery(),      # setuptools entry points
@@ -405,14 +405,14 @@ class PluginDiscovery:
             ModuleDiscovery(),          # Python module scanning
             RegistryDiscovery()         # package registry scanning
         ]
-    
+
     def discover_all_plugins(
-        self, 
+        self,
         component_types: list[ComponentType] | None = None,
         plugin_directories: list[str] | None = None
     ) -> dict[ComponentType, list[PluginInfo]]:
         """Comprehensive plugin discovery."""
-        
+
         discovered_plugins = {}
         for source in self._discovery_sources:
             try:
@@ -420,7 +420,7 @@ class PluginDiscovery:
                 discovered_plugins = self._merge_plugin_discoveries(discovered_plugins, source_plugins)
             except Exception as e:
                 logger.warning("Plugin discovery source %s failed: %s", source.__class__.__name__, e)
-        
+
         return discovered_plugins
 ```
 
@@ -429,10 +429,10 @@ class PluginDiscovery:
 ```python
 class PluginValidator:
     """Comprehensive plugin validation."""
-    
+
     def validate_plugin(self, plugin_info: PluginInfo) -> ValidationResult:
         """Multi-stage plugin validation."""
-        
+
         validation_stages = [
             self._validate_plugin_interface,
             self._validate_plugin_capabilities,
@@ -440,12 +440,12 @@ class PluginValidator:
             self._validate_plugin_security,
             self._validate_plugin_configuration
         ]
-        
+
         for stage in validation_stages:
             result = stage(plugin_info)
             if not result.is_valid:
                 return result
-        
+
         return ValidationResult(is_valid=True)
 ```
 
@@ -458,10 +458,10 @@ class PluginValidator:
 ```python
 class ConfigurationValidator:
     """Multi-stage configuration validation."""
-    
+
     def validate_configuration(self, config: CodeWeaverConfig) -> ValidationResult:
         """Comprehensive configuration validation."""
-        
+
         validation_pipeline = [
             self._validate_syntax,           # Basic syntax and structure
             self._validate_component_availability,  # Component existence
@@ -470,12 +470,12 @@ class ConfigurationValidator:
             self._validate_resource_requirements,  # Resource constraints
             self._validate_security_requirements   # Security policies
         ]
-        
+
         for validator in validation_pipeline:
             result = validator(config)
             if not result.is_valid:
                 return result
-        
+
         return ValidationResult(is_valid=True)
 ```
 
@@ -484,31 +484,31 @@ class ConfigurationValidator:
 ```python
 class ComponentLifecycleManager:
     """Unified component lifecycle management."""
-    
+
     async def initialize_component(
-        self, 
-        component: Any, 
+        self,
+        component: Any,
         config: BaseComponentConfig
     ) -> InitializationResult:
         """Initialize component with proper lifecycle management."""
-        
+
         try:
             # Pre-initialization validation
             await self._validate_pre_initialization(component, config)
-            
+
             # Initialize component
             if hasattr(component, 'initialize'):
                 await component.initialize()
-            
+
             # Post-initialization validation
             await self._validate_post_initialization(component, config)
-            
+
             return InitializationResult(success=True)
-            
+
         except Exception as e:
             logger.exception("Component initialization failed")
             return InitializationResult(success=False, error=str(e))
-    
+
     async def shutdown_component(self, component: Any) -> ShutdownResult:
         """Graceful component shutdown."""
         try:
@@ -529,26 +529,26 @@ class ComponentLifecycleManager:
 ```python
 class FactoryPerformanceManager:
     """Performance monitoring and optimization."""
-    
+
     def __init__(self):
         self._metrics_collector = MetricsCollector()
         self._component_cache = ComponentCache()
         self._resource_monitor = ResourceMonitor()
-    
+
     def optimize_component_creation(
-        self, 
-        component_type: str, 
+        self,
+        component_type: str,
         config: BaseComponentConfig
     ) -> OptimizationResult:
         """Optimize component creation process."""
-        
+
         # Check cache first
         if self._component_cache.has_component(component_type, config):
             return OptimizationResult(use_cache=True)
-        
+
         # Analyze resource requirements
         resource_analysis = self._resource_monitor.analyze_requirements(component_type, config)
-        
+
         # Determine optimization strategy
         return OptimizationResult(
             use_cache=False,
@@ -562,7 +562,7 @@ class FactoryPerformanceManager:
 ```python
 class FactoryObservability:
     """Comprehensive factory monitoring."""
-    
+
     def track_component_creation(
         self,
         component_type: str,
@@ -571,7 +571,7 @@ class FactoryObservability:
         success: bool
     ) -> None:
         """Track component creation metrics."""
-        
+
     def track_plugin_registration(
         self,
         plugin_info: PluginInfo,
@@ -579,7 +579,7 @@ class FactoryObservability:
         success: bool
     ) -> None:
         """Track plugin registration metrics."""
-        
+
     def get_factory_health(self) -> FactoryHealthReport:
         """Generate comprehensive factory health report."""
 ```
@@ -593,22 +593,22 @@ class FactoryObservability:
 ```python
 class FactorySecurity:
     """Security validation for factory operations."""
-    
+
     def validate_plugin_security(self, plugin_info: PluginInfo) -> SecurityValidationResult:
         """Validate plugin security requirements."""
-        
+
         security_checks = [
             self._check_code_signing,
             self._check_dependency_security,
             self._check_permission_requirements,
             self._check_data_access_patterns
         ]
-        
+
         for check in security_checks:
             result = check(plugin_info)
             if not result.is_secure:
                 return result
-        
+
         return SecurityValidationResult(is_secure=True)
 ```
 

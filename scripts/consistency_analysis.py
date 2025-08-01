@@ -13,8 +13,10 @@ More targeted analysis that considers the actual architecture and usage patterns
 import argparse
 import ast
 
-from dataclasses import dataclass, field
 from pathlib import Path
+
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 
 @dataclass
@@ -22,9 +24,9 @@ class MethodUsage:
     """Track where methods are used and tested."""
 
     method_name: str
-    implementations: list[str] = field(default_factory=list)
-    test_files: list[str] = field(default_factory=list)
-    factory_usage: list[str] = field(default_factory=list)
+    implementations: list[str] = Field(default_factory=list)
+    test_files: list[str] = Field(default_factory=list)
+    factory_usage: list[str] = Field(default_factory=list)
 
 
 class RefinedConsistencyAnalyzer:
@@ -285,16 +287,15 @@ def generate_refined_report(
     report.append("## Executive Summary\n")
     report.append("This analysis focuses on:")
     report.append("1. **Factory utility methods** that need consistency across packages")
-    report.append("2. **Service implementations** and their BaseServiceProvider compliance")
-    report.append("3. **Protocol specificity** - not all components need all protocols")
-    report.append("4. **Test coverage** for methods that might change\n")
-
-    # Factory utility methods analysis
-    report.append("## Factory Utility Methods Analysis\n")
-    report.append(
-        "These methods need consistency because they're used by factories and service managers:\n"
+    report.extend(
+        (
+            "2. **Service implementations** and their BaseServiceProvider compliance",
+            "3. **Protocol specificity** - not all components need all protocols",
+            "4. **Test coverage** for methods that might change\n",
+            "## Factory Utility Methods Analysis\n",
+            "These methods need consistency because they're used by factories and service managers:\n",
+        )
     )
-
     for method_name, usage in factory_methods.items():
         report.append(f"### {method_name}")
 
@@ -359,22 +360,16 @@ def generate_refined_report(
     report.append(
         "1. **Service BaseServiceProvider compliance**: Ensure all services inherit from BaseServiceProvider"
     )
-    report.append(
-        "2. **Factory utility method consistency**: Standardize signatures for methods used by factories"
+    report.extend(
+        (
+            "2. **Factory utility method consistency**: Standardize signatures for methods used by factories",
+            "3. **Test coverage**: Add tests for utility methods that lack coverage\n",
+            "### 🔧 Medium Priority",
+            "1. **Protocol-specific validation**: Don't force all protocols on all implementations",
+            "2. **Factory integration**: Ensure factory methods actually use the utility methods",
+            "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n",
+        )
     )
-    report.append("3. **Test coverage**: Add tests for utility methods that lack coverage\n")
-
-    report.append("### 🔧 Medium Priority")
-    report.append(
-        "1. **Protocol-specific validation**: Don't force all protocols on all implementations"
-    )
-    report.append(
-        "2. **Factory integration**: Ensure factory methods actually use the utility methods"
-    )
-    report.append(
-        "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n"
-    )
-
     report.append("### 💡 Low Priority")
     report.append(
         "1. **Service-specific protocols**: ChunkingService only for chunking services, etc."

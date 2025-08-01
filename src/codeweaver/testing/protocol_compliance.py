@@ -16,13 +16,14 @@ import inspect
 import logging
 import time
 
-from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import HybridSearchBackend, VectorBackend
 from codeweaver.providers import EmbeddingProvider, RerankProvider
 from codeweaver.sources import DataSource, SourceCapability, SourceConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     CollectionInfo,
     ContentItem,
     DistanceMetric,
@@ -46,10 +47,10 @@ class ComplianceResult:
     is_compliant: bool
     passed_tests: int
     total_tests: int
-    validation_errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-    performance_metrics: dict[str, float] = field(default_factory=dict)
-    test_details: dict[str, Any] = field(default_factory=dict)
+    validation_errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    performance_metrics: dict[str, float] = Field(default_factory=dict)
+    test_details: dict[str, Any] = Field(default_factory=dict)
 
     def __str__(self) -> str:
         status = "✅ PASS" if self.is_compliant else "❌ FAIL"

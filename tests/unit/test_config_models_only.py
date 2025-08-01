@@ -14,7 +14,7 @@ import pytest
 
 from pydantic import ValidationError
 
-from codeweaver.types import ComponentType, ServicesConfig
+from codeweaver.cw_types import ComponentType, ServicesConfig
 
 
 # Import just the new config models we created

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Auto-indexing background service provider."""
 
 import asyncio
@@ -9,7 +14,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     ChunkingService,
     ContentItem,
     FilteringService,
@@ -18,7 +23,7 @@ from codeweaver.types import (
     ServiceIntegrationError,
     ServiceType,
 )
-from codeweaver.types.services.config import AutoIndexingConfig
+from codeweaver.cw_types.services.config import AutoIndexingConfig
 
 
 class CodebaseChangeHandler(FileSystemEventHandler):
@@ -71,10 +76,8 @@ class CodebaseChangeHandler(FileSystemEventHandler):
             if pattern in raw_path:
                 return False
         return any(
-            (
-                file_path.match(pattern)
-                for pattern in self.service._auto_indexing_config.watch_patterns
-            )
+            file_path.match(pattern)
+            for pattern in self.service._auto_indexing_config.watch_patterns
         )
 
     async def _debounced_index_file(self, file_path: Path):
@@ -246,23 +249,24 @@ class AutoIndexingService(BaseServiceProvider):
     async def trigger_indexing(self, path: str) -> bool:
         """
         Trigger background indexing for a given path.
-        
+
         This method can be called from the intent bridge to start background
         indexing operations without exposing indexing to LLM users.
-        
+
         Args:
             path: Path to index
-            
+
         Returns:
             True if indexing was triggered successfully
         """
         try:
             self._logger.info("Triggering background indexing for path: %s", path)
             await self.start_monitoring(path)
-            return True
         except Exception as e:
-            self._logger.error("Failed to trigger background indexing for %s: %s", path, e)
+            self._logger.exception("Failed to trigger background indexing for %s: %s", path, e)
             return False
+        else:
+            return True
 
     async def _index_path_initial(self, path: str) -> None:
         """Perform initial indexing of a path using existing services."""

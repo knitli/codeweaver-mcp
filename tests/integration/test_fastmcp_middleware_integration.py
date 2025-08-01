@@ -12,7 +12,7 @@ import pytest
 from codeweaver.config import CodeWeaverConfig
 from codeweaver.server import CodeWeaverServer
 from codeweaver.services.manager import ServicesManager
-from codeweaver.types import ServicesConfig
+from codeweaver.cw_types import ServicesConfig
 
 
 @pytest.mark.integration

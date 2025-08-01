@@ -1,35 +1,39 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Multi-step workflow orchestration using existing service patterns."""
 
 import logging
 import time
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
+
+from pydantic import Field, PositiveFloat, NonNegativeInt
+from pydantic.dataclasses import dataclass
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
+from codeweaver.cw_types import ServiceConfig, ServiceHealth, ServiceIntegrationError, ServiceType
 
 
 @dataclass
 class WorkflowStep:
     """Represents a single step in a workflow."""
 
-    name: str
-    "Name of the workflow step."
-    handler: Callable
-    "Function to execute for this step."
-    required: bool = True
-    "Whether this step is required for workflow success."
-    timeout: float = 30.0
-    "Maximum time allowed for this step in seconds."
-    retry_count: int = 0
-    "Number of retries allowed for this step."
-    dependencies: list[str] | None = None
-    "Names of steps that must complete before this step."
-    metadata: dict[str, Any] | None = None
-    "Additional metadata for the step."
+    name: Annotated[str, Field(description="Name of the workflow step.")]
+
+    handler: Annotated[Callable, Field(description="Function to execute for this step.")]
+    required: Annotated[bool, Field(description="Whether this step is required for workflow success.")] = True
+    timeout: Annotated[PositiveFloat, Field(description="Maximum time allowed for this step in seconds.")] = 30.0
+    retry_count: Annotated[NonNegativeInt, Field(description="Number of retries allowed for this step.")] = 0
+    dependencies: Annotated[
+        list[str], Field(description="Names of steps that must complete before this step.")
+    ] | None = None
+
+    metadata: Annotated[dict[str, Any], Field(description="Additional metadata for the step")] | None = None
 
     def __post_init__(self):
         """Initialize default values."""
@@ -43,18 +47,12 @@ class WorkflowStep:
 class WorkflowDefinition:
     """Defines a complete workflow with steps and configuration."""
 
-    name: str
-    "Name of the workflow."
-    steps: list[WorkflowStep]
-    "List of steps to execute in order."
-    description: str = ""
-    "Human-readable description of the workflow."
-    timeout: float = 300.0
-    "Maximum time allowed for entire workflow in seconds."
-    allow_partial_success: bool = True
-    "Whether to continue if optional steps fail."
-    metadata: dict[str, Any] | None = None
-    "Additional metadata for the workflow."
+    name: Annotated[str, Field(description="Name of the workflow.")]
+    steps: Annotated[list[WorkflowStep], Field(description="List of steps to execute in order.")]
+    description: Annotated[str, Field(description="Human-readable description of the workflow.")] = ""
+    timeout: Annotated[float, Field(description="Maximum time allowed for entire workflow in seconds.")] = 300.0
+    allow_partial_success: Annotated[bool, Field(description="Whether to continue if optional steps fail.")] = True
+    metadata: Annotated[dict[str, Any], Field(description="Additional metadata for the workflow.")] | None = None
 
     def __post_init__(self):
         """Initialize default values."""
@@ -66,20 +64,13 @@ class WorkflowDefinition:
 class WorkflowStepResult:
     """Result of a single workflow step execution."""
 
-    step_name: str
-    "Name of the step that was executed."
-    success: bool
-    "Whether the step succeeded."
-    data: Any
-    "Result data from the step."
-    error_message: str | None = None
-    "Error message if step failed."
-    execution_time: float = 0.0
-    "Time taken to execute the step in seconds."
-    retry_count: int = 0
-    "Number of retries that were performed."
-    executed_at: datetime | None = None
-    "When the step was executed."
+    step_name: Annotated[str, Field(description="Name of the step that was executed.")]
+    success: Annotated[bool, Field(description="Whether the step succeeded.")]
+    data: Annotated[Any, Field(description="Result data from the step.")]
+    error_message: Annotated[str, Field(description="Error message if step failed.")] | None = None
+    execution_time: Annotated[float, Field(description="Time taken to execute the step in seconds.")] = 0.0
+    retry_count: Annotated[int, Field(description="Number of retries that were performed.")] = 0
+    executed_at: Annotated[datetime, Field(description="When the step was executed.")] | None = None
 
     def __post_init__(self):
         """Set executed_at timestamp if not provided."""
@@ -91,24 +82,15 @@ class WorkflowStepResult:
 class WorkflowResult:
     """Result of complete workflow execution."""
 
-    workflow_name: str
-    "Name of the workflow that was executed."
-    success: bool
-    "Whether the overall workflow succeeded."
-    steps: list[WorkflowStepResult]
-    "Results from all executed steps."
-    total_execution_time: float = 0.0
-    "Total time taken for the workflow in seconds."
-    completed_steps: int = 0
-    "Number of steps that completed successfully."
-    failed_steps: int = 0
-    "Number of steps that failed."
-    error_message: str | None = None
-    "Overall error message if workflow failed."
-    metadata: dict[str, Any] | None = None
-    "Additional metadata from workflow execution."
-    executed_at: datetime | None = None
-    "When the workflow was executed."
+    workflow_name: Annotated[str, Field(description="Name of the workflow that was executed.")]
+    success: Annotated[bool, Field(description="Whether the overall workflow succeeded.")]
+    steps: Annotated[list[WorkflowStepResult], Field(description="Results from all executed steps.")]
+    total_execution_time: Annotated[float, Field(description="Total time taken for the workflow in seconds.")] = 0.0
+    completed_steps: Annotated[int, Field(description="Number of steps that completed successfully.")] = 0
+    failed_steps: Annotated[int, Field(description="Number of steps that failed.")] = 0
+    error_message: Annotated[str, Field(description="Overall error message if workflow failed.")] | None = None
+    metadata: Annotated[dict[str, Any], Field(description="Additional metadata from workflow execution.")] | None = None
+    executed_at: Annotated[datetime, Field(description="When the workflow was executed.")] | None = None
 
     def __post_init__(self):
         """Initialize calculated values."""
@@ -388,7 +370,11 @@ class WorkflowOrchestrator(BaseServiceProvider):
             "data": step_result.data,
             "execution_time": step_result.execution_time,
         }
-        if step_result.data and isinstance(step_result.data, dict) and "context_updates" in step_result.data:
+        if (
+            step_result.data
+            and isinstance(step_result.data, dict)
+            and "context_updates" in step_result.data
+        ):
             updated_context |= step_result.data["context_updates"]
         return updated_context
 
@@ -417,6 +403,28 @@ class WorkflowOrchestrator(BaseServiceProvider):
 
     async def health_check(self) -> ServiceHealth:
         """Enhanced health check with workflow-specific metrics."""
+        base_health = await super().health_check()
+        base_health.metadata = {
+            "total_workflows": self._execution_stats["total_workflows"],
+            "success_rate": self._execution_stats["successful_workflows"]
+            / max(1, self._execution_stats["total_workflows"]),
+            "avg_workflow_time": self._execution_stats["avg_workflow_time"],
+            "total_steps_executed": self._execution_stats["total_steps_executed"],
+            "registered_steps": len(self._step_registry),
+            "workflow_templates": len(self._workflow_templates),
+        }
+        return base_health
+
+    def get_orchestrator_stats(self) -> dict[str, Any]:
+        """Get comprehensive orchestrator statistics."""
+        return {
+            "execution_stats": self._execution_stats.copy(),
+            "registry_info": {
+                "registered_steps": len(self._step_registry),
+                "workflow_templates": len(self._workflow_templates),
+            },
+            "health_status": self.status.value,
+        }
         base_health = await super().health_check()
         base_health.metadata = {
             "total_workflows": self._execution_stats["total_workflows"],

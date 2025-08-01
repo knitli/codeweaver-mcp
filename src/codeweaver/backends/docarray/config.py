@@ -8,7 +8,7 @@ from typing import Annotated, Any, ClassVar, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from codeweaver.backends import BackendConfig
-from codeweaver.types import BaseEnum
+from codeweaver.cw_types import BaseEnum
 
 
 class DocArraySchemaConfig(BaseModel):

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Simple search strategy for SEARCH intents."""
 
 import logging
@@ -5,7 +10,7 @@ import logging
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import (
+from codeweaver.cw_types import (
     Complexity,
     IntentResult,
     IntentStrategy,
@@ -13,7 +18,7 @@ from codeweaver.types import (
     ParsedIntent,
     ServiceType,
 )
-from codeweaver.types.services.config import ServiceConfig
+from codeweaver.cw_types.services.config import ServiceConfig
 
 
 class SimpleSearchStrategy(BaseServiceProvider, IntentStrategy):

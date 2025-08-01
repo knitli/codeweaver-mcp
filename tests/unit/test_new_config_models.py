@@ -16,7 +16,7 @@ import pytest
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from codeweaver.types import ComponentType
+from codeweaver.cw_types import ComponentType
 
 
 # Recreate the classes inline to test them without import issues

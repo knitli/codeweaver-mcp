@@ -50,7 +50,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 # 3. Internal imports - organized by layer
-from codeweaver.types import (  # Types first
+from codeweaver.cw_types import (  # Types first
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -251,7 +251,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field
 
 # Internal imports (organized by layer)
-from codeweaver.types import (
+from codeweaver.cw_types import (
     # Type imports first, alphabetical
     ConfigType,
     ProviderInfo,

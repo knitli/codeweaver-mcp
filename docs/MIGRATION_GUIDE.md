@@ -497,7 +497,7 @@ PROVIDERS = {
 }
 
 # After: Automatic registration
-from codeweaver.types import register_provider_class, ProviderType
+from codeweaver.cw_types import register_provider_class, ProviderType
 
 # At end of module
 register_provider_class(ProviderType.VOYAGE_AI, VoyageAIProvider)

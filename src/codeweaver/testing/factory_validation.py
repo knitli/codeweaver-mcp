@@ -13,8 +13,9 @@ component instantiation, and error handling across all protocols.
 import contextlib
 import logging
 
-from dataclasses import dataclass, field
 from typing import Any
+
+from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import BackendConfig, BackendFactory, VectorBackend
 from codeweaver.config import CodeWeaverConfig
@@ -32,7 +33,7 @@ from codeweaver.testing import (
     MockRerankProvider,
     MockVectorBackend,
 )
-from codeweaver.types import ProviderType
+from codeweaver.cw_types import ProviderType
 
 
 logger = logging.getLogger(__name__)
@@ -46,9 +47,9 @@ class FactoryValidationResult:
     is_valid: bool
     created_instances: int
     failed_creations: int
-    validation_errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
-    test_details: dict[str, Any] = field(default_factory=dict)
+    validation_errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    test_details: dict[str, Any] = Field(default_factory=dict)
 
     def __str__(self) -> str:
         status = "✅ VALID" if self.is_valid else "❌ INVALID"
@@ -105,7 +106,7 @@ class FactoryPatternValidator:
 
         # Register mock providers
         from codeweaver.providers.factory import ProviderRegistry
-        from codeweaver.types import EmbeddingProviderInfo, ProviderCapabilities, ProviderCapability
+        from codeweaver.cw_types import EmbeddingProviderInfo, ProviderCapabilities, ProviderCapability
 
         # Create mock provider info
         mock_provider_info = EmbeddingProviderInfo(
@@ -534,7 +535,7 @@ class FactoryPatternValidator:
                 """A mock provider class for testing registration."""
 
             from codeweaver.providers.factory import ProviderRegistry
-            from codeweaver.types import (
+            from codeweaver.cw_types import (
                 EmbeddingProviderInfo,
                 ProviderCapabilities,
                 ProviderCapability,

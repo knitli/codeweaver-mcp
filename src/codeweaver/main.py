@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING
 
 from codeweaver.config import get_config_manager
 from codeweaver.middleware.chunking import AST_GREP_AVAILABLE
-from codeweaver.server import create_clean_server
+from codeweaver.server import create_server
 
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ def get_server_instance() -> "CodeWeaverServer":
         config = config_manager.get_config()
 
         # Create the new clean server implementation
-        server_instance = create_clean_server(config)
+        server_instance = create_server(config)
 
         # Log server type
         logger.info("Created CodeWeaverServer with plugin system and FastMCP middleware")

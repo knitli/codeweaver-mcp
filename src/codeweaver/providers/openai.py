@@ -19,8 +19,9 @@ from typing import Any
 
 from codeweaver.providers.base import EmbeddingProviderBase
 from codeweaver.providers.config import OpenAICompatibleConfig, OpenAIConfig
-from codeweaver.types import (
+from codeweaver.cw_types import (
     EmbeddingProviderInfo,
+    OpenAIModel,
     ProviderCapability,
     ProviderType,
     register_provider_class,
@@ -64,7 +65,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         self.client = openai.AsyncOpenAI(**client_kwargs)
         self._last_request_time = 0.0
         self._min_request_interval = 0.1
-        self._model = self.config.get("model", "text-embedding-3-small")
+        self._model = self.config.get("model", OpenAIModel.TEXT_EMBEDDING_3_SMALL)
         self._dimension = self.config.get("dimension")
         self._auto_discover_dimensions = self.config.get("auto_discover_dimensions", True)
         self._max_batch_size = self.config.get("max_batch_size")
@@ -83,15 +84,10 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         """Initialize embedding dimensions for the configured model."""
         if self._dimension is not None:
             return
-        known_dimensions = {
-            "text-embedding-3-small": 1536,
-            "text-embedding-3-large": 3072,
-            "text-embedding-ada-002": 1536,
-        }
-        if self._model in known_dimensions:
-            self._dimension = known_dimensions[self._model]
-            logger.info("Using known dimensions for model '%s': %d", self._model, self._dimension)
-            return
+        if isinstance(self._model, str) and self._model in OpenAIModel.get_values():
+            self._model = OpenAIModel.from_string(self._model)
+        if isinstance(self._model, OpenAIModel):
+            self._dimension = OpenAIModel.dimensions
         if self._auto_discover_dimensions:
             try:
                 self._dimension = self._discover_model_dimensions()
@@ -194,8 +190,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cached_result:
                 logger.debug("Cache hit for %s OpenAI embeddings", len(texts))
                 return cached_result
-        rate_limiter = context.get("rate_limiting_service")
-        if rate_limiter:
+        if rate_limiter := context.get("rate_limiting_service"):
             await rate_limiter.acquire("openai", len(texts))
         else:
             await self._apply_rate_limit()
@@ -235,8 +230,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cached_result:
                 logger.debug("Cache hit for OpenAI query embedding")
                 return cached_result
-        rate_limiter = context.get("rate_limiting_service")
-        if rate_limiter:
+        if rate_limiter := context.get("rate_limiting_service"):
             await rate_limiter.acquire("openai", 1)
         else:
             await self._apply_rate_limit()

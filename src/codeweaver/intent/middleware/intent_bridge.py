@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Intent service bridge for FastMCP middleware integration."""
 
 import logging
@@ -5,8 +10,8 @@ import logging
 from typing import Any
 
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import IntentResult, ServiceIntegrationError, ServiceType
-from codeweaver.types.services.config import ServiceConfig
+from codeweaver.cw_types import IntentResult, ServiceIntegrationError, ServiceType
+from codeweaver.cw_types.services.config import ServiceConfig
 
 
 class IntentServiceBridge(BaseServiceProvider):
@@ -95,7 +100,6 @@ class IntentServiceBridge(BaseServiceProvider):
             return True
 
     async def process_intent(self, user_input: str, context: dict[str, Any]) -> IntentResult:
-        # sourcery skip: use-fstring-for-concatenation
         """
         Process intent through the orchestrator.
 
@@ -246,16 +250,16 @@ class IntentServiceBridge(BaseServiceProvider):
             if not self.services_manager:
                 self.logger.warning("ServicesManager not available")
                 return None
-            
             orchestrator = await self.services_manager.get_service("intent_orchestrator")
             if orchestrator:
                 self.logger.debug("IntentOrchestrator service retrieved successfully")
             else:
                 self.logger.info("IntentOrchestrator service not registered with ServicesManager")
-            return orchestrator
         except Exception as e:
             self.logger.warning("Failed to get IntentOrchestrator service: %s", e)
             return None
+        else:
+            return orchestrator
 
     async def _get_auto_indexing_service(self):
         """Get AutoIndexingService from services manager."""
@@ -263,13 +267,13 @@ class IntentServiceBridge(BaseServiceProvider):
             if not self.services_manager:
                 self.logger.warning("ServicesManager not available")
                 return None
-                
             indexing_service = await self.services_manager.get_service("auto_indexing")
             if indexing_service:
                 self.logger.debug("AutoIndexingService retrieved successfully")
             else:
                 self.logger.info("AutoIndexingService not registered with ServicesManager")
-            return indexing_service
         except Exception as e:
             self.logger.warning("Failed to get AutoIndexingService: %s", e)
             return None
+        else:
+            return indexing_service

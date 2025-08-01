@@ -13,7 +13,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from codeweaver.types import DimensionSize
+from codeweaver.cw_types import DimensionSize
 
 
 class ProviderConfig(BaseModel):
@@ -376,4 +376,45 @@ class SentenceTransformersConfig(EmbeddingProviderConfig):
 
     cache_folder: Annotated[
         str | None, Field(default=None, description="Directory to cache downloaded models")
+    ]
+
+
+class SpaCyProviderConfig(ProviderConfig):
+    """spaCy NLP provider configuration with intent classification and entity recognition."""
+
+    model_config = ConfigDict(extra="allow", validate_assignment=True)
+
+    # Provider identification
+    provider_name: str = "spaCy"
+
+    # spaCy-specific configuration
+    model: Annotated[str, Field(default="en_core_web_sm", description="spaCy model name")]
+    use_transformers: Annotated[
+        bool, Field(default=False, description="Use transformer-based models")
+    ]
+    enable_intent_classification: Annotated[
+        bool, Field(default=True, description="Enable intent classification")
+    ]
+    intent_labels: Annotated[
+        list[str],
+        Field(
+            default_factory=lambda: ["SEARCH", "DOCUMENTATION", "ANALYSIS"],
+            description="Intent classification labels",
+        ),
+    ]
+    confidence_threshold: Annotated[
+        float, Field(default=0.7, ge=0.0, le=1.0, description="Intent confidence threshold")
+    ]
+
+    # Performance settings
+    max_length: Annotated[
+        int, Field(default=1_000_000, ge=1000, description="Maximum text length to process")
+    ]
+
+    # Domain patterns - simplified for config
+    enable_domain_patterns: Annotated[
+        bool, Field(default=True, description="Enable domain-specific entity patterns")
+    ]
+    custom_patterns_file: Annotated[
+        str | None, Field(default=None, description="Path to custom patterns TOML file")
     ]

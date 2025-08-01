@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """Base service provider implementation."""
 
 import asyncio
@@ -8,7 +13,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 
-from codeweaver.types import (
+from codeweaver.cw_types import (
     HealthStatus,
     ProviderStatus,
     ServiceCapabilities,

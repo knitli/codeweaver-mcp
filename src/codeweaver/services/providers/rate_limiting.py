@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 Rate limiting service provider for CodeWeaver.
 
@@ -10,11 +15,12 @@ import logging
 import time
 
 from collections import defaultdict
-from dataclasses import dataclass, field
 from typing import Any
 
+from pydantic.dataclasses import dataclass
+
 from codeweaver.services.providers.base_provider import BaseServiceProvider
-from codeweaver.types import HealthStatus, ServiceCapabilities, ServiceHealth
+from codeweaver.cw_types import HealthStatus, ServiceCapabilities, ServiceHealth
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +32,7 @@ class RateLimitConfig:
 
     requests_per_second: float = 10.0
     burst_capacity: int = 20
-    provider_specific_limits: dict[str, dict[str, float]] = field(default_factory=dict)
+    provider_specific_limits: dict[str, dict[str, float]] = Field(default_factory=dict)
 
 
 @dataclass
@@ -36,7 +42,7 @@ class TokenBucket:
     capacity: int
     tokens: float
     refill_rate: float
-    last_refill: float = field(default_factory=time.time)
+    last_refill: float = Field(default_factory=time.time)
 
     def consume(self, tokens: int = 1) -> bool:
         """Try to consume tokens from the bucket."""
