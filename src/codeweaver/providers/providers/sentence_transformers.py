@@ -181,6 +181,24 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
             native_dimensions=capabilities.native_dimensions,
         )
 
+    async def health_check(self) -> bool:
+        """Check provider health by verifying model is loaded and functional.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        try:
+            if not hasattr(self, "_model") or self._model is None:
+                logger.warning("SentenceTransformers model not loaded")
+                return False
+            await self.embed_query("health_check")
+            logger.debug("SentenceTransformers health check passed")
+        except Exception:
+            logger.exception("SentenceTransformers health check failed")
+            return False
+        else:
+            return True
+
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if SentenceTransformers is available for the given capability."""

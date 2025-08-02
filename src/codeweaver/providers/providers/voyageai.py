@@ -295,6 +295,21 @@ class VoyageAIProvider(CombinedProvider):
             native_dimensions=capabilities.native_dimensions,
         )
 
+    async def health_check(self) -> bool:
+        """Check provider health by attempting a minimal API call.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        try:
+            await self.embed_query("health_check")
+            logger.debug("VoyageAI health check passed")
+        except Exception:
+            logger.exception("VoyageAI health check failed")
+            return False
+        else:
+            return True
+
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if VoyageAI is available for the given capability."""

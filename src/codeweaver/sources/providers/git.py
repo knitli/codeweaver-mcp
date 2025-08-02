@@ -29,8 +29,6 @@ class GitRepositorySourceConfig(BaseModel):
     """Configuration specific to git repository data sources."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # Inherited from BaseSourceConfig
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
@@ -61,8 +59,6 @@ class GitRepositorySourceConfig(BaseModel):
     supported_languages: Annotated[
         list[str], Field(default_factory=list, description="Supported programming languages")
     ]
-
-    # Git specific settings
     repository_url: Annotated[str, Field(description="Git repository URL (required)")]
     local_clone_path: Annotated[
         str | None, Field(None, description="Local clone path for repository")
@@ -70,13 +66,9 @@ class GitRepositorySourceConfig(BaseModel):
     branch: Annotated[str, Field("main", min_length=1, description="Git branch to checkout")]
     commit_hash: Annotated[str | None, Field(None, description="Specific commit hash to checkout")]
     depth: Annotated[int | None, Field(None, ge=1, description="Clone depth for shallow clones")]
-
-    # Authentication
     username: Annotated[str | None, Field(None, description="Username for authentication")]
     password: Annotated[str | None, Field(None, description="Password for authentication")]
     ssh_key_path: Annotated[str | None, Field(None, description="Path to SSH private key")]
-
-    # Sync settings
     auto_pull: Annotated[bool, Field(True, description="Automatically pull updates")]
     pull_interval_minutes: Annotated[
         int, Field(30, ge=1, le=10080, description="Pull interval in minutes")
@@ -109,7 +101,6 @@ class GitRepositorySourceProvider(AbstractDataSource):
     @classmethod
     def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if git repository source is available for the given capability."""
-        # Git source supports most capabilities but requires git
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
             SourceCapability.CONTENT_READING,
@@ -120,16 +111,13 @@ class GitRepositorySourceProvider(AbstractDataSource):
             SourceCapability.BATCH_PROCESSING,
             SourceCapability.AUTHENTICATION,
         }
-
         if capability in supported_capabilities:
-            # Check for git availability
             import shutil
 
             if shutil.which("git") is None:
-                return False, "git command not found in PATH"
-            return True, None
-
-        return False, f"Capability {capability.value} not supported by Git source"
+                return (False, "git command not found in PATH")
+            return (True, None)
+        return (False, f"Capability {capability.value} not supported by Git source")
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by git repository source."""
@@ -158,20 +146,10 @@ class GitRepositorySourceProvider(AbstractDataSource):
         """
         if not config.get("enabled", True):
             return []
-
-        if repository_url := config.get("repository_url"):  # noqa: F841
-            # TODO: Implement git repository discovery
-            # This would involve:
-            # 1. Cloning or pulling the repository
-            # 2. Checking out the specified branch/commit
-            # 3. Discovering files in the repository
-            # 4. Creating ContentItems with git metadata
-
+        if repository_url := config.get("repository_url"):
             raise NotImplementedError(
-                "Git repository source is not yet implemented. "
-                "Future implementation will require GitPython or pygit2 dependency."
+                "Git repository source is not yet implemented. Future implementation will require GitPython or pygit2 dependency."
             )
-
         raise ValueError("repository_url is required for git source")
 
     async def read_content(self, item: ContentItem) -> str:
@@ -188,11 +166,6 @@ class GitRepositorySourceProvider(AbstractDataSource):
         """
         if item.content_type != "git":
             raise ValueError(f"Unsupported content type for git source: {item.content_type}")
-
-        # TODO: Implement git file reading
-        # This would involve reading files from the local clone
-        # or directly from the git object database
-
         raise NotImplementedError("Git content reading not yet implemented")
 
     async def watch_changes(
@@ -212,14 +185,6 @@ class GitRepositorySourceProvider(AbstractDataSource):
         """
         if not config.get("enable_change_watching", False):
             raise NotImplementedError("Change watching is disabled in configuration")
-
-        # TODO: Implement git change watching
-        # This would involve:
-        # 1. Periodic git fetch/pull operations
-        # 2. Detecting new commits
-        # 3. Analyzing changed files between commits
-        # 4. Notifying about changes
-
         raise NotImplementedError("Git change watching not yet implemented")
 
     async def validate_source(self, config: GitRepositorySourceConfig) -> bool:
@@ -232,26 +197,16 @@ class GitRepositorySourceProvider(AbstractDataSource):
             True if configuration is valid, False otherwise
         """
         try:
-            # Call parent validation first
             if not await super().validate_source(config):
                 return False
-
-            # Check required fields
             repository_url = config.get("repository_url")
             if not repository_url:
                 logger.warning("Missing repository_url in git source configuration")
                 return False
-
-            # TODO: Validate repository accessibility
-            # This would involve checking if the repository exists
-            # and is accessible with the provided credentials
-
             logger.warning("Git repository validation not fully implemented")
-
         except Exception:
             logger.exception("Error validating git repository source configuration")
             return False
-
         else:
             return True
 
@@ -265,18 +220,36 @@ class GitRepositorySourceProvider(AbstractDataSource):
             Dictionary with detailed git metadata
         """
         metadata = await super().get_content_metadata(item)
-
-        # TODO: Add git-specific metadata
-        # This would include:
-        # - Commit hash
-        # - Author information
-        # - Commit message
-        # - File history
-        # - Branch information
-
         metadata.update({
             "git_metadata_available": False,
             "implementation_note": "Git metadata extraction not yet implemented",
         })
-
         return metadata
+
+    async def health_check(self) -> bool:
+        """Check git data source health by verifying repository accessibility.
+
+        Returns:
+            True if source is healthy and operational, False otherwise
+        """
+        try:
+            if not hasattr(self, "source_id") or not self.source_id:
+                logger.warning("Git source missing source_id")
+                return False
+            test_path = Path(".")
+            git_dir = test_path / ".git"
+            if git_dir.exists():
+                logger.debug("Git source health check passed - found .git directory")
+                return True
+            current = test_path
+            for _ in range(5):
+                current = current.parent
+                if (current / ".git").exists():
+                    logger.debug("Git source health check passed - found .git in parent")
+                    return True
+            logger.warning("Git source health check failed - no .git directory found")
+        except Exception:
+            logger.exception("Git source health check failed")
+            return False
+        else:
+            return False

@@ -23,8 +23,6 @@ from codeweaver.utils.decorators import not_implemented
 
 if TYPE_CHECKING:
     from codeweaver.cw_types import ContentItem, SourceCapabilities, SourceCapability
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,8 +31,6 @@ class WebCrawlerSourceConfig(BaseModel):
     """Configuration specific to web crawler data sources."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # Inherited from BaseSourceConfig
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
@@ -65,8 +61,6 @@ class WebCrawlerSourceConfig(BaseModel):
     supported_languages: Annotated[
         list[str], Field(default_factory=list, description="Supported programming languages")
     ]
-
-    # Web crawler specific settings
     start_urls: Annotated[list[str], Field(description="Starting URLs for crawling (required)")]
     allowed_domains: Annotated[
         list[str], Field(default_factory=list, description="Domains allowed for crawling")
@@ -75,8 +69,6 @@ class WebCrawlerSourceConfig(BaseModel):
     max_pages: Annotated[
         int, Field(1000, ge=1, le=100000, description="Maximum number of pages to crawl")
     ]
-
-    # Politeness settings
     delay_between_requests: Annotated[
         float, Field(1.0, ge=0.1, le=10.0, description="Delay between requests in seconds")
     ]
@@ -87,8 +79,6 @@ class WebCrawlerSourceConfig(BaseModel):
     max_requests_per_second: Annotated[
         float, Field(1.0, gt=0, le=10.0, description="Maximum requests per second")
     ]
-
-    # Content extraction settings
     extract_text_only: Annotated[bool, Field(True, description="Extract text content only")]
     include_code_blocks: Annotated[
         bool, Field(True, description="Include code blocks in extraction")
@@ -98,8 +88,6 @@ class WebCrawlerSourceConfig(BaseModel):
     min_content_length: Annotated[
         int, Field(100, ge=1, le=10000, description="Minimum content length to index")
     ]
-
-    # Content filtering
     allowed_content_types: Annotated[
         list[str],
         Field(
@@ -153,7 +141,6 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         """Check if web crawler source is available for the given capability."""
         from codeweaver.cw_types import SourceCapability
 
-        # Web crawler supports most capabilities but requires HTTP and parsing libraries
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
             SourceCapability.CONTENT_READING,
@@ -162,33 +149,26 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             SourceCapability.RATE_LIMITING,
             SourceCapability.AUTHENTICATION,
         }
-
         if capability in supported_capabilities:
-            # Check for HTTP client and parsing dependencies
             try:
-                import httpx  # noqa: F401
+                import httpx
             except ImportError:
                 try:
-                    import requests  # noqa: F401
+                    import requests
                 except ImportError:
                     return (
                         False,
                         "HTTP client not available (install with: uv add httpx or uv add requests)",
                     )
-
-            # Check for HTML parsing
             try:
-                import bs4  # noqa: F401
+                import bs4
             except ImportError:
-                return False, "HTML parser not available (install with: uv add beautifulsoup4)"
+                return (False, "HTML parser not available (install with: uv add beautifulsoup4)")
             else:
-                return True, None
-
-        # Change watching for web content is complex
+                return (True, None)
         if capability == SourceCapability.CHANGE_WATCHING:
-            return False, "Change watching for web content requires specialized monitoring setup"
-
-        return False, f"Capability {capability.value} not supported by WebCrawler source"
+            return (False, "Change watching for web content requires specialized monitoring setup")
+        return (False, f"Capability {capability.value} not supported by WebCrawler source")
 
     def get_capabilities(self) -> "SourceCapabilities":
         """Get capabilities supported by web crawler source."""
@@ -218,19 +198,9 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         """
         if not config.get("enabled", True):
             return []
-
-        if start_urls := config.get("start_urls", []):  # noqa: F841
-            # TODO: Implement web crawling
-            # This would involve:
-            # 1. Respecting robots.txt and politeness policies
-            # 2. Crawling websites starting from start_urls
-            # 3. Following links within allowed domains
-            # 4. Extracting text content from HTML pages
-            # 5. Creating ContentItems for each discovered page
-
+        if start_urls := config.get("start_urls", []):
             raise NotImplementedError(
-                "Web crawler source is not yet implemented. "
-                "Future implementation will require web scraping dependencies."
+                "Web crawler source is not yet implemented. Future implementation will require web scraping dependencies."
             )
         raise ValueError("start_urls is required for web crawler source")
 
@@ -250,14 +220,6 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             raise ValueError(
                 f"Unsupported content type for web crawler source: {item.content_type}"
             )
-
-        # TODO: Implement web content reading
-        # This would involve:
-        # 1. Making HTTP requests to fetch page content
-        # 2. Parsing HTML and extracting text
-        # 3. Handling different content types (HTML, Markdown, etc.)
-        # 4. Respecting rate limits and caching
-
         raise NotImplementedError("Web content reading not yet implemented")
 
     async def watch_changes(
@@ -277,14 +239,6 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         """
         if not config.get("enable_change_watching", False):
             raise NotImplementedError("Change watching is disabled in configuration")
-
-        # TODO: Implement web change watching
-        # This would involve:
-        # 1. Periodic re-crawling of monitored pages
-        # 2. Detecting content changes via checksums/ETags
-        # 3. Monitoring RSS/Atom feeds for updates
-        # 4. Using sitemap.xml for discovering new content
-
         raise NotImplementedError("Web change watching not yet implemented")
 
     async def validate_source(self, config: WebCrawlerSourceConfig) -> bool:
@@ -297,32 +251,20 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             True if configuration is valid, False otherwise
         """
         try:
-            # Call parent validation first
             if not await super().validate_source(config):
                 return False
-
-            # Check required fields
             start_urls = config.get("start_urls", [])
             if not start_urls:
                 logger.warning("Missing start_urls in web crawler source configuration")
                 return False
-
-            # Validate URL format
             for url in start_urls:
                 if not url.startswith(("http://", "https://")):
                     logger.warning("Invalid URL format: %s", url)
                     return False
-
-            # TODO: Test URL accessibility
-            # This would involve making test requests to verify
-            # the URLs are accessible and responsive
-
             logger.warning("Web URL accessibility validation not fully implemented")
-
         except Exception:
             logger.exception("Error validating web crawler source configuration")
             return False
-
         return True
 
     async def get_content_metadata(self, item: "ContentItem") -> dict[str, Any]:
@@ -335,18 +277,38 @@ class WebCrawlerSourceProvider(AbstractDataSource):
             Dictionary with detailed web metadata
         """
         metadata = await super().get_content_metadata(item)
-
-        # TODO: Add web-specific metadata
-        # This would include:
-        # - HTTP response headers
-        # - Page title and description
-        # - Meta tags and structured data
-        # - Link analysis and page rank
-        # - Content type and encoding
-
         metadata.update({
             "web_metadata_available": False,
             "implementation_note": "Web metadata extraction not yet implemented",
         })
-
         return metadata
+
+    async def health_check(self) -> bool:
+        """Check web data source health by testing connectivity.
+
+        Returns:
+            True if source is healthy and operational, False otherwise
+        """
+        try:
+            if not hasattr(self, "source_id") or not self.source_id:
+                logger.warning("Web source missing source_id")
+                return False
+            logger.debug("Web source health check - stub implementation")
+            try:
+                import urllib.request
+
+                with urllib.request.urlopen(
+                    "https://httpbin.org/status/200", timeout=5
+                ) as response:
+                    if response.getcode() == 200:
+                        logger.debug("Web source health check passed - connectivity OK")
+                        return True
+            except Exception as e:
+                logger.warning("Web source connectivity test failed: %s", e)
+                return False
+            logger.warning("Web source health check failed - no connectivity")
+        except Exception:
+            logger.exception("Web source health check failed")
+            return False
+        else:
+            return False

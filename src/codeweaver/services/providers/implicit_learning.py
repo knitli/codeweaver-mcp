@@ -633,3 +633,59 @@ class BehavioralPatternLearningProvider(BaseServiceProvider, ImplicitLearningSer
                 )
         except Exception as e:
             self._logger.warning("Failed to track learning signal: %s", e)
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for implicit learning operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "implicit_learning_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "max_behavioral_patterns": self._config.max_behavioral_patterns,
+                "pattern_decay_rate": self._config.pattern_decay_rate,
+                "learning_rate": self._config.learning_rate,
+                "min_pattern_confidence": self._config.min_pattern_confidence,
+                "enable_adaptive_thresholds": self._config.enable_adaptive_thresholds,
+                "context_sensitivity": self._config.context_sensitivity,
+                "update_frequency": self._config.update_frequency,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "active_patterns": len(self._behavioral_patterns),
+                "total_learning_signals": self._learning_stats["total_signals"],
+                "successful_learning_events": self._learning_stats["successful_learning_events"],
+                "failed_learning_events": self._learning_stats["failed_learning_events"],
+                "pattern_updates": self._learning_stats["pattern_updates"],
+                "avg_learning_time": self._learning_stats["avg_learning_time"],
+                "confidence_improvements": self._learning_stats["confidence_improvements"],
+                "patterns_learned": len([
+                    p
+                    for p in self._behavioral_patterns.values()
+                    if p.confidence >= self._config.min_pattern_confidence
+                ]),
+            }
+        })
+
+        return context

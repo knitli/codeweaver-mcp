@@ -815,3 +815,25 @@ class FileSystemSource(AbstractDataSource):
             ".makefile": "makefile",
         }
         return language_map.get(suffix)
+
+    async def health_check(self) -> bool:
+        """Check filesystem data source health by verifying root path accessibility.
+
+        Returns:
+            True if source is healthy and operational, False otherwise
+        """
+        try:
+            if not hasattr(self, "source_id") or not self.source_id:
+                logger.warning("Filesystem source missing source_id")
+                return False
+            test_path = Path()
+            if test_path.exists() and test_path.is_dir():
+                list(test_path.iterdir())
+                logger.debug("Filesystem source health check passed")
+                return True
+            logger.warning("Filesystem source cannot access test directory")
+        except Exception:
+            logger.exception("Filesystem source health check failed")
+            return False
+        else:
+            return False

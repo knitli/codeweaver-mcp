@@ -546,22 +546,9 @@ class SpaCyProvider(LocalNLPProvider):
             },
         ]
 
-    async def health_check(self) -> dict[str, Any]:
+    async def health_check(self) -> bool:
         """Check provider health and model availability."""
-        return {
-            "provider_name": self.provider_name,
-            "model_loaded": self.nlp is not None,
-            "model_name": self.model_name,
-            "capabilities": [
-                "intent_classification" if self.config.enable_intent_classification else None,
-                "entity_recognition",
-                "embeddings" if self.config.use_transformers else "word_vectors",
-                "pos_tagging",
-                "dependency_parsing",
-            ],
-            "pipeline": list(self.nlp.pipe_names) if self.nlp else [],
-            "domain_patterns_count": len(self._default_patterns),
-        }
+        return self.nlp is not None
 
 
 # Register the provider in the global registry

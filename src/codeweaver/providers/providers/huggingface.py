@@ -27,12 +27,12 @@ from codeweaver.utils.decorators import feature_flag_required
 
 
 try:
-    import requests
+    import httpx
 
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
-    requests = None
+    httpx = None
 try:
     import torch
     import transformers
@@ -99,7 +99,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "No HuggingFace API key provided. Rate limits will apply for public inference."
             )
 
-    def _init_local_model(self) -> None:  # sourcery skip: extract-method
+    def _init_local_model(self) -> None:
         """Initialize local transformers model."""
         if not TRANSFORMERS_AVAILABLE:
             raise ImportError("transformers and torch required for local models")
@@ -276,6 +276,27 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             max_input_length=capabilities.max_input_length,
             native_dimensions=capabilities.native_dimensions,
         )
+
+    async def health_check(self) -> bool:
+        """Check provider health by attempting a minimal operation.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        try:
+            if self._use_local and hasattr(self, "_model") and (self._model is not None):
+                logger.debug("HuggingFace local model health check passed")
+                return True
+            if not self._use_local:
+                await self.embed_query("health_check")
+                logger.debug("HuggingFace API health check passed")
+                return True
+            logger.warning("HuggingFace provider not properly initialized")
+        except Exception:
+            logger.exception("HuggingFace health check failed")
+            return False
+        else:
+            return False
 
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:

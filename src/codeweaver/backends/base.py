@@ -166,6 +166,15 @@ class VectorBackend(Protocol):
         """
         ...
 
+    async def health_check(self) -> bool:
+        """
+        Check backend health and connectivity.
+
+        Returns:
+            True if backend is healthy and operational, False otherwise
+        """
+        ...
+
 
 @runtime_checkable
 class HybridSearchBackend(VectorBackend, Protocol):

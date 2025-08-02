@@ -625,3 +625,50 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
                 "Runtime: service.set_enabled(enabled=False)",
             ],
         }
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for telemetry operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "telemetry_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "enabled": self._config.enabled,
+                "anonymous": self._config.anonymous,
+                "project_id": self._config.project_id,
+                "api_key_configured": bool(self._config.api_key),
+                "endpoint": self._config.endpoint,
+                "batch_size": self._config.batch_size,
+                "flush_interval": self._config.flush_interval,
+                "track_performance": self._config.track_performance,
+                "track_errors": self._config.track_errors,
+                "track_user_events": self._config.track_user_events,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics and privacy info
+        context.update({
+            "statistics": await self.get_telemetry_stats(),
+            "privacy_info": self.get_privacy_info(),
+        })
+
+        return context

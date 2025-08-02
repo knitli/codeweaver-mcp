@@ -9,6 +9,7 @@ import asyncio
 import logging
 
 from pathlib import Path
+from typing import Any
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -386,3 +387,53 @@ class AutoIndexingService(BaseServiceProvider):
             "filtering_service_available": bool(self.filtering_service),
         }
         return base_health
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for auto-indexing operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "auto_indexing_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "auto_indexing_enabled": self._config.auto_indexing_enabled,
+                "watch_patterns": self._config.watch_patterns,
+                "debounce_delay": self._config.debounce_delay,
+                "max_workers": self._config.max_workers,
+                "batch_size": self._config.batch_size,
+            },
+            "watched_paths": list(self.watched_paths),
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+            "metadata": health.metadata,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "files_indexed": self._indexing_stats["files_indexed"],
+                "files_failed": self._indexing_stats["files_failed"],
+                "total_chunks_created": self._indexing_stats["total_chunks_created"],
+                "indexing_workers_active": len([w for w in self._indexing_workers if not w.done()]),
+                "queue_size": self._indexing_queue.qsize(),
+                "observer_running": bool(self.observer and self.observer.is_alive()),
+            }
+        })
+
+        return context

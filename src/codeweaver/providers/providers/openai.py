@@ -210,7 +210,6 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 logger.debug("Cached %s OpenAI embeddings", len(texts))
         except Exception:
             logger.exception("Error generating embeddings from %s")
-
             raise
         else:
             return embeddings
@@ -245,7 +244,6 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 logger.debug("Cached OpenAI query embedding")
         except Exception:
             logger.exception("Error generating query embedding from %s")
-
             raise
         else:
             return embedding
@@ -298,6 +296,21 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             max_input_length=None,
             native_dimensions={},
         )
+
+    async def health_check(self) -> bool:
+        """Check provider health by attempting a minimal API call.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        try:
+            await self.embed_query("health_check")
+            logger.debug("OpenAI-compatible provider health check passed")
+        except Exception:
+            logger.exception("OpenAI-compatible provider health check failed")
+            return False
+        else:
+            return True
 
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:

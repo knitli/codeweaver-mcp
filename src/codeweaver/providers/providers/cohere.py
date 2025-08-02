@@ -1,4 +1,3 @@
-# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -272,6 +271,21 @@ class CohereProvider(CombinedProvider):
             max_input_length=capabilities.max_input_length,
             native_dimensions=capabilities.native_dimensions,
         )
+
+    async def health_check(self) -> bool:
+        """Check provider health by attempting a minimal API call.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        try:
+            await self.embed_query("health_check")
+            logger.debug("Cohere health check passed")
+        except Exception:
+            logger.exception("Cohere health check failed")
+            return False
+        else:
+            return True
 
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:

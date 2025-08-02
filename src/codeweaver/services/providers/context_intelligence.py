@@ -682,3 +682,58 @@ class FastMCPContextMiningProvider(BaseServiceProvider, ContextIntelligenceServi
 
         if expired_sessions:
             self._logger.debug("Cleaned up %d expired sessions", len(expired_sessions))
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for context intelligence operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "context_intelligence_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "context_window_size": self._config.context_window_size,
+                "max_context_history": self._config.max_context_history,
+                "enable_context_learning": self._config.enable_context_learning,
+                "context_similarity_threshold": self._config.context_similarity_threshold,
+                "session_timeout": self._config.session_timeout,
+                "max_concurrent_sessions": self._config.max_concurrent_sessions,
+                "adaptive_context_sizing": self._config.adaptive_context_sizing,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "active_sessions": len(self._session_profiles),
+                "context_entries": len(self._context_cache),
+                "successful_context_generations": self._context_stats[
+                    "successful_context_generations"
+                ],
+                "failed_context_generations": self._context_stats["failed_context_generations"],
+                "cache_hits": self._context_stats["cache_hits"],
+                "cache_misses": self._context_stats["cache_misses"],
+                "avg_context_generation_time": self._context_stats["avg_context_generation_time"],
+                "total_context_tokens": self._context_stats["total_context_tokens"],
+                "patterns_learned": self._context_stats["patterns_learned"],
+            }
+        })
+
+        return context

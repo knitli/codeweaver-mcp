@@ -730,3 +730,57 @@ class ContextAdequacyOptimizationProvider(BaseServiceProvider, ZeroShotOptimizat
         context_hash = hashlib.sha256(joined_context.encode()).hexdigest()[:16]
 
         return f"{intent_hash}:{context_hash}"
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for zero-shot optimization operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "zero_shot_optimization_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "max_cache_size": self._config.max_cache_size,
+                "cache_ttl": self._config.cache_ttl,
+                "adaptive_context_sizing": self._config.adaptive_context_sizing,
+                "context_window_optimization": self._config.context_window_optimization,
+                "enable_query_optimization": self._config.enable_query_optimization,
+                "enable_context_adequacy": self._config.enable_context_adequacy,
+                "optimization_aggressiveness": self._config.optimization_aggressiveness,
+                "min_confidence_threshold": self._config.min_confidence_threshold,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "cache_entries": len(self._optimization_cache),
+                "cache_hits": self._optimization_stats["cache_hits"],
+                "cache_misses": self._optimization_stats["cache_misses"],
+                "successful_optimizations": self._optimization_stats["successful_optimizations"],
+                "failed_optimizations": self._optimization_stats["failed_optimizations"],
+                "avg_optimization_time": self._optimization_stats["avg_optimization_time"],
+                "context_reductions": self._optimization_stats["context_reductions"],
+                "token_savings": self._optimization_stats["token_savings"],
+                "quality_score": self._optimization_stats["avg_quality_score"],
+            }
+        })
+
+        return context

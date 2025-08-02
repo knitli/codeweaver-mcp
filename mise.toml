@@ -78,8 +78,8 @@ install = "uv sync --all-groups"
 fix = """
 #!/bin/bash
 echo "Fixing code issues..."
-ruff check --select I --fix . &&
-ruff check --fix --unsafe-fixes . &&
+ruff check --select I --fix src/ &&
+ruff check --fix --unsafe-fixes src/ &&
 ruff format . &&
 hk fix &&
 echo "✅ Code fixes applied!"

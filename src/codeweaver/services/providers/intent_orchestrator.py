@@ -740,3 +740,58 @@ class IntentOrchestrator(BaseServiceProvider):
         )
 
         return base_health
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for intent orchestration operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "intent_orchestrator": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "max_concurrent_intents": self._config.max_concurrent_intents,
+                "intent_timeout": self._config.intent_timeout,
+                "cache_strategy_results": self._config.cache_strategy_results,
+                "adaptive_strategy_selection": self._config.adaptive_strategy_selection,
+                "fallback_to_simple": self._config.fallback_to_simple,
+                "context_window_size": self._config.context_window_size,
+                "circuit_breaker_threshold": self._config.circuit_breaker_threshold,
+                "strategy_confidence_threshold": self._config.strategy_confidence_threshold,
+            },
+            "available_strategies": list(self._strategies.keys()),
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+            "metadata": health.metadata,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "total_processed": self._intent_stats["total_processed"],
+                "successful_intents": self._intent_stats["successful_intents"],
+                "failed_intents": self._intent_stats["failed_intents"],
+                "cached_hits": self._intent_stats["cached_hits"],
+                "avg_processing_time": self._intent_stats["avg_processing_time"],
+                "strategy_usage": self._intent_stats["strategy_usage"].copy(),
+                "circuit_breaker_failures": self._circuit_breaker_failures,
+                "active_intents": len(self._active_intents),
+            }
+        })
+
+        return context

@@ -244,6 +244,46 @@ class ChunkingService(BaseServiceProvider, ChunkingService):
         self._stats = ChunkingStats()
         self._logger.info("Chunking statistics reset")
 
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for chunking operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "chunking_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "supported_languages": self.get_supported_languages(),
+            "available_strategies": self.get_available_strategies(),
+            "chunk_size_limits": {
+                "min_chunk_size": self._config.min_chunk_size,
+                "max_chunk_size": self._config.max_chunk_size,
+            },
+            "ast_grep_enabled": self._config.ast_grep_enabled,
+            "performance_mode": self._config.performance_mode.value,
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": await self.get_chunking_stats()})
+
+        return context
+
     async def _chunk_with_ast_strategy(self, content: str, file_path: Path) -> list[CodeChunk]:
         """Force AST-based chunking."""
         if not self._middleware:

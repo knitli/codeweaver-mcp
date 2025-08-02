@@ -12,7 +12,7 @@ native sparse vector support introduced in v1.10+.
 
 import logging
 
-from datetime import UTC, datetime
+from contextlib import suppress
 from typing import Any
 
 from qdrant_client import QdrantClient
@@ -37,11 +37,9 @@ from codeweaver.cw_types import (
     CollectionInfo,
     DistanceMetric,
     FilterCondition,
-    HealthStatus,
     HybridStrategy,
     SearchFilter,
     SearchResult,
-    ServiceHealth,
     VectorPoint,
 )
 
@@ -412,39 +410,16 @@ class QdrantHybridBackend(QdrantBackend):
         try:
             health_info = self.client.get_cluster_info()
             if not health_info:
-                return ServiceHealth(
-                    status=HealthStatus.UNHEALTHY,
-                    message="Unable to get cluster info from Qdrant",
-                    last_check=datetime.now(UTC),
-                )
-            collections = self.client.get_collections()
-            collection_count = len(collections.collections) if collections else 0
-            try:
-                telemetry = self.client.get_telemetry()
-            except Exception as e:
-                return ServiceHealth(
-                    status=HealthStatus.DEGRADED,
-                    message=f"Qdrant partially available: {e}",
-                    last_check=datetime.now(UTC),
-                    metadata={"collection_count": collection_count},
-                )
-            else:
-                return ServiceHealth(
-                    status=HealthStatus.HEALTHY,
-                    message=f"Qdrant healthy: {collection_count} collections available",
-                    last_check=datetime.now(UTC),
-                    metadata={
-                        "collection_count": collection_count,
-                        "cluster_info": str(health_info),
-                        "telemetry_available": telemetry is not None,
-                    },
-                )
-        except Exception as e:
-            return ServiceHealth(
-                status=HealthStatus.UNHEALTHY,
-                message=f"Qdrant connection failed: {e}",
-                last_check=datetime.now(UTC),
-            )
+                return False
+            # Check collections are accessible
+            self.client.get_collections()
+            # Try to get telemetry for comprehensive health check
+            with suppress(Exception):
+                self.client.get_telemetry()
+        except Exception:
+            return False
+        else:
+            return True  # Health check passed
 
     def get_connection_info(self) -> dict[str, Any]:
         """Get connection information for monitoring."""

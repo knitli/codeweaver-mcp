@@ -1061,7 +1061,7 @@ class ConfigSchema:
     @staticmethod
     def generate_example_config(format_type: str = "toml") -> str:
         """Generate an example configuration in the specified format."""
-        if format_type.lower() == "toml":
+        if fmt_type.lower() == "toml":
             return create_example_config()
         raise ValueError(f"Unsupported format: {format_type}")
 

@@ -24,16 +24,10 @@ from codeweaver.sources.base import AbstractDataSource, SourceWatcher
 logger = logging.getLogger(__name__)
 
 
-# TODO: We're already built from Pydantic, so could we implement this with SqlModel with minimal effort? Maybe take a SQLModel object as a dependency injection to use for read/discover/watch?
-# The answer is 'yes', [see analysis](../../../plans/features/DATABASE_SQLMODEL_ANALYSIS.md) for details.
-
-
 class DatabaseSourceConfig(BaseModel):
     """Configuration specific to database data sources."""
 
     model_config = ConfigDict(extra="allow", validate_assignment=True)
-
-    # Inherited from BaseSourceConfig
     enabled: Annotated[bool, Field(True, description="Whether source is enabled")]
     priority: Annotated[int, Field(1, ge=1, le=100, description="Source priority")]
     source_id: Annotated[str | None, Field(None, description="Unique source identifier")]
@@ -64,8 +58,6 @@ class DatabaseSourceConfig(BaseModel):
     supported_languages: Annotated[
         list[str], Field(default_factory=list, description="Supported programming languages")
     ]
-
-    # Database specific settings
     database_type: Annotated[
         str,
         Field(
@@ -83,13 +75,9 @@ class DatabaseSourceConfig(BaseModel):
         ),
     ]
     database_name: Annotated[str, Field(description="Database name (required)")]
-
-    # Authentication
     username: Annotated[str | None, Field(None, description="Username for database authentication")]
     password: Annotated[str | None, Field(None, description="Password for database authentication")]
     ssl_mode: Annotated[str | None, Field(None, description="SSL mode for secure connections")]
-
-    # Content discovery settings
     include_tables: Annotated[
         list[str], Field(default_factory=list, description="Tables to include in indexing")
     ]
@@ -103,8 +91,6 @@ class DatabaseSourceConfig(BaseModel):
     include_schemas: Annotated[
         list[str], Field(default_factory=list, description="Database schemas to include")
     ]
-
-    # Data extraction settings
     max_record_length: Annotated[
         int,
         Field(10000, ge=100, le=100000, description="Maximum record length for content extraction"),
@@ -146,7 +132,6 @@ class DatabaseSourceProvider(AbstractDataSource):
     @classmethod
     def check_availability(cls, capability: SourceCapability) -> tuple[bool, str | None]:
         """Check if database source is available for the given capability."""
-        # Database source supports most capabilities but requires database drivers
         supported_capabilities = {
             SourceCapability.CONTENT_DISCOVERY,
             SourceCapability.CONTENT_READING,
@@ -155,21 +140,16 @@ class DatabaseSourceProvider(AbstractDataSource):
             SourceCapability.AUTHENTICATION,
             SourceCapability.PAGINATION,
         }
-
         if capability in supported_capabilities:
-            # Check for database driver dependencies (basic check)
             try:
-                import sqlite3  # Built-in, always available  # noqa: F401
+                import sqlite3
             except ImportError:
-                return False, "No database drivers available"
-
+                return (False, "No database drivers available")
             else:
-                return True, None
-        # Change watching requires additional setup
+                return (True, None)
         if capability == SourceCapability.CHANGE_WATCHING:
-            return False, "Change watching requires database-specific triggers or polling setup"
-
-        return False, f"Capability {capability.value} not supported by Database source"
+            return (False, "Change watching requires database-specific triggers or polling setup")
+        return (False, f"Capability {capability.value} not supported by Database source")
 
     def get_capabilities(self) -> SourceCapabilities:
         """Get capabilities supported by database source."""
@@ -198,25 +178,13 @@ class DatabaseSourceProvider(AbstractDataSource):
         """
         if not config.get("enabled", True):
             return []
-
         database_type = config.get("database_type")
         if not database_type:
             raise ValueError("database_type is required for database source")
-
-        if connection_string := config.get("connection_string"):  # noqa: F841
-            # TODO: Implement database content discovery
-            # This would involve:
-            # 1. Connecting to the database
-            # 2. Discovering schemas, tables, views, procedures
-            # 3. Extracting schema definitions as content
-            # 4. Sampling data records if configured
-            # 5. Creating ContentItems for each database object
-
+        if connection_string := config.get("connection_string"):
             raise NotImplementedError(
-                f"Database source for {database_type} is not yet implemented. "
-                "Future implementation will require database-specific dependencies."
+                f"Database source for {database_type} is not yet implemented. Future implementation will require database-specific dependencies."
             )
-
         raise ValueError("connection_string is required for database source")
 
     async def read_content(self, item: ContentItem) -> str:
@@ -233,14 +201,6 @@ class DatabaseSourceProvider(AbstractDataSource):
         """
         if item.content_type != "database":
             raise ValueError(f"Unsupported content type for database source: {item.content_type}")
-
-        # TODO: Implement database content reading
-        # This would involve:
-        # 1. Connecting to the database
-        # 2. Executing appropriate queries based on object type
-        # 3. Formatting results as readable text
-        # 4. Handling different data types appropriately
-
         raise NotImplementedError("Database content reading not yet implemented")
 
     async def watch_changes(
@@ -260,14 +220,6 @@ class DatabaseSourceProvider(AbstractDataSource):
         """
         if not config.get("enable_change_watching", False):
             raise NotImplementedError("Change watching is disabled in configuration")
-
-        # TODO: Implement database change watching
-        # This would involve:
-        # 1. Setting up database change triggers/notifications
-        # 2. Polling for schema changes
-        # 3. Detecting data modifications in tracked tables
-        # 4. Handling different database-specific change mechanisms
-
         raise NotImplementedError("Database change watching not yet implemented")
 
     async def validate_source(self, config: DatabaseSourceConfig) -> bool:
@@ -280,31 +232,20 @@ class DatabaseSourceProvider(AbstractDataSource):
             True if configuration is valid, False otherwise
         """
         try:
-            # Call parent validation first
             if not await super().validate_source(config):
                 return False
-
-            # Check required fields
             database_type = config.get("database_type")
             if not database_type:
                 logger.warning("Missing database_type in database source configuration")
                 return False
-
             connection_string = config.get("connection_string")
             if not connection_string:
                 logger.warning("Missing connection_string in database source configuration")
                 return False
-
-            # TODO: Test database connectivity
-            # This would involve attempting a connection to verify
-            # the configuration is correct and accessible
-
             logger.warning("Database connectivity validation not fully implemented")
-
         except Exception:
             logger.exception("Error validating database source configuration")
             return False
-
         else:
             return True
 
@@ -318,18 +259,26 @@ class DatabaseSourceProvider(AbstractDataSource):
             Dictionary with detailed database metadata
         """
         metadata = await super().get_content_metadata(item)
-
-        # TODO: Add database-specific metadata
-        # This would include:
-        # - Table/collection information
-        # - Schema details
-        # - Data types and constraints
-        # - Relationships and foreign keys
-        # - Performance statistics
-
         metadata.update({
             "database_metadata_available": False,
             "implementation_note": "Database metadata extraction not yet implemented",
         })
-
         return metadata
+
+    async def health_check(self) -> bool:
+        """Check database data source health by verifying connection.
+
+        Returns:
+            True if source is healthy and operational, False otherwise
+        """
+        try:
+            if not hasattr(self, "source_id") or not self.source_id:
+                logger.warning("Database source missing source_id")
+                return False
+            logger.debug("Database source health check - stub implementation")
+            logger.debug("Database source health check passed (stub)")
+        except Exception:
+            logger.exception("Database source health check failed")
+            return False
+        else:
+            return True

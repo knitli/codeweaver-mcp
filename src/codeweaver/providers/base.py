@@ -84,6 +84,15 @@ class EmbeddingProvider(Protocol):
         """Get information about this provider's capabilities."""
         ...
 
+    async def health_check(self) -> bool:
+        """
+        Check provider health and availability.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
+        ...
+
 
 @runtime_checkable
 class RerankProvider(Protocol):
@@ -134,6 +143,15 @@ class RerankProvider(Protocol):
 
     def get_provider_info(self) -> EmbeddingProviderInfo:
         """Get information about this provider's capabilities."""
+        ...
+
+    async def health_check(self) -> bool:
+        """
+        Check provider health and availability.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
         ...
 
 
@@ -447,6 +465,15 @@ class NLPProvider(Protocol):
 
     def get_provider_info(self) -> EmbeddingProviderInfo:
         """Get information about this provider's capabilities."""
+        ...
+
+    async def health_check(self) -> bool:
+        """
+        Check provider health and availability.
+
+        Returns:
+            True if provider is healthy and operational, False otherwise
+        """
         ...
 
 

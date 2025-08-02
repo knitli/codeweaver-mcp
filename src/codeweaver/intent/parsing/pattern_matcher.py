@@ -337,4 +337,8 @@ class PatternBasedParser:
 
     def _get_matched_patterns(self, text: str, intent_type: IntentType) -> list[str]:
         """Get list of patterns that matched the text."""
-        return [pattern for pattern in self.patterns[f"{intent_type.value}_patterns"] if re.search(pattern, text)]
+        return [
+            pattern
+            for pattern in self.patterns[f"{intent_type.value}_patterns"]
+            if re.search(pattern, text)
+        ]

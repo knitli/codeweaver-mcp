@@ -213,3 +213,47 @@ class RateLimitingService(BaseServiceProvider):
             max_batch_size=1000,
             supports_async=True,
         )
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for rate limiting operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "rate_limiting_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.get_capabilities(),
+            "configuration": {
+                "rate_limit": self.config.rate_limit,
+                "time_window": self.config.time_window,
+                "bucket_size": self.config.bucket_size,
+                "cleanup_interval": self.config.cleanup_interval,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.message if health.status.name != "HEALTHY" else None,
+        })
+
+        # Add runtime statistics
+        context.update({
+            "statistics": {
+                "active_buckets": len(self._buckets),
+                "total_requests": sum(bucket.total_requests for bucket in self._buckets.values()),
+                "total_rejections": sum(bucket.rejections for bucket in self._buckets.values()),
+            }
+        })
+
+        return context

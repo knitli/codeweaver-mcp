@@ -23,7 +23,7 @@ console = Console(stderr=True, markup=True, emoji=True)
 DEFAULT_LOG_LEVEL = logging.INFO
 
 
-async def get_logger() -> logging.Logger:
+async def get_logger() -> logging.Logger:  # noqa: RUF029
     """
     Get the logger for CodeWeaver.
 
@@ -73,7 +73,7 @@ def get_handler() -> LogHandler:
 
 
 @LogHandler.register(CodeWeaverLogMessage)
-async def async_log_handler(message: CodeWeaverLogMessage) -> None:
+async def async_log_handler(message: CodeWeaverLogMessage) -> None:  # noqa: RUF029
     """
     Handle log messages from FastMCP.
 

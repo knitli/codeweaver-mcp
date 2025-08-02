@@ -109,6 +109,41 @@ class FastMCPLoggingProvider(BaseServiceProvider, LoggingService):
         """Get the FastMCP middleware instance."""
         return self._middleware
 
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for logging operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "logging_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "log_level": self._config.log_level,
+                "include_payloads": self._config.include_payloads,
+                "max_payload_length": self._config.max_payload_length,
+            },
+            "middleware_available": self._middleware is not None,
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        return context
+
 
 class FastMCPTimingProvider(BaseServiceProvider, TimingService):
     """FastMCP-based timing service provider."""
@@ -189,6 +224,40 @@ class FastMCPTimingProvider(BaseServiceProvider, TimingService):
     def get_middleware_instance(self) -> TimingMiddleware | None:
         """Get the FastMCP middleware instance."""
         return self._middleware
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for timing operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "timing_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {"track_performance_metrics": self._config.track_performance_metrics},
+            "middleware_available": self._middleware is not None,
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": await self.get_timing_stats()})
+
+        return context
 
 
 class FastMCPErrorHandlingProvider(BaseServiceProvider, ErrorHandlingService):
@@ -283,6 +352,44 @@ class FastMCPErrorHandlingProvider(BaseServiceProvider, ErrorHandlingService):
         """Get the FastMCP middleware instance."""
         return self._middleware
 
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for error handling operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "error_handling_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "include_traceback": self._config.include_traceback,
+                "transform_errors": self._config.transform_errors,
+                "max_error_history": self._config.max_error_history,
+            },
+            "middleware_available": self._middleware is not None,
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": await self.get_error_stats()})
+
+        return context
+
     def _get_current_timestamp(self) -> str:
         """Get current timestamp as string."""
         from datetime import UTC, datetime
@@ -372,3 +479,40 @@ class FastMCPRateLimitingProvider(BaseServiceProvider, RateLimitingService):
     def get_middleware_instance(self) -> RateLimitingMiddleware | None:
         """Get the FastMCP middleware instance."""
         return self._middleware
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for middleware rate limiting operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "middleware_rate_limiting_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "configuration": {
+                "requests_per_second": self._config.requests_per_second,
+                "burst_capacity": self._config.burst_capacity,
+            },
+            "middleware_available": self._middleware is not None,
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": await self.get_rate_limit_stats()})
+
+        return context

@@ -273,3 +273,41 @@ class CachingService(BaseServiceProvider):
             max_batch_size=self.config.max_size,
             supports_async=True,
         )
+
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for caching operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "caching_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.get_capabilities(),
+            "configuration": {
+                "max_size": self.config.max_size,
+                "max_memory_mb": self.config.max_memory_mb,
+                "cleanup_interval": self.config.cleanup_interval,
+                "default_ttl": self.config.default_ttl,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.message if health.status.name != "HEALTHY" else None,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": self.get_statistics()})
+
+        return context

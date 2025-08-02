@@ -155,6 +155,14 @@ class DataSource(Protocol):
         """
         ...
 
+    async def health_check(self) -> bool:
+        """Check data source health and availability.
+
+        Returns:
+            True if data source is healthy and operational, False otherwise
+        """
+        ...
+
     async def validate_source(self, config: SourceConfig) -> bool:
         """Validate that the source is accessible and properly configured.
 

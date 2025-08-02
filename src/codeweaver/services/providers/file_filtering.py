@@ -265,6 +265,46 @@ class FilteringService(BaseServiceProvider, FilteringService):
         self._stats = FilteringStats()
         self._logger.info("Filtering statistics reset")
 
+    async def create_service_context(
+        self, base_context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create service context for filtering operations."""
+        context = base_context.copy() if base_context else {}
+
+        # Add service reference and basic info
+        context.update({
+            "filtering_service": self,
+            "service_type": self.service_type,
+            "provider_name": self.name,
+            "provider_version": self.version,
+        })
+
+        # Add capabilities and configuration
+        context.update({
+            "capabilities": self.capabilities,
+            "active_patterns": self.get_active_patterns(),
+            "configuration": {
+                "use_gitignore": self._config.use_gitignore,
+                "max_file_size": self._config.max_file_size,
+                "max_concurrent_scans": self._config.max_concurrent_scans,
+                "allowed_extensions": self._config.allowed_extensions,
+                "ignore_directories": self._config.ignore_directories,
+            },
+        })
+
+        # Add health status
+        health = await self.health_check()
+        context.update({
+            "health_status": health.status,
+            "service_healthy": health.status.name == "HEALTHY",
+            "last_error": health.last_error,
+        })
+
+        # Add runtime statistics
+        context.update({"statistics": await self.get_filtering_stats()})
+
+        return context
+
     def _matches_include_patterns(self, file_path: Path, patterns: list[str]) -> bool:
         """Check if file matches any include patterns."""
         return self._check_for_matches(patterns, file_path)
