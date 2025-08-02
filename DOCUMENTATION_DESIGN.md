@@ -5,60 +5,69 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
 # CodeWeaver Documentation Design
+**Revised for Intent-Based Architecture with Advanced Services Layer**
 
 ## 📋 Summary
 
-This document outlines the comprehensive Material for MkDocs documentation structure designed for CodeWeaver, creating a world-class documentation experience that matches the sophistication of its extensible MCP server architecture.
+This document outlines the comprehensive Material for MkDocs documentation structure designed for CodeWeaver's revolutionary intent-based MCP server architecture. CodeWeaver has evolved from a traditional multi-tool MCP server to a sophisticated intent processing system with advanced services layer, requiring a complete documentation strategy overhaul.
 
 ## 🎯 Design Objectives
 
-### 1. **AI-First Documentation**
-- Optimized for both human readers and AI assistants
-- Clear integration guides for Claude Desktop and other MCP clients
-- Context-aware information architecture
+### 1. **Intent-First Documentation**
+- Optimized for natural language interactions with AI assistants
+- Clear guidance on intent-based queries and automatic background indexing
+- Focus on "what you want to achieve" rather than "how to use specific tools"
+- Integration guides for Claude Desktop emphasizing single `process_intent` tool
 
-### 2. **Progressive Disclosure**
-- 9-level information hierarchy from basic setup to advanced plugin development
-- User journey mapping for three primary personas
-- Task-oriented organization rather than technical structure
+### 2. **Architecture-Aware Progressive Disclosure**
+- 9-level information hierarchy updated for enterprise-grade service architecture
+- User journey mapping for four primary personas (added Enterprise Administrators)
+- Service-oriented organization reflecting sophisticated backend architecture
+- Clear separation between user-facing intents and administrator controls
 
-### 3. **World-Class User Experience**
-- Modern Material Design with CodeWeaver branding
-- Responsive design with accessibility compliance (WCAG 2.1 AA)
-- Performance-optimized with sub-3-second load times
+### 3. **Enterprise-Grade User Experience**
+- Modern Material Design reflecting CodeWeaver's production-ready status
+- Performance documentation for health monitoring, auto-recovery, and circuit breakers
+- Accessibility compliance (WCAG 2.1 AA) with enterprise deployment guidance
+- Sub-3-second load times with advanced service layer documentation
 
 ## 📁 Documentation Structure
 
-### 🔄 Information Architecture (9 Levels)
+### 🔄 Information Architecture (9 Levels) - **REVISED FOR INTENT ARCHITECTURE**
 
 ```
-Level 1: Getting Started    → High-level overview & quick wins
-Level 2: User Guide        → Task-oriented workflows  
-Level 3: Configuration     → Deep configuration options
-Level 4: Architecture      → System understanding
-Level 5: Plugin Development → Advanced extensibility
-Level 6: API Reference     → Detailed technical reference
-Level 7: Tutorials         → Learning by doing
-Level 8: Reference         → Quick lookup materials
-Level 9: Community         → Ecosystem & support
+Level 1: Getting Started    → Intent-based quick start & natural language examples
+Level 2: Intent Guide       → Natural language query patterns & capabilities  
+Level 3: Services & Config  → Advanced service layer configuration & monitoring
+Level 4: Architecture       → Intent processing pipeline & services architecture
+Level 5: Extension Dev      → Plugin development for intent processors & services
+Level 6: Services API       → Service layer API reference & health monitoring
+Level 7: Intent Tutorials   → Learning through natural language examples
+Level 8: Quick Reference    → Intent patterns, service configs, troubleshooting
+Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 ```
 
-### 👥 User Persona Mapping
+### 👥 User Persona Mapping - **UPDATED FOR CURRENT ARCHITECTURE**
 
 **🎯 AI Assistant Users (Beginners)**
-- Journey: Home → Why CodeWeaver → Quick Start → First Search → User Guide
-- Goal: Get CodeWeaver working with Claude Desktop in 5 minutes
-- Content: Simple setup, immediate value, troubleshooting
+- Journey: Home → Why CodeWeaver → Quick Start → First Intent Query → Intent Guide
+- Goal: Get CodeWeaver working with Claude Desktop using natural language in 5 minutes
+- Content: Intent examples, automatic indexing explanation, no-configuration startup
 
 **🛠️ Developer Teams (Intermediate)**  
-- Journey: User Guide → Configuration → Architecture → Tutorials → Performance
-- Goal: Configure and deploy for team/organization use
-- Content: Configuration options, best practices, deployment guides
+- Journey: Intent Guide → Services & Config → Architecture → Performance Monitoring → Deployment
+- Goal: Configure and deploy CodeWeaver for team use with service monitoring
+- Content: Service configuration, health monitoring, deployment guides, performance optimization
 
-**🧩 Plugin Developers (Advanced)**
-- Journey: Architecture → Plugin Development → API Reference → Examples  
-- Goal: Extend CodeWeaver with custom components
-- Content: Technical depth, code examples, protocols, testing
+**🏢 Enterprise Administrators (Advanced Operations)**
+- Journey: Architecture → Services & Config → Enterprise Deployment → Monitoring & Maintenance
+- Goal: Deploy and maintain CodeWeaver at enterprise scale with full observability
+- Content: Service health monitoring, auto-recovery configuration, enterprise deployment patterns
+
+**🧩 Plugin Developers (Advanced Technical)**
+- Journey: Architecture → Extension Development → Services API → Testing & Integration
+- Goal: Extend CodeWeaver with custom intent processors and service providers
+- Content: Intent processing plugins, service provider development, protocol implementation
 
 ## 🎨 Material Theme Configuration
 
@@ -98,29 +107,29 @@ Level 9: Community         → Ecosystem & support
 - **mike**: Multi-version documentation management
 - **privacy**: GDPR compliance and consent management
 
-## 📝 Content Strategy
+## 📝 Content Strategy - **REVISED FOR INTENT-BASED SYSTEM**
 
-### Content Type Definitions
+### Content Type Definitions - **UPDATED FOR NEW ARCHITECTURE**
 
-**Conceptual Content**
-- Structure: What → Why → How → When → Examples
-- Purpose: Help users understand and make decisions
-- Examples: Architecture concepts, search strategies
+**Intent-Based Conceptual Content**
+- Structure: What Intent → Natural Language Examples → How It Works → When to Use → Advanced Patterns
+- Purpose: Help users understand intent capabilities and formulate effective queries
+- Examples: Natural language search patterns, automatic indexing concepts, intent processing pipeline
 
-**Task-Based Guides**  
-- Structure: Overview → Prerequisites → Steps → Verification → Next Steps
-- Purpose: Help users accomplish specific goals
-- Examples: Indexing codebases, configuring providers
+**Service Configuration Guides**  
+- Structure: Service Overview → Configuration Options → Monitoring Setup → Health Checks → Troubleshooting
+- Purpose: Help administrators configure and monitor the service layer
+- Examples: Configuring chunking services, setting up health monitoring, auto-recovery configuration
 
-**Reference Documentation**
-- Structure: Description → Parameters → Examples → Related
-- Purpose: Detailed technical information for lookup
-- Examples: API docs, configuration schemas
+**Intent Reference Documentation**
+- Structure: Intent Description → Example Queries → Parameters → Response Format → Related Intents
+- Purpose: Detailed reference for available intents and their capabilities
+- Examples: Search intent patterns, capability queries, service status intents
 
-**Tutorials**
-- Structure: Learning objectives → Prerequisites → Walkthrough → Understanding → Next steps
-- Purpose: Teach through hands-on learning
-- Examples: React project setup, enterprise deployment
+**Hands-On Intent Tutorials**
+- Structure: Learning objectives → Setup → Natural Language Examples → Understanding Results → Advanced Patterns
+- Purpose: Teach effective intent usage through practical examples
+- Examples: Codebase exploration workflows, debugging with natural language, architectural analysis patterns
 
 ### Cross-Referencing Strategy
 - **Contextual Links**: Prerequisites, related concepts, next steps, examples
@@ -202,28 +211,35 @@ Level 9: Community         → Ecosystem & support
 - **Accessibility**: WCAG 2.1 AA compliance
 - **SEO Performance**: Top 3 search results for key terms
 
-## 🚀 Implementation Status
+## 🚀 Implementation Status - **REVISED FOR NEW ARCHITECTURE**
 
-### ✅ Completed
-- [x] MkDocs configuration with Material theme
-- [x] Navigation structure and information architecture  
-- [x] Core plugin configuration and optimization
-- [x] Brand identity and custom CSS system
-- [x] Content strategy and templates
-- [x] Performance optimization setup
+### ⚠️ Requires Major Updates (Architecture Changed)
+- [ ] **CRITICAL**: Update navigation structure for intent-based architecture
+- [ ] **CRITICAL**: Revise getting started guide for single intent tool
+- [ ] **CRITICAL**: Document automatic indexing vs manual indexing
+- [ ] **CRITICAL**: Create intent query examples and patterns
+- [ ] **CRITICAL**: Document service layer architecture and monitoring
 
-### 🔄 In Progress  
-- [ ] Content creation for all sections
-- [ ] API documentation generation
-- [ ] Tutorial development
-- [ ] Asset creation (logos, diagrams, screenshots)
+### ✅ Still Valid from Original Plan
+- [x] MkDocs configuration with Material theme (can be reused)
+- [x] Brand identity and custom CSS system (can be reused)
+- [x] Core plugin configuration and optimization (can be reused)
+- [x] Performance optimization setup (enhanced with service monitoring)
 
-### 📋 Planned
-- [ ] Multi-language support
-- [ ] Advanced search features
-- [ ] Interactive tutorials
-- [ ] Video content integration
-- [ ] Community contribution system
+### 🔄 Priority Updates Needed
+- [ ] **HIGH**: Intent-based content creation for all sections
+- [ ] **HIGH**: Service layer API documentation generation
+- [ ] **HIGH**: Natural language tutorial development with real examples
+- [ ] **MEDIUM**: Updated architecture diagrams showing intent processing pipeline
+- [ ] **MEDIUM**: Service health monitoring documentation
+
+### 📋 New Features to Add
+- [ ] Intent pattern library with examples
+- [ ] Service monitoring dashboards documentation  
+- [ ] Enterprise deployment guides for service layer
+- [ ] Auto-recovery and circuit breaker configuration guides
+- [ ] Background indexing behavior explanation
+- [ ] Migration guide from traditional MCP tools to intent interface
 
 ## 📚 Files Created
 
@@ -241,12 +257,32 @@ Level 9: Community         → Ecosystem & support
 - **`docs/assets/extra.css`**: Custom CSS with CodeWeaver branding
 - **`DOCUMENTATION_DESIGN.md`**: This comprehensive design document
 
-## 🎯 Next Steps
+## 🎯 Next Steps - **PRIORITIZED FOR ARCHITECTURE CHANGES**
 
-1. **Content Development**: Create content for all navigation sections
-2. **Asset Creation**: Design logos, diagrams, and screenshots
-3. **Testing**: Comprehensive testing across devices and browsers
-4. **Launch**: Deploy documentation and gather user feedback
-5. **Iteration**: Continuous improvement based on analytics and feedback
+### **Phase 1: Critical Architecture Updates (Week 1-2)**
+1. **Intent-Based Getting Started**: Complete rewrite for natural language interface
+2. **Architecture Documentation**: Document intent processing pipeline and services layer  
+3. **Service Monitoring Guide**: Document health checks, auto-recovery, circuit breakers
+4. **API Reference Update**: Document current `process_intent` tool vs legacy tools
 
-This documentation design provides a solid foundation for creating world-class documentation that matches CodeWeaver's sophisticated architecture while providing an exceptional user experience for all personas.
+### **Phase 2: Content Development (Week 3-4)**
+1. **Intent Pattern Library**: Comprehensive examples of natural language queries
+2. **Service Configuration**: Advanced service layer configuration documentation
+3. **Enterprise Deployment**: Large-scale deployment with service monitoring
+4. **Migration Guide**: Help users transition from traditional tools to intent interface
+
+### **Phase 3: Enhancement (Week 5-6)**
+1. **Updated Asset Creation**: Architecture diagrams for intent processing pipeline
+2. **Advanced Tutorials**: Natural language codebase exploration workflows
+3. **Performance Documentation**: Service layer performance optimization
+4. **Testing**: Comprehensive testing across all documentation updates
+
+### **Phase 4: Launch & Iteration (Week 7+)**
+1. **Deploy Updated Documentation**: Launch intent-focused documentation
+2. **User Feedback Collection**: Gather feedback on intent interface documentation
+3. **Continuous Improvement**: Analytics-based improvements for intent usage patterns
+4. **Community Engagement**: Foster community around intent-based development
+
+**Critical Success Factor**: The documentation must emphasize the paradigm shift from explicit tool usage to natural language intent processing, as this represents CodeWeaver's core value proposition and differentiator in the MCP ecosystem.
+
+This revised documentation design acknowledges CodeWeaver's evolution into a sophisticated, production-ready intent processing system with enterprise-grade service architecture, requiring comprehensive documentation updates to match its current capabilities.

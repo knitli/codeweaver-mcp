@@ -18,9 +18,12 @@ import time
 from typing import Any
 
 from codeweaver.cw_types import (
+    EmbeddingProviderError,
     EmbeddingProviderInfo,
     OpenAIModel,
     ProviderCapability,
+    ProviderConfigurationError,
+    ProviderCompatibilityError,
     ProviderType,
     register_provider_class,
 )
@@ -56,7 +59,12 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         """
         super().__init__(config)
         if not OPENAI_AVAILABLE:
-            raise ImportError("OpenAI library not available. Install with: uv add openai")
+            raise EmbeddingProviderError(
+                "OpenAI library not available",
+                provider_name="openai_compatible",
+                operation="initialization",
+                recovery_suggestions=["Install with: uv add openai"]
+            )
         self._service_name = self.config.get("service_name", "OpenAI-Compatible Service")
         self._base_url = self.config.get("base_url", "https://api.openai.com/v1")
         client_kwargs = {"api_key": self.config["api_key"], "base_url": self._base_url}
@@ -75,7 +83,16 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
     def _validate_config(self) -> None:
         """Validate OpenAI-compatible configuration."""
         if not self.config.get("api_key"):
-            raise ValueError("API key is required for OpenAI-compatible provider")
+            raise ProviderConfigurationError(
+                "API key is required for OpenAI-compatible provider",
+                provider_type="embedding",
+                provider_name="openai_compatible",
+                operation="validation",
+                recovery_suggestions=[
+                    "Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config",
+                    "For OpenAI: Get API key from https://platform.openai.com/api-keys"
+                ]
+            )
         logger.info(
             "Initializing %s with model '%s' at %s", self._service_name, self._model, self._base_url
         )
@@ -128,7 +145,17 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         with contextlib.suppress(RuntimeError):
             loop = asyncio.get_event_loop()
         if loop and loop.is_running():
-            raise RuntimeError("Cannot auto-discover dimensions in async context")
+            raise ProviderCompatibilityError(
+                "Cannot auto-discover dimensions in async context",
+                provider_type="embedding",
+                provider_name="openai_compatible",
+                operation="dimension_discovery",
+                recovery_suggestions=[
+                    "Set dimension explicitly in configuration",
+                    "Disable auto_discover_dimensions in config",
+                    "Use synchronous initialization context"
+                ]
+            )
         return asyncio.run(_discover())
 
     async def _apply_rate_limit(self) -> None:
@@ -208,9 +235,21 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)
                 logger.debug("Cached %s OpenAI embeddings", len(texts))
-        except Exception:
-            logger.exception("Error generating embeddings from %s")
-            raise
+        except Exception as e:
+            logger.exception("Error generating embeddings from %s", self._service_name)
+            raise EmbeddingProviderError(
+                f"Failed to generate embeddings from {self._service_name}",
+                provider_name="openai_compatible",
+                operation="embed_documents",
+                model_name=self._model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and service availability",
+                    "Verify base_url is correct for your service",
+                    "Check input text length and batch size limits",
+                    "Ensure model name is supported by the service"
+                ]
+            ) from e
         else:
             return embeddings
 
@@ -242,9 +281,21 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)
                 logger.debug("Cached OpenAI query embedding")
-        except Exception:
-            logger.exception("Error generating query embedding from %s")
-            raise
+        except Exception as e:
+            logger.exception("Error generating query embedding from %s", self._service_name)
+            raise EmbeddingProviderError(
+                f"Failed to generate query embedding from {self._service_name}",
+                provider_name="openai_compatible",
+                operation="embed_query",
+                model_name=self._model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and service availability",
+                    "Verify base_url is correct for your service",
+                    "Check query text length limits",
+                    "Ensure model name is supported by the service"
+                ]
+            ) from e
         else:
             return embedding
 
@@ -306,7 +357,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         try:
             await self.embed_query("health_check")
             logger.debug("OpenAI-compatible provider health check passed")
-        except Exception:
+        except Exception as e:
             logger.exception("OpenAI-compatible provider health check failed")
             return False
         else:

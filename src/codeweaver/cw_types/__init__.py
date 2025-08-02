@@ -58,7 +58,7 @@ from codeweaver.cw_types.enums import (
 )
 
 # Exception types
-# Backend exceptions
+# Backend exceptions and provider exceptions
 from codeweaver.cw_types.exceptions import (
     BackendAuthError,
     BackendCollectionNotFoundError,
@@ -67,6 +67,16 @@ from codeweaver.cw_types.exceptions import (
     BackendUnsupportedOperationError,
     BackendVectorDimensionMismatchError,
     CodeWeaverError,
+    ComponentError,
+    EmbeddingProviderError,
+    ProviderAuthError,
+    ProviderCompatibilityError,
+    ProviderConfigurationError,
+    ProviderConnectionError,
+    ProviderError,
+    ProviderResourceError,
+    ServiceProviderError,
+    SourceProviderError,
 )
 
 

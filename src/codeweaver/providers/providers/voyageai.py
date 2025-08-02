@@ -17,8 +17,11 @@ import time
 from typing import Any
 
 from codeweaver.cw_types import (
+    EmbeddingProviderError,
     EmbeddingProviderInfo,
     ProviderCapability,
+    ProviderConfigurationError,
+    ProviderCompatibilityError,
     ProviderType,
     RerankResult,
     get_provider_registry_entry,
@@ -49,7 +52,12 @@ class VoyageAIProvider(CombinedProvider):
         """
         super().__init__(config)
         if not VOYAGEAI_AVAILABLE:
-            raise ImportError("VoyageAI library not available. Install with: uv add voyageai")
+            raise EmbeddingProviderError(
+                "VoyageAI library not available",
+                provider_name="voyage_ai",
+                operation="initialization",
+                recovery_suggestions=["Install with: uv add voyageai"]
+            )
         self.client = voyageai.Client(api_key=self.config["api_key"])
         self._last_request_time = 0.0
         self._min_request_interval = 0.1
@@ -66,18 +74,38 @@ class VoyageAIProvider(CombinedProvider):
     def _validate_config(self) -> None:
         """Validate VoyageAI configuration."""
         if not self.config.get("api_key"):
-            raise ValueError("VoyageAI API key is required")
+            raise ProviderConfigurationError(
+                "VoyageAI API key is required",
+                provider_type="embedding",
+                provider_name="voyage_ai",
+                operation="validation",
+                recovery_suggestions=["Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config"]
+            )
         embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         if embedding_model not in self._capabilities.supported_embedding_models:
             available = ", ".join(self._capabilities.supported_embedding_models)
-            raise ValueError(
-                f"Unknown VoyageAI embedding model: {embedding_model}. Available: {available}"
+            raise ProviderCompatibilityError(
+                f"Unknown VoyageAI embedding model: {embedding_model}",
+                provider_type="embedding",
+                provider_name="voyage_ai",
+                operation="model_validation",
+                recovery_suggestions=[
+                    f"Use one of the supported models: {available}",
+                    "Check VoyageAI documentation for latest model list"
+                ]
             )
         rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
         if rerank_model not in self._capabilities.supported_reranking_models:
             available = ", ".join(self._capabilities.supported_reranking_models)
-            raise ValueError(
-                f"Unknown VoyageAI reranking model: {rerank_model}. Available: {available}"
+            raise ProviderCompatibilityError(
+                f"Unknown VoyageAI reranking model: {rerank_model}",
+                provider_type="embedding",
+                provider_name="voyage_ai",
+                operation="rerank_model_validation",
+                recovery_suggestions=[
+                    f"Use one of the supported reranking models: {available}",
+                    "Check VoyageAI documentation for latest reranking model list"
+                ]
             )
 
     @property
@@ -147,9 +175,20 @@ class VoyageAIProvider(CombinedProvider):
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)
                 logger.debug("Cached %s VoyageAI embeddings", len(texts))
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating VoyageAI embeddings")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate VoyageAI embeddings",
+                provider_name="voyage_ai",
+                operation="embed_documents",
+                model_name=self._embedding_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify input text length is within limits",
+                    "Check VoyageAI service status"
+                ]
+            ) from e
         return embeddings
 
     async def embed_query(self, text: str, context: dict[str, Any] | None = None) -> list[float]:
@@ -183,9 +222,20 @@ class VoyageAIProvider(CombinedProvider):
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)
                 logger.debug("Cached VoyageAI query embedding")
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating VoyageAI query embedding")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate VoyageAI query embedding",
+                provider_name="voyage_ai",
+                operation="embed_query",
+                model_name=self._embedding_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify query text length is within limits",
+                    "Check VoyageAI service status"
+                ]
+            ) from e
         return embedding
 
     @property
@@ -204,7 +254,16 @@ class VoyageAIProvider(CombinedProvider):
         """Rerank documents using VoyageAI with basic rate limiting."""
 
         def _raise_value_error(msg: str) -> None:
-            raise ValueError(msg)
+            raise ProviderConfigurationError(
+                msg,
+                provider_type="embedding",
+                provider_name="voyage_ai",
+                operation="rerank_validation",
+                recovery_suggestions=[
+                    "Reduce number of documents or query length",
+                    "Check VoyageAI reranking limits documentation"
+                ]
+            )
 
         try:
             if len(documents) > (self.max_documents or float("inf")):
@@ -222,9 +281,20 @@ class VoyageAIProvider(CombinedProvider):
                 )
                 for item in result.results
             ]
-        except Exception:
+        except Exception as e:
             logger.exception("Error reranking with VoyageAI")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to rerank documents with VoyageAI",
+                provider_name="voyage_ai",
+                operation="rerank",
+                model_name=self._rerank_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify document count and query length are within limits",
+                    "Check VoyageAI service status"
+                ]
+            ) from e
         else:
             return rerank_results
 
@@ -304,7 +374,7 @@ class VoyageAIProvider(CombinedProvider):
         try:
             await self.embed_query("health_check")
             logger.debug("VoyageAI health check passed")
-        except Exception:
+        except Exception as e:
             logger.exception("VoyageAI health check failed")
             return False
         else:

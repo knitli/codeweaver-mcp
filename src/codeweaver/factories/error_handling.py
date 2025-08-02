@@ -25,9 +25,19 @@ from pydantic.dataclasses import dataclass
 from codeweaver.cw_types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
+    ComponentError,
     ComponentType,
+    EmbeddingProviderError,
     ErrorCategory,
     ErrorSeverity,
+    ProviderAuthError,
+    ProviderCompatibilityError,
+    ProviderConfigurationError,
+    ProviderConnectionError,
+    ProviderError,
+    ProviderResourceError,
+    ServiceProviderError,
+    SourceProviderError,
 )
 
 
@@ -148,7 +158,72 @@ class ErrorHandler:
     def _generate_recovery_suggestions(
         self, category: ErrorCategory, exception: Exception | None
     ) -> list[str]:
-        """Generate recovery suggestions based on error category."""
+        """Generate recovery suggestions based on error category and exception type."""
+        # Provider-specific suggestions based on new exception hierarchy
+        if exception and isinstance(exception, ProviderError):
+            # Use recovery suggestions from the provider exception if available
+            if hasattr(exception, 'recovery_suggestions') and exception.recovery_suggestions:
+                return exception.recovery_suggestions
+            
+            # Generate provider-specific suggestions based on error type
+            if isinstance(exception, ProviderConnectionError):
+                return [
+                    "Verify network connectivity and service availability",
+                    "Check endpoint URLs and connection parameters", 
+                    "Implement retry logic with exponential backoff",
+                    "Validate firewall and proxy configurations"
+                ]
+            elif isinstance(exception, ProviderAuthError):
+                return [
+                    "Verify API keys, tokens, and credentials",
+                    "Check permission levels for the operation",
+                    "Refresh or rotate credentials if expired",
+                    "Validate credential scope and access rights"
+                ]
+            elif isinstance(exception, ProviderConfigurationError):
+                return [
+                    "Validate all required configuration parameters",
+                    "Check parameter types and value ranges", 
+                    "Verify compatibility with provider version",
+                    "Review default configuration fallbacks"
+                ]
+            elif isinstance(exception, ProviderResourceError):
+                return [
+                    "Implement rate limiting and backoff strategies",
+                    "Check quota usage and limits",
+                    "Retry after specified delay periods",
+                    "Consider alternative providers or scaling options"
+                ]
+            elif isinstance(exception, ProviderCompatibilityError):
+                return [
+                    "Update provider to compatible version",
+                    "Check feature availability and alternatives",
+                    "Implement fallback for unsupported operations", 
+                    "Validate API version compatibility"
+                ]
+            elif isinstance(exception, EmbeddingProviderError):
+                return [
+                    "Verify embedding provider configuration",
+                    "Check model availability and dimensions",
+                    "Validate API credentials and quotas",
+                    "Review input data format and size limits"
+                ]
+            elif isinstance(exception, SourceProviderError):
+                return [
+                    "Verify source path and access permissions",
+                    "Check file system or network connectivity", 
+                    "Validate source configuration parameters",
+                    "Review input data format compatibility"
+                ]
+            elif isinstance(exception, ServiceProviderError):
+                return [
+                    "Check service provider health and availability",
+                    "Verify service configuration and dependencies",
+                    "Review service resource usage and limits",
+                    "Validate service integration patterns"
+                ]
+        
+        # Fallback to category-based suggestions
         suggestions_map = {
             ErrorCategory.CONFIGURATION: [
                 "Check configuration file syntax and completeness",

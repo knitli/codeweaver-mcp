@@ -15,6 +15,7 @@ import logging
 from typing import Any
 
 from codeweaver.cw_types import (
+    EmbeddingProviderError,
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderType,
@@ -52,8 +53,11 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
         """
         super().__init__(config)
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
-            raise ImportError(
-                "SentenceTransformers library not available. Install with: uv add sentence-transformers"
+            raise EmbeddingProviderError(
+                "SentenceTransformers library not available",
+                provider_name="sentence_transformers",
+                operation="initialization",
+                recovery_suggestions=["Install with: uv add sentence-transformers"]
             )
         self._registry_entry = get_provider_registry_entry(ProviderType.SENTENCE_TRANSFORMERS)
         if isinstance(config, dict):
@@ -114,9 +118,21 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 normalize_embeddings=self._normalize_embeddings,
                 convert_to_numpy=True,
             )
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating SentenceTransformers embeddings")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate SentenceTransformers embeddings",
+                provider_name="sentence_transformers",
+                operation="embed_documents",
+                model_name=self._model_name,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check model is properly loaded",
+                    "Verify input text length is within limits",
+                    "Ensure sufficient memory is available",
+                    "Check device compatibility (CPU/GPU)"
+                ]
+            ) from e
         else:
             return [embedding.tolist() for embedding in embeddings]
 
@@ -129,9 +145,21 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 normalize_embeddings=self._normalize_embeddings,
                 convert_to_numpy=True,
             )
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating SentenceTransformers query embedding")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate SentenceTransformers query embedding",
+                provider_name="sentence_transformers",
+                operation="embed_query",
+                model_name=self._model_name,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check model is properly loaded",
+                    "Verify query text length is within limits",
+                    "Ensure sufficient memory is available",
+                    "Check device compatibility (CPU/GPU)"
+                ]
+            ) from e
         else:
             return embedding[0].tolist()
 
@@ -193,7 +221,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 return False
             await self.embed_query("health_check")
             logger.debug("SentenceTransformers health check passed")
-        except Exception:
+        except Exception as e:
             logger.exception("SentenceTransformers health check failed")
             return False
         else:

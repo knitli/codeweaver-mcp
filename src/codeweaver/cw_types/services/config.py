@@ -389,6 +389,8 @@ class AutoIndexingConfig(ServiceConfig):
     """Configuration for background auto-indexing services."""
 
     provider: str = "auto_indexing"
+    # Note: FilteringService provides comprehensive pattern handling
+    # These patterns complement FilteringService for auto-indexing specific needs
     watch_patterns: Annotated[list[str], Field(description="File patterns to watch")] = Field(
         default_factory=lambda: ["**/*.py", "**/*.js", "**/*.ts", "**/*.jsx", "**/*.tsx"]
     )

@@ -15,8 +15,11 @@ import logging
 from typing import Any
 
 from codeweaver.cw_types import (
+    EmbeddingProviderError,
     EmbeddingProviderInfo,
     ProviderCapability,
+    ProviderConfigurationError,
+    ProviderCompatibilityError,
     ProviderType,
     get_provider_registry_entry,
     register_provider_class,
@@ -29,9 +32,9 @@ from codeweaver.utils.decorators import feature_flag_required
 try:
     import httpx
 
-    REQUESTS_AVAILABLE = True
+    HTTPX_AVAILABLE = True
 except ImportError:
-    REQUESTS_AVAILABLE = False
+    HTTPX_AVAILABLE = False
     httpx = None
 try:
     import torch
@@ -89,11 +92,21 @@ class HuggingFaceProvider(EmbeddingProviderBase):
     def _validate_config(self) -> None:
         """Validate HuggingFace configuration."""
         if self._use_local and (not TRANSFORMERS_AVAILABLE):
-            raise ValueError(
-                "Local model mode requires transformers. Install with: uv add transformers torch"
+            raise ProviderConfigurationError(
+                "Local model mode requires transformers",
+                provider_type="embedding",
+                provider_name="huggingface",
+                operation="validation",
+                recovery_suggestions=["Install with: uv add transformers torch"]
             )
-        if not self._use_local and (not REQUESTS_AVAILABLE):
-            raise ValueError("API mode requires requests. Install with: uv add requests")
+        if not self._use_local and (not HTTPX_AVAILABLE):
+            raise ProviderConfigurationError(
+                "API mode requires httpx",
+                provider_type="embedding",
+                provider_name="huggingface",
+                operation="validation",
+                recovery_suggestions=["Install with: uv add httpx"]
+            )
         if not self._use_local and (not self._api_key):
             logger.warning(
                 "No HuggingFace API key provided. Rate limits will apply for public inference."
@@ -102,7 +115,12 @@ class HuggingFaceProvider(EmbeddingProviderBase):
     def _init_local_model(self) -> None:
         """Initialize local transformers model."""
         if not TRANSFORMERS_AVAILABLE:
-            raise ImportError("transformers and torch required for local models")
+            raise EmbeddingProviderError(
+                "transformers and torch required for local models",
+                provider_name="huggingface",
+                operation="local_model_initialization",
+                recovery_suggestions=["Install with: uv add transformers torch"]
+            )
         try:
             from transformers import AutoModel, AutoTokenizer
 
@@ -113,12 +131,28 @@ class HuggingFaceProvider(EmbeddingProviderBase):
             self._model.to(self._device)
             logger.info("Loaded local HuggingFace model: %s on %s", self._model_name, self._device)
         except Exception as e:
-            raise RuntimeError(f"Failed to load local model {self._model_name}: {e}") from e
+            raise EmbeddingProviderError(
+                f"Failed to load local model {self._model_name}",
+                provider_name="huggingface",
+                operation="local_model_loading",
+                model_name=self._model_name,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check model name exists on HuggingFace Hub",
+                    "Verify sufficient disk space and memory",
+                    "Check internet connectivity for model download"
+                ]
+            ) from e
 
     def _init_api_client(self) -> None:
         """Initialize API client for HuggingFace Inference API."""
-        if not REQUESTS_AVAILABLE:
-            raise ImportError("requests required for HuggingFace API")
+        if not HTTPX_AVAILABLE:
+            raise EmbeddingProviderError(
+                "httpx required for HuggingFace API",
+                provider_name="huggingface",
+                operation="api_client_initialization",
+                recovery_suggestions=["Install with: uv add httpx"]
+            )
         self._api_url = (
             f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self._model_name}"
         )
@@ -159,9 +193,21 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         try:
             if self._use_local:
                 return await self._embed_local(texts)
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating HuggingFace embeddings")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate HuggingFace embeddings",
+                provider_name="huggingface",
+                operation="embed_documents",
+                model_name=self._model_name,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check model availability and configuration",
+                    "Verify input text length is within limits",
+                    "For API mode: check network connectivity and API key",
+                    "For local mode: ensure model is properly loaded"
+                ]
+            ) from e
         else:
             return await self._embed_api(texts)
 
@@ -169,16 +215,33 @@ class HuggingFaceProvider(EmbeddingProviderBase):
         """Generate embedding for search query."""
         try:
             embeddings = await self.embed_documents([text])
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating HuggingFace query embedding")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate HuggingFace query embedding",
+                provider_name="huggingface",
+                operation="embed_query",
+                model_name=self._model_name,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check model availability and configuration",
+                    "Verify query text length is within limits",
+                    "For API mode: check network connectivity and API key",
+                    "For local mode: ensure model is properly loaded"
+                ]
+            ) from e
         else:
             return embeddings[0]
 
     async def _embed_local(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings using local model."""
         if not TRANSFORMERS_AVAILABLE:
-            raise RuntimeError("Local model not available")
+            raise EmbeddingProviderError(
+                "Local model not available - transformers not installed",
+                provider_name="huggingface",
+                operation="embed_local",
+                recovery_suggestions=["Install with: uv add transformers torch"]
+            )
         import torch
 
         embeddings = []
@@ -205,17 +268,32 @@ class HuggingFaceProvider(EmbeddingProviderBase):
 
     async def _embed_api(self, texts: list[str]) -> list[list[float]]:
         """Generate embeddings using HuggingFace Inference API."""
-        if not REQUESTS_AVAILABLE:
-            raise RuntimeError("API client not available")
+        if not HTTPX_AVAILABLE:
+            raise EmbeddingProviderError(
+                "API client not available - httpx not installed",
+                provider_name="huggingface",
+                operation="embed_api",
+                recovery_suggestions=["Install with: uv add httpx"]
+            )
         embeddings = []
         for text in texts:
-            response = requests.post(
-                self._api_url, headers=self._headers, json={"inputs": text}, timeout=30
-            )
-            if response.status_code != 200:
-                raise RuntimeError(
-                    f"HuggingFace API error: {response.status_code} - {response.text}"
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    self._api_url, headers=self._headers, json={"inputs": text}, timeout=30
                 )
+                if response.status_code != 200:
+                    raise EmbeddingProviderError(
+                        f"HuggingFace API error: {response.status_code} - {response.text}",
+                        provider_name="huggingface",
+                        operation="embed_api",
+                        model_name=self._model_name,
+                        recovery_suggestions=[
+                            "Check API key validity and permissions",
+                            "Verify model name is correct and accessible",
+                            "Check HuggingFace Inference API status",
+                            "Ensure input text is properly formatted"
+                        ]
+                    )
             embedding = response.json()
             if isinstance(embedding, list) and isinstance(embedding[0], list):
                 embeddings.append(embedding[0])
@@ -292,7 +370,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 logger.debug("HuggingFace API health check passed")
                 return True
             logger.warning("HuggingFace provider not properly initialized")
-        except Exception:
+        except Exception as e:
             logger.exception("HuggingFace health check failed")
             return False
         else:
@@ -301,9 +379,9 @@ class HuggingFaceProvider(EmbeddingProviderBase):
     @classmethod
     def check_availability(cls, capability: ProviderCapability) -> tuple[bool, str | None]:
         """Check if HuggingFace is available for the given capability."""
-        if not REQUESTS_AVAILABLE:
+        if not HTTPX_AVAILABLE:
             api_available = False
-            api_reason = "requests package not installed"
+            api_reason = "httpx package not installed"
         else:
             api_available = True
             api_reason = None

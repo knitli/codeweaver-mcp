@@ -71,7 +71,20 @@ class CodebaseChangeHandler(FileSystemEventHandler):
             task.add_done_callback(self._background_tasks.discard)
 
     def _should_process_file(self, file_path: Path) -> bool:
-        """Check if file should be processed based on patterns."""
+        """Check if file should be processed using FilteringService if available."""
+        # Use FilteringService if available for consistent filtering logic
+        if self.service.filtering_service:
+            return self.service.filtering_service.should_include_file(
+                file_path,
+                include_patterns=self.service._auto_indexing_config.watch_patterns,
+                exclude_patterns=self.service._auto_indexing_config.ignore_patterns
+            )
+        
+        # Fallback to custom logic if FilteringService is not available
+        return self._fallback_filtering(file_path)
+    
+    def _fallback_filtering(self, file_path: Path) -> bool:
+        """Fallback filtering logic when FilteringService is unavailable."""
         raw_path = str(file_path)
         for pattern in self.service._auto_indexing_config.ignore_patterns:
             if pattern in raw_path:
@@ -276,7 +289,12 @@ class AutoIndexingService(BaseServiceProvider):
             return
         self._logger.info("Starting initial indexing of path: %s", path)
         try:
-            files = await self.filtering_service.discover_files(path)
+            # Use FilteringService for consistent file discovery
+            files = await self.filtering_service.discover_files(
+                Path(path),
+                include_patterns=self._auto_indexing_config.watch_patterns,
+                exclude_patterns=self._auto_indexing_config.ignore_patterns
+            )
             self._logger.info("Found %d files to index in %s", len(files), path)
             for file_path in files:
                 try:
@@ -327,6 +345,21 @@ class AutoIndexingService(BaseServiceProvider):
     async def _process_file_for_indexing(self, file_path: Path, worker_name: str) -> None:
         """Process a single file for indexing."""
         try:
+            # Use FilteringService metadata if available for enhanced file checking
+            if self.filtering_service:
+                try:
+                    metadata = await self.filtering_service.get_file_metadata(file_path)
+                    if metadata.is_binary:
+                        self._logger.debug("Skipping binary file: %s", file_path)
+                        return
+                    if metadata.size > self._auto_indexing_config.max_file_size:
+                        self._logger.debug("Skipping large file: %s (%d bytes)", file_path, metadata.size)
+                        return
+                except Exception as e:
+                    self._logger.warning("Failed to get file metadata for %s: %s", file_path, e)
+                    # Continue with fallback logic
+            
+            # Fallback to basic size check
             if file_path.stat().st_size > self._auto_indexing_config.max_file_size:
                 self._logger.debug("Skipping large file: %s", file_path)
                 return
@@ -361,11 +394,17 @@ class AutoIndexingService(BaseServiceProvider):
 
     async def _get_chunking_service(self) -> ChunkingService | None:
         """Get chunking service through dependency injection."""
-        return None
+        # Service injection should be provided by the service manager during initialization
+        # This will be updated when the auto-indexing service is properly integrated
+        # with the ServicesManager dependency injection system
+        return self.chunking_service
 
     async def _get_filtering_service(self) -> FilteringService | None:
         """Get filtering service through dependency injection."""
-        return None
+        # Service injection should be provided by the service manager during initialization  
+        # This will be updated when the auto-indexing service is properly integrated
+        # with the ServicesManager dependency injection system
+        return self.filtering_service
 
     async def _get_backend_registry(self):
         """Get backend registry through dependency injection."""

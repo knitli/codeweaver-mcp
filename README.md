@@ -49,14 +49,15 @@ CodeWeaver is designed to be intuitive and easy to use. We prioritize developer 
 - **MCP Integration**: Seamless compatibility with AI assistants like Claude.
 - **Make AI Useful for Your Codebase**: CodeWeaver is built to help AI assistants like Claude understand your codebase better, enabling them to answer questions, find patterns, and assist with development tasks. Less tokens. More context. Better results.
 
-### **Tools Actually Built For AI Assistants**
+### **Revolutionary Intent-Based Interface**
 
-- **Focus on AI Assistants**. We designed Codeweaver's MCP tool API specifically for AI assistants, not humans. We want to make it easy for AI to understand and navigate your codebase without overwhelming it with unnecessary complexity.
-  - The problem with most AI tools today is that they are designed for humans. AIs need their own set of tools optimized for their unique capabilities and limitations.
-- **Deliver only what the assistant needs**. The best human APIs are actually terrible AI APIs. AI assistants get quickly overwhelmed by huge arrays of choices. CodeWeaver provides a clean, structured interface that AI can easily understand.
-- **Abstract away complexity**. CodeWeaver handles the heavy lifting of indexing, chunking, searching, parsing, reranking, and more. Our goal is to seamlessly bring together complex data sources into a single, easy-to-use interface for AI assistants with **a single MCP tool for assistants**: **search**.
-  - We will add a tool or two later, like `replace`, but we believe **three is the limit**. We want to keep the interface simple and focused.
-- **Focus on code understandings**. If you have used AI assistants like Claude for development, you see that they have to reconsume the same codebase over and over again. CodeWeaver is designed to end that cycle.
+- **Natural Language First**. CodeWeaver uses a single `process_intent` tool that understands natural language queries like "find authentication functions" or "analyze database patterns". No complex tool selection or parameter configuration required.
+  - Traditional MCP servers force AI assistants to choose between multiple tools (`index_codebase`, `search_code`, `ast_grep_search`). CodeWeaver eliminates this complexity with intelligent intent processing.
+- **Automatic Background Indexing**. CodeWeaver automatically indexes your codebase in the background using file system monitoring. No manual indexing required - just start asking questions about your code.
+- **Intent-Driven Architecture**. Our sophisticated intent processing pipeline understands what you want to accomplish and automatically selects the best combination of search strategies, providers, and processing techniques.
+  - Built on enterprise-grade service architecture with health monitoring, auto-recovery, and circuit breakers
+- **AI Assistant Optimized**. Every aspect is designed for AI efficiency: unified responses, minimal token usage, contextual results, and zero configuration complexity.
+- **Focus on Code Understanding**. Stop re-explaining your codebase. CodeWeaver maintains persistent understanding so AI assistants can dive deep into architecture, patterns, and relationships without starting from scratch every time.
 
 ## 🚀 Quick Start
 
@@ -132,11 +133,14 @@ Add to your `claude_desktop_config.json`:
 uv run codeweaver
 ```
 
-Then in Claude:
-- *"Index my Python project at /home/user/myapp"*
-- *"Find all authentication functions in my codebase"*
-- *"Search for error handling patterns in TypeScript"*
-- *"Use ast-grep to find all Rust functions with error handling"*
+Then in Claude (using natural language):
+- *"Analyze the authentication system in my codebase"*
+- *"Find all database connection patterns"*
+- *"Show me error handling across the TypeScript files"*
+- *"What are the main architectural components?"*
+- *"Find potential security vulnerabilities"*
+
+CodeWeaver automatically indexes your codebase in the background and understands your intent!
 
 ## 🔧 Provider Configurations
 
@@ -322,25 +326,39 @@ Choose embedding dimensions based on your needs:
 - `1024` dimensions: Default - optimal quality/cost balance
 - `2048` dimensions: Maximum quality, highest cost
 
-## 🏗️ Architecture
+## 🏗️ Architecture - **INTENT-BASED WITH SERVICES LAYER**
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Your AI       │───►│   CodeWeaver    │───►│  Vector Backend │
-│   Assistant     │    │   MCP Server    │    │ (Qdrant/Pinecone│
-│  (Claude, etc.) │    │                 │    │ /Weaviate/etc.) │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ Embedding       │  │    ast-grep     │  │  Data Sources   │
-│ Providers       │  │   Tree-sitter   │  │  (Filesystem/   │
-│ (Voyage/OpenAI/ │  │    Parsing      │  │   Git/DB/API)   │
-│  Cohere/HF)     │  │                 │  │                 │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
+┌─────────────────┐    ┌─────────────────────────────────────────┐    ┌─────────────────┐
+│   Your AI       │───►│         CodeWeaver MCP Server           │───►│  Vector Backend │
+│   Assistant     │    │      (Intent Processing System)         │    │ (Qdrant/Pinecone│
+│  (Claude, etc.) │    │                                         │    │ /Weaviate/etc.) │
+└─────────────────┘    │  ┌─────────────────────────────────┐    │    └─────────────────┘
+                       │  │     Intent Orchestrator         │    │
+                       │  │  - Natural Language Processing  │    │
+                       │  │  - Auto Background Indexing     │    │
+                       │  │  - Strategy Selection           │    │
+                       │  │  - Circuit Breakers & Caching  │    │
+                       │  └─────────────────────────────────┘    │
+                       │                                         │
+                       │  ┌─────────────────────────────────┐    │
+                       │  │      Advanced Services Layer    │    │
+                       │  │  - Health Monitoring           │    │
+                       │  │  - Auto Recovery               │    │
+                       │  │  - Performance Optimization    │    │
+                       │  │  - Chunking & Filtering        │    │
+                       │  └─────────────────────────────────┘    │
+                       └─────────────────────────────────────────┘
+                                            │
+        ┌───────────────────────────────────┼───────────────────────────────────┐
+        │                                   │                                   │
+        ▼                                   ▼                                   ▼
+┌─────────────────┐              ┌─────────────────┐              ┌─────────────────┐
+│ Embedding       │              │    ast-grep     │              │  Data Sources   │
+│ Providers       │              │   Tree-sitter   │              │  (Filesystem/   │
+│ (Voyage/OpenAI/ │              │    Parsing      │              │   Git/DB/API)   │
+│  Cohere/HF)     │              │                 │              │                 │
+└─────────────────┘              └─────────────────┘              └─────────────────┘
 ```
 
 ## 📚 Configuration System
@@ -407,14 +425,17 @@ host = "localhost"
 
 ## 📖 Documentation
 
-### MCP Tools
+### MCP Tools - **INTENT-BASED INTERFACE**
 
-| Tool | Description |
-|------|-------------|
-| `index_codebase` | Semantically chunk and embed your codebase |
-| `search_code` | Natural language search with advanced filtering |
-| `ast_grep_search` | Structural search using ast-grep patterns |
-| `get_supported_languages` | List all supported languages and capabilities |
+| Tool | Description | Status |
+|------|-------------|--------|
+| `process_intent` | **Primary Tool** - Natural language intent processing for all codebase interactions | ✅ Active |
+| `get_intent_capabilities` | Query available intent capabilities and supported operations | ✅ Active |
+| `index_codebase` | **Legacy** - Manual indexing (replaced by automatic background indexing) | ⚠️ Deprecated |
+| `search_code` | **Legacy** - Direct search (replaced by intent processing) | ⚠️ Deprecated |
+| `ast_grep_search` | **Legacy** - Structural search (integrated into intent processing) | ⚠️ Deprecated |
+
+**Note**: CodeWeaver now uses a single intent-based interface. Simply describe what you want in natural language!
 
 ### Environment Variables
 
@@ -554,7 +575,7 @@ Set your embedding provider in config file or via `CW_EMBEDDING_API_KEY` environ
 Check your vector database URL and credentials. For Qdrant, ensure your cluster is accessible.
 
 **"No results found"**
-Ensure your codebase is indexed first using the `index_codebase` tool. Try broader search terms. You can get some results using structural search patterns even without indexing.
+CodeWeaver automatically indexes your codebase in the background. If you're not getting results, try broader natural language queries or check that your codebase path is correctly configured.
 
 **"Configuration not found"**
 CodeWeaver looks for config files in several locations. Create a `.codeweaver.toml` file in your project root or use environment variables.

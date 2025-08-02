@@ -15,8 +15,11 @@ import logging
 from typing import Any
 
 from codeweaver.cw_types import (
+    EmbeddingProviderError,
     EmbeddingProviderInfo,
     ProviderCapability,
+    ProviderConfigurationError,
+    ProviderCompatibilityError,
     ProviderType,
     RerankResult,
     get_provider_registry_entry,
@@ -49,7 +52,12 @@ class CohereProvider(CombinedProvider):
         """
         super().__init__(config)
         if not COHERE_AVAILABLE:
-            raise ImportError("Cohere library not available. Install with: uv add cohere")
+            raise EmbeddingProviderError(
+                "Cohere library not available",
+                provider_name="cohere",
+                operation="initialization",
+                recovery_suggestions=["Install with: uv add cohere"]
+            )
         self.client = cohere.Client(api_key=self.config["api_key"])
         self.rate_limiter = self.config.get("rate_limiter")
         self._registry_entry = get_provider_registry_entry(ProviderType.COHERE)
@@ -63,18 +71,41 @@ class CohereProvider(CombinedProvider):
     def _validate_config(self) -> None:
         """Validate Cohere configuration."""
         if not self.config.get("api_key"):
-            raise ValueError("Cohere API key is required")
+            raise ProviderConfigurationError(
+                "Cohere API key is required",
+                provider_type="embedding",
+                provider_name="cohere",
+                operation="validation",
+                recovery_suggestions=[
+                    "Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config",
+                    "Get API key from https://dashboard.cohere.ai/api-keys"
+                ]
+            )
         embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         if embedding_model not in self._capabilities.supported_embedding_models:
             available = ", ".join(self._capabilities.supported_embedding_models)
-            raise ValueError(
-                f"Unknown Cohere embedding model: {embedding_model}. Available: {available}"
+            raise ProviderCompatibilityError(
+                f"Unknown Cohere embedding model: {embedding_model}",
+                provider_type="embedding",
+                provider_name="cohere",
+                operation="model_validation",
+                recovery_suggestions=[
+                    f"Use one of the supported models: {available}",
+                    "Check Cohere documentation for latest model list"
+                ]
             )
         rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
         if rerank_model not in self._capabilities.supported_reranking_models:
             available = ", ".join(self._capabilities.supported_reranking_models)
-            raise ValueError(
-                f"Unknown Cohere reranking model: {rerank_model}. Available: {available}"
+            raise ProviderCompatibilityError(
+                f"Unknown Cohere reranking model: {rerank_model}",
+                provider_type="embedding",
+                provider_name="cohere",
+                operation="rerank_model_validation",
+                recovery_suggestions=[
+                    f"Use one of the supported reranking models: {available}",
+                    "Check Cohere documentation for latest reranking model list"
+                ]
             )
 
     @property
@@ -129,9 +160,20 @@ class CohereProvider(CombinedProvider):
             if cache_service:
                 await cache_service.set(cache_key, embeddings, ttl=3600)
                 logger.debug("Cached %s Cohere embeddings", len(texts))
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating Cohere embeddings")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate Cohere embeddings",
+                provider_name="cohere",
+                operation="embed_documents",
+                model_name=self._embedding_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify input text length is within limits",
+                    "Check Cohere service status"
+                ]
+            ) from e
         else:
             return embeddings
 
@@ -160,9 +202,20 @@ class CohereProvider(CombinedProvider):
             if cache_service:
                 await cache_service.set(cache_key, embedding, ttl=3600)
                 logger.debug("Cached Cohere query embedding")
-        except Exception:
+        except Exception as e:
             logger.exception("Error generating Cohere query embedding")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to generate Cohere query embedding",
+                provider_name="cohere",
+                operation="embed_query",
+                model_name=self._embedding_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify query text length is within limits",
+                    "Check Cohere service status"
+                ]
+            ) from e
         else:
             return embedding
 
@@ -182,7 +235,16 @@ class CohereProvider(CombinedProvider):
         """Rerank documents using Cohere."""
 
         def _raise_value_error(msg: str) -> None:
-            raise ValueError(msg)
+            raise ProviderConfigurationError(
+                msg,
+                provider_type="embedding",
+                provider_name="cohere",
+                operation="rerank_validation",
+                recovery_suggestions=[
+                    "Reduce number of documents or query length",
+                    "Check Cohere reranking limits documentation"
+                ]
+            )
 
         try:
             if len(documents) > (self.max_documents or float("inf")):
@@ -201,9 +263,20 @@ class CohereProvider(CombinedProvider):
                 )
                 for item in response.results
             )
-        except Exception:
+        except Exception as e:
             logger.exception("Error reranking with Cohere")
-            raise
+            raise EmbeddingProviderError(
+                "Failed to rerank documents with Cohere",
+                provider_name="cohere",
+                operation="rerank",
+                model_name=self._rerank_model,
+                original_error=e,
+                recovery_suggestions=[
+                    "Check API key validity and network connectivity",
+                    "Verify document count and query length are within limits",
+                    "Check Cohere service status"
+                ]
+            ) from e
         else:
             return rerank_results
 
@@ -281,7 +354,7 @@ class CohereProvider(CombinedProvider):
         try:
             await self.embed_query("health_check")
             logger.debug("Cohere health check passed")
-        except Exception:
+        except Exception as e:
             logger.exception("Cohere health check failed")
             return False
         else:
