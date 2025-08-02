@@ -37,7 +37,7 @@ This document outlines the comprehensive Material for MkDocs documentation struc
 
 ```
 Level 1: Getting Started    → Intent-based quick start & natural language examples
-Level 2: Intent Guide       → Natural language query patterns & capabilities  
+Level 2: Intent Guide       → Natural language query patterns & capabilities
 Level 3: Services & Config  → Advanced service layer configuration & monitoring
 Level 4: Architecture       → Intent processing pipeline & services architecture
 Level 5: Extension Dev      → Plugin development for intent processors & services
@@ -54,7 +54,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - Goal: Get CodeWeaver working with Claude Desktop using natural language in 5 minutes
 - Content: Intent examples, automatic indexing explanation, no-configuration startup
 
-**🛠️ Developer Teams (Intermediate)**  
+**🛠️ Developer Teams (Intermediate)**
 - Journey: Intent Guide → Services & Config → Architecture → Performance Monitoring → Deployment
 - Goal: Configure and deploy CodeWeaver for team use with service monitoring
 - Content: Service configuration, health monitoring, deployment guides, performance optimization
@@ -79,7 +79,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 
 ### Brand Identity
 - **Primary Color**: CodeWeaver Blue (#1976d2)
-- **Accent Color**: Amber (#ffc107) 
+- **Accent Color**: Amber (#ffc107)
 - **Typography**: Inter (text) + JetBrains Mono (code)
 - **Design System**: Material Design with custom CodeWeaver components
 
@@ -92,7 +92,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 
 ### Essential Plugins (Required)
 - **mkdocstrings**: Automatic API documentation from docstrings
-- **search**: Enhanced search with code-aware tokenization  
+- **search**: Enhanced search with code-aware tokenization
 - **minify**: Performance optimization for faster loading
 - **git-revision-date**: Version tracking and last modified dates
 
@@ -116,7 +116,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - Purpose: Help users understand intent capabilities and formulate effective queries
 - Examples: Natural language search patterns, automatic indexing concepts, intent processing pipeline
 
-**Service Configuration Guides**  
+**Service Configuration Guides**
 - Structure: Service Overview → Configuration Options → Monitoring Setup → Health Checks → Troubleshooting
 - Purpose: Help administrators configure and monitor the service layer
 - Examples: Configuring chunking services, setting up health monitoring, auto-recovery configuration
@@ -144,7 +144,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - **Caching Strategy**: Aggressive caching with cache invalidation
 - **CDN Integration**: Global content delivery for faster access
 
-### Search Performance  
+### Search Performance
 - **Pre-built Index**: Search index generated at build time
 - **Smart Tokenization**: Code-aware search term separation
 - **Result Ranking**: Relevance-based result ordering
@@ -177,7 +177,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - **Search Analytics**: What users are looking for
 - **Feedback System**: Page helpfulness ratings
 
-### Quality Monitoring  
+### Quality Monitoring
 - **Link Validation**: Automated broken link detection
 - **Accessibility Testing**: WCAG compliance validation
 - **Performance Audits**: Regular performance assessments
@@ -235,7 +235,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 
 ### 📋 New Features to Add
 - [ ] Intent pattern library with examples
-- [ ] Service monitoring dashboards documentation  
+- [ ] Service monitoring dashboards documentation
 - [ ] Enterprise deployment guides for service layer
 - [ ] Auto-recovery and circuit breaker configuration guides
 - [ ] Background indexing behavior explanation
@@ -250,7 +250,7 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 
 ### Documentation Strategy
 - **`docs/content-strategy.md`**: Comprehensive content organization strategy
-- **`docs/material-theme-config.md`**: Theme configuration recommendations  
+- **`docs/material-theme-config.md`**: Theme configuration recommendations
 - **`docs/plugin-recommendations.md`**: Plugin ecosystem and configuration
 
 ### Assets and Styling
@@ -260,10 +260,10 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 ## 🎯 Next Steps - **PRIORITIZED FOR ARCHITECTURE CHANGES**
 
 ### **Phase 1: Critical Architecture Updates (Week 1-2)**
-1. **Intent-Based Getting Started**: Complete rewrite for natural language interface
-2. **Architecture Documentation**: Document intent processing pipeline and services layer  
+1. **Intent-Based Getting Started**: Complete rewrite for natural language interface (audience: developers)
+2. **Architecture Documentation**: Document intent processing pipeline and services layer
 3. **Service Monitoring Guide**: Document health checks, auto-recovery, circuit breakers
-4. **API Reference Update**: Document current `process_intent` tool vs legacy tools
+4. **API Reference Update**: Document current `process_intent` tool and service layer APIs
 
 ### **Phase 2: Content Development (Week 3-4)**
 1. **Intent Pattern Library**: Comprehensive examples of natural language queries
