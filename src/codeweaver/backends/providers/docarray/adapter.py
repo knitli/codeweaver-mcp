@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from itertools import starmap
 from typing import Any
 
+
 try:
     from docarray import BaseDoc, DocList
     from docarray.index.abstract import BaseDocIndex
@@ -20,10 +21,10 @@ except ImportError:
     # Provide stub classes for when docarray is not available
     class BaseDoc:
         pass
-    
+
     class DocList:
         pass
-    
+
     class BaseDocIndex:
         pass
 

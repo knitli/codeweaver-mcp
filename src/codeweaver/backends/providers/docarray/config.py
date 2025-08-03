@@ -145,6 +145,12 @@ class DocArrayBackendKind(BaseEnum):
 
     QDRANT = "docarray_qdrant"
     WEAVIATE = "docarray_weaviate"
+    MILVUS = "docarray_milvus"
+    ELASTICSEARCH = "docarray_elasticsearch"
+    REDIS = "docarray_redis"
+    EPSILLA = "docarray_epsilla"
+    HNSW = "docarray_hnsw"
+    INMEMORY = "docarray_inmemory"
 
     @property
     def config_class(self) -> type[DocArrayBackendConfig]:
@@ -153,7 +159,19 @@ class DocArrayBackendKind(BaseEnum):
             case DocArrayBackendKind.QDRANT:
                 return QdrantDocArrayConfig
             case DocArrayBackendKind.WEAVIATE:
-                return WeaviateDocArrayConfig
+                raise NotImplementedError("DocArray Weaviate backend not yet implemented")
+            case DocArrayBackendKind.MILVUS:
+                raise NotImplementedError("DocArray Milvus backend not yet implemented")
+            case DocArrayBackendKind.ELASTICSEARCH:
+                raise NotImplementedError("DocArray Elasticsearch backend not yet implemented")
+            case DocArrayBackendKind.REDIS:
+                raise NotImplementedError("DocArray Redis backend not yet implemented")
+            case DocArrayBackendKind.EPSILLA:
+                raise NotImplementedError("DocArray EPSilla backend not yet implemented")
+            case DocArrayBackendKind.HNSW:
+                raise NotImplementedError("DocArray HnSw backend not yet implemented")
+            case DocArrayBackendKind.INMEMORY:
+                raise NotImplementedError("DocArray InMemoryExactNNIndex backend not yet implemented")
             case _:
                 raise ValueError(f"Unsupported DocArray backend kind: {self.value}")
 

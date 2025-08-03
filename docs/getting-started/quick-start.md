@@ -4,12 +4,12 @@ SPDX-FileCopyrightText: 2025 Knitli Inc.
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
-# Quick Start Guide
+# Quick Setup Guide
 
 !!! tip "5-Minute Setup"
-    Get CodeWeaver running with Claude Desktop in under 5 minutes. This guide covers the fastest path to semantic code search.
+    Get CodeWeaver running with Claude Desktop in 5 minutes. Enable semantic code search for any AI assistant.
 
-Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of this guide, you'll be searching your codebase using natural language.
+Get semantic code search working with Claude Desktop in 5 minutes. This guide covers installation, configuration, and first usage.
 
 ## Prerequisites
 
@@ -19,8 +19,8 @@ Get CodeWeaver up and running with Claude Desktop in 5 minutes. By the end of th
   - Voyage AI API key ([get one free](https://voyage.ai/))
   - Qdrant Cloud cluster ([create free cluster](https://cloud.qdrant.io/))
 
-!!! note "Why these providers?"
-    This quick start uses Voyage AI (best-in-class code embeddings) and Qdrant Cloud (easiest vector database setup). CodeWeaver supports many other providers - see [Configuration Guide](../configuration/providers.md) for alternatives.
+!!! note "Provider Options"
+    This guide uses Voyage AI and Qdrant Cloud for simplicity. CodeWeaver supports multiple providers - see [Configuration Guide](../configuration/providers.md) for alternatives including OpenAI, Cohere, Pinecone, and Weaviate.
 
 ## Step 1: Install CodeWeaver
 
@@ -148,77 +148,101 @@ Add CodeWeaver to your Claude Desktop configuration:
 2. **Start a new conversation** in Claude Desktop
 3. **Verify MCP connection** by asking: "What MCP tools do you have available?"
 
-You should see CodeWeaver tools listed:
-- `index_codebase`
-- `search_code`
-- `ast_grep_search`
-- `get_supported_languages`
+You should see CodeWeaver's intent processing tools:
+- `process_intent` - Natural language codebase interaction
+- `get_intent_capabilities` - Available intent types and features
 
-## Step 6: Index Your First Codebase
+## Step 6: Try It Out
 
-Now let's index a codebase and try semantic search:
+Test semantic code search with your codebase. **No manual indexing required** - CodeWeaver automatically handles indexing when AI assistants explore code.
 
-### Index a Project
-In Claude Desktop, ask:
-```
-Can you index my codebase at /path/to/your/project?
-```
+### First Search
 
-Claude will use the `index_codebase` tool to:
-- Discover source code files
-- Chunk code intelligently using AST parsing
-- Generate embeddings using Voyage AI
-- Store vectors in your Qdrant cluster
-
-### Your First Search
-Try these semantic searches:
+In Claude Desktop, try:
 
 ```
-Search for "authentication middleware" in the codebase
+Can you help me understand the authentication system in /path/to/your/project?
 ```
 
+CodeWeaver will:
+- Automatically index relevant files in your codebase
+- Search for authentication-related code semantically
+- Provide comprehensive analysis of how authentication works
+
+### Example Queries
+
+Natural language queries work across any codebase:
+
 ```
-Find code that handles user registration
+Find all API endpoints in this Express.js project
 ```
 
 ```
-Show me error handling patterns
-```
-
-### Structural Search
-Try pattern-based searches:
-
-```
-Find all React functional components using the pattern "const $_ = () => { $$$ }"
+Show me error handling patterns in the codebase
 ```
 
 ```
-Search for Python classes that inherit from BaseModel
+What are the main database models?
 ```
 
-## 🎉 Success! What's Next?
+```
+Explain the user registration flow
+```
 
-Congratulations! You now have CodeWeaver running with Claude Desktop. Here's what you can do next:
+```
+Find potential security issues in auth code
+```
+
+### How Queries Work
+
+CodeWeaver processes natural language in multiple ways:
+
+- **Semantic Search**: "authentication functions" finds login, verify, authorize functions
+- **Structural Patterns**: "API endpoints" finds route definitions, handlers, middleware
+- **Cross-File Analysis**: "user registration flow" traces code across multiple files
+- **Domain Understanding**: "security issues" applies security-specific pattern matching
+
+## Success! What's Next?
+
+You now have semantic code search working with Claude Desktop. Here's what to explore:
 
 <div class="grid cards" markdown>
 
--   :material-search-web: **[Master Search Strategies](../user-guide/search-strategies.md)**
+-   :material-cog: **[User Guide](../user-guide/how-it-works.md)**
 
-    Learn advanced semantic and structural search techniques
+    Understand how CodeWeaver integrates with your development workflow
 
--   :material-tune: **[Optimize Performance](../user-guide/performance.md)**
+-   :material-tune: **[Configuration](../configuration/environment.md)**
 
-    Tune indexing and search for large codebases
+    Customize providers, backends, and performance settings
 
--   :material-cog: **[Advanced Configuration](../configuration/config-file.md)**
+-   :material-puzzle: **[Extension Development](../architecture/index.md)**
 
-    Explore configuration options and alternative providers
+    Build custom providers and extend CodeWeaver's capabilities
 
--   :material-school: **[Try Tutorials](../tutorials/index.md)**
+-   :material-help: **[Troubleshooting](troubleshooting.md)**
 
-    Step-by-step guides for specific use cases
+    Solve common issues and optimize performance
 
 </div>
+
+## How This Differs from Manual Search
+
+**Traditional Approach:**
+```
+# Manual steps required
+1. grep -r "auth" .
+2. Find relevant files
+3. Read and understand context
+4. Piece together the system
+```
+
+**With CodeWeaver:**
+```
+# Single natural language query
+"Explain the authentication system in this project"
+# → Automatic semantic search + structural analysis + result synthesis
+```
 
 ## Troubleshooting
 
@@ -234,21 +258,23 @@ Congratulations! You now have CodeWeaver running with Claude Desktop. Here's wha
 - Check your Qdrant cluster URL format
 - Ensure environment variables are set correctly
 
-**"No search results"**
-- Make sure you've indexed your codebase first
-- Check that the indexed path contains source code files
+**"Failed to process intent"**
+- Make sure the specified codebase path exists and contains source code
 - Verify your Qdrant cluster is accessible
+- Check that file permissions allow reading the codebase
 
-**"ast-grep not available"**
-- This is normal - CodeWeaver falls back to regex parsing
-- For optimal performance, install ast-grep: `uv add ast-grep-py`
+**"Background indexing slow"**
+- This is normal for large codebases on first access
+- Subsequent queries will be much faster due to caching
+- Consider using smaller directory paths for testing
 
 ### Getting Help
 
-- **[Troubleshooting Guide](../user-guide/troubleshooting.md)** - Comprehensive troubleshooting
-- **[Community Support](../community/support.md)** - Discord and GitHub discussions
-- **[Configuration Guide](../configuration/index.md)** - Detailed configuration options
+- **[User Guide](../user-guide/how-it-works.md)** - How CodeWeaver works with your development workflow
+- **[Configuration Guide](../configuration/environment.md)** - Advanced setup and customization
+- **[Community Support](../community/support.md)** - GitHub discussions and help
+- **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
 ---
 
-**Next:** [Your First Search →](first-search.md)
+**Next:** [User Guide →](../user-guide/how-it-works.md)

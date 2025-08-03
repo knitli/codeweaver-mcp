@@ -79,10 +79,10 @@ class CodebaseChangeHandler(FileSystemEventHandler):
                 include_patterns=self.service._auto_indexing_config.watch_patterns,
                 exclude_patterns=self.service._auto_indexing_config.ignore_patterns
             )
-        
+
         # Fallback to custom logic if FilteringService is not available
         return self._fallback_filtering(file_path)
-    
+
     def _fallback_filtering(self, file_path: Path) -> bool:
         """Fallback filtering logic when FilteringService is unavailable."""
         raw_path = str(file_path)
@@ -358,7 +358,7 @@ class AutoIndexingService(BaseServiceProvider):
                 except Exception as e:
                     self._logger.warning("Failed to get file metadata for %s: %s", file_path, e)
                     # Continue with fallback logic
-            
+
             # Fallback to basic size check
             if file_path.stat().st_size > self._auto_indexing_config.max_file_size:
                 self._logger.debug("Skipping large file: %s", file_path)
@@ -401,7 +401,7 @@ class AutoIndexingService(BaseServiceProvider):
 
     async def _get_filtering_service(self) -> FilteringService | None:
         """Get filtering service through dependency injection."""
-        # Service injection should be provided by the service manager during initialization  
+        # Service injection should be provided by the service manager during initialization
         # This will be updated when the auto-indexing service is properly integrated
         # with the ServicesManager dependency injection system
         return self.filtering_service

@@ -125,12 +125,16 @@ test = [
 ]
 docs = [
     "mkdocs>=1.6.1",
+    "mkdocs-git-revision-date-localized-plugin>=1.3.0",
     "mkdocs-material>=9.6.15",
     "mkdocs-redirects>=1.0.0",
+    "mkdocstrings[python]>=0.30.0",
+    "mkdocs-gen-files>=0.5.0",
     "mkdocs-minify-plugin>=0.8.0",
+    "mkdocs-rss-plugin==1.17.3",
     "mkdocs-awesome-pages-plugin>=2.10.0",
-    "mkdocs-material-extensions>=1.2.0",
     "pymdown-extensions>=10.1",
+    "pygments>=2.19.1",
 ]
 dev = [
     "ruff>=0.12.4",
@@ -144,8 +148,10 @@ typing = ["pylance>=0.32.0"]
 
 [project.optional-dependencies]
 
-default = [
+recommended = [
+    "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
+        "fastmcp>=2.10.6",
     "posthog>=6.3.0",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
@@ -153,9 +159,20 @@ default = [
     "tomli-w>=1.2.0",
     "voyageai>=0.3.4",
     "watchdog>=6.0.0",
+
+    "posthog>=6.3.0",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "rignore>=0.6.4",
+    "spacy>=3.8.7",
+    "tomli-w>=1.2.0",
+    "voyageai>=0.3.4",
+    "watchdog>=6.0.0",
     ]
 
-default-no-telemetry = [
+recommended-no-telemetry = [
     "cyclopts>=3.22.5",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
@@ -165,9 +182,17 @@ default-no-telemetry = [
     "watchdog>=6.0.0",
 ]
 
-default-minimal = [
+# Absolute bare minimum to run CodeWeaver
+# This is the minimum set of dependencies required to run CodeWeaver without any additional features or providers. No CLI, no telemetry, no advanced features.
+minimal = [
+    "ast-grep-py>=0.39.1",
     "qdrant-client>=1.15.0",
     "voyageai>=0.3.4",
+    "fastmcp>=2.10.6",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rignore>=0.6.4",
 ]
 
 cli = ["cyclopts>=3.22.5", "rich>=14.0.0", "tomli-w>=1.2.0"]
@@ -196,12 +221,12 @@ backend-qdrant = ["qdrant-client>=1.15.0"]
 
 # DocArray options
 backend-docarray = ["docarray>=0.40.1"]
-backend-docarray-elasticsearch = ["docarray[elasticsearch]>=0.40.1"]
-backend-docarray-epsilla = ["docarray[epsilla]>=0.40.1"]
-backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
+# backend-docarray-elasticsearch = ["docarray[elasticsearch]>=0.40.1"]
+# backend-docarray-epsilla = ["docarray[epsilla]>=0.40.1"]
+# backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
 backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
-backend-docarray-redis = ["docarray[redis]>=0.40.1"]
-backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
+# backend-docarray-redis = ["docarray[redis]>=0.40.1"]
+# backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
 
 
 [tool.hatch.build.targets.wheel]

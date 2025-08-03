@@ -45,6 +45,8 @@ from codeweaver.server import create_server
 
 if TYPE_CHECKING:
     from codeweaver.server import CodeWeaverServer
+
+
 logger = logging.getLogger(__name__)
 server_instance = None
 config_manager = None
@@ -60,6 +62,31 @@ def get_server_instance() -> "CodeWeaverServer":
         server_instance = create_server(config)
         logger.info("Created CodeWeaverServer with plugin system and FastMCP middleware")
     return server_instance
+
+
+async def _handle_main_value_error(e: ValueError) -> None:
+    """Handle ValueError during main execution."""
+    print(f"\n❌ Configuration error: {e}")
+    print("\n📋 Configuration help:")
+    print("You can configure Code Weaver using:")
+    print("1. Environment variables (CW_EMBEDDING_API_KEY, CW_VECTOR_BACKEND_URL, etc.)")
+    print("2. TOML config files in these locations:")
+    print("   - .local.codeweaver.toml (workspace local)")
+    print("   - .codeweaver.toml (repository)")
+    print("   - ~/.config/codeweaver/config.toml (user)")
+    print("\n🔧 Example config:")
+    print(await config_manager.get_example_config() if config_manager else "")
+
+
+async def _handle_main_configuration_error(e: ConfigurationError) -> None:
+    """Handle ConfigurationError during main execution."""
+    print(f"\n❌ Configuration error: {e}")
+    print("\n💡 Please check your configuration files:")
+    print("   - .local.codeweaver.toml (workspace)")
+    print("   - .codeweaver/.codeweaver.toml (repository)")
+    print("   - ~/.config/codeweaver/config.toml (user)")
+    print("\n🔧 Example config:")
+    print(await config_manager.get_example_config() if config_manager else "")
 
 
 async def main() -> None:
@@ -86,24 +113,11 @@ async def main() -> None:
         await server.run()
     except ValueError as e:
         logger.exception("❌ Configuration error")
-        print(f"\n❌ Configuration error: {e}")
-        print("\n📋 Configuration help:")
-        print("You can configure Code Weaver using:")
-        print("1. Environment variables (CW_EMBEDDING_API_KEY, CW_VECTOR_BACKEND_URL, etc.)")
-        print("2. TOML config files in these locations:")
-        print("   - .local.codeweaver.toml (workspace local)")
-        print("   - .codeweaver.toml (repository)")
-        print("   - ~/.config/codeweaver/config.toml (user)")
-        print("\n🔧 Example config:")
-        print(config_manager.get_example_config() if config_manager else "")
+        await _handle_main_value_error(e)
         return
     except ConfigurationError as e:
         logger.exception("❌ Configuration error")
-        print(f"❌ Configuration error: {e}")
-        print("\n💡 Please check your configuration files:")
-        print("   - .local.codeweaver.toml (workspace)")
-        print("   - .codeweaver/.codeweaver.toml (repository)")
-        print("   - ~/.config/codeweaver/config.toml (user)")
+        await _handle_main_configuration_error(e)
         return
     except (ComponentCreationError, BackendConnectionError) as e:
         logger.exception("❌ Component setup error")

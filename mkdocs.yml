@@ -7,7 +7,7 @@
 # World-class documentation for an extensible MCP server
 
 site_name: CodeWeaver Documentation
-site_description: Extensible semantic code search with plugin architecture - Official Documentation
+site_description: Codeweaver -- The MCP Context Platform -- Official Documentation
 site_author: Knitli Inc.
 site_url: https://docs.codeweaver.dev
 repo_url: https://github.com/knitli/codeweaver-mcp
@@ -23,8 +23,8 @@ theme:
   name: material
 
   # Logo and Branding
-  logo: assets/logo.svg
-  favicon: assets/favicon.ico
+  # logo: assets/logo.svg
+  # favicon: assets/favicon.ico
 
   # Language and Internationalization
   language: en
@@ -90,127 +90,76 @@ theme:
     code: JetBrains Mono
 
   # Custom CSS and JavaScript
-  custom_dir: docs/overrides
+  custom_css: assets/extra.css
 
-# Navigation Structure - Progressive Disclosure & Task-Oriented
+# Navigation Structure - Developer-First Architecture
 nav:
-  # LEVEL 1: Getting Started (High-Level Overview)
+  # CORE: Essential for getting started
   - Home: index.md
-  - Why CodeWeaver?: why-codeweaver.md
   - Getting Started:
-    - Quick Start: getting-started/quick-start.md
+    - Quick Setup: getting-started/quick-start.md
     - Installation: getting-started/installation.md
-    - Your First Search: getting-started/first-search.md
-    - Configuration Basics: getting-started/configuration.md
+    - Configuration: getting-started/configuration.md
+    - Troubleshooting: getting-started/troubleshooting.md
 
-  # LEVEL 2: User Guides (Task-Oriented)
+  # USE: How to integrate and use CodeWeaver
   - User Guide:
-    - Overview: user-guide/index.md
-    - Indexing Your Codebase: user-guide/indexing.md
-    - Search Strategies: user-guide/search-strategies.md
-    - Advanced Filtering: user-guide/filtering.md
-    - MCP Integration: user-guide/mcp-integration.md
-    - Performance Optimization: user-guide/performance.md
-    - Troubleshooting: user-guide/troubleshooting.md
+    - How It Works: user-guide/how-it-works.md
+    - Claude Desktop Integration: user-guide/claude-desktop.md
+    - Development Workflows: user-guide/workflows.md
+    - Performance & Optimization: user-guide/performance.md
 
-  # LEVEL 3: Configuration (Deep Configuration)
+  # BUILD: For developers extending CodeWeaver
+  - Extension Development:
+    - Architecture Overview: architecture/index.md
+    - Plugin System: architecture/plugins.md
+    - Creating Extensions:
+      - Embedding Providers: extensions/embedding-providers.md
+      - Vector Backends: extensions/vector-backends.md
+      - Data Sources: extensions/data-sources.md
+      - Service Providers: extensions/services.md
+    - Development Guide:
+      - Plugin Protocols: extensions/protocols.md
+      - Testing & Validation: extensions/testing.md
+      - Performance Guidelines: extensions/performance.md
+
+  # CONFIGURE: Advanced configuration and deployment
   - Configuration:
-    - Overview: configuration/index.md
-    - Configuration File: configuration/config-file.md
     - Environment Variables: configuration/environment.md
-    - Provider Configuration: configuration/providers.md
+    - Provider Setup: configuration/providers.md
     - Backend Configuration: configuration/backends.md
     - Service Configuration: configuration/services.md
-    - Advanced Settings: configuration/advanced.md
-    - Migration Guide: configuration/migration.md
+    - Enterprise Deployment: configuration/enterprise.md
 
-  # LEVEL 4: Architecture (System Understanding)
-  - Architecture:
-    - Overview: architecture/index.md
-    - Core Concepts: architecture/concepts.md
-    - Plugin System: architecture/plugins.md
-    - Factory Pattern: architecture/factory-system.md
-    - Service Layer: architecture/services.md
-    - Protocol Interfaces: architecture/protocols.md
-    - Middleware: architecture/middleware.md
-    - Type System: architecture/types.md
-    - Design Decisions: architecture/decisions.md
-
-  # LEVEL 5: Plugin Development (Advanced Users)
-  - Plugin Development:
-    - Overview: plugins/index.md
-    - Getting Started: plugins/getting-started.md
-    - Plugin Types:
-      - Embedding Providers: plugins/embedding-providers.md
-      - Vector Backends: plugins/vector-backends.md
-      - Data Sources: plugins/data-sources.md
-      - Services: plugins/services.md
-    - Advanced Topics:
-      - Plugin Protocols: plugins/protocols.md
-      - Registration System: plugins/registration.md
-      - Testing Plugins: plugins/testing.md
-      - Performance Guidelines: plugins/performance.md
-    - Examples:
-      - Custom Provider: plugins/examples/custom-provider.md
-      - Custom Backend: plugins/examples/custom-backend.md
-      - Custom Service: plugins/examples/custom-service.md
-
-  # LEVEL 6: API Reference (Detailed Reference)
+  # REFERENCE: Technical documentation and API
   - API Reference:
-    - Overview: api/index.md
-    - MCP Tools:
-      - process_intent: api/mcp/process-intent.md
-    - Core APIs:
+    - MCP Tools: api/mcp/process-intent.md
+    - Core Components:
       - CodeWeaverFactory: api/core/factory.md
       - ConfigManager: api/core/config.md
-      - ServicesManager: api/core/services.md
+      - ServicesManager: api/services/manager.md
     - Protocols:
       - VectorBackend: api/protocols/vector-backend.md
       - EmbeddingProvider: api/protocols/embedding-provider.md
       - DataSource: api/protocols/data-source.md
       - ServiceProvider: api/protocols/service-provider.md
-    - Types:
-      - Data Structures: api/types/data-structures.md
-      - Enums: api/types/enums.md
-      - Exceptions: api/types/exceptions.md
-      - Configuration: api/types/configuration.md
 
-  # LEVEL 7: Tutorials & Examples (Learning by Doing)
-  - Tutorials:
-    - Overview: tutorials/index.md
-    - Basic Tutorials:
-      - Setting Up Claude Desktop: tutorials/claude-desktop-setup.md
-      - Indexing a React Project: tutorials/react-project.md
-      - Multi-Language Codebase: tutorials/multi-language.md
-      - Performance Tuning: tutorials/performance-tuning.md
-    - Advanced Tutorials:
-      - Custom Embedding Provider: tutorials/custom-embedding.md
-      - Multi-Source Integration: tutorials/multi-source.md
-      - Enterprise Deployment: tutorials/enterprise-setup.md
-      - CI/CD Integration: tutorials/cicd-integration.md
-    - Use Cases:
-      - AI Assistant Integration: tutorials/use-cases/ai-assistant.md
-      - Code Review Assistant: tutorials/use-cases/code-review.md
-      - Documentation Generator: tutorials/use-cases/doc-generator.md
-      - Legacy Code Analysis: tutorials/use-cases/legacy-analysis.md
-
-  # LEVEL 8: Reference Materials (Quick Lookups)
+  # REFERENCE: Quick lookup and patterns
   - Reference:
+    - Usage Patterns: reference/usage-patterns.md
     - Language Support: reference/language-support.md
     - Provider Comparison: reference/provider-comparison.md
     - Backend Comparison: reference/backend-comparison.md
-    - Configuration Schema: reference/config-schema.md
-    - Environment Variables: reference/environment-vars.md
     - Error Codes: reference/error-codes.md
     - Performance Benchmarks: reference/benchmarks.md
     - Changelog: reference/changelog.md
 
-  # LEVEL 9: Community & Support (Ecosystem)
+  # COMMUNITY: Support and contribution
   - Community:
-    - Contributing: community/contributing.md
-    - Code of Conduct: community/code-of-conduct.md
     - Support: community/support.md
-    - Roadmap: community/roadmap.md
+    - Contributing: community/contributing.md
+    - Migration Guide: migration/traditional-to-intent.md
+    - Code of Conduct: community/code-of-conduct.md
     - Security: community/security.md
     - License: community/license.md
 
@@ -219,7 +168,9 @@ plugins:
   # Search
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-
+  - gen-files:
+      scripts:
+      - scripts/gen_ref_pages.py  # (2)!
   # Automatic API documentation generation
   - mkdocstrings:
       handlers:
@@ -288,7 +239,8 @@ plugins:
 
   # Tags for content organization
   - tags:
-      tags_file: reference/tags.md
+      tags: true
+      enabled: true
 
   # RSS feed generation
   - rss:
@@ -338,9 +290,9 @@ markdown_extensions:
   - pymdownx.mark          # Highlighting text
   - pymdownx.smartsymbols  # Smart symbols
   - pymdownx.snippets:     # Include snippets
-      auto_append:
-        - includes/abbreviations.md
-      check_paths: true
+     # auto_append:
+        #- includes/abbreviations.md
+     # check_paths: true
   - pymdownx.superfences:  # Nested code blocks
       custom_fences:
         - name: mermaid
@@ -369,8 +321,7 @@ validation:
 
 # Watch settings for development
 watch:
-  - src/codeweaver
-  - docs/overrides
+  - docs
   - mkdocs.yml
 
 # Extra configuration

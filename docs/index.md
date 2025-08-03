@@ -4,188 +4,164 @@ SPDX-FileCopyrightText: 2025 Knitli Inc.
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
-# CodeWeaver Documentation
+# CodeWeaver
 
-!!! tip "AI-First Documentation"
-    This documentation is optimized for both human readers and AI assistants. Whether you're integrating CodeWeaver with Claude Desktop or building custom plugins, you'll find clear, actionable guidance.
+**Semantic code search MCP server for AI assistants**
 
-**Extensible semantic code search with plugin architecture**
+CodeWeaver is a Model Context Protocol (MCP) server that provides semantic code search capabilities to AI assistants like Claude. It enables natural language exploration of codebases through intelligent indexing, vector search, and structural analysis.
 
-CodeWeaver is a next-generation Model Context Protocol (MCP) server that revolutionizes how AI assistants understand and navigate codebases. Built on an extensible plugin architecture, it provides semantic code search through your choice of embedding providers, vector databases, and data sources.
+## What CodeWeaver Does
 
-## 🎯 Who Is This For?
+CodeWeaver transforms how AI assistants interact with your code:
 
-=== "AI Assistant Users"
-    **Get AI that truly understands your codebase**
+- **Semantic Search**: Find code by meaning, not just keywords ("authentication functions" vs. "login")
+- **Automatic Indexing**: AI assistants can explore codebases without manual setup
+- **Multi-Language Support**: Works across 20+ programming languages with intelligent parsing
+- **Extensible Architecture**: Plugin system for custom providers, backends, and data sources
 
-    - Set up CodeWeaver with Claude Desktop in minutes
-    - Search your code using natural language
-    - Let AI answer questions about your entire project
-    - No more repeatedly explaining your codebase structure
+## Who Uses CodeWeaver
 
-    → [Quick Start](getting-started/quick-start.md) | [MCP Integration](user-guide/mcp-integration.md)
+=== "Developers Using AI Assistants"
+    **Get more from Claude Desktop and other AI tools**
 
-=== "Developer Teams"
-    **Scale code understanding across your team**
+    - Enhance code reviews with intelligent codebase exploration
+    - Understand unfamiliar codebases quickly
+    - Find related code patterns and architectural decisions
+    - Accelerate debugging and feature development
 
-    - Index large monorepos and multi-language projects
-    - Configure for your exact tech stack and preferences
-    - Deploy on-premise or cloud with enterprise features
-    - Integrate with CI/CD and development workflows
+    → [Quick Setup](getting-started/quick-start.md)
 
-    → [Configuration Guide](configuration/index.md) | [Enterprise Setup](tutorials/enterprise-setup.md)
+=== "Extension Developers"
+    **Build custom integrations and providers**
 
-=== "Plugin Developers"
-    **Extend CodeWeaver for your needs**
+    - Extend embedding providers (Voyage AI, OpenAI, Cohere, custom)
+    - Add vector database backends (Qdrant, Pinecone, Weaviate, custom)
+    - Create specialized data sources and processing pipelines
+    - Leverage protocol-based plugin architecture
 
-    - Build custom embedding providers and vector backends
-    - Create specialized data sources and services
-    - Leverage protocol-based interfaces and factory patterns
-    - Access comprehensive testing and validation tools
+    → [Extension Development](architecture/index.md)
 
-    → [Plugin Development](plugins/index.md) | [Architecture Guide](architecture/index.md)
+## How It Works
 
-## ✨ What Makes CodeWeaver Special
+1. **Install and Configure**: Set up CodeWeaver as an MCP server with your AI assistant
+2. **Automatic Indexing**: When AI assistants request codebase analysis, CodeWeaver intelligently indexes relevant files
+3. **Semantic Search**: Natural language queries get converted to vector searches and structural patterns
+4. **Intelligent Results**: Combines semantic similarity with code structure analysis for relevant results
 
-### 🔌 **True Extensibility**
-Plugin architecture with hot-swappable components. Mix and match providers without changing a single line of code.
-
-### 🧠 **Universal Provider Support**
-Best-in-class embedding providers: Voyage AI, OpenAI, Cohere, HuggingFace, or bring your own.
-
-### 🏗️ **Enterprise Architecture**
-Factory patterns, protocol-based interfaces, comprehensive testing, and production-ready deployment.
-
-### 🔍 **Dual Search Modes**
-- **Semantic**: "Find authentication middleware" → Understands meaning and context
-- **Structural**: `"class $_ extends $$$_"` → Exact patterns using ast-grep
-
-### ⚡ **AI-Optimized**
-Purpose-built for AI assistants. Clean APIs, intelligent chunking, and context-aware responses.
-
-## 🚀 Quick Start
-
-Get up and running in 3 steps:
+## Quick Start
 
 ```bash
-# 1. Install CodeWeaver
+# Install CodeWeaver
 uv add codeweaver
 
-# 2. Set your API keys
+# Set API keys for embedding provider and vector database
 export CW_EMBEDDING_API_KEY="your-voyage-key"
 export CW_VECTOR_BACKEND_URL="your-qdrant-url"
 
-# 3. Run the server
-uv run codeweaver
+# Configure with Claude Desktop (see setup guide for details)
 ```
 
-→ [Detailed Installation Guide](getting-started/installation.md)
+Once configured, AI assistants can explore your codebase naturally:
+- "Find authentication functions in this project"
+- "Show me how error handling works"
+- "What are the main API endpoints?"
 
-## 📚 Popular Guides
+→ [Complete Setup Guide](getting-started/quick-start.md)
+
+## Documentation
 
 <div class="grid cards" markdown>
 
--   :material-rocket-launch: **[Quick Start](getting-started/quick-start.md)**
+-   :material-rocket-launch: **[Quick Setup](getting-started/quick-start.md)**
 
-    Get CodeWeaver running with Claude Desktop in under 5 minutes
+    Install and configure CodeWeaver with Claude Desktop in 5 minutes
 
--   :material-search-web: **[Search Strategies](user-guide/search-strategies.md)**
+-   :material-cog: **[User Guide](user-guide/how-it-works.md)**
 
-    Master semantic and structural search techniques
+    Understand how CodeWeaver integrates with your development workflow
 
--   :material-cog: **[Configuration](configuration/config-file.md)**
+-   :material-puzzle: **[Extension Development](architecture/index.md)**
 
-    Configure providers, backends, and advanced settings
+    Build custom providers, backends, and data sources
 
--   :material-puzzle: **[Plugin Development](plugins/getting-started.md)**
+-   :material-api: **[API Reference](api/mcp/process-intent.md)**
 
-    Build custom providers and extend CodeWeaver
+    Technical reference for MCP tools and extension protocols
 
--   :material-api: **[API Reference](api/index.md)**
+-   :material-tune: **[Configuration](configuration/environment.md)**
 
-    Complete reference for MCP tools and core APIs
+    Environment variables, providers, and deployment options
 
--   :material-school: **[Tutorials](tutorials/index.md)**
+-   :material-help: **[Reference](reference/usage-patterns.md)**
 
-    Step-by-step guides for common use cases
+    Language support, provider comparison, and troubleshooting
 
 </div>
 
-## 🏛️ Architecture at a Glance
+## Architecture
 
 ```mermaid
 graph TB
-    subgraph "MCP Layer"
-        A[Claude Desktop] --> B[CodeWeaver Server]
+    subgraph "AI Assistant"
+        A[Claude Desktop] --> B[MCP Protocol]
     end
 
-    subgraph "Core System"
-        B --> C[Factory System]
-        C --> D[Service Layer]
-        D --> E[Middleware]
+    subgraph "CodeWeaver MCP Server"
+        B --> C[process_intent Tool]
+        C --> D[Query Processing]
+        D --> E[Auto-Indexing]
+        D --> F[Semantic Search]
+        D --> G[Structural Analysis]
     end
 
-    subgraph "Plugin Ecosystem"
-        F[Embedding Providers] --> C
-        G[Vector Backends] --> C
-        H[Data Sources] --> C
-        I[Services] --> D
-    end
-
-    subgraph "Data Flow"
-        J[Code Files] --> K[Chunking]
-        K --> L[Embedding]
-        L --> M[Vector Storage]
-        M --> N[Semantic Search]
+    subgraph "Extensible Backends"
+        E --> H[Embedding Provider]
+        F --> I[Vector Database]
+        G --> J[AST Parser]
     end
 
     style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
+    style C fill:#f3e5f5
+    style D fill:#e8f5e8
+    style H fill:#fff3e0
+    style I fill:#fff3e0
+    style J fill:#fff3e0
 ```
 
-CodeWeaver's modular architecture enables:
+CodeWeaver's plugin architecture enables:
 
-- **Protocol-based interfaces** for type-safe extensibility
-- **Factory pattern** for runtime component discovery
-- **Service layer** with dependency injection and health monitoring
-- **Middleware system** for cross-cutting concerns
+- **Provider flexibility**: Support for multiple embedding and vector database providers
+- **Extensible processing**: Custom data sources and analysis pipelines
+- **Semantic + structural search**: Combines meaning-based and pattern-based code discovery
+- **Auto-scaling indexing**: Intelligent background processing with caching
 
-→ [Learn more about the architecture](architecture/index.md)
+→ [Architecture Overview](architecture/index.md)
 
-## 🌟 Success Stories
+## Common Use Cases
 
-!!! success "Large Monorepo Success"
-    "CodeWeaver indexes our 2M+ line TypeScript monorepo in minutes. Claude now understands our entire codebase structure and can answer complex questions about cross-service dependencies."
+**Code Exploration**: "Find all authentication functions" → Semantic search across auth-related code patterns
 
-    — Senior Engineering Manager, Fortune 500 Company
+**Architecture Analysis**: "How does error handling work?" → Structural analysis of exception patterns and error flows  
 
-!!! success "Multi-Language Support"
-    "We have Python, Go, TypeScript, and Rust services. CodeWeaver's ast-grep integration provides structural search across all languages with a unified interface."
+**Pattern Discovery**: "Show me API endpoints" → Combined search for route definitions, handlers, and documentation
 
-    — Platform Engineering Lead, AI Startup
+**Legacy Understanding**: "Explain the payment system" → Multi-file analysis connecting related components
 
-!!! success "Enterprise Deployment"
-    "Self-hosted on our Kubernetes cluster with custom embedding models. The plugin architecture let us integrate our internal code analysis tools seamlessly."
+**Security Review**: "Find potential security issues" → Pattern matching for common vulnerability patterns
 
-    — DevOps Architect, Financial Services
+## Requirements
 
-## 🤝 Community and Support
+- **Python 3.11+** with `uv` package manager
+- **Embedding Provider**: Voyage AI, OpenAI, Cohere, or HuggingFace
+- **Vector Database**: Qdrant, Pinecone, Weaviate, or ChromaDB  
+- **AI Assistant**: Claude Desktop, or custom MCP client
 
-- **[GitHub Repository](https://github.com/knitli/codeweaver-mcp)** - Source code, issues, and discussions
-- **[Discord Community](https://discord.gg/codeweaver)** - Chat with users and developers
-- **[Documentation](https://docs.codeweaver.dev)** - Comprehensive guides and API reference
-- **[Support](community/support.md)** - Enterprise support and professional services
+## License
 
-## 📄 License
+CodeWeaver is dual-licensed under [MIT](https://opensource.org/licenses/MIT) or [Apache-2.0](https://opensource.org/licenses/Apache-2.0).
 
-CodeWeaver is dual-licensed under [MIT](https://opensource.org/licenses/MIT) or [Apache-2.0](https://opensource.org/licenses/Apache-2.0) licenses. Use whichever works best for your project.
+## Support
 
----
-
-**Ready to get started?** → [Quick Start Guide](getting-started/quick-start.md)
-
-**Need help?** → [Community Support](community/support.md)
-
-**Want to contribute?** → [Contributing Guide](community/contributing.md)
+- **[GitHub Issues](https://github.com/knitli/codeweaver-mcp/issues)** - Bug reports and feature requests
+- **[Documentation](getting-started/quick-start.md)** - Setup guides and technical reference
+- **[Community Support](community/support.md)** - Discussion forums and help

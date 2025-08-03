@@ -5,69 +5,56 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
 # CodeWeaver Documentation Design
-**Revised for Intent-Based Architecture with Advanced Services Layer**
+**Developer-Focused Architecture for MCP Server Integration**
 
 ## 📋 Summary
 
-This document outlines the comprehensive Material for MkDocs documentation structure designed for CodeWeaver's revolutionary intent-based MCP server architecture. CodeWeaver has evolved from a traditional multi-tool MCP server to a sophisticated intent processing system with advanced services layer, requiring a complete documentation strategy overhaul.
+This document outlines the comprehensive Material for MkDocs documentation structure designed for CodeWeaver's semantic code search MCP server. The documentation prioritizes developer workflows, integration guidance, and extensibility patterns for the two primary developer audiences: those implementing CodeWeaver for productivity, and those extending its capabilities.
 
 ## 🎯 Design Objectives
 
-### 1. **Intent-First Documentation**
-- Optimized for natural language interactions with AI assistants
-- Clear guidance on intent-based queries and automatic background indexing
-- Focus on "what you want to achieve" rather than "how to use specific tools"
-- Integration guides for Claude Desktop emphasizing single `process_intent` tool
+### 1. **Developer-First Documentation**
+- Optimized for developers integrating MCP servers with AI assistants
+- Clear technical setup guides with immediate productivity focus
+- Practical code examples and integration patterns
+- Extension development guidance for custom providers and backends
 
-### 2. **Architecture-Aware Progressive Disclosure**
-- 9-level information hierarchy updated for enterprise-grade service architecture
-- User journey mapping for four primary personas (added Enterprise Administrators)
-- Service-oriented organization reflecting sophisticated backend architecture
-- Clear separation between user-facing intents and administrator controls
+### 2. **Progressive Technical Disclosure**
+- 6-section information hierarchy focused on developer workflows
+- User journey mapping for two primary developer personas
+- Technical architecture documentation for extension developers
+- Clear separation between usage and extension development
 
-### 3. **Enterprise-Grade User Experience**
-- Modern Material Design reflecting CodeWeaver's production-ready status
-- Performance documentation for health monitoring, auto-recovery, and circuit breakers
-- Accessibility compliance (WCAG 2.1 AA) with enterprise deployment guidance
-- Sub-3-second load times with advanced service layer documentation
+### 3. **Technical User Experience**
+- Modern Material Design with developer-focused navigation
+- Performance documentation for production deployment
+- Accessibility compliance (WCAG 2.1 AA) with technical content optimization
+- Sub-3-second load times with efficient content organization
 
 ## 📁 Documentation Structure
 
-### 🔄 Information Architecture (9 Levels) - **REVISED FOR INTENT ARCHITECTURE**
+### 🔄 Information Architecture (6 Sections) - **DEVELOPER-FOCUSED HIERARCHY**
 
 ```
-Level 1: Getting Started    → Intent-based quick start & natural language examples
-Level 2: Intent Guide       → Natural language query patterns & capabilities
-Level 3: Services & Config  → Advanced service layer configuration & monitoring
-Level 4: Architecture       → Intent processing pipeline & services architecture
-Level 5: Extension Dev      → Plugin development for intent processors & services
-Level 6: Services API       → Service layer API reference & health monitoring
-Level 7: Intent Tutorials   → Learning through natural language examples
-Level 8: Quick Reference    → Intent patterns, service configs, troubleshooting
-Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
+Section 1: Getting Started  → Quick setup, installation, configuration, troubleshooting
+Section 2: User Guide       → Integration workflows, Claude Desktop, performance
+Section 3: Extension Dev    → Architecture, plugin system, custom providers
+Section 4: Configuration   → Environment, providers, backends, deployment
+Section 5: API Reference   → MCP tools, core components, protocols
+Section 6: Reference       → Usage patterns, language support, provider comparison
 ```
 
-### 👥 User Persona Mapping - **UPDATED FOR CURRENT ARCHITECTURE**
+### 👥 User Persona Mapping - **DEVELOPER-FOCUSED AUDIENCES**
 
-**🎯 AI Assistant Users (Beginners)**
-- Journey: Home → Why CodeWeaver → Quick Start → First Intent Query → Intent Guide
-- Goal: Get CodeWeaver working with Claude Desktop using natural language in 5 minutes
-- Content: Intent examples, automatic indexing explanation, no-configuration startup
+**🛠️ Developers Using AI Assistants (Primary)**
+- Journey: Home → Quick Setup → User Guide → Configuration → Troubleshooting
+- Goal: Get CodeWeaver working with Claude Desktop to enhance development workflow
+- Content: Installation guides, Claude Desktop integration, practical query examples, performance optimization
 
-**🛠️ Developer Teams (Intermediate)**
-- Journey: Intent Guide → Services & Config → Architecture → Performance Monitoring → Deployment
-- Goal: Configure and deploy CodeWeaver for team use with service monitoring
-- Content: Service configuration, health monitoring, deployment guides, performance optimization
-
-**🏢 Enterprise Administrators (Advanced Operations)**
-- Journey: Architecture → Services & Config → Enterprise Deployment → Monitoring & Maintenance
-- Goal: Deploy and maintain CodeWeaver at enterprise scale with full observability
-- Content: Service health monitoring, auto-recovery configuration, enterprise deployment patterns
-
-**🧩 Plugin Developers (Advanced Technical)**
-- Journey: Architecture → Extension Development → Services API → Testing & Integration
-- Goal: Extend CodeWeaver with custom intent processors and service providers
-- Content: Intent processing plugins, service provider development, protocol implementation
+**🧩 Extension Developers (Secondary)**
+- Journey: Architecture → Extension Development → API Reference → Testing
+- Goal: Build custom providers, backends, and data sources for CodeWeaver
+- Content: Plugin architecture, protocol implementation, testing frameworks, performance guidelines
 
 ## 🎨 Material Theme Configuration
 
@@ -107,29 +94,29 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - **mike**: Multi-version documentation management
 - **privacy**: GDPR compliance and consent management
 
-## 📝 Content Strategy - **REVISED FOR INTENT-BASED SYSTEM**
+## 📝 Content Strategy - **DEVELOPER-FOCUSED TECHNICAL CONTENT**
 
-### Content Type Definitions - **UPDATED FOR NEW ARCHITECTURE**
+### Content Type Definitions - **TECHNICAL DOCUMENTATION PATTERNS**
 
-**Intent-Based Conceptual Content**
-- Structure: What Intent → Natural Language Examples → How It Works → When to Use → Advanced Patterns
-- Purpose: Help users understand intent capabilities and formulate effective queries
-- Examples: Natural language search patterns, automatic indexing concepts, intent processing pipeline
+**Technical Setup Guides**
+- Structure: Prerequisites → Installation → Configuration → Verification → Troubleshooting
+- Purpose: Get developers productive with CodeWeaver quickly and reliably
+- Examples: Claude Desktop integration, provider setup, environment configuration
 
-**Service Configuration Guides**
-- Structure: Service Overview → Configuration Options → Monitoring Setup → Health Checks → Troubleshooting
-- Purpose: Help administrators configure and monitor the service layer
-- Examples: Configuring chunking services, setting up health monitoring, auto-recovery configuration
+**Architecture Documentation**
+- Structure: Overview → Components → Patterns → Extension Points → Examples
+- Purpose: Help extension developers understand system design and customization options
+- Examples: Plugin architecture, protocol interfaces, factory patterns, service layer
 
-**Intent Reference Documentation**
-- Structure: Intent Description → Example Queries → Parameters → Response Format → Related Intents
-- Purpose: Detailed reference for available intents and their capabilities
-- Examples: Search intent patterns, capability queries, service status intents
+**API Reference Documentation**
+- Structure: Interface Definition → Parameters → Return Types → Examples → Error Handling
+- Purpose: Complete technical reference for developers building integrations
+- Examples: MCP tool signatures, protocol implementations, configuration schemas
 
-**Hands-On Intent Tutorials**
-- Structure: Learning objectives → Setup → Natural Language Examples → Understanding Results → Advanced Patterns
-- Purpose: Teach effective intent usage through practical examples
-- Examples: Codebase exploration workflows, debugging with natural language, architectural analysis patterns
+**Practical Integration Guides**
+- Structure: Use Case → Setup → Implementation → Testing → Optimization
+- Purpose: Demonstrate real-world integration patterns and best practices
+- Examples: Development workflow integration, performance optimization, production deployment
 
 ### Cross-Referencing Strategy
 - **Contextual Links**: Prerequisites, related concepts, next steps, examples
@@ -211,42 +198,47 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - **Accessibility**: WCAG 2.1 AA compliance
 - **SEO Performance**: Top 3 search results for key terms
 
-## 🚀 Implementation Status - **REVISED FOR NEW ARCHITECTURE**
+## 🚀 Implementation Status - **DEVELOPER-FOCUSED ARCHITECTURE**
 
-### ⚠️ Requires Major Updates (Architecture Changed)
-- [ ] **CRITICAL**: Update navigation structure for intent-based architecture
-- [ ] **CRITICAL**: Revise getting started guide for single intent tool
-- [ ] **CRITICAL**: Document automatic indexing vs manual indexing
-- [ ] **CRITICAL**: Create intent query examples and patterns
-- [ ] **CRITICAL**: Document service layer architecture and monitoring
+### ✅ Completed Implementation
+- [x] **CRITICAL**: Updated navigation structure for developer-first approach
+- [x] **CRITICAL**: Revised homepage to focus on technical value and developer workflows
+- [x] **CRITICAL**: Updated getting started guide for immediate developer productivity
+- [x] **CRITICAL**: Created usage patterns reference for practical query examples
+- [x] **CRITICAL**: Streamlined service layer documentation for technical clarity
+- [x] **CRITICAL**: Created developer-focused architecture overview
 
-### ✅ Still Valid from Original Plan
-- [x] MkDocs configuration with Material theme (can be reused)
-- [x] Brand identity and custom CSS system (can be reused)
-- [x] Core plugin configuration and optimization (can be reused)
-- [x] Performance optimization setup (enhanced with service monitoring)
+### ✅ Technical Infrastructure
+- [x] MkDocs configuration with Material theme optimized for developers
+- [x] Brand identity and custom CSS system for technical content
+- [x] Core plugin configuration and performance optimization
+- [x] Navigation structure prioritizing developer workflows
 
-### 🔄 Priority Updates Needed
-- [ ] **HIGH**: Intent-based content creation for all sections
-- [ ] **HIGH**: Service layer API documentation generation
-- [ ] **HIGH**: Natural language tutorial development with real examples
-- [ ] **MEDIUM**: Updated architecture diagrams showing intent processing pipeline
-- [ ] **MEDIUM**: Service health monitoring documentation
+### 🔄 Ongoing Content Development
+- [ ] **HIGH**: User guide content for development workflow integration
+- [ ] **HIGH**: Extension development guides with practical examples
+- [ ] **HIGH**: Configuration documentation for all providers and backends
+- [ ] **MEDIUM**: Troubleshooting guides for common integration issues
+- [ ] **MEDIUM**: Performance optimization guides for production deployment
 
-### 📋 New Features to Add
-- [ ] Intent pattern library with examples
-- [ ] Service monitoring dashboards documentation
-- [ ] Enterprise deployment guides for service layer
-- [ ] Auto-recovery and circuit breaker configuration guides
-- [ ] Background indexing behavior explanation
-- [ ] Migration guide from traditional MCP tools to intent interface
+### 📋 Future Enhancements
+- [ ] Advanced extension examples and tutorials
+- [ ] Provider comparison matrix with technical specifications
+- [ ] Enterprise deployment patterns and best practices
+- [ ] Community contribution guidelines for extension developers
+- [ ] Performance benchmarking and optimization guides
 
 ## 📚 Files Created
 
 ### Core Configuration
-- **`mkdocs.yml`**: Complete Material theme configuration with navigation
-- **`docs/index.md`**: Homepage with user persona targeting
-- **`docs/why-codeweaver.md`**: Value proposition and comparison page
+- **`mkdocs.yml`**: Complete Material theme configuration with developer-focused navigation
+- **`docs/index.md`**: Homepage targeting developers using AI assistants and extension developers
+- **`docs/getting-started/quick-start.md`**: Streamlined setup guide for immediate productivity
+
+### Developer-Focused Documentation
+- **`docs/reference/usage-patterns.md`**: Practical query patterns and examples
+- **`docs/architecture/index.md`**: Technical architecture overview for extension developers
+- **`docs/services/index.md`**: Service layer documentation with technical focus
 
 ### Documentation Strategy
 - **`docs/content-strategy.md`**: Comprehensive content organization strategy
@@ -257,32 +249,34 @@ Level 9: Enterprise & Community → Large-scale deployment & ecosystem support
 - **`docs/assets/extra.css`**: Custom CSS with CodeWeaver branding
 - **`DOCUMENTATION_DESIGN.md`**: This comprehensive design document
 
-## 🎯 Next Steps - **PRIORITIZED FOR ARCHITECTURE CHANGES**
+## 🎯 Next Steps - **DEVELOPER-FOCUSED CONTENT COMPLETION**
 
-### **Phase 1: Critical Architecture Updates (Week 1-2)**
-1. **Intent-Based Getting Started**: Complete rewrite for natural language interface (audience: developers)
-2. **Architecture Documentation**: Document intent processing pipeline and services layer
-3. **Service Monitoring Guide**: Document health checks, auto-recovery, circuit breakers
-4. **API Reference Update**: Document current `process_intent` tool and service layer APIs
+### **Phase 1: Core User Guide (Week 1-2)**
+1. **User Guide Development**: How CodeWeaver integrates with development workflows
+2. **Claude Desktop and Claude Code Integration**: Detailed integration guide with troubleshooting
+3. **Development Workflows**: Practical examples of using semantic search in daily work (to be clear, codeweaver doesn't *just* use semantic search, but also uses traditional search and can integrate with any data source, and we don't expose search directly to developers right now, but this is more useful in the context of writing custom search patterns that the tool will then use (triggered by the LLM user)). Codeweaver supports adding ast-grep and other patterns to the config, and I'd also hammer home that we only have native patterns for a few languages and could use folks to contribute more.
+4. **Performance Optimization**: Configuration tuning for production use
 
-### **Phase 2: Content Development (Week 3-4)**
-1. **Intent Pattern Library**: Comprehensive examples of natural language queries
-2. **Service Configuration**: Advanced service layer configuration documentation
-3. **Enterprise Deployment**: Large-scale deployment with service monitoring
-4. **Migration Guide**: Help users transition from traditional tools to intent interface
+### **Phase 2: Extension Development (Week 3-4)**
+1. **Extension Development Guides**: Complete guides for building custom providers
+2. **Protocol Documentation**: Detailed interface documentation for plugin development
+3. **Testing and Validation**: Framework and examples for testing custom extensions
+4. **Performance Guidelines**: Best practices for high-performance extensions
 
-### **Phase 3: Enhancement (Week 5-6)**
-1. **Updated Asset Creation**: Architecture diagrams for intent processing pipeline
-2. **Advanced Tutorials**: Natural language codebase exploration workflows
-3. **Performance Documentation**: Service layer performance optimization
-4. **Testing**: Comprehensive testing across all documentation updates
+### **Phase 3: Configuration and Reference (Week 5-6)**
+1. **Configuration Documentation**: Complete coverage of all providers and backends (not including intent layer, which gets its own section)
+2. **Provider Comparison**: Technical specifications and selection guidance
+3. **Troubleshooting Guides**: Common issues and resolution patterns
+4. **Reference Materials**: Language support, error codes, performance benchmarks
 
-### **Phase 4: Launch & Iteration (Week 7+)**
-1. **Deploy Updated Documentation**: Launch intent-focused documentation
-2. **User Feedback Collection**: Gather feedback on intent interface documentation
-3. **Continuous Improvement**: Analytics-based improvements for intent usage patterns
-4. **Community Engagement**: Foster community around intent-based development
+### **Phase 4: The Intent Layer (Week 7-8)**
+1. **Intent Layer Overview**: Explanation of the intent layer and its role in CodeWeaver
+2. **Configuration Patterns**: How to configure the intent layer for custom search patterns
+3. **Custom Strategies**: Developing custom strategies for the intent layer
 
-**Critical Success Factor**: The documentation must emphasize the paradigm shift from explicit tool usage to natural language intent processing, as this represents CodeWeaver's core value proposition and differentiator in the MCP ecosystem.
+### **Phase 5: Community and Enhancement**
+1. **Community Guidelines**: Contribution patterns for extension developers
+2. **Enterprise Deployment**: Production deployment patterns and best practices
+3. **User Feedback Integration**: Analytics-based improvements for developer workflows
 
-This revised documentation design acknowledges CodeWeaver's evolution into a sophisticated, production-ready intent processing system with enterprise-grade service architecture, requiring comprehensive documentation updates to match its current capabilities.
+**Critical Success Factor**: The documentation focuses on enabling developers to be productive with CodeWeaver as a semantic and traditional code search tool, while providing comprehensive extension guidance for those who want to customize and enhance its capabilities.
