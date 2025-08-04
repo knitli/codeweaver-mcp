@@ -447,7 +447,7 @@ retry_delay = 2.0
 
 #### Collection Not Found
 
-```
+```plaintext
 Error: Collection 'codeweaver-embeddings' not found
 ```
 
@@ -462,7 +462,7 @@ curl -X PUT "https://your-cluster.qdrant.io/collections/codeweaver-embeddings" \
 
 #### Dimension Mismatch
 
-```
+```plaintext
 Error: Vector dimension mismatch: expected 1024, got 1536
 ```
 

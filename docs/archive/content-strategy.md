@@ -13,7 +13,7 @@ This document outlines the comprehensive content strategy for CodeWeaver's Mater
 ### 1. Progressive Disclosure
 The documentation follows a layered approach where complexity increases as users dive deeper:
 
-```
+```plaintext
 Level 1: Getting Started (High-level overview)
 Level 2: User Guides (Task-oriented)
 Level 3: Configuration (Deep configuration)
@@ -278,13 +278,13 @@ What to read or do next
     ```python
     # Simple, common use case
     basic_example()
-    ```
+    ```plaintext
 
 === "Advanced Example"
     ```python
     # More complex scenario
     advanced_example_with_options()
-    ```
+    ```plaintext
 
 === "Full Example"
     ```python

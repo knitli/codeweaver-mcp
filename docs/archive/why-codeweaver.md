@@ -58,7 +58,7 @@ graph LR
 === "Semantic Search"
     **Natural Language Understanding**
     
-    ```
+    ```plaintext
     Query: "Find authentication middleware"
     Results: ✅ auth.middleware.ts, ✅ user-auth.service.ts, ✅ jwt-validator.ts
     ```
@@ -68,7 +68,7 @@ graph LR
 === "Structural Search"
     **Code Pattern Recognition**
     
-    ```
+    ```plaintext
     Pattern: "class $_ extends Component"
     Results: ✅ All React class components
     ```
@@ -78,7 +78,7 @@ graph LR
 === "Hybrid Search"
     **Best of Both Worlds**
     
-    ```
+    ```plaintext
     Query: "Find API endpoints that handle user data"
     Results: ✅ Semantic understanding + structural patterns
     ```
@@ -126,7 +126,7 @@ CodeWeaver helps AI assistants understand:
 ## Real-World Impact
 
 ### Before CodeWeaver
-```
+```plaintext
 👤 Human: "How does authentication work in our app?"
 
 🤖 AI: "I'd need to see your authentication files to help."
@@ -143,7 +143,7 @@ CodeWeaver helps AI assistants understand:
 ```
 
 ### After CodeWeaver
-```
+```plaintext
 👤 Human: "How does authentication work in our app?"
 
 🤖 AI: "I can see your authentication system uses:

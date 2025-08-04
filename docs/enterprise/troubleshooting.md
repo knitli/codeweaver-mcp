@@ -6,7 +6,7 @@ This comprehensive troubleshooting guide covers common issues, debugging procedu
 
 ### Systematic Approach
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────┐
 │                 Troubleshooting Process                     │
 │                                                             │

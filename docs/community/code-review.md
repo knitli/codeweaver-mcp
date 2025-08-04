@@ -58,7 +58,7 @@ Before submitting a pull request:
 ### 2. Pull Request Submission
 
 **PR Title Format:**
-```
+```plaintext
 type(scope): brief description
 
 Examples:
@@ -379,7 +379,7 @@ This method could benefit from input validation. Consider adding a check for emp
 ```python
 if not texts:
     raise ValueError("texts cannot be empty")
-```
+```plaintext
 
 # ✅ GOOD: Architectural suggestion
 This implementation looks good! For consistency with other providers, consider using the same error handling pattern as VoyageProvider:

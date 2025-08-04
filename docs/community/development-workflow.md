@@ -82,7 +82,7 @@ uv sync --group bench     # Benchmarking tools
 
 Understanding the codebase structure helps you navigate and contribute effectively:
 
-```
+```plaintext
 codeweaver-mcp/
 ├── src/codeweaver/              # Main source code
 │   ├── __init__.py              # Package initialization
@@ -238,7 +238,7 @@ def embed_documents(self, texts: list[str], context: dict | None = None) -> list
             context
         )
         print(f"Generated {len(embeddings)} embeddings")
-        ```
+        ```plaintext
     """
 ```
 

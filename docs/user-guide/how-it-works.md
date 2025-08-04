@@ -22,7 +22,7 @@ CodeWeaver operates as a **Model Context Protocol (MCP) server** that sits betwe
 ## The Development Workflow Integration
 
 ### Before CodeWeaver
-```
+```plaintext
 Developer Question: "Where is user authentication handled?"
 ↓
 Manual Process: Search files → Read code → Understand context → Find related files
@@ -31,7 +31,7 @@ Time: 10-30 minutes of manual exploration
 ```
 
 ### With CodeWeaver
-```
+```plaintext
 Developer Question: "Where is user authentication handled?"
 ↓
 AI Assistant + CodeWeaver: Semantic search + contextual understanding
@@ -80,7 +80,7 @@ graph LR
 ## Development Workflow Examples
 
 ### Code Exploration
-```
+```plaintext
 Query: "How does error handling work in this API?"
 ↓
 CodeWeaver finds:
@@ -91,7 +91,7 @@ CodeWeaver finds:
 ```
 
 ### Feature Development
-```
+```plaintext
 Query: "Show me examples of database migrations"
 ↓
 CodeWeaver locates:
@@ -102,7 +102,7 @@ CodeWeaver locates:
 ```
 
 ### Debugging
-```
+```plaintext
 Query: "Find code that processes payment webhooks"
 ↓
 CodeWeaver identifies:
@@ -113,7 +113,7 @@ CodeWeaver identifies:
 ```
 
 ### Code Review
-```
+```plaintext
 Query: "Show security patterns in authentication code"
 ↓
 CodeWeaver highlights:

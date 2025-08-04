@@ -6,7 +6,7 @@ This guide covers scaling CodeWeaver for large organizations, multiple teams, an
 
 CodeWeaver's scalable architecture supports growth from small teams to enterprise-scale deployments:
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Enterprise Scale Architecture                 │
 │                                                                 │

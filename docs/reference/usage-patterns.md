@@ -13,7 +13,7 @@ Common patterns for using CodeWeaver with AI assistants. These examples work wit
 ### Finding Specific Code
 
 **Functions and Methods:**
-```
+```plaintext
 Find authentication functions in this project
 Search for async functions that handle database operations
 Show me React hooks that manage state
@@ -21,7 +21,7 @@ Locate API endpoint handlers
 ```
 
 **Classes and Components:**
-```
+```plaintext
 Find React components that use useEffect
 Show Python classes that inherit from BaseModel
 Search for Vue components with computed properties
@@ -29,7 +29,7 @@ Find TypeScript interfaces for API responses
 ```
 
 **Patterns and Structures:**
-```
+```plaintext
 Find all error handling patterns
 Show me database schema definitions
 Search for configuration files
@@ -40,7 +40,7 @@ Locate test files for the auth module
 
 ### Architecture Analysis
 
-```
+```plaintext
 Explain how the authentication system works
 How does error handling work in this codebase?
 What's the data flow from frontend to backend?
@@ -49,7 +49,7 @@ How is configuration managed across the application?
 
 ### System Overview
 
-```
+```plaintext
 What are the main components of this system?
 How do the different modules interact?
 What are the key architectural patterns used?
@@ -58,7 +58,7 @@ How is the application structured?
 
 ### Code Relationships
 
-```
+```plaintext
 How do these components connect?
 What are the dependencies for this module?
 How does data flow through the system?
@@ -69,7 +69,7 @@ What are the integration points?
 
 ### Code Quality
 
-```
+```plaintext
 What are the testing patterns in this codebase?
 Find potential code quality issues
 Analyze the error handling strategy
@@ -78,7 +78,7 @@ Review the logging and monitoring approach
 
 ### Security Analysis
 
-```
+```plaintext
 Find potential security vulnerabilities
 Analyze authentication and authorization patterns
 Review input validation approaches
@@ -87,7 +87,7 @@ Check for common security anti-patterns
 
 ### Performance Analysis
 
-```
+```plaintext
 Find performance bottlenecks in the API layer
 Analyze database query patterns
 Review caching strategies
@@ -98,7 +98,7 @@ Identify optimization opportunities
 
 ### Frontend Development
 
-```
+```plaintext
 Find React components that need optimization
 Analyze state management patterns
 Review accessibility implementations
@@ -107,7 +107,7 @@ Find responsive design patterns
 
 ### Backend Development
 
-```
+```plaintext
 Analyze API design patterns
 Review database integration approaches
 Find middleware and interceptor usage
@@ -116,7 +116,7 @@ Analyze service layer architecture
 
 ### DevOps and Infrastructure
 
-```
+```plaintext
 Find deployment configuration
 Analyze monitoring and logging setup
 Review CI/CD pipeline configuration
@@ -127,7 +127,7 @@ Find infrastructure as code patterns
 
 ### Cross-File Analysis
 
-```
+```plaintext
 Trace the user registration flow across files
 How does payment processing work end-to-end?
 Follow the data validation pipeline
@@ -136,7 +136,7 @@ Trace error handling from frontend to backend
 
 ### Legacy Code Understanding
 
-```
+```plaintext
 Explain this legacy authentication system
 How does this old payment module work?
 What are the dependencies of this legacy component?
@@ -145,7 +145,7 @@ How can we modernize this legacy pattern?
 
 ### Migration Planning
 
-```
+```plaintext
 Find all uses of the old authentication library
 Identify components that need React 18 migration
 Find deprecated API usage patterns

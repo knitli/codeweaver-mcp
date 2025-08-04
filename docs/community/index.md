@@ -36,7 +36,7 @@ Ready to contribute? Here's how to get started:
 
 CodeWeaver is built on extensible patterns that make it easy to add new functionality:
 
-```
+```plaintext
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   MCP Client    │───▶│  CodeWeaver      │───▶│    Your Code    │
 │   (Claude)      │    │     Server       │    │   Extensions    │

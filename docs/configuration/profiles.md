@@ -184,7 +184,7 @@ CodeWeaver selects profiles in this order:
 
 ### Profile Not Found
 
-```
+```plaintext
 Error: Profile 'myprofile' not found
 ```
 
@@ -192,7 +192,7 @@ Error: Profile 'myprofile' not found
 
 ### Missing API Keys
 
-```
+```plaintext
 Error: CW_EMBEDDING_API_KEY is required for profile 'codeweaver_original'
 ```
 

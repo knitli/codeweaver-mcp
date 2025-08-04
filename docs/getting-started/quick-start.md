@@ -160,7 +160,7 @@ Test semantic code search with your codebase. **No manual indexing required** - 
 
 In Claude Desktop, try:
 
-```
+```plaintext
 Can you help me understand the authentication system in /path/to/your/project?
 ```
 
@@ -173,23 +173,23 @@ CodeWeaver will:
 
 Natural language queries work across any codebase:
 
-```
+```plaintext
 Find all API endpoints in this Express.js project
 ```
 
-```
+```plaintext
 Show me error handling patterns in the codebase
 ```
 
-```
+```plaintext
 What are the main database models?
 ```
 
-```
+```plaintext
 Explain the user registration flow
 ```
 
-```
+```plaintext
 Find potential security issues in auth code
 ```
 
@@ -229,7 +229,7 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 ## How This Differs from Manual Search
 
 **Traditional Approach:**
-```
+```plaintext
 # Manual steps required
 1. grep -r "auth" .
 2. Find relevant files
@@ -238,7 +238,7 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 ```
 
 **With CodeWeaver:**
-```
+```plaintext
 # Single natural language query
 "Explain the authentication system in this project"
 # → Automatic semantic search + structural analysis + result synthesis

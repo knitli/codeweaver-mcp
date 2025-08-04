@@ -6,7 +6,7 @@ This guide covers production-ready deployment architectures for CodeWeaver in en
 
 CodeWeaver's modular architecture enables flexible deployment patterns that can be adapted to your organization's specific requirements:
 
-```
+```plaintext
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Client Layer  │    │  CodeWeaver MCP  │    │  Vector Backend │
 │                 │    │     Server       │    │                 │
@@ -30,7 +30,7 @@ CodeWeaver's modular architecture enables flexible deployment patterns that can 
 The single-node pattern is ideal for small to medium teams (10-100 developers) with moderate codebase sizes. It provides production-grade reliability while minimizing operational complexity.
 
 ### Architecture Diagram
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────┐
 │                     Production Server                       │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐ │
@@ -252,7 +252,7 @@ WantedBy=multi-user.target
 The distributed pattern is designed for large organizations (100-1000 developers) requiring high availability, load distribution, and horizontal scaling capabilities.
 
 ### Architecture Diagram
-```
+```plaintext
                               Load Balancer
                            ┌─────────────────┐
                            │  HAProxy/NGINX  │
@@ -550,7 +550,7 @@ High-availability (HA) deployment ensures 99.9%+ uptime with automatic failover,
 ### Architecture Components
 
 **Load Balancer Configuration (HAProxy):**
-```
+```plaintext
 # haproxy.cfg
 global
     daemon
@@ -585,7 +585,7 @@ backend qdrant_servers
 ```
 
 **Keepalived Configuration for HA Load Balancer:**
-```
+```plaintext
 # keepalived.conf (Primary)
 vrrp_script chk_haproxy {
     script "/bin/kill -0 `cat /var/run/haproxy.pid`"

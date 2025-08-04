@@ -199,15 +199,15 @@ In Claude Desktop, you should see:
 ### Test Basic Functionality
 Try these commands in Claude Desktop:
 
-```
+```plaintext
 Can you list the supported languages in CodeWeaver?
 ```
 
-```
+```plaintext
 Please index the codebase in /path/to/your/project
 ```
 
-```
+```plaintext
 Search for "authentication logic" in the codebase
 ```
 

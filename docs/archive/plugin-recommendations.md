@@ -277,7 +277,7 @@ def define_env(env):
 === "{language.title()}"
     ```{language}
     --8<-- "{file_path}"
-    ```
+    ```plaintext
 """
 ```
 

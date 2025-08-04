@@ -14,7 +14,7 @@ This comprehensive guide catalogs all error codes, warning messages, and status 
 
 CodeWeaver uses structured error codes for systematic troubleshooting:
 
-```
+```plaintext
 CW-<COMPONENT>-<SEVERITY>-<CODE>
 ```
 
@@ -25,7 +25,7 @@ CW-<COMPONENT>-<SEVERITY>-<CODE>
 ## Authentication Errors (CW-AUTH-E-xxx)
 
 ### CW-AUTH-E-001: Invalid API Key
-```
+```plaintext
 Error: Invalid API key for embedding provider
 Authentication failed with status 401
 ```
@@ -47,7 +47,7 @@ Authentication failed with status 401
 - `CW_OPENAI_API_KEY`
 
 ### CW-AUTH-E-002: API Key Not Found
-```
+```plaintext
 Error: API key is required but not provided
 No valid authentication credentials found
 ```
@@ -63,7 +63,7 @@ No valid authentication credentials found
 3. Check Claude Desktop configuration includes API key
 
 ### CW-AUTH-E-003: Authentication Timeout
-```
+```plaintext
 Error: Authentication request timed out
 Failed to validate API key within 30 seconds
 ```
@@ -80,7 +80,7 @@ Failed to validate API key within 30 seconds
 4. Check firewall/proxy settings
 
 ### CW-AUTH-E-004: Rate Limited Authentication
-```
+```plaintext
 Error: Too many authentication attempts
 Rate limit exceeded for API key validation
 ```
@@ -99,7 +99,7 @@ Rate limit exceeded for API key validation
 ## Embedding Provider Errors (CW-EMBED-E-xxx)
 
 ### CW-EMBED-E-001: Provider Unavailable
-```
+```plaintext
 Error: Embedding provider 'voyage-ai' is not available
 Provider not found in registry
 ```
@@ -116,7 +116,7 @@ Provider not found in registry
 4. Check supported providers list
 
 ### CW-EMBED-E-002: Model Not Found
-```
+```plaintext
 Error: Model 'unknown-model' not supported
 Available models: ['voyage-code-3', 'voyage-context-3']
 ```
@@ -133,7 +133,7 @@ Available models: ['voyage-code-3', 'voyage-context-3']
 4. Verify model is available in your API tier
 
 ### CW-EMBED-E-003: Request Too Large
-```
+```plaintext
 Error: Input text exceeds maximum length
 Max length: 8000 characters, received: 12000 characters
 ```
@@ -150,7 +150,7 @@ Max length: 8000 characters, received: 12000 characters
 4. Implement text preprocessing
 
 ### CW-EMBED-E-004: Rate Limit Exceeded
-```
+```plaintext
 Error: Rate limit exceeded for embedding provider
 Requests per minute limit reached: 100/100
 ```
@@ -167,7 +167,7 @@ Requests per minute limit reached: 100/100
 4. Implement exponential backoff
 
 ### CW-EMBED-E-005: Service Unavailable
-```
+```plaintext
 Error: Embedding service temporarily unavailable
 HTTP 503: Service Unavailable
 ```
@@ -186,7 +186,7 @@ HTTP 503: Service Unavailable
 ## Vector Database Errors (CW-VECTOR-E-xxx)
 
 ### CW-VECTOR-E-001: Connection Failed
-```
+```plaintext
 Error: Failed to connect to vector database
 Connection refused: http://localhost:6333
 ```
@@ -204,7 +204,7 @@ Connection refused: http://localhost:6333
 4. Configure firewall to allow connections
 
 ### CW-VECTOR-E-002: Collection Not Found
-```
+```plaintext
 Error: Collection 'my-project' does not exist
 HTTP 404: Collection not found
 ```
@@ -222,7 +222,7 @@ HTTP 404: Collection not found
 4. Check database instance and credentials
 
 ### CW-VECTOR-E-003: Dimension Mismatch
-```
+```plaintext
 Error: Vector dimension mismatch
 Expected: 1024, received: 1536
 ```
@@ -239,7 +239,7 @@ Expected: 1024, received: 1536
 4. Update collection configuration
 
 ### CW-VECTOR-E-004: Storage Full
-```
+```plaintext
 Error: Vector database storage limit exceeded
 Available space: 0 bytes
 ```
@@ -256,7 +256,7 @@ Available space: 0 bytes
 4. Implement vector pruning strategy
 
 ### CW-VECTOR-E-005: Query Timeout
-```
+```plaintext
 Error: Vector search query timed out
 Query exceeded 30 second timeout
 ```
@@ -276,7 +276,7 @@ Query exceeded 30 second timeout
 ## Indexing Errors (CW-INDEX-E-xxx)
 
 ### CW-INDEX-E-001: No Files Found
-```
+```plaintext
 Error: No files found for indexing
 Path: /path/to/project contains 0 eligible files
 ```
@@ -294,7 +294,7 @@ Path: /path/to/project contains 0 eligible files
 4. Verify read permissions: `ls -la /path/to/project`
 
 ### CW-INDEX-E-002: File Too Large
-```
+```plaintext
 Warning: File exceeds size limit, skipping
 File: large_file.py (5.2MB > 1MB limit)
 ```
@@ -311,7 +311,7 @@ File: large_file.py (5.2MB > 1MB limit)
 4. Filter by file types only
 
 ### CW-INDEX-E-003: Parse Error
-```
+```plaintext
 Error: Failed to parse file with AST
 File: broken_syntax.py - Syntax error at line 45
 ```
@@ -329,7 +329,7 @@ File: broken_syntax.py - Syntax error at line 45
 4. Skip problematic files with exclusion patterns
 
 ### CW-INDEX-E-004: Memory Exhausted
-```
+```plaintext
 Error: Out of memory during indexing
 Failed to allocate memory for batch processing
 ```
@@ -347,7 +347,7 @@ Failed to allocate memory for batch processing
 4. Increase system memory or add swap
 
 ### CW-INDEX-E-005: Permission Denied
-```
+```plaintext
 Error: Permission denied accessing file
 File: /protected/file.py - Read permission required
 ```
@@ -366,7 +366,7 @@ File: /protected/file.py - Read permission required
 ## Search Errors (CW-SEARCH-E-xxx)
 
 ### CW-SEARCH-E-001: Empty Query
-```
+```plaintext
 Error: Search query cannot be empty
 Received empty or whitespace-only query
 ```
@@ -383,7 +383,7 @@ Received empty or whitespace-only query
 4. Validate input before processing
 
 ### CW-SEARCH-E-002: Query Too Long
-```
+```plaintext
 Error: Search query exceeds maximum length
 Query length: 2000 characters, limit: 1000
 ```
@@ -400,7 +400,7 @@ Query length: 2000 characters, limit: 1000
 4. Increase provider limits if possible
 
 ### CW-SEARCH-E-003: No Results Found
-```
+```plaintext
 Warning: No results found for query
 Query returned 0 matches from 10,000 vectors
 ```
@@ -418,7 +418,7 @@ Query returned 0 matches from 10,000 vectors
 4. Check index integrity
 
 ### CW-SEARCH-E-004: Search Timeout
-```
+```plaintext
 Error: Search request timed out
 Query exceeded 10 second timeout limit
 ```
@@ -438,7 +438,7 @@ Query exceeded 10 second timeout limit
 ## Configuration Errors (CW-CONFIG-E-xxx)
 
 ### CW-CONFIG-E-001: Invalid Configuration
-```
+```plaintext
 Error: Configuration validation failed
 Invalid value for 'chunk_size': must be between 50 and 5000
 ```
@@ -456,7 +456,7 @@ Invalid value for 'chunk_size': must be between 50 and 5000
 4. Review all related settings
 
 ### CW-CONFIG-E-002: File Not Found
-```
+```plaintext
 Error: Configuration file not found
 Path: /path/to/config.toml does not exist
 ```
@@ -474,7 +474,7 @@ Path: /path/to/config.toml does not exist
 4. Use absolute path
 
 ### CW-CONFIG-E-003: Parse Error
-```
+```plaintext
 Error: Failed to parse configuration file
 TOML syntax error at line 15: Invalid escape sequence
 ```
@@ -491,7 +491,7 @@ TOML syntax error at line 15: Invalid escape sequence
 4. Use configuration generator tool
 
 ### CW-CONFIG-E-004: Environment Override
-```
+```plaintext
 Warning: Environment variable overrides config file
 CW_BATCH_SIZE=16 overrides config file value of 8
 ```
@@ -510,7 +510,7 @@ CW_BATCH_SIZE=16 overrides config file value of 8
 ## Warning Messages (CW-*-W-xxx)
 
 ### CW-EMBED-W-001: Model Deprecated
-```
+```plaintext
 Warning: Embedding model 'text-embedding-ada-002' is deprecated
 Consider upgrading to 'text-embedding-3-small'
 ```
@@ -522,7 +522,7 @@ Consider upgrading to 'text-embedding-3-small'
 4. Monitor for breaking changes
 
 ### CW-VECTOR-W-001: Performance Degraded
-```
+```plaintext
 Warning: Vector database performance below optimal
 Query latency: 2.5s (normal: <200ms)
 ```
@@ -534,7 +534,7 @@ Query latency: 2.5s (normal: <200ms)
 4. Review index configuration
 
 ### CW-INDEX-W-001: Large Batch Size
-```
+```plaintext
 Warning: Large batch size may cause memory issues
 Current: 128, recommended maximum: 32
 ```

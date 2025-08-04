@@ -44,7 +44,7 @@ export PATH="$HOME/.local/bin:$PATH"
 # Get everything else set up
 mise run setup
 
-```
+```plaintext
 
 This will:
 - Install all of the [repo's tools](https://github.com/knitli/codeweaver-mcp/blob/main/mise.toml#L8-L24), including `uv`, `ruff`, `pytest`, and `hk`
@@ -80,7 +80,7 @@ brew install hk
 uv run pytest tests/unit/ -v
 
 # We told you it's a lot easier with mise, right? 😄
-```
+```plaintext
 
 ### 2. Understand the Architecture
 
@@ -131,7 +131,7 @@ class NewProvider(CombinedProvider):
     async def embed_documents(self, texts: list[str], context: dict | None = None) -> list[list[float]]:
         # Implementation here
         pass
-```
+```plaintext
 
 **Requirements:**
 - Follow [development patterns](development_patterns.md)
@@ -157,7 +157,7 @@ class NewBackend(VectorBackend):
     async def search(self, query_vector: list[float], limit: int = 10) -> list[SearchResult]:
         # Implementation here
         pass
-```
+```plaintext
 
 **Requirements:**
 - Implement all protocol methods
@@ -224,7 +224,7 @@ git checkout -b feature/your-feature-name
 
 # Or for bug fixes
 git checkout -b fix/bug-description
-```
+```plaintext
 
 ### 2. Make Your Changes
 
@@ -257,7 +257,7 @@ git checkout -b fix/bug-description
 
         # Good
         logger.info("Processing...", extra=my_complex_object)
-        ```
+        ```plaintext
     - [`TRY401` Redundant `exception` in `logging.exception`](https://docs.astral.sh/ruff/rules/verbose-log-message/). Don't include the `exception` object in the log message in an except block. Use `logging.exception` which automatically includes the exception information.
         ```python
         try:
@@ -269,7 +269,7 @@ git checkout -b fix/bug-description
 
             # Good
             logger.exception("An error occurred")
-        ```
+        ```plaintext
     - [`TRY300` Use `else` state for returns in `try` blocks](https://docs.astral.sh/ruff/rules/try-consider-else/). Use the `else` clause for final return statements in `try` blocks to ensure they are only executed if no exceptions were raised (early returns in `try` blocks are OK, but final returns should be in the `else` block).
         ```python
         def bad_example():
@@ -288,7 +288,7 @@ git checkout -b fix/bug-description
             else:  # <-- only executed if no exceptions were raised
                 return result
 
-        ```
+        ```plaintext
 
 **Code Quality:**
 ```bash
@@ -301,7 +301,7 @@ uv run pytest
 
 # Check type hints
 uv run mypy src/codeweaver/
-```
+```plaintext
 
 ### 3. Write Good Commit Messages
 
@@ -318,7 +318,7 @@ test(services): add integration tests for chunking service
 update stuff
 fix bug
 wip
-```
+```plaintext
 
 **Format:**
 ```
@@ -328,7 +328,7 @@ Optional longer description explaining the change
 and why it was made.
 
 Closes #123
-```
+```plaintext
 
 **Types:**
 - `feat` - New features
@@ -351,7 +351,7 @@ uv run pytest tests/integration/ -v
 
 # Validation tests (for architecture changes)
 uv run python tests/validation/validate_architecture.py
-```
+```plaintext
 
 **Test Coverage:**
 - Aim for >90% coverage on new code
@@ -389,7 +389,7 @@ Brief description of changes and motivation.
 - [ ] Self-review completed
 - [ ] Documentation updated
 - [ ] No breaking changes (or clearly documented)
-```
+```plaintext
 
 ## 🧪 Testing Guidelines
 
@@ -407,7 +407,7 @@ tests/
 │   └── test_service_integration.py
 └── validation/            # Architecture compliance tests
     └── validate_architecture.py
-```
+```plaintext
 
 ### Test Patterns
 
@@ -439,7 +439,7 @@ class TestExampleProvider:
         """Test error handling for empty input."""
         with pytest.raises(ValueError, match="texts cannot be empty"):
             await provider.embed_documents([])
-```
+```plaintext
 
 **Integration Test Example:**
 ```python
@@ -457,7 +457,7 @@ async def test_provider_backend_integration():
 
     assert len(results) == 1
     assert results[0].id == "1"
-```
+```plaintext
 
 ### Test Best Practices
 
@@ -515,7 +515,7 @@ Reviewers will check for:
 git add .
 git commit -m "address review feedback: improve error handling"
 git push origin feature/your-feature-name
-```
+```plaintext
 
 **Handle Conflicts:**
 ```bash
@@ -527,7 +527,7 @@ git rebase main
 
 # Resolve conflicts and push
 git push --force-with-lease origin feature/your-feature-name
-```
+```plaintext
 
 ## 🎨 Style Guidelines
 

@@ -16,7 +16,7 @@ The Intent Layer acts as a sophisticated middleware between LLM users (like Clau
 Without the Intent Layer, LLMs face several challenges when working with code search tools:
 
 ### Context Pollution
-```
+```plaintext
 ❌ Traditional Approach:
 User: "Find authentication functions"
 System: Exposes 4 different search tools, various filters, backend options...
@@ -38,7 +38,7 @@ Result: Confusion, suboptimal choices, wasted context
 ## How the Intent Layer Works
 
 ### Streamlined Interface
-```
+```plaintext
 ✅ Intent Layer Approach:
 User: "Find authentication functions"
 Intent Layer: Recognizes SEARCH intent → PROJECT scope → MODERATE complexity
@@ -88,7 +88,7 @@ graph LR
 
 ### Simple Search Strategy
 Perfect for direct queries with clear targets:
-```
+```plaintext
 Input: "Find the login function"
 Strategy: Direct semantic search with high confidence
 Output: Specific function locations with relevant context
@@ -96,7 +96,7 @@ Output: Specific function locations with relevant context
 
 ### Analysis Workflow Strategy  
 Handles complex analytical tasks:
-```
+```plaintext
 Input: "Analyze security issues in authentication system"
 Strategy: Multi-step workflow (search → analyze → report)
 Output: Comprehensive analysis with findings and recommendations
@@ -104,7 +104,7 @@ Output: Comprehensive analysis with findings and recommendations
 
 ### Adaptive Strategy
 Universal fallback for unclear or complex requests:
-```
+```plaintext
 Input: "Help me understand the codebase structure"
 Strategy: Dynamic approach based on project characteristics
 Output: Tailored exploration based on codebase patterns
@@ -133,7 +133,7 @@ Output: Tailored exploration based on codebase patterns
 ## Real-World Examples
 
 ### Code Discovery
-```
+```plaintext
 Input: "Where is the user authentication handled?"
 Intent Layer Processing:
   - Intent: SEARCH
@@ -149,7 +149,7 @@ Output:
 ```
 
 ### Architecture Understanding
-```
+```plaintext
 Input: "How does the payment system work?"
 Intent Layer Processing:
   - Intent: UNDERSTAND
@@ -165,7 +165,7 @@ Output:
 ```
 
 ### Security Analysis
-```
+```plaintext
 Input: "Are there any SQL injection vulnerabilities?"
 Intent Layer Processing:
   - Intent: ANALYZE

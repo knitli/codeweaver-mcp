@@ -6,7 +6,7 @@ This guide covers comprehensive monitoring, observability, and alerting strategi
 
 CodeWeaver implements a comprehensive observability stack with multiple layers of monitoring:
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────────┐
 │                   Observability Stack                           │
 │                                                                 │

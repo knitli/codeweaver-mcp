@@ -362,19 +362,19 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 ### Common Errors
 
 #### Invalid API Key
-```
+```plaintext
 Error: Invalid API key for VoyageAI
 ```
 **Solution:** Verify API key format and permissions
 
 #### Model Not Found
-```
+```plaintext
 Error: Model 'invalid-model' not found
 ```
 **Solution:** Check model name spelling and availability
 
 #### Rate Limit Exceeded
-```
+```plaintext
 Error: Rate limit exceeded (429)
 ```
 **Solution:** Reduce `rate_limit` or implement exponential backoff

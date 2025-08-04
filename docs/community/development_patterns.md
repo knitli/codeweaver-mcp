@@ -704,14 +704,14 @@ Example:
     provider = ExampleProvider(config)
 
     embeddings = await provider.embed_documents(["Hello, world!"], context)
-    ```
+    ```plaintext
 
     With services integration:
 
     ```python
     context = await services_manager.create_service_context()
     embeddings = await provider.embed_documents(["Hello, world!"], context)
-    ```
+    ```plaintext
 """
 ```
 
@@ -742,7 +742,7 @@ class ExampleProvider(CombinedProvider):
 
         # Rerank documents
         results = await provider.rerank_documents("query", ["doc1", "doc2"], context)
-        ```
+        ```plaintext
     """
 ```
 
@@ -783,7 +783,7 @@ async def embed_documents(
         )
         assert len(embeddings) == 2
         assert len(embeddings[0]) == provider.dimension
-        ```
+        ```plaintext
     """
 ```
 

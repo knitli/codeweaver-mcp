@@ -6,7 +6,7 @@ This guide provides comprehensive security hardening, compliance frameworks, and
 
 CodeWeaver implements a defense-in-depth security model with multiple layers of protection:
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────┐
 │                    Security Layers                          │
 │                                                             │

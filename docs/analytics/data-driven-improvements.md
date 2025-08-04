@@ -549,7 +549,7 @@ support_analysis = {
 export CW_CHUNKING_STRATEGY=adaptive
 export CW_MAX_CHUNK_SIZE=1000
 export CW_BATCH_SIZE=25
-```
+```plaintext
 
 **Example Configuration**:
 ```toml
@@ -561,7 +561,7 @@ overlap_size = 100
 [performance] 
 batch_size = 25
 memory_limit_mb = 500
-```
+```plaintext
 
 **Expected Results**: 60-80% reduction in search latency
 ```

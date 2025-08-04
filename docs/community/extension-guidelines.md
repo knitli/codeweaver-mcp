@@ -12,7 +12,7 @@ This guide provides comprehensive guidelines for creating extensions to CodeWeav
 
 CodeWeaver's extensible architecture allows you to add new functionality through four main extension points:
 
-```
+```plaintext
 ┌─────────────────────────────────────────────────────────────┐
 │                    CodeWeaver Core                          │
 ├─────────────────┬─────────────────┬─────────────────────────┤

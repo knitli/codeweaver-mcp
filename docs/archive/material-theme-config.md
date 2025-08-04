@@ -305,7 +305,7 @@ markdown_extensions:
 
 ### CSS Organization
 
-```
+```plaintext
 docs/assets/
 ├── extra.css           # Main custom styles
 ├── api-docs.css        # API documentation specific

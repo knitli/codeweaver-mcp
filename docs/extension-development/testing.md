@@ -16,7 +16,7 @@ CodeWeaver provides a comprehensive testing framework to ensure extension qualit
 
 ### Test Organization
 
-```
+```plaintext
 tests/
 ├── unit/                    # Unit tests for individual components
 │   ├── test_providers/      # Provider-specific unit tests

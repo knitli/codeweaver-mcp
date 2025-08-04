@@ -361,19 +361,19 @@ uv run codeweaver
 ### Common Errors
 
 #### Missing API Key
-```
+```plaintext
 Error: CW_EMBEDDING_API_KEY is required
 ```
 **Solution:** Set the API key or use the `minimal` profile
 
 #### Invalid URL Format
-```
+```plaintext
 Error: Invalid URL format for CW_VECTOR_BACKEND_URL
 ```
 **Solution:** Ensure URL includes protocol (`https://`)
 
 #### Configuration Conflicts
-```
+```plaintext
 Warning: Environment variable overrides TOML configuration
 ```
 **Solution:** Check for conflicting environment variables

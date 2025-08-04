@@ -18,7 +18,7 @@ The CodeWeaver services layer provides a clean abstraction between the FastMCP m
 
 ### Core Components
 
-```
+```plaintext
 src/codeweaver/services/
 ├── manager.py              # ServicesManager - coordinates all services
 ├── middleware_bridge.py    # Bridge between FastMCP and services

@@ -17,7 +17,7 @@ This guide demonstrates real-world development scenarios where CodeWeaver enhanc
 **Scenario:** You're joining a new project or exploring an unfamiliar codebase.
 
 #### Traditional Approach
-```
+```plaintext
 1. Clone repository
 2. Read README and documentation
 3. Browse directory structure manually
@@ -27,7 +27,7 @@ This guide demonstrates real-world development scenarios where CodeWeaver enhanc
 ```
 
 #### CodeWeaver-Enhanced Approach
-```
+```plaintext
 1. Clone repository and index with CodeWeaver
 2. Ask natural language questions to understand architecture
 3. Get instant context on components and relationships
@@ -35,7 +35,7 @@ This guide demonstrates real-world development scenarios where CodeWeaver enhanc
 ```
 
 **Example Conversation:**
-```
+```plaintext
 Developer: "I need to understand this codebase. Can you help me get oriented?"
 
 AI + CodeWeaver:
@@ -69,7 +69,7 @@ Would you like me to explain any specific component in detail?"
 #### Example: Adding User Profile Management
 
 **Step 1: Understanding Existing Patterns**
-```
+```plaintext
 Developer: "I need to add user profile management. Show me how user-related features are currently implemented."
 
 AI + CodeWeaver searches and finds:
@@ -81,7 +81,7 @@ AI + CodeWeaver searches and finds:
 ```
 
 **Step 2: Finding Integration Points**
-```
+```plaintext
 Developer: "Where would I add new user profile endpoints?"
 
 AI + CodeWeaver locates:
@@ -92,7 +92,7 @@ AI + CodeWeaver locates:
 ```
 
 **Step 3: Implementation Guidance**
-```
+```plaintext
 Developer: "Show me the validation patterns used in this codebase."
 
 AI + CodeWeaver finds examples of:
@@ -109,7 +109,7 @@ AI + CodeWeaver finds examples of:
 #### Example: Investigating Authentication Failures
 
 **Step 1: Identifying the Problem Domain**
-```
+```plaintext
 Developer: "Users are reporting intermittent authentication failures. Help me understand the auth flow."
 
 AI + CodeWeaver maps the authentication system:
@@ -121,7 +121,7 @@ AI + CodeWeaver maps the authentication system:
 ```
 
 **Step 2: Finding Related Code**
-```
+```plaintext
 Developer: "Show me all the places where authentication tokens are validated."
 
 AI + CodeWeaver searches for:
@@ -132,7 +132,7 @@ AI + CodeWeaver searches for:
 ```
 
 **Step 3: Analyzing Error Patterns**
-```
+```plaintext
 Developer: "Find code that handles authentication errors and logging."
 
 AI + CodeWeaver locates:
@@ -149,7 +149,7 @@ AI + CodeWeaver locates:
 #### Example: Security Review
 
 **Step 1: Security Pattern Analysis**
-```
+```plaintext
 Developer: "Review this codebase for security patterns in authentication and authorization."
 
 AI + CodeWeaver analyzes:
@@ -161,7 +161,7 @@ AI + CodeWeaver analyzes:
 ```
 
 **Step 2: Consistency Checking**
-```
+```plaintext
 Developer: "Are security patterns consistently applied across all endpoints?"
 
 AI + CodeWeaver compares:
@@ -178,7 +178,7 @@ AI + CodeWeaver compares:
 #### Example: API Consistency Improvement
 
 **Step 1: Pattern Discovery**
-```
+```plaintext
 Developer: "Show me all API endpoint patterns to identify inconsistencies."
 
 AI + CodeWeaver finds:
@@ -189,7 +189,7 @@ AI + CodeWeaver finds:
 ```
 
 **Step 2: Identifying Refactoring Opportunities**
-```
+```plaintext
 Developer: "Find duplicate code patterns that could be consolidated."
 
 AI + CodeWeaver locates:
@@ -206,7 +206,7 @@ AI + CodeWeaver locates:
 #### Example: Adding Comprehensive Tests
 
 **Step 1: Test Pattern Analysis**
-```
+```plaintext
 Developer: "Show me the testing patterns used in this project."
 
 AI + CodeWeaver identifies:
@@ -217,7 +217,7 @@ AI + CodeWeaver identifies:
 ```
 
 **Step 2: Coverage Analysis**
-```
+```plaintext
 Developer: "What areas of the codebase need better test coverage?"
 
 AI + CodeWeaver finds:
@@ -232,7 +232,7 @@ AI + CodeWeaver finds:
 ### JavaScript/TypeScript Projects
 
 **Common Queries:**
-```
+```plaintext
 "Show me all React components that use hooks"
 "Find async/await patterns and error handling"
 "Locate all API client implementations"
@@ -240,7 +240,7 @@ AI + CodeWeaver finds:
 ```
 
 **Example: React Component Analysis**
-```
+```plaintext
 Developer: "I need to understand how state management works in this React app."
 
 AI + CodeWeaver finds:
@@ -253,7 +253,7 @@ AI + CodeWeaver finds:
 ### Python Projects
 
 **Common Queries:**
-```
+```plaintext
 "Show me all Django models and their relationships"
 "Find async functions and their error handling"
 "Locate all API serializers and validators"
@@ -261,7 +261,7 @@ AI + CodeWeaver finds:
 ```
 
 **Example: Django API Development**
-```
+```plaintext
 Developer: "How are API endpoints structured in this Django project?"
 
 AI + CodeWeaver locates:
@@ -275,7 +275,7 @@ AI + CodeWeaver locates:
 ### Go Projects
 
 **Common Queries:**
-```
+```plaintext
 "Show me interface implementations and their usage"
 "Find error handling patterns throughout the codebase"
 "Locate all HTTP handlers and middleware"
@@ -283,7 +283,7 @@ AI + CodeWeaver locates:
 ```
 
 **Example: Microservice Architecture**
-```
+```plaintext
 Developer: "How is service communication handled in this Go microservice?"
 
 AI + CodeWeaver finds:
@@ -296,7 +296,7 @@ AI + CodeWeaver finds:
 ### Rust Projects
 
 **Common Queries:**
-```
+```plaintext
 "Show me all trait implementations"
 "Find error handling patterns with Result types"
 "Locate async/await usage and futures"
@@ -304,7 +304,7 @@ AI + CodeWeaver finds:
 ```
 
 **Example: Systems Programming**
-```
+```plaintext
 Developer: "How does this Rust application handle memory management and error propagation?"
 
 AI + CodeWeaver analyzes:
@@ -320,7 +320,7 @@ AI + CodeWeaver analyzes:
 
 **Scenario:** Full-stack applications with multiple languages.
 
-```
+```plaintext
 Developer: "This project has Python backend and React frontend. Show me how they communicate."
 
 AI + CodeWeaver maps:
@@ -334,7 +334,7 @@ AI + CodeWeaver maps:
 
 **Scenario:** Working with large, complex legacy codebases.
 
-```
+```plaintext
 Developer: "This is a legacy PHP application. Help me understand the architecture before making changes."
 
 AI + CodeWeaver identifies:
@@ -349,7 +349,7 @@ AI + CodeWeaver identifies:
 
 **Scenario:** Identifying performance bottlenecks.
 
-```
+```plaintext
 Developer: "Find code that might be causing performance issues in this web application."
 
 AI + CodeWeaver searches for:
@@ -365,7 +365,7 @@ AI + CodeWeaver searches for:
 ### Git Workflow Integration
 
 **Branch Analysis:**
-```
+```plaintext
 Developer: "I'm merging a feature branch. Show me what authentication-related code has changed."
 
 AI + CodeWeaver analyzes:
@@ -378,7 +378,7 @@ AI + CodeWeaver analyzes:
 ### Code Review Assistance
 
 **Pull Request Review:**
-```
+```plaintext
 Developer: "Review this PR for consistency with existing patterns."
 
 AI + CodeWeaver compares:
@@ -391,7 +391,7 @@ AI + CodeWeaver compares:
 ### Documentation Generation
 
 **API Documentation:**
-```
+```plaintext
 Developer: "Generate documentation for all public API endpoints."
 
 AI + CodeWeaver extracts:

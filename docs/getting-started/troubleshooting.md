@@ -288,7 +288,7 @@ uv run codeweaver --help
 ### ❌ "Invalid API key" errors
 
 **Symptoms:**
-```
+```plaintext
 Error: Authentication failed with embedding provider
 HTTP 401: Unauthorized
 ```
@@ -343,7 +343,7 @@ export $(cat .env)
 ### ❌ "Rate limit exceeded" errors
 
 **Symptoms:**
-```
+```plaintext
 Error: Rate limit exceeded for embedding provider
 HTTP 429: Too Many Requests
 ```
@@ -376,7 +376,7 @@ export CW_RETRY_MAX_DELAY=60.0
 ### ❌ "Connection refused" to vector database
 
 **Symptoms:**
-```
+```plaintext
 Error: Failed to connect to vector database
 Connection refused: http://localhost:6333
 ```
@@ -441,7 +441,7 @@ export CW_VECTOR_BACKEND_API_KEY=your-api-key
 ### ❌ "Collection not found" errors
 
 **Symptoms:**
-```
+```plaintext
 Error: Collection 'codeweaver-xyz' not found
 HTTP 404: Collection does not exist
 ```
@@ -475,7 +475,7 @@ curl -X PUT http://localhost:6333/collections/my-collection \
 ### ❌ "No files found to index"
 
 **Symptoms:**
-```
+```plaintext
 Warning: No files found in directory
 Indexed 0 files, created 0 chunks
 ```
@@ -616,7 +616,7 @@ export CW_HYBRID_WEIGHTS=0.7,0.3
 ### ❌ "Search timeout" errors
 
 **Symptoms:**
-```
+```plaintext
 Error: Search request timed out
 HTTP 504: Gateway Timeout
 ```

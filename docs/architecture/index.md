@@ -128,7 +128,7 @@ class CustomVectorBackend(VectorBackend):
 
 ### 1. Query Input
 AI assistant sends natural language query through MCP protocol:
-```
+```plaintext
 "Find authentication functions in /path/to/project"
 ```
 

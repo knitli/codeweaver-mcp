@@ -578,7 +578,7 @@ for service_name, health in health_report.services.items():
 
 #### Service Not Found
 
-```
+```plaintext
 Error: Service provider 'custom_chunking' not found
 ```
 
@@ -589,7 +589,7 @@ Error: Service provider 'custom_chunking' not found
 
 #### Service Initialization Failed
 
-```
+```plaintext
 Error: Failed to initialize chunking service
 ```
 
@@ -600,7 +600,7 @@ Error: Failed to initialize chunking service
 
 #### Health Check Failures
 
-```
+```plaintext
 Warning: Chunking service health check failed
 ```
 
