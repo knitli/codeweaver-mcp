@@ -1,1 +1,0 @@
-::: codeweaver.cli.app

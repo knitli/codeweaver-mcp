@@ -1,1 +1,0 @@
-::: codeweaver.sources.providers.filesystem

@@ -1,1 +1,0 @@
-::: codeweaver.providers.nlp.spacy

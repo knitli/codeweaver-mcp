@@ -140,7 +140,7 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             return
 
         # Get API key from config or environment
-        api_key = self._config.api_key or os.environ.get("CW_POSTHOG_API_KEY")
+        api_key = self._config.api_key or os.environ.get("CW_POSTHOG_API_KEY") or CODEWEAVER_PROJECT_KEY
 
         # Allow mock mode for testing
         if self._config.mock_mode:

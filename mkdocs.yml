@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # CodeWeaver Documentation Configuration
 # World-class documentation for an extensible MCP server
-site_name: CodeWeaver Documentation
+site_name: CodeWeaver
 site_description: Codeweaver -- The MCP Context Platform -- Official Documentation
 site_author: Knitli Inc.
 site_url: https://docs.codeweaver.dev
@@ -13,13 +13,13 @@ repo_name: knitli/codeweaver-mcp
 edit_uri: edit/main/docs/
 # Copyright and Legal
 copyright: |
-  Copyright &copy; 2025 Knitli Inc. Licensed under MIT OR Apache-2.0.
+  Copyright &copy; 2025 Knitli Inc. License: MIT <strong>or</strong> Apache-2.0.
 # Theme Configuration - Material Design
 theme:
   name: material
   # Logo and Branding
-  # logo: assets/logo.svg
-  # favicon: assets/favicon.ico
+  logo: assets/knitli_symbol_off-white_RGB.svg
+  favicon: assets/favicon.ico
 
   # Language and Internationalization
   language: en
@@ -53,28 +53,28 @@ theme:
     # Table of Contents
     - toc.follow # Follow table of contents
     - toc.integrate # Integrate TOC with navigation
-  # Color Palette
+  # Color Palette - Knitli Brand Colors
   palette:
-    # Light mode
+    # Light mode - warm and human-centered
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue
-      accent: amber
+      primary: deep orange
+      accent: cyan
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    # Dark mode
+    # Dark mode - sophisticated aubergine theme
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue
-      accent: amber
+      primary: deep orange
+      accent: cyan
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  # Fonts
+  # Fonts - Human-centered and accessible
   font:
-    text: Inter
-    code: JetBrains Mono
+    text: Inter  # Excellent readability and accessibility
+    code: SF Mono  # Clean, readable monospace
   # Custom CSS and JavaScript
   custom_css: assets/extra.css
 # Navigation Structure - Developer-First Architecture
@@ -210,11 +210,12 @@ plugins:
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
-  # Social cards generation
+  # Social cards generation - Knitli branded
   - social:
       enabled: !ENV [CI, false]
       cards_layout_options:
-        background_color: "#1976d2"
+        background_color: "#ea5932"  # Knitli rust-orange
+        color: "#f2ece7"  # Knitli off-white
         font_family: Inter
   # Tags for content organization
   - tags:
@@ -332,11 +333,8 @@ extra:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/codeweaver/
       name: PyPI Package
-    - icon: fontawesome/brands/discord
-      link: https://discord.gg/codeweaver
-      name: Discord Community
     - icon: fontawesome/solid/paper-plane
-      link: mailto:support@codeweaver.dev
+      link: mailto:support@knit.li
       name: Email Support
   # Version management
   version:
@@ -350,12 +348,10 @@ extra:
 # Extra CSS and JavaScript
 extra_css:
   - assets/extra.css
-  - assets/api-docs.css
 extra_javascript:
-  - assets/extra.js
-  - assets/mermaid.min.js
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
-  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/format_blocks.js
+#  - assets/extra.js
+#  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
 # Development server configuration
 dev_addr: '127.0.0.1:8000'
 use_directory_urls: true
