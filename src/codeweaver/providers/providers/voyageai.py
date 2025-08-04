@@ -56,7 +56,7 @@ class VoyageAIProvider(CombinedProvider):
                 "VoyageAI library not available",
                 provider_name="voyage_ai",
                 operation="initialization",
-                recovery_suggestions=["Install with: uv add voyageai"]
+                recovery_suggestions=["Install with: uv add voyageai"],
             )
         self.client = voyageai.Client(api_key=self.config["api_key"])
         self._last_request_time = 0.0
@@ -79,7 +79,9 @@ class VoyageAIProvider(CombinedProvider):
                 provider_type="embedding",
                 provider_name="voyage_ai",
                 operation="validation",
-                recovery_suggestions=["Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config"]
+                recovery_suggestions=[
+                    "Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config"
+                ],
             )
         embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         if embedding_model not in self._capabilities.supported_embedding_models:
@@ -91,8 +93,8 @@ class VoyageAIProvider(CombinedProvider):
                 operation="model_validation",
                 recovery_suggestions=[
                     f"Use one of the supported models: {available}",
-                    "Check VoyageAI documentation for latest model list"
-                ]
+                    "Check VoyageAI documentation for latest model list",
+                ],
             )
         rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
         if rerank_model not in self._capabilities.supported_reranking_models:
@@ -104,8 +106,8 @@ class VoyageAIProvider(CombinedProvider):
                 operation="rerank_model_validation",
                 recovery_suggestions=[
                     f"Use one of the supported reranking models: {available}",
-                    "Check VoyageAI documentation for latest reranking model list"
-                ]
+                    "Check VoyageAI documentation for latest reranking model list",
+                ],
             )
 
     @property
@@ -186,8 +188,8 @@ class VoyageAIProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify input text length is within limits",
-                    "Check VoyageAI service status"
-                ]
+                    "Check VoyageAI service status",
+                ],
             ) from e
         return embeddings
 
@@ -233,8 +235,8 @@ class VoyageAIProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify query text length is within limits",
-                    "Check VoyageAI service status"
-                ]
+                    "Check VoyageAI service status",
+                ],
             ) from e
         return embedding
 
@@ -261,8 +263,8 @@ class VoyageAIProvider(CombinedProvider):
                 operation="rerank_validation",
                 recovery_suggestions=[
                     "Reduce number of documents or query length",
-                    "Check VoyageAI reranking limits documentation"
-                ]
+                    "Check VoyageAI reranking limits documentation",
+                ],
             )
 
         try:
@@ -292,8 +294,8 @@ class VoyageAIProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify document count and query length are within limits",
-                    "Check VoyageAI service status"
-                ]
+                    "Check VoyageAI service status",
+                ],
             ) from e
         else:
             return rerank_results
@@ -374,7 +376,7 @@ class VoyageAIProvider(CombinedProvider):
         try:
             await self.embed_query("health_check")
             logger.debug("VoyageAI health check passed")
-        except Exception as e:
+        except Exception:
             logger.exception("VoyageAI health check failed")
             return False
         else:

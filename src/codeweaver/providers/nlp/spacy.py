@@ -13,6 +13,7 @@ including intent classification, entity recognition, and text embeddings.
 import itertools
 import logging
 
+from types import MappingProxyType
 from typing import Any
 
 from codeweaver.cw_types import (
@@ -379,172 +380,12 @@ class SpaCyProvider(LocalNLPProvider):
             entities[0]["text"] if entities else None,
         )
 
-    def _get_default_domain_patterns(self) -> list[dict[str, Any]]:
+    def _get_default_domain_patterns(self) -> tuple[MappingProxyType[str, Any]]:
         """Get default code domain patterns."""
-        return [
-            {
-                "label": "LANGUAGE",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "python",
-                                "javascript",
-                                "typescript",
-                                "java",
-                                "go",
-                                "rust",
-                                "c++",
-                                "csharp",
-                                "ruby",
-                                "php",
-                                "swift",
-                                "kotlin",
-                                "scala",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "CODE_ELEMENT",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "function",
-                                "class",
-                                "method",
-                                "variable",
-                                "constant",
-                                "interface",
-                                "module",
-                                "package",
-                                "component",
-                                "service",
-                                "endpoint",
-                                "route",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "FRAMEWORK",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "react",
-                                "vue",
-                                "angular",
-                                "django",
-                                "flask",
-                                "express",
-                                "spring",
-                                "fastapi",
-                                "nextjs",
-                                "nuxt",
-                                "laravel",
-                                "rails",
-                                "dotnet",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "DATABASE",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "mysql",
-                                "postgresql",
-                                "mongodb",
-                                "redis",
-                                "elasticsearch",
-                                "sqlite",
-                                "oracle",
-                                "cassandra",
-                                "dynamodb",
-                                "firestore",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "OPERATION",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "authentication",
-                                "authorization",
-                                "validation",
-                                "logging",
-                                "caching",
-                                "monitoring",
-                                "deployment",
-                                "testing",
-                                "debugging",
-                                "optimization",
-                                "refactoring",
-                                "migration",
-                                "backup",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "FILE_TYPE",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "json",
-                                "yaml",
-                                "xml",
-                                "csv",
-                                "sql",
-                                "dockerfile",
-                                "makefile",
-                                "config",
-                                "env",
-                                "properties",
-                                "manifest",
-                                "schema",
-                            ]
-                        }
-                    }
-                ],
-            },
-            {
-                "label": "TOOL",
-                "pattern": [
-                    {
-                        "LOWER": {
-                            "IN": [
-                                "git",
-                                "docker",
-                                "kubernetes",
-                                "jenkins",
-                                "github",
-                                "gitlab",
-                                "vscode",
-                                "intellij",
-                                "webpack",
-                                "babel",
-                                "eslint",
-                                "pytest",
-                            ]
-                        }
-                    }
-                ],
-            },
-        ]
+        # TODO: Add language-specific targeting patterns
+        from codeweaver.language_constants import DEFAULT_NER_PATTERNS
+
+        return DEFAULT_NER_PATTERNS
 
     async def health_check(self) -> bool:
         """Check provider health and model availability."""

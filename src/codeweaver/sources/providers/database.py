@@ -142,7 +142,7 @@ class DatabaseSourceProvider(AbstractDataSource):
         }
         if capability in supported_capabilities:
             try:
-                import sqlite3
+                import sqlite3  # noqa: F401
             except ImportError:
                 return (False, "No database drivers available")
             else:
@@ -181,7 +181,7 @@ class DatabaseSourceProvider(AbstractDataSource):
         database_type = config.get("database_type")
         if not database_type:
             raise ValueError("database_type is required for database source")
-        if connection_string := config.get("connection_string"):
+        if config.get("connection_string"):
             raise NotImplementedError(
                 f"Database source for {database_type} is not yet implemented. Future implementation will require database-specific dependencies."
             )

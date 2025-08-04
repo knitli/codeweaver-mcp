@@ -171,7 +171,9 @@ class DocArrayBackendKind(BaseEnum):
             case DocArrayBackendKind.HNSW:
                 raise NotImplementedError("DocArray HnSw backend not yet implemented")
             case DocArrayBackendKind.INMEMORY:
-                raise NotImplementedError("DocArray InMemoryExactNNIndex backend not yet implemented")
+                raise NotImplementedError(
+                    "DocArray InMemoryExactNNIndex backend not yet implemented"
+                )
             case _:
                 raise ValueError(f"Unsupported DocArray backend kind: {self.value}")
 

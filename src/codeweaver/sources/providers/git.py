@@ -146,7 +146,7 @@ class GitRepositorySourceProvider(AbstractDataSource):
         """
         if not config.get("enabled", True):
             return []
-        if repository_url := config.get("repository_url"):
+        if config.get("repository_url"):
             raise NotImplementedError(
                 "Git repository source is not yet implemented. Future implementation will require GitPython or pygit2 dependency."
             )
@@ -232,11 +232,13 @@ class GitRepositorySourceProvider(AbstractDataSource):
         Returns:
             True if source is healthy and operational, False otherwise
         """
+        from pathlib import Path
+
         try:
             if not hasattr(self, "source_id") or not self.source_id:
                 logger.warning("Git source missing source_id")
                 return False
-            test_path = Path(".")
+            test_path = Path.cwd()
             git_dir = test_path / ".git"
             if git_dir.exists():
                 logger.debug("Git source health check passed - found .git directory")

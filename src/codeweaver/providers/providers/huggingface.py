@@ -19,7 +19,6 @@ from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     ProviderCapability,
     ProviderConfigurationError,
-    ProviderCompatibilityError,
     ProviderType,
     get_provider_registry_entry,
     register_provider_class,
@@ -97,7 +96,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 provider_type="embedding",
                 provider_name="huggingface",
                 operation="validation",
-                recovery_suggestions=["Install with: uv add transformers torch"]
+                recovery_suggestions=["Install with: uv add transformers torch"],
             )
         if not self._use_local and (not HTTPX_AVAILABLE):
             raise ProviderConfigurationError(
@@ -105,7 +104,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 provider_type="embedding",
                 provider_name="huggingface",
                 operation="validation",
-                recovery_suggestions=["Install with: uv add httpx"]
+                recovery_suggestions=["Install with: uv add httpx"],
             )
         if not self._use_local and (not self._api_key):
             logger.warning(
@@ -119,7 +118,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "transformers and torch required for local models",
                 provider_name="huggingface",
                 operation="local_model_initialization",
-                recovery_suggestions=["Install with: uv add transformers torch"]
+                recovery_suggestions=["Install with: uv add transformers torch"],
             )
         try:
             from transformers import AutoModel, AutoTokenizer
@@ -140,8 +139,8 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 recovery_suggestions=[
                     "Check model name exists on HuggingFace Hub",
                     "Verify sufficient disk space and memory",
-                    "Check internet connectivity for model download"
-                ]
+                    "Check internet connectivity for model download",
+                ],
             ) from e
 
     def _init_api_client(self) -> None:
@@ -151,7 +150,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "httpx required for HuggingFace API",
                 provider_name="huggingface",
                 operation="api_client_initialization",
-                recovery_suggestions=["Install with: uv add httpx"]
+                recovery_suggestions=["Install with: uv add httpx"],
             )
         self._api_url = (
             f"https://api-inference.huggingface.co/pipeline/feature-extraction/{self._model_name}"
@@ -205,8 +204,8 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                     "Check model availability and configuration",
                     "Verify input text length is within limits",
                     "For API mode: check network connectivity and API key",
-                    "For local mode: ensure model is properly loaded"
-                ]
+                    "For local mode: ensure model is properly loaded",
+                ],
             ) from e
         else:
             return await self._embed_api(texts)
@@ -227,8 +226,8 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                     "Check model availability and configuration",
                     "Verify query text length is within limits",
                     "For API mode: check network connectivity and API key",
-                    "For local mode: ensure model is properly loaded"
-                ]
+                    "For local mode: ensure model is properly loaded",
+                ],
             ) from e
         else:
             return embeddings[0]
@@ -240,7 +239,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "Local model not available - transformers not installed",
                 provider_name="huggingface",
                 operation="embed_local",
-                recovery_suggestions=["Install with: uv add transformers torch"]
+                recovery_suggestions=["Install with: uv add transformers torch"],
             )
         import torch
 
@@ -273,7 +272,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 "API client not available - httpx not installed",
                 provider_name="huggingface",
                 operation="embed_api",
-                recovery_suggestions=["Install with: uv add httpx"]
+                recovery_suggestions=["Install with: uv add httpx"],
             )
         embeddings = []
         for text in texts:
@@ -291,8 +290,8 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                             "Check API key validity and permissions",
                             "Verify model name is correct and accessible",
                             "Check HuggingFace Inference API status",
-                            "Ensure input text is properly formatted"
-                        ]
+                            "Ensure input text is properly formatted",
+                        ],
                     )
             embedding = response.json()
             if isinstance(embedding, list) and isinstance(embedding[0], list):
@@ -370,7 +369,7 @@ class HuggingFaceProvider(EmbeddingProviderBase):
                 logger.debug("HuggingFace API health check passed")
                 return True
             logger.warning("HuggingFace provider not properly initialized")
-        except Exception as e:
+        except Exception:
             logger.exception("HuggingFace health check failed")
             return False
         else:

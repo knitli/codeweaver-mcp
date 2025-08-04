@@ -25,7 +25,6 @@ from pydantic.dataclasses import dataclass
 from codeweaver.cw_types import (
     BaseComponentConfig,
     CodeWeaverFactoryError,
-    ComponentError,
     ComponentType,
     EmbeddingProviderError,
     ErrorCategory,
@@ -162,68 +161,77 @@ class ErrorHandler:
         # Provider-specific suggestions based on new exception hierarchy
         if exception and isinstance(exception, ProviderError):
             # Use recovery suggestions from the provider exception if available
-            if hasattr(exception, 'recovery_suggestions') and exception.recovery_suggestions:
+            if hasattr(exception, "recovery_suggestions") and exception.recovery_suggestions:
                 return exception.recovery_suggestions
-            
+
             # Generate provider-specific suggestions based on error type
-            if isinstance(exception, ProviderConnectionError):
-                return [
-                    "Verify network connectivity and service availability",
-                    "Check endpoint URLs and connection parameters", 
-                    "Implement retry logic with exponential backoff",
-                    "Validate firewall and proxy configurations"
-                ]
-            elif isinstance(exception, ProviderAuthError):
-                return [
-                    "Verify API keys, tokens, and credentials",
-                    "Check permission levels for the operation",
-                    "Refresh or rotate credentials if expired",
-                    "Validate credential scope and access rights"
-                ]
-            elif isinstance(exception, ProviderConfigurationError):
-                return [
-                    "Validate all required configuration parameters",
-                    "Check parameter types and value ranges", 
-                    "Verify compatibility with provider version",
-                    "Review default configuration fallbacks"
-                ]
-            elif isinstance(exception, ProviderResourceError):
-                return [
-                    "Implement rate limiting and backoff strategies",
-                    "Check quota usage and limits",
-                    "Retry after specified delay periods",
-                    "Consider alternative providers or scaling options"
-                ]
-            elif isinstance(exception, ProviderCompatibilityError):
-                return [
-                    "Update provider to compatible version",
-                    "Check feature availability and alternatives",
-                    "Implement fallback for unsupported operations", 
-                    "Validate API version compatibility"
-                ]
-            elif isinstance(exception, EmbeddingProviderError):
-                return [
-                    "Verify embedding provider configuration",
-                    "Check model availability and dimensions",
-                    "Validate API credentials and quotas",
-                    "Review input data format and size limits"
-                ]
-            elif isinstance(exception, SourceProviderError):
-                return [
-                    "Verify source path and access permissions",
-                    "Check file system or network connectivity", 
-                    "Validate source configuration parameters",
-                    "Review input data format compatibility"
-                ]
-            elif isinstance(exception, ServiceProviderError):
-                return [
-                    "Check service provider health and availability",
-                    "Verify service configuration and dependencies",
-                    "Review service resource usage and limits",
-                    "Validate service integration patterns"
-                ]
-        
+            return self._get_provider_specific_suggestions(exception)
+
         # Fallback to category-based suggestions
+        return self._get_category_based_suggestions(category)
+
+    def _get_provider_specific_suggestions(self, exception: ProviderError) -> list[str]:
+        """Get recovery suggestions specific to provider error types."""
+        if isinstance(exception, ProviderConnectionError):
+            return [
+                "Verify network connectivity and service availability",
+                "Check endpoint URLs and connection parameters",
+                "Implement retry logic with exponential backoff",
+                "Validate firewall and proxy configurations",
+            ]
+        if isinstance(exception, ProviderAuthError):
+            return [
+                "Verify API keys, tokens, and credentials",
+                "Check permission levels for the operation",
+                "Refresh or rotate credentials if expired",
+                "Validate credential scope and access rights",
+            ]
+        if isinstance(exception, ProviderConfigurationError):
+            return [
+                "Validate all required configuration parameters",
+                "Check parameter types and value ranges",
+                "Verify compatibility with provider version",
+                "Review default configuration fallbacks",
+            ]
+        if isinstance(exception, ProviderResourceError):
+            return [
+                "Implement rate limiting and backoff strategies",
+                "Check quota usage and limits",
+                "Retry after specified delay periods",
+                "Consider alternative providers or scaling options",
+            ]
+        if isinstance(exception, ProviderCompatibilityError):
+            return [
+                "Update provider to compatible version",
+                "Check feature availability and alternatives",
+                "Implement fallback for unsupported operations",
+                "Validate API version compatibility",
+            ]
+        if isinstance(exception, EmbeddingProviderError):
+            return [
+                "Verify embedding provider configuration",
+                "Check model availability and dimensions",
+                "Validate API credentials and quotas",
+                "Review input data format and size limits",
+            ]
+        if isinstance(exception, SourceProviderError):
+            return [
+                "Verify source path and access permissions",
+                "Check file system or network connectivity",
+                "Validate source configuration parameters",
+                "Review input data format compatibility",
+            ]
+        if isinstance(exception, ServiceProviderError):
+            return [
+                "Check service provider health and availability",
+                "Verify service configuration and dependencies",
+                "Review service resource usage and limits",
+                "Validate service integration patterns",
+            ]
+        return ["Contact support for assistance"]
+
+    def _get_category_based_suggestions(self, category: ErrorCategory) -> list[str]:
+        """Get recovery suggestions based on error category."""
         suggestions_map = {
             ErrorCategory.CONFIGURATION: [
                 "Check configuration file syntax and completeness",
@@ -251,7 +259,6 @@ class ErrorHandler:
                 "Check service quotas and limits",
             ],
         }
-
         return suggestions_map.get(category, ["Contact support for assistance"])
 
     def _severity_to_log_level(self, severity: ErrorSeverity) -> int:

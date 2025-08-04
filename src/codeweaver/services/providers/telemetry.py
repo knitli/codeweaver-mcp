@@ -24,6 +24,11 @@ from codeweaver.cw_types import ServiceType, TelemetryService, TelemetryServiceC
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
+# Note: This is **not an API key**, but a project key. It is post-only.
+# You **can safely commit it**. Ignore any warnings about it.
+CODEWEAVER_PROJECT_KEY = "phc_XKWSirBXZdxYEYRl98cJQzqvTcvQ7U1KWZYygLghhJg"
+
+
 class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
     """PostHog telemetry service provider with privacy-first design and opt-out functionality."""
 
@@ -59,8 +64,8 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
     def _check_enabled(self) -> bool:
         """Check if telemetry is enabled through various opt-out mechanisms."""
         # Environment variable override
-        env_enabled = os.environ.get("CW_TELEMETRY_ENABLED", "").lower()
-        if env_enabled in ("false", "0", "no", "off", "disabled"):
+        if (env_enabled := os.environ.get("CW_TELEMETRY_ENABLED", "").lower()) and env_enabled in ("false", "0", "no", "off", "disabled"):
+            self._logger.info("Telemetry explicitly disabled via CW_TELEMETRY_ENABLED environment variable")
             return False
 
         # Configuration setting
@@ -68,8 +73,10 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             return False
 
         # Check for explicit opt-out in environment
-        no_telemetry = os.environ.get("CW_NO_TELEMETRY", "").lower()
-        return no_telemetry not in ("true", "1", "yes", "on", "enabled")
+        if (no_telemetry := os.environ.get("CW_NO_TELEMETRY", "").lower()) and no_telemetry not in ("true", "1", "yes", "on", "enabled"):
+            self._logger.info("Telemetry explicitly disabled via CW_NO_TELEMETRY environment variable")
+            return False
+        return True
 
     def _generate_user_id(self) -> str:
         """Generate a privacy-conscious user ID."""
@@ -159,6 +166,9 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             self._initialized_posthog = True
 
             self._logger.info("PostHog telemetry provider initialized successfully")
+
+            # One more check before enabling
+            # TODO: figure out how to check if user has opted out of PostHog from posthog might be self.posthog_client.has_opted_out_capturing() but I couldn't find it in the docs
 
             # Track initialization event
             await self.track_event(

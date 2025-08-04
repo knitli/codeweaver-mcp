@@ -27,9 +27,7 @@ local linters = new Mapping<String, Step> {
     }
 
     ["reuse"] = new Step {
-        glob = List("*README", "*.{login,astro,bash,bash_logout,bashrc,browserlistrc,conf,config,csh,css,cts,fish,gitattributes,gitmodules,html,htmx,ini,j2,jinja,jinja2,json,json5,jsonc,jsonl,ksh,md,mdown,mdtext,mdtxt,mdwn,mdx,mk,mkd,mts,nix,nu,pkl,profile,py,quokka,rs,sass,scss,sh,sh,shellcheckrc,sql,sqlite,stylelintrc,svelte,tcsh,toml,ts,tsx,txt,yaml,yml,zlogin,zlogout,zprofile,zsh,zshenv,zshrc}", "*Dockerfile*", "*Makefile*", "*makefile*", "CHANGELOG*", "CODE_OF_CONDUCT*", "CONTRIBUTING*", "HACKING*", "README*", "SECURITY*", "SHARING")
-        batch = true
-        check = "reuse lint-file {{ files }}"
+        check = "reuse lint"
         fix = "./scripts/update-licenses.py add {{ files }}"
     }
 

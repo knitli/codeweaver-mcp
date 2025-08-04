@@ -151,17 +151,17 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         }
         if capability in supported_capabilities:
             try:
-                import httpx
+                import httpx  # noqa: F401
             except ImportError:
                 try:
-                    import requests
+                    import requests  # noqa: F401
                 except ImportError:
                     return (
                         False,
                         "HTTP client not available (install with: uv add httpx or uv add requests)",
                     )
             try:
-                import bs4
+                import bs4  # noqa: F401
             except ImportError:
                 return (False, "HTML parser not available (install with: uv add beautifulsoup4)")
             else:
@@ -198,7 +198,7 @@ class WebCrawlerSourceProvider(AbstractDataSource):
         """
         if not config.get("enabled", True):
             return []
-        if start_urls := config.get("start_urls", []):
+        if config.get("start_urls", []):
             raise NotImplementedError(
                 "Web crawler source is not yet implemented. Future implementation will require web scraping dependencies."
             )
@@ -295,12 +295,11 @@ class WebCrawlerSourceProvider(AbstractDataSource):
                 return False
             logger.debug("Web source health check - stub implementation")
             try:
-                import urllib.request
+                import httpx
 
-                with urllib.request.urlopen(
-                    "https://httpbin.org/status/200", timeout=5
-                ) as response:
-                    if response.getcode() == 200:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    response = await client.get("https://httpbin.org/status/200")
+                    if response.status_code == 200:
                         logger.debug("Web source health check passed - connectivity OK")
                         return True
             except Exception as e:

@@ -34,7 +34,13 @@ logger = logging.getLogger(__name__)
 app = App(name="index", help="Auto-indexing service management - control and monitor code indexing")
 
 
-async def _handle_service_start(auto_indexing_service: "AutoIndexingService", services_manager: "ServicesManager", paths: Sequence[Path], *, watch: bool) -> "AutoIndexingService":
+async def _handle_service_start(
+    auto_indexing_service: "AutoIndexingService",
+    services_manager: "ServicesManager",
+    paths: Sequence[Path],
+    *,
+    watch: bool,
+) -> "AutoIndexingService":
     """Handle starting the auto-indexing service with optional paths and watching."""
     if auto_indexing_service:
         await services_manager.stop_service("auto_indexing")
@@ -150,7 +156,9 @@ async def stop(
             print(f"Failed to stop auto-indexing service: {e}")
 
 
-async def _format_status_data(auto_indexing_service: "AutoIndexingService", *, detailed: bool) -> dict[str, Any]:
+async def _format_status_data(
+    auto_indexing_service: "AutoIndexingService", *, detailed: bool
+) -> dict[str, Any]:
     """Format status data for auto-indexing service."""
     status_data = {"running": False, "status": "stopped"}
     if auto_indexing_service:
@@ -293,7 +301,13 @@ async def remove_path(
             print(f"Failed to remove path: {e}")
 
 
-async def _do_reindex(auto_indexing_service: "AutoIndexingService", target_paths: Sequence[Path], *, wait: bool, connection_timeout: float) -> None:
+async def _do_reindex(
+    auto_indexing_service: "AutoIndexingService",
+    target_paths: Sequence[Path],
+    *,
+    wait: bool,
+    connection_timeout: float,
+) -> None:
     """Perform reindexing on specified paths."""
     await auto_indexing_service.reindex(target_paths)
     if wait:

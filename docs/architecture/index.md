@@ -6,7 +6,7 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 # Architecture Overview
 
-CodeWeaver's architecture is designed for extensibility and performance. It provides semantic code search through a plugin-based system with multiple provider and backend options.
+CodeWeaver's architecture is designed for extensibility and performance. It provides semantic and traditional code search through a plugin-based system with multiple provider and backend options.
 
 ## High-Level Architecture
 
@@ -24,7 +24,7 @@ graph TB
 
     subgraph "Core Services"
         E --> F[Chunking Service]
-        E --> G[Filtering Service] 
+        E --> G[Filtering Service]
         E --> H[Embedding Service]
         E --> I[Vector Service]
     end
@@ -75,7 +75,7 @@ embedding_provider = factory.create_embedding_provider(
     config=VoyageConfig(api_key="...")
 )
 
-# Example: Creating vector backends  
+# Example: Creating vector backends
 vector_backend = factory.create_vector_backend(
     backend_type="qdrant",
     config=QdrantConfig(url="...", api_key="...")
@@ -118,7 +118,7 @@ class CustomVectorBackend(VectorBackend):
     async def store_vectors(self, vectors: list[VectorPoint]) -> None:
         # Your storage logic here
         pass
-        
+
     async def search_vectors(self, query_vector: list[float], limit: int) -> list[SearchResult]:
         # Your search logic here
         pass

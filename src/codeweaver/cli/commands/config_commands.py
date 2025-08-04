@@ -3,7 +3,6 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# ruff: noqa: RUF029
 """
 Configuration management commands.
 
@@ -372,7 +371,7 @@ def _build_mcp_status_for_target(mcp_target):
                 "total_servers": len(mcp_servers),
                 "codeweaver_servers": codeweaver_servers,
                 "has_codeweaver": len(codeweaver_servers) > 0,
-                }
+            }
         return {
             "exists": False,
             "config_path": str(config_path) if config_path else None,

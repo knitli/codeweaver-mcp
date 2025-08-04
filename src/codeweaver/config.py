@@ -912,7 +912,7 @@ class ConfigManager:
 class CodeWeaverConfigWithFile(CodeWeaverConfig):
     """CodeWeaver configuration with explicit TOML file specification."""
 
-    def __init__(self, toml_file: str | Path, **kwargs):
+    def __init__(self, toml_file: str | Path, **kwargs: dict[str, Any]):
         """Initialize with explicit TOML file.
 
         Args:
@@ -1061,7 +1061,7 @@ class ConfigSchema:
     @staticmethod
     def generate_example_config(format_type: str = "toml") -> str:
         """Generate an example configuration in the specified format."""
-        if fmt_type.lower() == "toml":
+        if format_type.lower() == "toml":
             return create_example_config()
         raise ValueError(f"Unsupported format: {format_type}")
 

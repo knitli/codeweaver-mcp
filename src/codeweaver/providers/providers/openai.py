@@ -22,8 +22,8 @@ from codeweaver.cw_types import (
     EmbeddingProviderInfo,
     OpenAIModel,
     ProviderCapability,
-    ProviderConfigurationError,
     ProviderCompatibilityError,
+    ProviderConfigurationError,
     ProviderType,
     register_provider_class,
 )
@@ -63,7 +63,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 "OpenAI library not available",
                 provider_name="openai_compatible",
                 operation="initialization",
-                recovery_suggestions=["Install with: uv add openai"]
+                recovery_suggestions=["Install with: uv add openai"],
             )
         self._service_name = self.config.get("service_name", "OpenAI-Compatible Service")
         self._base_url = self.config.get("base_url", "https://api.openai.com/v1")
@@ -90,8 +90,8 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 operation="validation",
                 recovery_suggestions=[
                     "Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config",
-                    "For OpenAI: Get API key from https://platform.openai.com/api-keys"
-                ]
+                    "For OpenAI: Get API key from https://platform.openai.com/api-keys",
+                ],
             )
         logger.info(
             "Initializing %s with model '%s' at %s", self._service_name, self._model, self._base_url
@@ -153,8 +153,8 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                 recovery_suggestions=[
                     "Set dimension explicitly in configuration",
                     "Disable auto_discover_dimensions in config",
-                    "Use synchronous initialization context"
-                ]
+                    "Use synchronous initialization context",
+                ],
             )
         return asyncio.run(_discover())
 
@@ -247,8 +247,8 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                     "Check API key validity and service availability",
                     "Verify base_url is correct for your service",
                     "Check input text length and batch size limits",
-                    "Ensure model name is supported by the service"
-                ]
+                    "Ensure model name is supported by the service",
+                ],
             ) from e
         else:
             return embeddings
@@ -293,8 +293,8 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
                     "Check API key validity and service availability",
                     "Verify base_url is correct for your service",
                     "Check query text length limits",
-                    "Ensure model name is supported by the service"
-                ]
+                    "Ensure model name is supported by the service",
+                ],
             ) from e
         else:
             return embedding
@@ -357,7 +357,7 @@ class OpenAICompatibleProvider(EmbeddingProviderBase):
         try:
             await self.embed_query("health_check")
             logger.debug("OpenAI-compatible provider health check passed")
-        except Exception as e:
+        except Exception:
             logger.exception("OpenAI-compatible provider health check failed")
             return False
         else:

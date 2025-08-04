@@ -57,7 +57,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 "SentenceTransformers library not available",
                 provider_name="sentence_transformers",
                 operation="initialization",
-                recovery_suggestions=["Install with: uv add sentence-transformers"]
+                recovery_suggestions=["Install with: uv add sentence-transformers"],
             )
         self._registry_entry = get_provider_registry_entry(ProviderType.SENTENCE_TRANSFORMERS)
         if isinstance(config, dict):
@@ -130,8 +130,8 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                     "Check model is properly loaded",
                     "Verify input text length is within limits",
                     "Ensure sufficient memory is available",
-                    "Check device compatibility (CPU/GPU)"
-                ]
+                    "Check device compatibility (CPU/GPU)",
+                ],
             ) from e
         else:
             return [embedding.tolist() for embedding in embeddings]
@@ -157,8 +157,8 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                     "Check model is properly loaded",
                     "Verify query text length is within limits",
                     "Ensure sufficient memory is available",
-                    "Check device compatibility (CPU/GPU)"
-                ]
+                    "Check device compatibility (CPU/GPU)",
+                ],
             ) from e
         else:
             return embedding[0].tolist()
@@ -221,7 +221,7 @@ class SentenceTransformersProvider(LocalEmbeddingProvider):
                 return False
             await self.embed_query("health_check")
             logger.debug("SentenceTransformers health check passed")
-        except Exception as e:
+        except Exception:
             logger.exception("SentenceTransformers health check failed")
             return False
         else:

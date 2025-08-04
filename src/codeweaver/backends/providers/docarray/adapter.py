@@ -15,18 +15,21 @@ from typing import Any
 try:
     from docarray import BaseDoc, DocList
     from docarray.index.abstract import BaseDocIndex
+
     DOCARRAY_AVAILABLE = True
 except ImportError:
     DOCARRAY_AVAILABLE = False
+
     # Provide stub classes for when docarray is not available
     class BaseDoc:
-        pass
+        """Stub for BaseDoc type."""
 
     class DocList:
-        pass
+        """Stub for DocList type."""
 
     class BaseDocIndex:
-        pass
+        """Stub for BaseDocIndex type."""
+
 
 from codeweaver.backends.base import HybridSearchBackend, VectorBackend
 from codeweaver.cw_types import (

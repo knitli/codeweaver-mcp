@@ -28,4 +28,110 @@ Key Features:
 CodeWeaver is the context layer for AI-driven coding.
 """
 
+from codweaver.factories import (
+    BackendPlugin,
+    CodeWeaverFactory,
+    ComponentFactory,
+    ComponentRegistry,
+    ExtensibilityManager,
+    FactoryContext,
+    ProviderPlugin,
+    SourcePlugin,
+)
+
+import codeweaver.cli
+
+from codeweaver.backends import (
+    BackendConfig,
+    BackendConfigExtended,
+    BackendFactory,
+    DistanceMetric,
+    FilterCondition,
+    HybridSearchBackend,
+    VectorBackend,
+    VectorPoint,
+)
+from codeweaver.intent import (
+    AdaptiveStrategy,
+    AnalysisWorkflowStrategy,
+    PatternBasedParser,
+    SimpleSearchStrategy,
+    StrategyRegistry,
+    WorkflowDefinition,
+    WorkflowOrchestrator,
+    WorkflowResult,
+    WorkflowStep,
+)
+from codeweaver.providers import (
+    EmbeddingProvider,
+    ProviderCapabilities,
+    ProviderCapability,
+    ProviderSDK,
+    RerankProvider,
+    register_combined_provider,
+    register_embedding_provider,
+    register_reranking_provider,
+)
+from codeweaver.services import BaseServiceProvider, RateLimitConfig
+from codeweaver.sources import (
+    AbstractDataSource,
+    DataSource,
+    SourceConfig,
+    SourceRegistry,
+    SourceWatcher,
+)
+
+
 __version__ = "0.1.0"
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    import codeweaver.main
+
+    asyncio.run(codeweaver.main.main())
+
+
+__all__ = (
+    "AbstractDataSource",
+    "AdaptiveStrategy",
+    "AnalysisWorkflowStrategy",
+    "BackendConfig",
+    "BackendConfigExtended",
+    "BackendFactory",
+    "BackendPlugin",
+    "BaseServiceProvider",
+    "CodeWeaverFactory",
+    "ComponentFactory",
+    "ComponentRegistry",
+    "DataSource",
+    "DistanceMetric",
+    "EmbeddingProvider",
+    "ExtensibilityManager",
+    "FactoryContext",
+    "FilterCondition",
+    "HybridSearchBackend",
+    "PatternBasedParser",
+    "ProviderCapabilities",
+    "ProviderCapability",
+    "ProviderPlugin",
+    "ProviderSDK",
+    "RateLimitConfig",
+    "RerankProvider",
+    "SimpleSearchStrategy",
+    "SourceConfig",
+    "SourcePlugin",
+    "SourceRegistry",
+    "SourceWatcher",
+    "StrategyRegistry",
+    "VectorBackend",
+    "VectorPoint",
+    "WorkflowDefinition",
+    "WorkflowOrchestrator",
+    "WorkflowResult",
+    "WorkflowStep",
+    "register_combined_provider",
+    "register_embedding_provider",
+    "register_reranking_provider",
+)

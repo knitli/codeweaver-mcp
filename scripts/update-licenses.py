@@ -1,7 +1,13 @@
+#!/usr/bin/env -S uv run -s
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["rignore", "cyclopts"]
+# ///
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
+# sourcery skip: avoid-global-variables
 
 """Update licenses for files in the repository.
 
@@ -10,7 +16,7 @@ TODO: Add interactive prompt for contributors.
 
 import json
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 
 from concurrent.futures import ThreadPoolExecutor

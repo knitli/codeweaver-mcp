@@ -7,12 +7,12 @@ The language constants module provides default ast-grep and NER patterns for var
 - general code domain patterns in `codeweaver/language_constants/general.py`
 - Use lowercase for module names
 - constants per language (implementing all encouraged but anything is better than nothing):
-  - `LANGUAGE`: Language name in lowercase (e.g. `python`)
-  - `DEFAULT_{language_name}AST_GREP_PATTERNS`: Default ast-grep pattern for the language (e.g. `DEFAULT_PYTHON_AST_GREP_PATTERNS`)
-  - `DEFAULT_{language_name}_NER_PATTERNS`: Default NER pattern for the language
-  - `DEFAULT_EXTENSIONS`: Default file extensions for the language (a tuple of strings without leading dot)
+  - `DEFAULT_{language}_AST_GREP_PATTERNS`
+  - `DEFAULT_{language}_NER_PATTERNS`
+    - Should only include patterns that are *specific* to the language.
+    - General patterns should be in `codeweaver/language_constants/general.py`.
 
-  - Others allowed as needed.
+  - Others allowed as needed, please don't duplicate information available in `cw_types/language.py`
 
 ### Typing and Data Structures
 
@@ -23,11 +23,36 @@ The language constants module provides default ast-grep and NER patterns for var
 - Use docstrings to describe the purpose of each constant and module
 """
 
-from codeweaver.language_constants.general import DEFAULT_NER_PATTERNS
+from codeweaver.language_constants.general import DEFAULT_AST_GREP_PATTERNS, DEFAULT_NER_PATTERNS
+from codeweaver.language_constants.javascript_family import (
+    DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS,
+    DEFAULT_JAVASCRIPT_NER_PATTERNS,
+)
+from codeweaver.language_constants.python import (
+    DEFAULT_PYTHON_AST_GREP_PATTERNS,
+    DEFAULT_PYTHON_NER_PATTERNS,
+)
 
 
-ALL_NER_PATTERNS = (*DEFAULT_NER_PATTERNS,)
+ALL_NER_PATTERNS = (
+    *DEFAULT_NER_PATTERNS,
+    *DEFAULT_PYTHON_NER_PATTERNS,
+    *DEFAULT_JAVASCRIPT_NER_PATTERNS,
+)
+
+ALL_AST_GREP_PATTERNS = (
+    *DEFAULT_AST_GREP_PATTERNS,
+    *DEFAULT_PYTHON_AST_GREP_PATTERNS,
+    *DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS,
+)
 
 __all__ = (
+    "ALL_AST_GREP_PATTERNS",
     "ALL_NER_PATTERNS",
+    "DEFAULT_AST_GREP_PATTERNS",
+    "DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS",
+    "DEFAULT_JAVASCRIPT_NER_PATTERNS",
+    "DEFAULT_NER_PATTERNS",
+    "DEFAULT_PYTHON_AST_GREP_PATTERNS",
+    "DEFAULT_PYTHON_NER_PATTERNS",
 )

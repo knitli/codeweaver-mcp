@@ -6,6 +6,7 @@
 
 from codeweaver.backends.providers.qdrant import QdrantBackend, QdrantHybridBackend
 
+
 # Check if docarray is available first
 try:
     from codeweaver.backends.providers.docarray.adapter import DOCARRAY_AVAILABLE
@@ -26,10 +27,11 @@ if DOCARRAY_AVAILABLE:
             create_docarray_backend,
             register_docarray_backends,
         )
-        
+
         __all__ = (
+            "DOCARRAY_AVAILABLE",
             "BaseDocArrayAdapter",
-            "DocArrayConfigFactory", 
+            "DocArrayConfigFactory",
             "DocArrayHybridAdapter",
             "DocumentSchemaGenerator",
             "QdrantBackend",
@@ -39,18 +41,9 @@ if DOCARRAY_AVAILABLE:
             "SchemaTemplates",
             "create_docarray_backend",
             "register_docarray_backends",
-            "DOCARRAY_AVAILABLE",
         )
     except ImportError:
         DOCARRAY_AVAILABLE = False
-        __all__ = (
-            "QdrantBackend",
-            "QdrantHybridBackend",
-            "DOCARRAY_AVAILABLE",
-        )
+        __all__ = ("DOCARRAY_AVAILABLE", "QdrantBackend", "QdrantHybridBackend")
 else:
-    __all__ = (
-        "QdrantBackend",
-        "QdrantHybridBackend", 
-        "DOCARRAY_AVAILABLE",
-    )
+    __all__ = ("DOCARRAY_AVAILABLE", "QdrantBackend", "QdrantHybridBackend")

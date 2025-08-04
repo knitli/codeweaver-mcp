@@ -15,7 +15,13 @@ Contains individual command implementations organized by functionality:
 """
 
 # Import command modules for easy access
-from . import client_commands, config_commands, index_commands, services_commands, stats_commands
+from codeweaver.cli import (
+    client_commands,
+    config_commands,
+    index_commands,
+    services_commands,
+    stats_commands,
+)
 
 
 __all__ = [

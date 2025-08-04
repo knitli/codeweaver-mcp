@@ -2,10 +2,8 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
 # CodeWeaver Documentation Configuration
 # World-class documentation for an extensible MCP server
-
 site_name: CodeWeaver Documentation
 site_description: Codeweaver -- The MCP Context Platform -- Official Documentation
 site_author: Knitli Inc.
@@ -13,57 +11,48 @@ site_url: https://docs.codeweaver.dev
 repo_url: https://github.com/knitli/codeweaver-mcp
 repo_name: knitli/codeweaver-mcp
 edit_uri: edit/main/docs/
-
 # Copyright and Legal
 copyright: |
   Copyright &copy; 2025 Knitli Inc. Licensed under MIT OR Apache-2.0.
-
 # Theme Configuration - Material Design
 theme:
   name: material
-
   # Logo and Branding
   # logo: assets/logo.svg
   # favicon: assets/favicon.ico
 
   # Language and Internationalization
   language: en
-
   # Material Theme Features
   features:
     # Navigation Features
-    - navigation.instant      # Instant loading
-    - navigation.instant.prefetch  # Prefetch on hover
-    - navigation.tracking     # Track URL fragments
-    - navigation.tabs         # Top-level navigation tabs
-    - navigation.tabs.sticky  # Sticky navigation tabs
-    - navigation.sections     # Section navigation
-    - navigation.expand       # Auto-expand navigation
-    - navigation.path         # Navigation breadcrumbs
-    - navigation.prune        # Prune navigation for performance
-    - navigation.indexes      # Section index pages
-    - navigation.top          # Back to top button
-
+    - navigation.instant # Instant loading
+    - navigation.instant.prefetch # Prefetch on hover
+    - navigation.tracking # Track URL fragments
+    - navigation.tabs # Top-level navigation tabs
+    - navigation.tabs.sticky # Sticky navigation tabs
+    - navigation.sections # Section navigation
+    - navigation.expand # Auto-expand navigation
+    - navigation.path # Navigation breadcrumbs
+    - navigation.prune # Prune navigation for performance
+    - navigation.indexes # Section index pages
+    - navigation.top # Back to top button
     # Search Features
-    - search.highlight        # Highlight search terms
-    - search.share           # Share search results
-    - search.suggest         # Search suggestions
-
+    - search.highlight # Highlight search terms
+    - search.share # Share search results
+    - search.suggest # Search suggestions
     # Header Features
-    - header.autohide        # Auto-hide header on scroll
-
+    - header.autohide # Auto-hide header on scroll
     # Content Features
-    - content.code.copy      # Copy code button
-    - content.code.select    # Select code button
-    - content.code.annotate  # Code annotations
-    - content.tabs.link      # Link content tabs
-    - content.tooltips       # Content tooltips
-    - content.footnote.tooltips  # Footnote tooltips
-
+    - content.code.copy # Copy code button
+    - content.code.select # Select code button
+    - content.code.annotate # Code annotations
+    - content.tabs.link # Link content tabs
+    - content.tooltips # Content tooltips
+    - content.footnote.tooltips # Footnote tooltips
     # Table of Contents
-    - toc.follow            # Follow table of contents
-    - toc.integrate         # Integrate TOC with navigation
-
+    - toc.follow # Follow table of contents
+    - toc.integrate # Integrate TOC with navigation
   # Color Palette
   palette:
     # Light mode
@@ -74,7 +63,6 @@ theme:
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-
     # Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
@@ -83,86 +71,87 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-
   # Fonts
   font:
     text: Inter
     code: JetBrains Mono
-
   # Custom CSS and JavaScript
   custom_css: assets/extra.css
-
 # Navigation Structure - Developer-First Architecture
 nav:
   # CORE: Essential for getting started
   - Home: index.md
   - Getting Started:
-    - Quick Setup: getting-started/quick-start.md
-    - Installation: getting-started/installation.md
-    - Configuration: getting-started/configuration.md
-    - Troubleshooting: getting-started/troubleshooting.md
-
+      - Quick Setup: getting-started/quick-start.md
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+      - Troubleshooting: getting-started/troubleshooting.md
   # USE: How to integrate and use CodeWeaver
   - User Guide:
-    - How It Works: user-guide/how-it-works.md
-    - Claude Desktop Integration: user-guide/claude-desktop.md
-    - Development Workflows: user-guide/workflows.md
-    - Performance & Optimization: user-guide/performance.md
-
+      - How It Works: user-guide/how-it-works.md
+      - Claude Desktop Integration: user-guide/claude-desktop.md
+      - Development Workflows: user-guide/workflows.md
+      - Performance & Optimization: user-guide/performance.md
   # BUILD: For developers extending CodeWeaver
   - Extension Development:
-    - Architecture Overview: architecture/index.md
-    - Plugin System: architecture/plugins.md
-    - Creating Extensions:
-      - Embedding Providers: extensions/embedding-providers.md
-      - Vector Backends: extensions/vector-backends.md
-      - Data Sources: extensions/data-sources.md
-      - Service Providers: extensions/services.md
-    - Development Guide:
-      - Plugin Protocols: extensions/protocols.md
-      - Testing & Validation: extensions/testing.md
-      - Performance Guidelines: extensions/performance.md
-
+      - Architecture Overview: architecture/index.md
+      - Plugin System: architecture/plugins.md
+      - Creating Extensions:
+          - Embedding Providers: extensions/embedding-providers.md
+          - Vector Backends: extensions/vector-backends.md
+          - Data Sources: extensions/data-sources.md
+          - Service Providers: extensions/services.md
+      - Development Guide:
+          - Plugin Protocols: extensions/protocols.md
+          - Testing & Validation: extensions/testing.md
+          - Performance Guidelines: extensions/performance.md
   # CONFIGURE: Advanced configuration and deployment
   - Configuration:
-    - Environment Variables: configuration/environment.md
-    - Provider Setup: configuration/providers.md
-    - Backend Configuration: configuration/backends.md
-    - Service Configuration: configuration/services.md
-    - Enterprise Deployment: configuration/enterprise.md
-
+      - Environment Variables: configuration/environment.md
+      - Provider Setup: configuration/providers.md
+      - Backend Configuration: configuration/backends.md
+      - Service Configuration: configuration/services.md
+      - Enterprise Deployment: configuration/enterprise.md
   # REFERENCE: Technical documentation and API
   - API Reference:
-    - MCP Tools: api/mcp/process-intent.md
-    - Core Components:
-      - CodeWeaverFactory: api/core/factory.md
-      - ConfigManager: api/core/config.md
-      - ServicesManager: api/services/manager.md
-    - Protocols:
-      - VectorBackend: api/protocols/vector-backend.md
-      - EmbeddingProvider: api/protocols/embedding-provider.md
-      - DataSource: api/protocols/data-source.md
-      - ServiceProvider: api/protocols/service-provider.md
-
+      - Overview: api/index.md
+      - Core Modules:
+          - Main: api/main.md
+          - Configuration: api/config.md
+          - Server: api/server.md
+      - Architecture:
+          - Backends: api/backends/index.md
+          - Factories: api/factories/index.md
+          - Services: api/services/index.md
+          - Sources: api/sources/index.md
+          - Providers: api/providers/index.md
+          - Middleware: api/middleware/index.md
+      - Command Line:
+          - CLI: api/cli/index.md
+          - Commands: api/commands/index.md
+      - Type System: api/cw_types/index.md
+      - Intent Layer: api/intent/index.md
+      - Utilities:
+          - Helpers: api/utils/index.md
+          - Testing: api/testing/index.md
+          - Constants: api/language_constants/index.md
   # REFERENCE: Quick lookup and patterns
   - Reference:
-    - Usage Patterns: reference/usage-patterns.md
-    - Language Support: reference/language-support.md
-    - Provider Comparison: reference/provider-comparison.md
-    - Backend Comparison: reference/backend-comparison.md
-    - Error Codes: reference/error-codes.md
-    - Performance Benchmarks: reference/benchmarks.md
-    - Changelog: reference/changelog.md
-
+      - Usage Patterns: reference/usage-patterns.md
+      - Language Support: reference/language-support.md
+      - Provider Comparison: reference/provider-comparison.md
+      - Backend Comparison: reference/backend-comparison.md
+      - Error Codes: reference/error-codes.md
+      - Performance Benchmarks: reference/benchmarks.md
+      - Changelog: reference/changelog.md
   # COMMUNITY: Support and contribution
   - Community:
-    - Support: community/support.md
-    - Contributing: community/contributing.md
-    - Migration Guide: migration/traditional-to-intent.md
-    - Code of Conduct: community/code-of-conduct.md
-    - Security: community/security.md
-    - License: community/license.md
-
+      - Support: community/support.md
+      - Contributing: community/contributing.md
+      - Migration Guide: migration/traditional-to-intent.md
+      - Code of Conduct: community/code-of-conduct.md
+      - Security: community/security.md
+      - License: community/license.md
 # Plugins Configuration
 plugins:
   # Search
@@ -170,7 +159,7 @@ plugins:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - gen-files:
       scripts:
-      - scripts/gen_ref_pages.py  # (2)!
+        - scripts/gen_ref_pages.py # (2)!
   # Automatic API documentation generation
   - mkdocstrings:
       handlers:
@@ -182,30 +171,24 @@ plugins:
             show_root_toc_entry: true
             show_root_full_path: false
             show_object_full_path: false
-
             # Member settings
             show_bases: true
             show_inheritance_diagram: true
             show_if_no_docstring: true
-
             # Docstring settings
             docstring_style: google
             docstring_options:
               ignore_init_summary: true
               trim_doctest_flags: true
-
             # Type annotation settings
             show_signature_annotations: true
             separate_signature: true
-
             # Filter settings
             filters:
-              - "!^_[^_]"  # Hide private members except __special__
-
+              - "!^_[^_]" # Hide private members except __special__
             # Rendering settings
             group_by_category: true
             heading_level: 2
-
   # Git integration for last updated dates
   - git-revision-date-localized:
       enabled: !ENV [CI, false]
@@ -214,13 +197,11 @@ plugins:
       timezone: UTC
       locale: en
       strict: false
-
   # Auto-generated navigation
   - awesome-pages:
       filename: .pages
       collapse_single_pages: true
       strict: false
-
   # Minification for performance
   - minify:
       minify_html: true
@@ -229,19 +210,16 @@ plugins:
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
-
   # Social cards generation
   - social:
       enabled: !ENV [CI, false]
       cards_layout_options:
         background_color: "#1976d2"
         font_family: Inter
-
   # Tags for content organization
   - tags:
       tags: true
       enabled: true
-
   # RSS feed generation
   - rss:
       enabled: !ENV [CI, false]
@@ -251,63 +229,60 @@ plugins:
       categories:
         - tags
         - categories
-
 # Markdown Extensions
 markdown_extensions:
   # Python Markdown Extensions
-  - abbr                    # Abbreviations
-  - admonition             # Admonitions (notes, warnings, etc.)
-  - attr_list              # Attribute lists
-  - def_list               # Definition lists
-  - footnotes              # Footnotes
-  - md_in_html             # Markdown in HTML
-  - toc:                   # Table of contents
+  - abbr # Abbreviations
+  - admonition # Admonitions (notes, warnings, etc.)
+  - attr_list # Attribute lists
+  - def_list # Definition lists
+  - footnotes # Footnotes
+  - md_in_html # Markdown in HTML
+  - toc: # Table of contents
       permalink: true
       permalink_title: "Anchor link to this section"
       title: "On this page"
       toc_depth: 3
-  - tables                 # Tables
-
+  - tables # Tables
   # PyMdown Extensions
-  - pymdownx.arithmatex:   # Math notation
+  - pymdownx.arithmatex: # Math notation
       generic: true
-  - pymdownx.betterem:     # Better emphasis
+  - pymdownx.betterem: # Better emphasis
       smart_enable: all
-  - pymdownx.caret         # Insertions and superscript
-  - pymdownx.details       # Collapsible details
-  - pymdownx.emoji:        # Emoji support
+  - pymdownx.caret # Insertions and superscript
+  - pymdownx.details # Collapsible details
+  - pymdownx.emoji: # Emoji support
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:    # Syntax highlighting
+  - pymdownx.highlight: # Syntax highlighting
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
       use_pygments: true
       auto_title: true
       linenums: true
-  - pymdownx.inlinehilite  # Inline syntax highlighting
-  - pymdownx.keys          # Keyboard keys
-  - pymdownx.mark          # Highlighting text
-  - pymdownx.smartsymbols  # Smart symbols
-  - pymdownx.snippets:     # Include snippets
-     # auto_append:
-        #- includes/abbreviations.md
-     # check_paths: true
-  - pymdownx.superfences:  # Nested code blocks
+  - pymdownx.inlinehilite # Inline syntax highlighting
+  - pymdownx.keys # Keyboard keys
+  - pymdownx.mark # Highlighting text
+  - pymdownx.smartsymbols # Smart symbols
+  - pymdownx.snippets: # Include snippets
+    # auto_append:
+    #- includes/abbreviations.md
+    # check_paths: true
+  - pymdownx.superfences: # Nested code blocks
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:       # Content tabs
+  - pymdownx.tabbed: # Content tabs
       alternate_style: true
       combine_header_slug: true
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
-  - pymdownx.tasklist:     # Task lists
+  - pymdownx.tasklist: # Task lists
       custom_checkbox: true
-  - pymdownx.tilde         # Deletions and subscript
-
+  - pymdownx.tilde # Deletions and subscript
 # Validation and Quality Assurance
 validation:
   nav:
@@ -318,12 +293,10 @@ validation:
     not_found: warn
     absolute_links: info
     unrecognized_links: info
-
 # Watch settings for development
 watch:
   - docs
   - mkdocs.yml
-
 # Extra configuration
 extra:
   # Analytics
@@ -337,19 +310,20 @@ extra:
           name: This page was helpful
           data: 1
           note: >-
-            Thanks for your feedback! Help us improve by
-            <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+            Thanks for your feedback! Help us improve by <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+
+
               telling us what you found helpful
             </a>.
         - icon: material/thumb-down-outline
           name: This page could be improved
           data: 0
           note: >-
-            Thanks for your feedback! Help us improve by
-            <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+            Thanks for your feedback! Help us improve by <a href="https://github.com/knitli/codeweaver-mcp/issues/new/?title=[Docs]+{title}+-+{url}" target="_blank" rel="noopener">
+
+
               telling us what we can do better
             </a>.
-
   # Social links
   social:
     - icon: fontawesome/brands/github
@@ -364,32 +338,24 @@ extra:
     - icon: fontawesome/solid/paper-plane
       link: mailto:support@codeweaver.dev
       name: Email Support
-
   # Version management
   version:
     provider: mike
     default: latest
-
   # Consent for cookies/analytics
   consent:
     title: Cookie consent
     description: >-
-      We use cookies to recognize your repeated visits and preferences, as well
-      as to measure the effectiveness of our documentation and whether users
-      find what they're searching for. With your consent, you're helping us to
-      make our documentation better.
-
+      We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better.
 # Extra CSS and JavaScript
 extra_css:
   - assets/extra.css
   - assets/api-docs.css
-
 extra_javascript:
   - assets/extra.js
   - assets/mermaid.min.js
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-
 # Development server configuration
 dev_addr: '127.0.0.1:8000'
 use_directory_urls: true

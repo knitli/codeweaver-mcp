@@ -23,6 +23,7 @@ shfmt = "latest"
 taplo = "latest"
 typos = "latest"
 uv = "latest"
+yamlfmt = "latest"
 
 [env]
 GH_REPO="knitli/codeweaver-mcp"
@@ -37,6 +38,11 @@ mise run setup &&
 mise run update-tools &&
 alias jj='jj --no-pager' &&
 alias git='git --no-pager' &&
+if [ "$GITHUB_ACTIONS" == true ]; then
+    export CI=true
+else
+    export CI=false
+fi
 """
 
 leave = """
@@ -60,6 +66,12 @@ echo "Setting up development environment..."
 uv venv --allow-existing .venv &&
 source .venv/bin/activate
 uv sync --all-groups &&
+# Determine if we're in CI
+if [ "$GITHUB_ACTIONS" == true ]; then
+    export CI=true
+else
+    export CI=false
+fi
 echo "✅ Development environment ready!"
 """
 
@@ -78,8 +90,9 @@ install = "uv sync --all-groups"
 fix = """
 #!/bin/bash
 echo "Fixing code issues..."
-ruff check --select I --fix src/ &&
+ruff check --select I --fix . &&
 ruff check --fix --unsafe-fixes src/ &&
+scripts/fix-ruff-patterns.sh src/ &&
 ruff format . &&
 hk fix &&
 echo "✅ Code fixes applied!"

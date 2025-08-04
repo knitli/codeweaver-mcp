@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
+# sourcery skip: use-contextlib-suppress
 """
 Vector database backends for CodeWeaver.
 
@@ -24,7 +25,7 @@ from codeweaver.backends.config import (
     get_provider_specific_config,
 )
 from codeweaver.backends.factory import BackendFactory
-from codeweaver.backends.providers import QdrantBackend, QdrantHybridBackend, DOCARRAY_AVAILABLE
+from codeweaver.backends.providers import DOCARRAY_AVAILABLE, QdrantBackend, QdrantHybridBackend
 from codeweaver.cw_types import (
     BackendAuthError,
     BackendCollectionNotFoundError,
@@ -39,8 +40,10 @@ from codeweaver.cw_types import (
     VectorPoint,
 )
 
+
 # Core exports that are always available
 __all__ = [
+    "DOCARRAY_AVAILABLE",
     "EXAMPLE_CONFIGS",
     "BackendAuthError",
     "BackendCollectionNotFoundError",
@@ -64,7 +67,6 @@ __all__ = [
     "VectorPoint",
     "create_backend_config_from_env",
     "get_provider_specific_config",
-    "DOCARRAY_AVAILABLE",
 ]
 
 # Conditional docarray imports
@@ -81,9 +83,9 @@ if DOCARRAY_AVAILABLE:
             create_docarray_backend,
             register_docarray_backends,
         )
-        
+
         # Add docarray exports to __all__
-        __all__.extend([
+        __all__ += [
             "BaseDocArrayAdapter",
             "DocArrayConfigFactory",
             "DocArrayHybridAdapter",
@@ -93,14 +95,16 @@ if DOCARRAY_AVAILABLE:
             "SchemaTemplates",
             "create_docarray_backend",
             "register_docarray_backends",
-        ])
-        
+        ]
+
         # Try to import DocArray backends factory (optional)
-        try:
-            from codeweaver.backends.providers.docarray import factory as docarray_factory  # noqa: F401
+        try:  # noqa: SIM105
+            from codeweaver.backends.providers.docarray import (
+                factory as docarray_factory,  # noqa: F401
+            )
         except ImportError:
             pass
-            
+
     except ImportError:
         # DocArray imports failed despite DOCARRAY_AVAILABLE being True
         pass

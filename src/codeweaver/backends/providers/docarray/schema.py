@@ -7,18 +7,22 @@ import logging
 
 from typing import Any
 
+
 try:
     from docarray import BaseDoc
-    from docarray.typing import NdArray
+    from docarray.typing import AndArray
+
     DOCARRAY_AVAILABLE = True
 except ImportError:
     DOCARRAY_AVAILABLE = False
+
     # Provide stub classes for when docarray is not available
     class BaseDoc:
-        pass
-    
-    class NdArray:
-        pass
+        """Stub for BaseDoc type."""
+
+    class AndArray:
+        """Stub for AndArray type."""
+
 
 from pydantic import Field, create_model
 
@@ -103,7 +107,7 @@ class DocumentSchemaGenerator:
         return {
             "id": (str, Field(description="Unique document identifier")),
             "content": (str, Field(description="Document text content")),
-            "embedding": (NdArray[embedding_dim], Field(description="Dense vector embedding")),
+            "embedding": (AndArray[embedding_dim], Field(description="Dense vector embedding")),
             "metadata": (
                 dict[str, Any],
                 Field(default_factory=dict, description="Document metadata"),
@@ -181,8 +185,8 @@ class SchemaTemplates:
             embedding_dimension=embedding_dim,
             include_sparse_vectors=True,
             custom_fields={
-                "image_embedding": (NdArray[embedding_dim], Field(description="Image embedding")),
-                "text_embedding": (NdArray[embedding_dim], Field(description="Text embedding")),
+                "image_embedding": (AndArray[embedding_dim], Field(description="Image embedding")),
+                "text_embedding": (AndArray[embedding_dim], Field(description="Text embedding")),
                 "image_url": (str | None, Field(default=None, description="Image URL")),
             },
         )

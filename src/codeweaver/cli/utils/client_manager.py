@@ -104,7 +104,7 @@ class ClientManager:
 
         Args:
             server_path: Path to MCP server
-            timeout: Connection timeout in seconds
+            connection_timeout: Connection timeout in seconds
 
         Returns:
             Connection test results
@@ -125,7 +125,7 @@ class ClientManager:
 
         try:
             return await cls.execute_with_client(
-                server_path, _test_operation, timeout=connection_timeout
+                server_path, _test_operation, connection_timeout=connection_timeout
             )
         except Exception as e:
             return {"connected": False, "error": str(e), "tools_count": 0, "tools": []}

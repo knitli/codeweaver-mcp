@@ -1,4 +1,4 @@
-# sourcery skip: avoid-global-variables
+# sourcery skip: avoid-global-variables, require-parameter-annotation
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -18,13 +18,17 @@ import logging
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from cyclopts import App, Parameter
 
 from codeweaver.cli.types import OutputFormat
 from codeweaver.cli.utils import ServerManager
 
+
+if TYPE_CHECKING:
+    from codeweaver.server import CodeWeaverServer
+    from codeweaver.services.auto_indexing import AutoIndexingService
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +95,7 @@ async def _get_health_data(config_path: Path, *, detailed: bool) -> dict[str, An
                 available_services = await server.services_manager.list_services()
                 for service_name in available_services:
                     health_data["services"][service_name] = await _get_service_health(
-                        server, service_name, detailed
+                        server, service_name, detailed=detailed
                     )
         except Exception as e:
             health_data["server_error"] = str(e)
@@ -99,7 +103,9 @@ async def _get_health_data(config_path: Path, *, detailed: bool) -> dict[str, An
     return health_data
 
 
-async def _get_service_health(server, service_name, detailed):
+async def _get_service_health(
+    server: "CodeWeaverServer", service_name, *, detailed: bool
+) -> dict[str, Any]:
     """Get health status of a specific service."""
     try:
         service = await server.services_manager.get_service(service_name)
@@ -137,7 +143,7 @@ async def health(
     """Show comprehensive health status of CodeWeaver server and services."""
     try:
         config_path = str(config) if config else None
-        health_data = await _get_health_data(config_path, detailed)
+        health_data = await _get_health_data(config_path, detailed=detailed)
         output = format_health_output(health_data, fmt)
         print(output)
     except Exception as e:
@@ -216,7 +222,9 @@ async def services(
             print(f"Failed to get service statistics: {e}")
 
 
-def _get_indexing_stats(auto_indexing_service, detailed):
+def _get_indexing_stats(
+    auto_indexing_service: "AutoIndexingService", *, detailed: bool
+) -> dict[str, Any]:
     """Collect statistics for auto-indexing service."""
     if not auto_indexing_service:
         return {"status": "not_running", "message": "Auto-indexing service is not running"}
@@ -236,7 +244,7 @@ def _get_indexing_stats(auto_indexing_service, detailed):
     return indexing_stats
 
 
-def indexing_output(indexing_stats, fmt, *, detailed: bool) -> str:
+def indexing_output(indexing_stats: dict[str, Any], fmt: OutputFormat, *, detailed: bool) -> str:
     """Format the output for indexing stats.
 
     Args:
@@ -247,12 +255,12 @@ def indexing_output(indexing_stats, fmt, *, detailed: bool) -> str:
     Returns:
         Formatted string output.
     """
-    if not indexing_stats.get("service_running", False):
+    if not indexing_stats.get("service_running"):
         return "○ Service not running"
     output_lines = [
         "✓ Service running",
         f"  Type: {indexing_stats.get('type', 'Unknown')}",
-        f"  Watching: {'Yes' if indexing_stats.get('watching', False) else 'No'}",
+        f"  Watching: {'Yes' if indexing_stats.get('watching') else 'No'}",
     ]
     if detailed and "paths" in indexing_stats:
         output_lines.extend([f"  • {path}" for path in indexing_stats["paths"]])
@@ -278,11 +286,11 @@ async def indexing(
 
         # Extracted logic for collecting indexing stats
         def _collect_index_stats():
-            return _get_indexing_stats(auto_indexing_service, detailed)
+            return _get_indexing_stats(auto_indexing_service, detailed=detailed)
 
         # Extracted logic for formatting indexing output
         def _format_index_output(stats):
-            return indexing_output(stats, fmt, detailed)
+            return indexing_output(stats, fmt, detailed=detailed)
 
         # Main logic now delegates to helpers
         stats = _collect_index_stats()

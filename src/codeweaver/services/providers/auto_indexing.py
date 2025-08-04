@@ -77,7 +77,7 @@ class CodebaseChangeHandler(FileSystemEventHandler):
             return self.service.filtering_service.should_include_file(
                 file_path,
                 include_patterns=self.service._auto_indexing_config.watch_patterns,
-                exclude_patterns=self.service._auto_indexing_config.ignore_patterns
+                exclude_patterns=self.service._auto_indexing_config.ignore_patterns,
             )
 
         # Fallback to custom logic if FilteringService is not available
@@ -293,7 +293,7 @@ class AutoIndexingService(BaseServiceProvider):
             files = await self.filtering_service.discover_files(
                 Path(path),
                 include_patterns=self._auto_indexing_config.watch_patterns,
-                exclude_patterns=self._auto_indexing_config.ignore_patterns
+                exclude_patterns=self._auto_indexing_config.ignore_patterns,
             )
             self._logger.info("Found %d files to index in %s", len(files), path)
             for file_path in files:
@@ -353,7 +353,9 @@ class AutoIndexingService(BaseServiceProvider):
                         self._logger.debug("Skipping binary file: %s", file_path)
                         return
                     if metadata.size > self._auto_indexing_config.max_file_size:
-                        self._logger.debug("Skipping large file: %s (%d bytes)", file_path, metadata.size)
+                        self._logger.debug(
+                            "Skipping large file: %s (%d bytes)", file_path, metadata.size
+                        )
                         return
                 except Exception as e:
                     self._logger.warning("Failed to get file metadata for %s: %s", file_path, e)

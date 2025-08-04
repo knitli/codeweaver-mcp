@@ -13,12 +13,18 @@ with fallback parsing, integrated as FastMCP middleware for service injection.
 import logging
 
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, ClassVar
 
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.middleware import CallNext
 
-from codeweaver.cw_types import CodeChunk
+from codeweaver.cw_types import CodeChunk, SemanticSearchLanguage
+from codeweaver.language_constants import (
+    DEFAULT_AST_GREP_PATTERNS,
+    DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS,
+    DEFAULT_PYTHON_AST_GREP_PATTERNS,
+)
 
 
 # ast-grep for proper tree-sitter parsing
@@ -37,72 +43,16 @@ class ChunkingMiddleware(Middleware):
     """FastMCP middleware providing intelligent code chunking services."""
 
     # Languages supported by ast-grep
-    SUPPORTED_LANGUAGES: ClassVar[dict[str, str]] = {
-        # Web technologies
-        ".html": "html",
-        ".htm": "html",
-        ".js": "javascript",
-        ".ts": "typescript",
-        ".tsx": "tsx",
-        ".jsx": "jsx",
-        ".css": "css",
-        ".scss": "scss",
-        ".sass": "sass",
-        ".less": "less",
-        ".vue": "vue",
-        ".svelte": "svelte",
-        # Systems programming
-        ".rs": "rust",
-        ".go": "go",
-        ".c": "c",
-        ".cpp": "cpp",
-        ".cc": "cpp",
-        ".cxx": "cpp",
-        ".h": "c",
-        ".hpp": "cpp",
-        ".cs": "csharp",
-        ".zig": "zig",
-        # High-level languages
-        ".py": "python",
-        ".java": "java",
-        ".kt": "kotlin",
-        ".scala": "scala",
-        ".rb": "ruby",
-        ".php": "php",
-        ".swift": "swift",
-        # Functional languages
-        ".ex": "elixir",
-        ".exs": "elixir",
-        # Data/config
-        ".json": "json",
-        ".yaml": "yaml",
-        ".yml": "yaml",
-        # Scripts
-        ".sh": "bash",
-        ".bash": "bash",
-        ".zsh": "bash",
-    }
+    SUPPORTED_LANGUAGES: ClassVar[MappingProxyType[str, SemanticSearchLanguage]] = (
+        SemanticSearchLanguage.ext_map()
+    )
 
     # AST-grep patterns for semantic chunking by language
     CHUNK_PATTERNS: ClassVar[dict[str, list[tuple[str, str]]]] = {
-        "python": [
-            ("function_definition", "function"),
-            ("class_definition", "class"),
-            ("async_function_definition", "async_function"),
-        ],
-        "javascript": [
-            ("function_declaration", "function"),
-            ("class_declaration", "class"),
-            ("method_definition", "method"),
-            ("arrow_function", "arrow_function"),
-        ],
-        "typescript": [
-            ("function_declaration", "function"),
-            ("class_declaration", "class"),
-            ("method_definition", "method"),
-            ("interface_declaration", "interface"),
-            ("type_alias_declaration", "type"),
-        ],
+        "general": DEFAULT_AST_GREP_PATTERNS,
+        "javascript": DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS,
+        "python": DEFAULT_PYTHON_AST_GREP_PATTERNS,
+        "typescript": DEFAULT_JAVASCRIPT_AST_GREP_PATTERNS,  # TypeScript shares JS patterns
         "rust": [
             ("function_item", "function"),
             ("struct_item", "struct"),

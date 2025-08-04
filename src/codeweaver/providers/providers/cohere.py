@@ -18,8 +18,8 @@ from codeweaver.cw_types import (
     EmbeddingProviderError,
     EmbeddingProviderInfo,
     ProviderCapability,
-    ProviderConfigurationError,
     ProviderCompatibilityError,
+    ProviderConfigurationError,
     ProviderType,
     RerankResult,
     get_provider_registry_entry,
@@ -56,7 +56,7 @@ class CohereProvider(CombinedProvider):
                 "Cohere library not available",
                 provider_name="cohere",
                 operation="initialization",
-                recovery_suggestions=["Install with: uv add cohere"]
+                recovery_suggestions=["Install with: uv add cohere"],
             )
         self.client = cohere.Client(api_key=self.config["api_key"])
         self.rate_limiter = self.config.get("rate_limiter")
@@ -78,8 +78,8 @@ class CohereProvider(CombinedProvider):
                 operation="validation",
                 recovery_suggestions=[
                     "Set CW_EMBEDDING_API_KEY environment variable or provide api_key in config",
-                    "Get API key from https://dashboard.cohere.ai/api-keys"
-                ]
+                    "Get API key from https://dashboard.cohere.ai/api-keys",
+                ],
             )
         embedding_model = self.config.get("model", self._capabilities.default_embedding_model)
         if embedding_model not in self._capabilities.supported_embedding_models:
@@ -91,8 +91,8 @@ class CohereProvider(CombinedProvider):
                 operation="model_validation",
                 recovery_suggestions=[
                     f"Use one of the supported models: {available}",
-                    "Check Cohere documentation for latest model list"
-                ]
+                    "Check Cohere documentation for latest model list",
+                ],
             )
         rerank_model = self.config.get("rerank_model", self._capabilities.default_reranking_model)
         if rerank_model not in self._capabilities.supported_reranking_models:
@@ -104,8 +104,8 @@ class CohereProvider(CombinedProvider):
                 operation="rerank_model_validation",
                 recovery_suggestions=[
                     f"Use one of the supported reranking models: {available}",
-                    "Check Cohere documentation for latest reranking model list"
-                ]
+                    "Check Cohere documentation for latest reranking model list",
+                ],
             )
 
     @property
@@ -171,8 +171,8 @@ class CohereProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify input text length is within limits",
-                    "Check Cohere service status"
-                ]
+                    "Check Cohere service status",
+                ],
             ) from e
         else:
             return embeddings
@@ -213,8 +213,8 @@ class CohereProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify query text length is within limits",
-                    "Check Cohere service status"
-                ]
+                    "Check Cohere service status",
+                ],
             ) from e
         else:
             return embedding
@@ -242,8 +242,8 @@ class CohereProvider(CombinedProvider):
                 operation="rerank_validation",
                 recovery_suggestions=[
                     "Reduce number of documents or query length",
-                    "Check Cohere reranking limits documentation"
-                ]
+                    "Check Cohere reranking limits documentation",
+                ],
             )
 
         try:
@@ -274,8 +274,8 @@ class CohereProvider(CombinedProvider):
                 recovery_suggestions=[
                     "Check API key validity and network connectivity",
                     "Verify document count and query length are within limits",
-                    "Check Cohere service status"
-                ]
+                    "Check Cohere service status",
+                ],
             ) from e
         else:
             return rerank_results
@@ -354,7 +354,7 @@ class CohereProvider(CombinedProvider):
         try:
             await self.embed_query("health_check")
             logger.debug("Cohere health check passed")
-        except Exception as e:
+        except Exception:
             logger.exception("Cohere health check failed")
             return False
         else:

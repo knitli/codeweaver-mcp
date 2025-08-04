@@ -992,7 +992,7 @@ def register_provider() -> dict[str, Any]:
 
     @classmethod
     def create_provider_file(
-        cls, output_path: Path | str, provider_type: str, **template_kwargs
+        cls, output_path: Path | str, provider_type: str, **template_kwargs: dict[str, Any]
     ) -> None:
         """Create a provider file from template.
 
@@ -1043,7 +1043,7 @@ def register_provider() -> dict[str, Any]:
 
 # Helper functions for easy registration
 def register_embedding_provider(
-    provider_name: str, provider_class: type[EmbeddingProviderBase], **kwargs
+    provider_name: str, provider_class: type[EmbeddingProviderBase], **kwargs: dict[str, Any]
 ) -> ValidationResult:
     """Helper function to register an embedding provider.
 
@@ -1061,7 +1061,7 @@ def register_embedding_provider(
 
 
 def register_reranking_provider(
-    provider_name: str, provider_class: type[RerankProviderBase], **kwargs
+    provider_name: str, provider_class: type[RerankProviderBase], **kwargs: dict[str, Any]
 ) -> ValidationResult:
     """Helper function to register a reranking provider.
 
@@ -1079,7 +1079,7 @@ def register_reranking_provider(
 
 
 def register_combined_provider(
-    provider_name: str, provider_class: type[CombinedProvider], **kwargs
+    provider_name: str, provider_class: type[CombinedProvider], **kwargs: dict[str, Any]
 ) -> ValidationResult:
     """Helper function to register a combined provider.
 

@@ -152,7 +152,7 @@ def _print_tool_result(result: dict, tool_name: str, fmt: OutputFormat) -> None:
         print(f"✓ Tool '{tool_name}' executed successfully")
         if result.get("result"):
             print("Result:")
-            if isinstance(result["result"], (dict, list)):
+            if isinstance(result["result"], dict | list):
                 print(json.dumps(result["result"], indent=2))
             else:
                 print(result["result"])
