@@ -93,8 +93,8 @@ max_queue_size = 1000             # CW_TELEMETRY_MAX_QUEUE_SIZE
 - Error rates and categories
 
 ### Privacy Measures
-- File paths are hashed: `/secret/project/file.py` → `path_3_.py_a1b2c3d4`
-- Repository names are hashed: `company/secret-repo` → `repo_e5f6g7h8`
+- File paths are hashed: `/secret/project/file.py` :material-arrow-right-circle: `path_3_.py_a1b2c3d4`
+- Repository names are hashed: `company/secret-repo` :material-arrow-right-circle: `repo_e5f6g7h8`
 - Search queries are sanitized to remove content while preserving patterns
 
 ## Getting Privacy Information

@@ -436,11 +436,11 @@ Alerts:
   - name: "High Search Latency"
     condition: "P95 latency > 1s for 5 minutes"
     action: "Scale up compute"
-  
+
   - name: "Memory Pressure"
     condition: "Memory usage > 90% for 2 minutes"
     action: "Alert ops team"
-  
+
   - name: "Vector DB Unavailable"
     condition: "Health check fails for 30 seconds"
     action: "Failover to backup"
@@ -505,7 +505,7 @@ Savings: "30-50% additional savings"
 
 ## Next Steps
 
-- **[Configuration Optimization →](../getting-started/configuration.md)**: Apply performance configurations
-- **[Provider Selection →](./provider-comparison.md)**: Choose optimal providers for your performance needs
-- **[Monitoring Setup →](../services/monitoring.md)**: Implement performance monitoring
-- **[Troubleshooting →](../getting-started/troubleshooting.md)**: Resolve performance issues
+- **[Configuration Optimization :material-arrow-right-circle:](../getting-started/configuration.md)**: Apply performance configurations
+- **[Provider Selection :material-arrow-right-circle:](./provider-comparison.md)**: Choose optimal providers for your performance needs
+- **[Monitoring Setup :material-arrow-right-circle:](../services/monitoring.md)**: Implement performance monitoring
+- **[Troubleshooting :material-arrow-right-circle:](../getting-started/troubleshooting.md)**: Resolve performance issues

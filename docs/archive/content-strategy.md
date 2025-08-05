@@ -31,17 +31,17 @@ Level 9: Community & Support (Ecosystem)
 
 **🎯 AI Assistant Users (Beginners)**
 - **Goal**: Get CodeWeaver working with Claude Desktop quickly
-- **Journey**: Home → Why CodeWeaver → Quick Start → First Search → User Guide
+- **Journey**: Home :material-arrow-right-circle: Why CodeWeaver :material-arrow-right-circle: Quick Start :material-arrow-right-circle: First Search :material-arrow-right-circle: User Guide
 - **Content Needs**: Simple setup, immediate value, troubleshooting
 
 **🛠️ Developer Teams (Intermediate)**
 - **Goal**: Configure and deploy CodeWeaver for team/organization use
-- **Journey**: User Guide → Configuration → Architecture → Tutorials → Performance
+- **Journey**: User Guide :material-arrow-right-circle: Configuration :material-arrow-right-circle: Architecture :material-arrow-right-circle: Tutorials :material-arrow-right-circle: Performance
 - **Content Needs**: Configuration options, best practices, deployment guides
 
 **🧩 Plugin Developers (Advanced)**
 - **Goal**: Extend CodeWeaver with custom components
-- **Journey**: Architecture → Plugin Development → API Reference → Examples
+- **Journey**: Architecture :material-arrow-right-circle: Plugin Development :material-arrow-right-circle: API Reference :material-arrow-right-circle: Examples
 - **Content Needs**: Technical depth, code examples, protocols, testing
 
 ### 3. Task-Oriented Organization
@@ -50,7 +50,7 @@ Each section is organized around user tasks rather than technical structure:
 
 #### User Guide Tasks:
 - ✅ Index my codebase
-- ✅ Search my code semantically  
+- ✅ Search my code semantically
 - ✅ Use structural search patterns
 - ✅ Optimize performance
 - ✅ Troubleshoot issues
@@ -269,7 +269,7 @@ Practical examples with code
 What to read or do next
 
 ---
-**Need help?** → [Support](../community/support.md)
+**Need help?** :material-arrow-right-circle: [Support](../community/support.md)
 ```
 
 ### Code Example Template

@@ -11,7 +11,7 @@ Thank you for your interest in contributing to CodeWeaver! This guide will help 
 ## 🎯 Before You Start
 
 ### Read the Contributor License Agreement
-By contributing to CodeWeaver, you agree to our [Contributor License Agreement](../../CONTRIBUTORS_LICENSE_AGREEMENT.md). It's developer-friendly and ensures your contributions remain open source while giving you full credit.
+By contributing to CodeWeaver, you agree to our [Contributor License Agreement](https://github.com/knitli/codeweaver-mcp/blog/main/CONTRIBUTORS_LICENSE_AGREEMENT.md). It's developer-friendly and ensures your contributions remain open source while giving you full credit.
 
 **Key Points:**
 - ✅ You retain all rights to your work

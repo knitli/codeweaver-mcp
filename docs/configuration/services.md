@@ -26,7 +26,7 @@ The service layer consists of:
     export CW_SERVICES__CHUNKING__PROVIDER="fastmcp_chunking"
     export CW_SERVICES__CHUNKING__MAX_CHUNK_SIZE=1500
     export CW_SERVICES__CHUNKING__MIN_CHUNK_SIZE=50
-    
+
     # Advanced settings
     export CW_SERVICES__CHUNKING__AST_GREP_ENABLED=true
     export CW_SERVICES__CHUNKING__PERFORMANCE_MODE="balanced"
@@ -42,7 +42,7 @@ The service layer consists of:
     ast_grep_enabled = true
     performance_mode = "balanced"  # fast, balanced, quality
     fallback_enabled = true
-    
+
     # Advanced chunking settings
     overlap_size = 100
     respect_boundaries = true
@@ -65,7 +65,7 @@ The service layer consists of:
 python.function_priority = true
 python.class_grouping = true
 
-# JavaScript-specific chunking  
+# JavaScript-specific chunking
 javascript.module_awareness = true
 javascript.async_handling = true
 
@@ -340,16 +340,16 @@ class CustomChunkingProvider(BaseServiceProvider, ChunkingService):
         # Initialize your service
         self.config = self.get_config()
         await self._setup_resources()
-    
+
     async def chunk_content(
-        self, 
-        content: str, 
+        self,
+        content: str,
         file_path: str | None = None
     ) -> list[str]:
         # Implement chunking logic
         chunks = self._custom_chunking_algorithm(content, file_path)
         return chunks
-    
+
     async def _health_check_implementation(self) -> bool:
         # Implement health check
         return True
@@ -388,11 +388,11 @@ from codeweaver.cw_types import ServiceProvider
 class ServicePlugin:
     def get_service_class(self) -> type[ServiceProvider]:
         return CustomValidationProvider
-    
+
     @property
     def service_type(self) -> ServiceType:
         return ServiceType.VALIDATION
-    
+
     def get_config_schema(self) -> dict:
         return {
             "type": "object",
@@ -422,7 +422,7 @@ class ValidationProvider(BaseServiceProvider, ValidationService):
         super().__init__(config)
         self.chunking_service = services_manager.get_chunking_service()
         self.filtering_service = services_manager.get_filtering_service()
-    
+
     async def validate_content(self, content: str) -> bool:
         # Use other services
         chunks = await self.chunking_service.chunk_content(content)
@@ -441,7 +441,7 @@ from codeweaver.services.middleware_bridge import ServiceBridge
 async def search_tool(context: MCP_Context):
     chunking_service = context.get_service("chunking")
     filtering_service = context.get_service("filtering")
-    
+
     # Use services in tool implementation
     chunks = await chunking_service.chunk_content(content)
     files = await filtering_service.discover_files(path)
@@ -624,6 +624,6 @@ profile_performance = true
 ## Next Steps
 
 - **Advanced configuration**: [Advanced Configuration](./advanced.md)
-- **Custom provider development**: [Extension Development](../extension-dev/)
+- **Custom provider development**: [Extension Development](../extension-development/)
 - **Performance optimization**: [Performance Guide](../user-guide/performance.md)
 - **Monitoring setup**: [Monitoring Guide](../user-guide/monitoring.md)

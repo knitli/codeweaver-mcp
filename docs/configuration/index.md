@@ -14,10 +14,10 @@ CodeWeaver includes built-in configuration profiles that cover common use cases:
     # Required environment variables
     export CW_EMBEDDING_API_KEY="your-voyage-api-key"
     export CW_VECTOR_BACKEND_URL="your-qdrant-url"
-    
+
     # Optional for authentication
     export CW_VECTOR_BACKEND_API_KEY="your-qdrant-api-key"
-    
+
     # Uses 'codeweaver_original' profile automatically
     uv run codeweaver
     ```
@@ -30,7 +30,7 @@ CodeWeaver includes built-in configuration profiles that cover common use cases:
     # Create minimal configuration file
     echo '[profile]
     name = "minimal"' > .codeweaver.toml
-    
+
     # No API keys required
     uv run codeweaver
     ```
@@ -44,11 +44,11 @@ CodeWeaver includes built-in configuration profiles that cover common use cases:
     export CW_EMBEDDING_API_KEY="your-voyage-api-key"
     export CW_VECTOR_BACKEND_URL="your-qdrant-url"
     export CW_ENABLE_HYBRID_SEARCH=true
-    
+
     # Create performance configuration
     echo '[profile]
     name = "performance"' > .codeweaver.toml
-    
+
     uv run codeweaver
     ```
 
@@ -58,7 +58,7 @@ CodeWeaver loads configuration from multiple sources in priority order:
 
 1. **Direct parameters** (programmatic configuration)
 2. **Environment variables** (`CW_*` prefix)
-3. **TOML configuration files** (`.local.codeweaver.toml` → `.codeweaver.toml` → `~/.config/codeweaver/config.toml`)
+3. **TOML configuration files** (`.local.codeweaver.toml` :material-arrow-right-circle: `.codeweaver.toml` :material-arrow-right-circle: `~/.config/codeweaver/config.toml`)
 4. **`.env` files** (for development)
 5. **Secret files** (for secure deployment)
 
@@ -72,6 +72,7 @@ CodeWeaver loads configuration from multiple sources in priority order:
 | **[Backends](./backends.md)** | Vector databases | Qdrant, DocArray, custom backends |
 | **[Services](./services.md)** | Service layer | Chunking, filtering, monitoring |
 | **[Advanced](./advanced.md)** | Custom configurations | Factory patterns, plugins |
+| **[Intent Layer](../intent-layer/configuration.md)** | Intent processing | Custom intent handlers, strategies, patterns |
 
 ## Configuration File Example
 
@@ -125,4 +126,5 @@ requests_per_minute = 60
 - **New users**: Start with the [Environment Variables](./environment.md) guide
 - **Customization needs**: Explore [Providers](./providers.md) and [Backends](./backends.md)
 - **Advanced users**: Check [Services](./services.md) and [Advanced](./advanced.md) configuration
+- **Intent processing**: See the [Intent Layer Configuration](../intent-layer/configuration.md)
 - **Troubleshooting**: See the [Troubleshooting Guide](../user-guide/troubleshooting.md)

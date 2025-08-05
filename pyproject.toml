@@ -132,8 +132,8 @@ docs = [
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-minify-plugin>=0.8.0",
     "mkdocs-rss-plugin==1.17.3",
-    "mkdocs-awesome-pages-plugin>=2.10.0",
-    "pymdown-extensions>=10.1",
+    "mkdocs-awesome-nav>=3.1.2",
+    "pymdown-extensions>=10.16.1",
     "pygments>=2.19.1",
 ]
 dev = [

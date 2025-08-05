@@ -111,11 +111,11 @@ codeweaver-mcp/
 
 **Where to add new functionality:**
 
-1. **New Providers** → `src/codeweaver/providers/your_provider.py`
-2. **New Backends** → `src/codeweaver/backends/your_backend.py`
-3. **New Sources** → `src/codeweaver/sources/your_source.py`
-4. **New Services** → `src/codeweaver/services/providers/your_service.py`
-5. **Type Definitions** → `src/codeweaver/_types/`
+1. **New Providers** :material-arrow-right-circle: `src/codeweaver/providers/your_provider.py`
+2. **New Backends** :material-arrow-right-circle: `src/codeweaver/backends/your_backend.py`
+3. **New Sources** :material-arrow-right-circle: `src/codeweaver/sources/your_source.py`
+4. **New Services** :material-arrow-right-circle: `src/codeweaver/services/providers/your_service.py`
+5. **Type Definitions** :material-arrow-right-circle: `src/codeweaver/_types/`
 
 ## 🔄 Development Cycle
 

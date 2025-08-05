@@ -44,7 +44,7 @@ graph LR
     B --> C[Semantic Embeddings]
     C --> D[Vector Database]
     D --> E[AI Assistant Memory]
-    
+
     style A fill:#e1f5fe
     style E fill:#e8f5e8
 ```
@@ -57,32 +57,32 @@ graph LR
 
 === "Semantic Search"
     **Natural Language Understanding**
-    
+
     ```plaintext
     Query: "Find authentication middleware"
     Results: ✅ auth.middleware.ts, ✅ user-auth.service.ts, ✅ jwt-validator.ts
     ```
-    
+
     Understands **meaning**, not just keywords.
 
 === "Structural Search"
     **Code Pattern Recognition**
-    
+
     ```plaintext
     Pattern: "class $_ extends Component"
     Results: ✅ All React class components
     ```
-    
+
     Finds **exact patterns** using ast-grep across 20+ languages.
 
 === "Hybrid Search"
     **Best of Both Worlds**
-    
+
     ```plaintext
     Query: "Find API endpoints that handle user data"
     Results: ✅ Semantic understanding + structural patterns
     ```
-    
+
     Combines meaning with structure for precise results.
 
 ### 🏗️ **Architecture Awareness**
@@ -148,11 +148,11 @@ CodeWeaver helps AI assistants understand:
 
 🤖 AI: "I can see your authentication system uses:
 - JWT middleware in `src/auth/middleware.ts`
-- User service integration in `src/services/user.service.ts`  
+- User service integration in `src/services/user.service.ts`
 - Role-based permissions in `src/auth/rbac.ts`
 - OAuth providers in `src/auth/providers/`
 
-The flow is: OAuth → JWT generation → middleware validation → RBAC check.
+The flow is: OAuth :material-arrow-right-circle: JWT generation :material-arrow-right-circle: middleware validation :material-arrow-right-circle: RBAC check.
 Would you like me to explain any specific part?"
 
 ✨ Complete understanding in one response
@@ -206,23 +206,23 @@ Ready to transform your AI-assisted development workflow?
 <div class="grid cards" markdown>
 
 -   :material-rocket-launch: **[Quick Start](getting-started/quick-start.md)**
-    
+
     Set up CodeWeaver with Claude Desktop in 5 minutes
 
 -   :material-play-circle: **[First Search](getting-started/first-search.md)**
-    
+
     Try your first semantic code search
 
 -   :material-cog: **[Configuration](getting-started/configuration.md)**
-    
+
     Configure for your specific setup
 
 -   :material-school: **[Tutorials](tutorials/index.md)**
-    
+
     Step-by-step guides for common scenarios
 
 </div>
 
 ---
 
-**Next:** [Quick Start Guide →](getting-started/quick-start.md)
+**Next:** [Quick Start Guide :material-arrow-right-circle:](getting-started/quick-start.md)

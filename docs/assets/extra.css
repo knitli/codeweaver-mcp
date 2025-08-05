@@ -90,6 +90,15 @@
 }
 
 
+div>table>tbody>tr:where(:has(span.filename)) {
+  background-color: var(--md-code-bg-color);
+  border-radius: 0.1rem 0 0 0.1rem;
+
+  span.filename {
+    text-transform: capitalize;
+  };
+}
+
 .md-typeset div.tabbed-content::before,
 .md-typeset div.tabbed-content::after {
   display: none;
@@ -144,9 +153,18 @@ div.tabbed-content {
 }
 
 .md-tabs__link--active {
-  color: var(--knitli-rust-orange);
+  color: var(--knitli-rust-orange) !important;
   background-color: rgba(234, 89, 50, 0.15);
   font-weight: 600;
+}
+
+/* Override Material Design's default active tab color */
+[data-md-color-scheme="default"] .md-tabs__link--active {
+  color: var(--knitli-rust-orange) !important;
+}
+
+[data-md-color-scheme="slate"] .md-tabs__link--active {
+  color: var(--knitli-rust-orange) !important;
 }
 
 /* Typography - Human and Readable */
@@ -901,12 +919,36 @@ div.tabbed-content {
   color: var(--knitli-off-white);
 }
 
-/* Hide filename when it's just the language */
-article table>tbody>tr>th>span.filename {
-  display: none;
+[data-md-color-scheme="slate"] table.highlighttable td.linenos {
+  border-style: solid;
+  border-right-color: var(--knitli-french-gray);
+  border-right-width: 0.1rem;
+  border-radius: 0.5rem 0 0 0.5rem;
 }
 
-/* Enhanced scroll behavior */
+[data-md-color-scheme="slate"] .md-sidebar {
+  background-color: var(--knitli-aubergine-dark);
+}
+
+[data-md-color-scheme="slate"] .md-nav>.md-nav__list>.md-nav__item--active>.md-nav__link:not(.md-nav__container) {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .highlighttable>tbody>tr>.code>div>pre {
+  border-style: solid;
+  border-top-width: 0.2rem;
+  border-right-width: 0.1rem;
+  border-bottom-width: 0.1rem;
+  border-left-width: 0;
+  border-bottom-right-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+
+  code.md-code__content {
+    background-color: rgba(21, 166, 205, 0.1);
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -977,6 +1019,10 @@ html {
   color: var(--knitli-rust-orange);
 }
 
+[data-md-color-scheme="default"] nav.md-tabs>div>ul>li.md-tabs__item.md-tabs__item--active>a {
+  color: var(--knitli-rust-orange);
+}
+
 /* Search suggestions */
 .md-search-result__link:hover {
   background-color: rgba(234, 89, 50, 0.05);
@@ -1007,4 +1053,12 @@ html {
 
 [data-md-color-scheme="slate"] .md-typeset table:not([class]) tbody tr:hover {
   background-color: rgba(234, 89, 50, 0.05);
+}
+
+.md-header__title>.md-header__ellipsis {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--knitli-off-white);
 }

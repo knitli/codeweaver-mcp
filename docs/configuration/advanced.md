@@ -168,7 +168,7 @@ backend_type = "memory"
 enable_caching = false
 log_level = "DEBUG"
 
-# Production overrides  
+# Production overrides
 [profiles.production]
 inherits = "base"
 
@@ -248,14 +248,14 @@ class GitDataSource(DataSource):
         self.repo_url = config["repo_url"]
         self.branch = config.get("branch", "main")
         self.auth_token = config.get("auth_token")
-    
+
     async def discover_content(self, **kwargs) -> AsyncIterator[ContentItem]:
         """Discover content from Git repository"""
         repo = await self._clone_repo()
-        
+
         for file_path in self._walk_files(repo):
             content = await self._read_file(repo, file_path)
-            
+
             yield ContentItem(
                 content=content,
                 metadata={
@@ -266,7 +266,7 @@ class GitDataSource(DataSource):
                     "commit_hash": await self._get_commit_hash(repo, file_path)
                 }
             )
-    
+
     async def health_check(self) -> bool:
         """Check if repository is accessible"""
         try:
@@ -443,13 +443,13 @@ class CustomProviderConfig(BaseModel):
     endpoint: str = Field(..., regex=r'^https?://')
     timeout: int = Field(30, ge=1, le=300)
     batch_size: int = Field(32, ge=1, le=1000)
-    
+
     @validator('api_key')
     def validate_api_key(cls, v):
         if not v.startswith('cp_'):
             raise ValueError('API key must start with "cp_"')
         return v
-    
+
     @validator('endpoint')
     def validate_endpoint(cls, v):
         if 'localhost' in v and not cls.is_development():
@@ -526,7 +526,7 @@ config = (ConfigBuilder()
 [profile]
 name = "minimal"
 
-[backend] 
+[backend]
 provider = "docarray"
 backend_type = "memory"
 
@@ -633,7 +633,7 @@ def test_production_config():
             "api_key": "test-key"
         }
     )
-    
+
     # Should require API key
     with pytest.raises(ValueError):
         CodeWeaverConfig(
@@ -644,7 +644,7 @@ def test_production_config():
 
 ## Next Steps
 
-- **Plugin development**: [Extension Development Guide](../extension-dev/)
+- **Plugin development**: [Extension Development Guide](../extension-development/)
 - **Performance optimization**: [Performance Guide](../user-guide/performance.md)
 - **Enterprise deployment**: [Deployment Guide](../user-guide/deployment.md)
 - **Monitoring and observability**: [Monitoring Guide](../user-guide/monitoring.md)

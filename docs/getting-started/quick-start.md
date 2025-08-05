@@ -241,7 +241,7 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 ```plaintext
 # Single natural language query
 "Explain the authentication system in this project"
-# → Automatic semantic search + structural analysis + result synthesis
+# :material-arrow-right-circle: Automatic semantic search + structural analysis + result synthesis
 ```
 
 ## Troubleshooting
@@ -277,4 +277,4 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 
 ---
 
-**Next:** [User Guide →](../user-guide/how-it-works.md)
+**Next:** [User Guide :material-arrow-right-circle:](../user-guide/how-it-works.md)

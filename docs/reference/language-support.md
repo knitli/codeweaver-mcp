@@ -54,16 +54,16 @@ from typing import Optional
 # Chunk 2: Class definition
 class UserAuth:
     """Handles user authentication logic."""
-    
+
     def __init__(self, secret_key: str):
         self.secret_key = secret_key
-    
+
     # Chunk 3: Method with implementation
     def hash_password(self, password: str) -> str:
         """Hash password with salt."""
         salt = os.urandom(32)
-        return hashlib.pbkdf2_hmac('sha256', 
-                                   password.encode('utf-8'), 
+        return hashlib.pbkdf2_hmac('sha256',
+                                   password.encode('utf-8'),
                                    salt, 100000)
 ```
 
@@ -103,19 +103,19 @@ interface UserListProps {
 }
 
 // Chunk 2: Component definition
-export const UserList: React.FC<UserListProps> = ({ 
-  users, 
-  onUserSelect 
+export const UserList: React.FC<UserListProps> = ({
+  users,
+  onUserSelect
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  
+
   // Chunk 3: Hook implementation
   useEffect(() => {
     if (users.length > 0 && !selectedId) {
       setSelectedId(users[0].id);
     }
   }, [users, selectedId]);
-  
+
   // Component render logic continues...
 };
 ```
@@ -440,7 +440,7 @@ Quality: ⭐⭐⭐
 ```yaml
 File Patterns:
   - models.py: "Model class boundaries"
-  - views.py: "View function/class boundaries"  
+  - views.py: "View function/class boundaries"
   - urls.py: "URL pattern boundaries"
   - admin.py: "Admin class boundaries"
   - serializers.py: "Serializer class boundaries"
@@ -514,7 +514,7 @@ Add custom patterns for specialized code:
 [chunking.custom_patterns]
 python = [
   "function_definition",
-  "class_definition", 
+  "class_definition",
   "async_function_definition",
   "decorator_definition"
 ]
@@ -553,17 +553,17 @@ include_tests = false
 
 ```yaml
 Primary Extensions:
-  - ".py" → Python
-  - ".js" → JavaScript
-  - ".ts" → TypeScript
-  - ".rs" → Rust
-  - ".go" → Go
+  - ".py" :material-arrow-right-circle: Python
+  - ".js" :material-arrow-right-circle: JavaScript
+  - ".ts" :material-arrow-right-circle: TypeScript
+  - ".rs" :material-arrow-right-circle: Rust
+  - ".go" :material-arrow-right-circle: Go
 
 Secondary Extensions:
-  - ".pyi" → Python (type stubs)
-  - ".jsx" → JavaScript (React)
-  - ".tsx" → TypeScript (React)
-  - ".d.ts" → TypeScript (declarations)
+  - ".pyi" :material-arrow-right-circle: Python (type stubs)
+  - ".jsx" :material-arrow-right-circle: JavaScript (React)
+  - ".tsx" :material-arrow-right-circle: TypeScript (React)
+  - ".d.ts" :material-arrow-right-circle: TypeScript (declarations)
 ```
 
 ### Content-Based Detection
@@ -572,15 +572,15 @@ When extensions are ambiguous or missing:
 
 ```yaml
 Shebang Recognition:
-  - "#!/usr/bin/env python" → Python
-  - "#!/bin/bash" → Shell
-  - "#!/usr/bin/node" → JavaScript
+  - "#!/usr/bin/env python" :material-arrow-right-circle: Python
+  - "#!/bin/bash" :material-arrow-right-circle: Shell
+  - "#!/usr/bin/node" :material-arrow-right-circle: JavaScript
 
 Content Patterns:
-  - "package.json" → Node.js project
-  - "Cargo.toml" → Rust project
-  - "go.mod" → Go module
-  - "pyproject.toml" → Python project
+  - "package.json" :material-arrow-right-circle: Node.js project
+  - "Cargo.toml" :material-arrow-right-circle: Rust project
+  - "go.mod" :material-arrow-right-circle: Go module
+  - "pyproject.toml" :material-arrow-right-circle: Python project
 ```
 
 ### Language Metadata
@@ -706,7 +706,7 @@ register_language(
 
 ## Next Steps
 
-- **[Provider Comparison →](./provider-comparison.md)**: Choose optimal providers for your languages
-- **[Configuration Reference →](../getting-started/configuration.md)**: Configure language-specific settings
-- **[Extension Development →](../extension-development/)**: Add support for new languages
-- **[Performance Optimization →](../user-guide/performance.md)**: Optimize for your codebase
+- **[Provider Comparison :material-arrow-right-circle:](./provider-comparison.md)**: Choose optimal providers for your languages
+- **[Configuration Reference :material-arrow-right-circle:](../getting-started/configuration.md)**: Configure language-specific settings
+- **[Extension Development :material-arrow-right-circle:](../extension-development/)**: Add support for new languages
+- **[Performance Optimization :material-arrow-right-circle:](../user-guide/performance.md)**: Optimize for your codebase

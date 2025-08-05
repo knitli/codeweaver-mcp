@@ -438,19 +438,19 @@ AI + CodeWeaver extracts:
 ### Time Savings Examples
 
 **Code Exploration:**
-- Traditional: 2-4 hours → CodeWeaver: 30-60 minutes
+- Traditional: 2-4 hours :material-arrow-right-circle: CodeWeaver: 30-60 minutes
 - **Savings: 60-75% reduction in exploration time**
 
 **Bug Investigation:**
-- Traditional: 1-3 hours → CodeWeaver: 15-45 minutes
+- Traditional: 1-3 hours :material-arrow-right-circle: CodeWeaver: 15-45 minutes
 - **Savings: 50-75% reduction in investigation time**
 
 **Feature Integration:**
-- Traditional: 30-60 minutes → CodeWeaver: 10-20 minutes
+- Traditional: 30-60 minutes :material-arrow-right-circle: CodeWeaver: 10-20 minutes
 - **Savings: 60-70% reduction in integration research**
 
 **Code Review:**
-- Traditional: 45-90 minutes → CodeWeaver: 15-30 minutes
+- Traditional: 45-90 minutes :material-arrow-right-circle: CodeWeaver: 15-30 minutes
 - **Savings: 60-70% reduction in review time**
 
 ### Quality Improvements
@@ -467,4 +467,4 @@ Ready to implement these workflows in your development process?
 - [**Performance Optimization**](performance.md) - Configure CodeWeaver for your project size
 - [**Troubleshooting Guide**](../getting-started/troubleshooting.md) - Resolve common workflow issues
 - [**Configuration Reference**](../getting-started/configuration.md) - Advanced configuration options
-- [**Extension Development**](../extension-dev/) - Build custom workflows and integrations
+- [**Extension Development**](../extension-development/) - Build custom workflows and integrations

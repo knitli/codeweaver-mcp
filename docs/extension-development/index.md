@@ -7,7 +7,7 @@ Welcome to CodeWeaver's extension development documentation. CodeWeaver implemen
 CodeWeaver's extension system supports four main types of plugins:
 
 - **[Providers](./providers.md)**: Embedding and reranking services (Voyage AI, OpenAI, custom)
-- **[Backends](./backends.md)**: Vector databases and search engines (Qdrant, Pinecone, custom)  
+- **[Backends](./backends.md)**: Vector databases and search engines (Qdrant, Pinecone, custom)
 - **[Sources](./sources.md)**: Data source connectors (filesystem, Git, API, custom)
 - **[Services](./services.md)**: Middleware services (chunking, filtering, validation, custom)
 
@@ -65,29 +65,29 @@ CodeWeaver uses a **protocol-based plugin architecture** with the following key 
 ### [Embedding/Reranking Providers](./providers.md)
 **Purpose**: Add support for new embedding models and reranking services
 
-**Key Protocols**: `EmbeddingProvider`, `RerankProvider`, `NLPProvider`  
-**Use Cases**: Custom embedding models, local inference, proprietary APIs  
+**Key Protocols**: `EmbeddingProvider`, `RerankProvider`, `NLPProvider`
+**Use Cases**: Custom embedding models, local inference, proprietary APIs
 **Examples**: Hugging Face transformers, local BERT models, enterprise APIs
 
-### [Vector Backends](./backends.md)  
+### [Vector Backends](./backends.md)
 **Purpose**: Integrate with new vector databases and search engines
 
-**Key Protocols**: `VectorBackend`, `HybridSearchBackend`, `StreamingBackend`  
-**Use Cases**: New vector databases, custom search logic, hybrid search  
+**Key Protocols**: `VectorBackend`, `HybridSearchBackend`, `StreamingBackend`
+**Use Cases**: New vector databases, custom search logic, hybrid search
 **Examples**: Elasticsearch, Redis, custom vector stores
 
 ### [Data Sources](./sources.md)
 **Purpose**: Connect to new types of data sources and content repositories
 
-**Key Protocols**: `DataSource`, `SourceCapabilities`, `SourceWatcher`  
-**Use Cases**: Custom repositories, API integrations, specialized file formats  
+**Key Protocols**: `DataSource`, `SourceCapabilities`, `SourceWatcher`
+**Use Cases**: Custom repositories, API integrations, specialized file formats
 **Examples**: Confluence, Notion, custom CMS, database connectors
 
 ### [Services](./services.md)
 **Purpose**: Add middleware functionality and processing capabilities
 
-**Key Protocols**: `ServiceProvider`, `ChunkingService`, `FilteringService`  
-**Use Cases**: Custom chunking algorithms, specialized filtering, validation logic  
+**Key Protocols**: `ServiceProvider`, `ChunkingService`, `FilteringService`
+**Use Cases**: Custom chunking algorithms, specialized filtering, validation logic
 **Examples**: Custom tokenizers, content validators, format converters
 
 ## 🔧 Core Development Concepts
@@ -102,7 +102,7 @@ from typing import Protocol, runtime_checkable
 class EmbeddingProvider(Protocol):
     @property
     def provider_name(self) -> str: ...
-    
+
     async def embed_documents(self, texts: list[str]) -> list[list[float]]: ...
     async def health_check(self) -> bool: ...
 ```
@@ -117,8 +117,8 @@ class MyProviderPlugin(ProviderPlugin):
     @classmethod
     def get_plugin_name(cls) -> str:
         return "my_custom_provider"
-    
-    @classmethod  
+
+    @classmethod
     def get_provider_class(cls) -> type[EmbeddingProvider]:
         return MyCustomProvider
 ```
@@ -140,16 +140,16 @@ class MyProviderConfig(BaseModel):
 
 Choose your extension type to get started:
 
-- **[Building Custom Providers →](./providers.md)**
-- **[Creating Vector Backends →](./backends.md)**  
-- **[Developing Data Sources →](./sources.md)**
-- **[Implementing Services →](./services.md)**
+- **[Building Custom Providers :material-arrow-right-circle:](./providers.md)**
+- **[Creating Vector Backends :material-arrow-right-circle:](./backends.md)**
+- **[Developing Data Sources :material-arrow-right-circle:](./sources.md)**
+- **[Implementing Services :material-arrow-right-circle:](./services.md)**
 
 Or dive deeper into the architecture:
 
-- **[Protocol Reference →](../reference/protocols.md)**
-- **[Testing Framework →](./testing.md)**
-- **[Performance Guidelines →](./performance.md)**
+- **[Protocol Reference :material-arrow-right-circle:](../reference/protocols.md)**
+- **[Testing Framework :material-arrow-right-circle:](./testing.md)**
+- **[Performance Guidelines :material-arrow-right-circle:](./performance.md)**
 
 ## 💡 Need Help?
 

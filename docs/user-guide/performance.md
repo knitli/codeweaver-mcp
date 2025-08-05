@@ -564,7 +564,7 @@ def benchmark_indexing(codebase_path):
         "codeweaver", "index", codebase_path
     ], capture_output=True)
     end_time = time.time()
-    
+
     duration = end_time - start_time
     print(f"Indexing completed in {duration:.2f} seconds")
     return duration
@@ -576,14 +576,14 @@ def benchmark_indexing(codebase_path):
 def benchmark_search(query, iterations=10):
     import statistics
     times = []
-    
+
     for _ in range(iterations):
         start_time = time.time()
         # Perform search operation
         result = search_codebase(query)
         end_time = time.time()
         times.append(end_time - start_time)
-    
+
     avg_time = statistics.mean(times)
     print(f"Average search time: {avg_time:.3f} seconds")
     return avg_time
@@ -595,5 +595,5 @@ With optimized performance configuration:
 
 - [**Troubleshooting Guide**](../getting-started/troubleshooting.md) - Resolve performance issues
 - [**Configuration Reference**](../getting-started/configuration.md) - Complete configuration options
-- [**Extension Development**](../extension-dev/) - Build performance-optimized extensions
+- [**Extension Development**](../extension-development/) - Build performance-optimized extensions
 - [**Production Deployment**](../enterprise/) - Enterprise-scale deployment patterns

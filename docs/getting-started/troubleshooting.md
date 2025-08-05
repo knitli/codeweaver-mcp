@@ -854,4 +854,4 @@ If you've resolved your issues:
 - [**Configuration Reference**](configuration.md) - Complete configuration options
 - [**Performance Optimization**](../user-guide/performance.md) - Optimize for your use case
 - [**Development Workflows**](../user-guide/workflows.md) - Learn practical usage patterns
-- [**Extension Development**](../extension-dev/) - Build custom integrations
+- [**Extension Development**](../extension-development/) - Build custom integrations

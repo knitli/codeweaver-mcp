@@ -12,7 +12,7 @@ This document showcases real examples of how analytics data and user feedback ha
 ## Improvement Categories
 
 ### 1. Search Quality Enhancements
-### 2. Performance Optimizations  
+### 2. Performance Optimizations
 ### 3. User Experience Improvements
 ### 4. Feature Development Priorities
 ### 5. Documentation and Onboarding
@@ -21,7 +21,7 @@ This document showcases real examples of how analytics data and user feedback ha
 
 ## Search Quality Enhancements
 
-### Case Study 1: Query Pattern Analysis → Improved Semantic Matching
+### Case Study 1: Query Pattern Analysis :material-arrow-right-circle: Improved Semantic Matching
 
 **The Data**:
 ```python
@@ -57,7 +57,7 @@ def embed_code_chunk(chunk: str) -> List[float]:
         # Add error context to embedding
         context = f"Error handling: {extract_error_context(chunk)}\n{chunk}"
         return embedding_provider.embed(context)
-    
+
     return embedding_provider.embed(chunk)
 ```
 
@@ -66,7 +66,7 @@ def embed_code_chunk(chunk: str) -> List[float]:
 - Overall search satisfaction score increased by 0.7 points
 - User-reported "can't find error handling examples" issues dropped by 78%
 
-### Case Study 2: Result Relevance Scoring → Smarter Ranking
+### Case Study 2: Result Relevance Scoring :material-arrow-right-circle: Smarter Ranking
 
 **The Data**:
 ```python
@@ -92,23 +92,23 @@ relevance_analysis = {
 ```python
 def calculate_relevance_score(result: SearchResult, query: str) -> float:
     base_score = result.semantic_similarity_score
-    
+
     # Boost exact matches
     if is_exact_function_match(result, query):
         base_score *= 1.4
-    
+
     # Boost similar patterns
     elif has_similar_patterns(result, query):
         base_score *= 1.2
-    
+
     # Slightly reduce documentation scores unless specifically requested
     elif is_documentation(result) and not query_asks_for_docs(query):
         base_score *= 0.9
-    
+
     # Reduce test file scores unless specifically requested
     elif is_test_file(result) and not query_asks_for_tests(query):
         base_score *= 0.7
-    
+
     return base_score
 ```
 
@@ -121,7 +121,7 @@ def calculate_relevance_score(result: SearchResult, query: str) -> float:
 
 ## Performance Optimizations
 
-### Case Study 3: Latency Analysis → Chunking Strategy Optimization
+### Case Study 3: Latency Analysis :material-arrow-right-circle: Chunking Strategy Optimization
 
 **The Data**:
 ```python
@@ -154,10 +154,10 @@ class AdaptiveChunkingStrategy:
                 return ChunkingMethod.FAST_SIMPLE  # Skip AST parsing for large files
             else:
                 return ChunkingMethod.AST_AWARE    # Use AST for smaller files
-        
+
         # Standard AST-aware chunking for smaller repos
         return ChunkingMethod.AST_AWARE
-    
+
     def chunk_with_fallback(self, content: str, method: ChunkingMethod) -> List[Chunk]:
         try:
             if method == ChunkingMethod.AST_AWARE:
@@ -165,7 +165,7 @@ class AdaptiveChunkingStrategy:
         except ASTParsingError:
             # Fallback to simple chunking
             return self.simple_chunking(content)
-        
+
         return self.simple_chunking(content)
 ```
 
@@ -175,7 +175,7 @@ class AdaptiveChunkingStrategy:
 - Memory usage during indexing reduced by 35%
 - User-reported "indexing never completes" issues eliminated
 
-### Case Study 4: Memory Usage Patterns → Batched Processing
+### Case Study 4: Memory Usage Patterns :material-arrow-right-circle: Batched Processing
 
 **The Data**:
 ```python
@@ -204,13 +204,13 @@ class BatchedIndexingProcessor:
         self.max_memory_mb = max_memory_mb
         self.current_batch = []
         self.batch_size = self.calculate_optimal_batch_size()
-    
+
     async def process_files(self, files: List[str]) -> None:
         for batch in self.create_batches(files):
             await self.process_batch(batch)
             await self.flush_to_vector_db()
             self.cleanup_memory()  # Force garbage collection
-    
+
     def calculate_optimal_batch_size(self) -> int:
         available_memory = psutil.virtual_memory().available
         # Use conservative 25% of available memory
@@ -229,7 +229,7 @@ class BatchedIndexingProcessor:
 
 ## User Experience Improvements
 
-### Case Study 5: Error Message Analysis → Better Developer Experience
+### Case Study 5: Error Message Analysis :material-arrow-right-circle: Better Developer Experience
 
 **The Data**:
 ```python
@@ -269,7 +269,7 @@ class UserFriendlyErrorHandler:
                 documentation_link="/docs/configuration/advanced.md#file-size-limits",
                 severity="info"
             )
-        
+
         elif isinstance(error, ASTGrepUnavailableError):
             return ErrorResponse(
                 message="AST-grep is not available, falling back to simple chunking",
@@ -291,7 +291,7 @@ class UserFriendlyErrorHandler:
 - User-reported "error messages are helpful" increased from 3.2 to 7.8/10
 - Time to successful first search reduced from 15 minutes to 6 minutes
 
-### Case Study 6: Usage Flow Analysis → Onboarding Optimization
+### Case Study 6: Usage Flow Analysis :material-arrow-right-circle: Onboarding Optimization
 
 **The Data**:
 ```python
@@ -327,34 +327,34 @@ user_journey_pain_points = {
 class OnboardingOrchestrator:
     async def start_guided_setup(self) -> None:
         """Guide users through progressive setup."""
-        
+
         # Phase 1: Minimal viable configuration
         await self.setup_basic_config()
         await self.test_connection()
-        
+
         # Phase 2: Quick win with small test repository
         test_repo = await self.suggest_test_repository()
         await self.index_small_sample(test_repo)
-        
+
         # Phase 3: Guided first search
         await self.demonstrate_search_patterns()
-        
+
         # Phase 4: Full setup with user's actual repository
         if await self.user_wants_full_setup():
             await self.setup_production_config()
-    
+
     async def suggest_test_repository(self) -> str:
         """Suggest a small, representative test repository."""
         return "~/Documents/small-project"  # or create sample project
-    
+
     async def demonstrate_search_patterns(self) -> None:
         """Show effective search examples."""
         examples = [
             "Find authentication functions",
-            "Show error handling patterns", 
+            "Show error handling patterns",
             "Find configuration examples"
         ]
-        
+
         for example in examples:
             await self.run_example_search(example)
             await self.explain_results(example)
@@ -370,7 +370,7 @@ class OnboardingOrchestrator:
 
 ## Feature Development Priorities
 
-### Case Study 7: Language Usage Analysis → Enhanced Language Support
+### Case Study 7: Language Usage Analysis :material-arrow-right-circle: Enhanced Language Support
 
 **The Data**:
 ```python
@@ -412,7 +412,7 @@ class LanguageAwareChunking:
             "rust": RustChunkingStrategy(),
             "cpp": CppChunkingStrategy()
         }
-    
+
     def chunk_by_language(self, content: str, language: str) -> List[Chunk]:
         strategy = self.language_strategies.get(language, DefaultStrategy())
         return strategy.chunk_with_context(content)
@@ -421,17 +421,17 @@ class GoChunkingStrategy:
     def chunk_with_context(self, content: str) -> List[Chunk]:
         # Go-specific patterns
         chunks = []
-        
+
         # Preserve package declarations and imports together
         package_section = self.extract_package_section(content)
         if package_section:
             chunks.append(Chunk(content=package_section, type="package_context"))
-        
+
         # Function chunks include receiver context
         for func in self.extract_functions(content):
             func_with_context = self.add_go_context(func)
             chunks.append(Chunk(content=func_with_context, type="function"))
-        
+
         return chunks
 ```
 
@@ -441,7 +441,7 @@ class GoChunkingStrategy:
 - User requests for additional language support increased by 40% (positive signal)
 - Language-specific feature adoption rate: 67% of users in target languages
 
-### Case Study 8: Integration Usage Patterns → API Development
+### Case Study 8: Integration Usage Patterns :material-arrow-right-circle: API Development
 
 **The Data**:
 ```python
@@ -474,22 +474,22 @@ integration_analysis = {
 @app.post("/api/v1/search/batch")
 async def batch_search(request: BatchSearchRequest) -> BatchSearchResponse:
     """Handle batch search operations efficiently."""
-    
+
     # Validate batch size
     if len(request.queries) > 50:
         raise HTTPException(400, "Batch size limited to 50 queries")
-    
+
     # Process queries in parallel
     tasks = [
         search_single_query(query, request.repository_id)
         for query in request.queries
     ]
-    
+
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     return BatchSearchResponse(
         results=[
-            result if not isinstance(result, Exception) 
+            result if not isinstance(result, Exception)
             else SearchError(query=request.queries[i], error=str(result))
             for i, result in enumerate(results)
         ],
@@ -508,7 +508,7 @@ async def batch_search(request: BatchSearchRequest) -> BatchSearchResponse:
 
 ## Documentation and Onboarding
 
-### Case Study 9: Support Ticket Analysis → Documentation Improvements
+### Case Study 9: Support Ticket Analysis :material-arrow-right-circle: Documentation Improvements
 
 **The Data**:
 ```python
@@ -558,7 +558,7 @@ strategy = "adaptive"
 max_chunk_size = 1000
 overlap_size = 100
 
-[performance] 
+[performance]
 batch_size = 25
 memory_limit_mb = 500
 ```plaintext
@@ -583,7 +583,7 @@ improvement_metrics = {
     "january_2025": {
         "search_quality": {
             "relevance_score": 8.2,  # +0.3 from December
-            "success_rate": 0.84,    # +0.04 
+            "success_rate": 0.84,    # +0.04
             "refinement_rate": 0.16  # -0.03 (improvement)
         },
         "performance": {
@@ -629,7 +629,7 @@ ab_test_results = {
 ### Quantitative Improvements (2024-2025)
 
 - **Search Quality**: +28% improvement in relevance scores
-- **Performance**: -43% reduction in average search latency  
+- **Performance**: -43% reduction in average search latency
 - **User Satisfaction**: +2.1 point increase in NPS score
 - **Retention**: +47% improvement in weekly active users
 - **Error Rates**: -78% reduction in user-reported issues
@@ -637,7 +637,7 @@ ab_test_results = {
 ### Qualitative Feedback Themes
 
 - "Search results are much more relevant than before"
-- "Setup process is now straightforward" 
+- "Setup process is now straightforward"
 - "Error messages actually help me fix problems"
 - "Performance is noticeably faster"
 - "Documentation helped me understand advanced features"

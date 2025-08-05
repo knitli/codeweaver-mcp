@@ -41,8 +41,8 @@ Result: Confusion, suboptimal choices, wasted context
 ```plaintext
 ✅ Intent Layer Approach:
 User: "Find authentication functions"
-Intent Layer: Recognizes SEARCH intent → PROJECT scope → MODERATE complexity
-System: Orchestrates semantic + structural search → Returns refined results
+Intent Layer: Recognizes SEARCH intent :material-arrow-right-circle: PROJECT scope :material-arrow-right-circle: MODERATE complexity
+System: Orchestrates semantic + structural search :material-arrow-right-circle: Returns refined results
 LLM: Gets exactly what it needs with clear metadata
 ```
 
@@ -94,11 +94,11 @@ Strategy: Direct semantic search with high confidence
 Output: Specific function locations with relevant context
 ```
 
-### Analysis Workflow Strategy  
+### Analysis Workflow Strategy
 Handles complex analytical tasks:
 ```plaintext
 Input: "Analyze security issues in authentication system"
-Strategy: Multi-step workflow (search → analyze → report)
+Strategy: Multi-step workflow (search :material-arrow-right-circle: analyze :material-arrow-right-circle: report)
 Output: Comprehensive analysis with findings and recommendations
 ```
 
@@ -126,7 +126,7 @@ Output: Tailored exploration based on codebase patterns
 
 ### For Organizations
 - **Consistent**: Standardized approach across different LLMs
-- **Scalable**: Handles increasing complexity gracefully  
+- **Scalable**: Handles increasing complexity gracefully
 - **Maintainable**: Clear separation of concerns and interfaces
 - **Secure**: Controlled access to underlying systems
 
@@ -137,7 +137,7 @@ Output: Tailored exploration based on codebase patterns
 Input: "Where is the user authentication handled?"
 Intent Layer Processing:
   - Intent: SEARCH
-  - Target: "user authentication"  
+  - Target: "user authentication"
   - Scope: PROJECT
   - Strategy: SimpleSearchStrategy
 
@@ -170,7 +170,7 @@ Input: "Are there any SQL injection vulnerabilities?"
 Intent Layer Processing:
   - Intent: ANALYZE
   - Target: "SQL injection vulnerabilities"
-  - Scope: PROJECT  
+  - Scope: PROJECT
   - Strategy: AnalysisWorkflowStrategy
 
 Output:

@@ -19,7 +19,8 @@ theme:
   name: material
   # Logo and Branding
   logo: assets/knitli_symbol_off-white_RGB.svg
-  favicon: assets/favicon.ico
+  favicon: assets/favicon-32x32.png
+  custom_dir: overrides
 
   # Language and Internationalization
   language: en
@@ -28,6 +29,7 @@ theme:
     # Navigation Features
     - navigation.instant # Instant loading
     - navigation.instant.prefetch # Prefetch on hover
+    - navigation.instant.progress # Instant loading progress
     - navigation.tracking # Track URL fragments
     - navigation.tabs # Top-level navigation tabs
     - navigation.tabs.sticky # Sticky navigation tabs
@@ -58,16 +60,16 @@ theme:
     # Light mode - warm and human-centered
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep orange
-      accent: cyan
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     # Dark mode - sophisticated aubergine theme
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep orange
-      accent: cyan
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -78,88 +80,17 @@ theme:
   # Custom CSS and JavaScript
   custom_css: assets/extra.css
 # Navigation Structure - Developer-First Architecture
-nav:
-  # CORE: Essential for getting started
-  - Home: index.md
-  - Getting Started:
-      - Quick Setup: getting-started/quick-start.md
-      - Installation: getting-started/installation.md
-      - Configuration: getting-started/configuration.md
-      - Troubleshooting: getting-started/troubleshooting.md
-  # USE: How to integrate and use CodeWeaver
-  - User Guide:
-      - How It Works: user-guide/how-it-works.md
-      - Claude Desktop Integration: user-guide/claude-desktop.md
-      - Development Workflows: user-guide/workflows.md
-      - Performance & Optimization: user-guide/performance.md
-  # BUILD: For developers extending CodeWeaver
-  - Extension Development:
-      - Architecture Overview: architecture/index.md
-      - Plugin System: architecture/plugins.md
-      - Creating Extensions:
-          - Embedding Providers: extensions/embedding-providers.md
-          - Vector Backends: extensions/vector-backends.md
-          - Data Sources: extensions/data-sources.md
-          - Service Providers: extensions/services.md
-      - Development Guide:
-          - Plugin Protocols: extensions/protocols.md
-          - Testing & Validation: extensions/testing.md
-          - Performance Guidelines: extensions/performance.md
-  # CONFIGURE: Advanced configuration and deployment
-  - Configuration:
-      - Environment Variables: configuration/environment.md
-      - Provider Setup: configuration/providers.md
-      - Backend Configuration: configuration/backends.md
-      - Service Configuration: configuration/services.md
-      - Enterprise Deployment: configuration/enterprise.md
-  # REFERENCE: Technical documentation and API
-  - API Reference:
-      - Overview: api/index.md
-      - Core Modules:
-          - Main: api/main.md
-          - Configuration: api/config.md
-          - Server: api/server.md
-      - Architecture:
-          - Backends: api/backends/index.md
-          - Factories: api/factories/index.md
-          - Services: api/services/index.md
-          - Sources: api/sources/index.md
-          - Providers: api/providers/index.md
-          - Middleware: api/middleware/index.md
-      - Command Line:
-          - CLI: api/cli/index.md
-          - Commands: api/commands/index.md
-      - Type System: api/cw_types/index.md
-      - Intent Layer: api/intent/index.md
-      - Utilities:
-          - Helpers: api/utils/index.md
-          - Testing: api/testing/index.md
-          - Constants: api/language_constants/index.md
-  # REFERENCE: Quick lookup and patterns
-  - Reference:
-      - Usage Patterns: reference/usage-patterns.md
-      - Language Support: reference/language-support.md
-      - Provider Comparison: reference/provider-comparison.md
-      - Backend Comparison: reference/backend-comparison.md
-      - Error Codes: reference/error-codes.md
-      - Performance Benchmarks: reference/benchmarks.md
-      - Changelog: reference/changelog.md
-  # COMMUNITY: Support and contribution
-  - Community:
-      - Support: community/support.md
-      - Contributing: community/contributing.md
-      - Migration Guide: migration/traditional-to-intent.md
-      - Code of Conduct: community/code-of-conduct.md
-      - Security: community/security.md
-      - License: community/license.md
+# NOTE: For nav see docs/.nav.yml
 # Plugins Configuration
 plugins:
+  # Generate API documentation (gen-files creates virtual API pages for mkdocstrings)
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
   # Search
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
-  - gen-files:
-      scripts:
-        - scripts/gen_ref_pages.py # (2)!
+
   # Automatic API documentation generation
   - mkdocstrings:
       handlers:
@@ -188,7 +119,7 @@ plugins:
               - "!^_[^_]" # Hide private members except __special__
             # Rendering settings
             group_by_category: true
-            heading_level: 2
+            heading_level: 4
   # Git integration for last updated dates
   - git-revision-date-localized:
       enabled: !ENV [CI, false]
@@ -198,10 +129,9 @@ plugins:
       locale: en
       strict: false
   # Auto-generated navigation
-  - awesome-pages:
-      filename: .pages
-      collapse_single_pages: true
-      strict: false
+  - awesome-nav
+  - meta:
+      enabled: true
   # Minification for performance
   - minify:
       minify_html: true
@@ -210,6 +140,11 @@ plugins:
       htmlmin_opts:
         remove_comments: true
       cache_safe: true
+      js_files:
+        - assets/format_blocks.js
+        - assets/sort_tables.js
+      css_files:
+        - assets/extra.css
   # Social cards generation - Knitli branded
   - social:
       enabled: !ENV [CI, false]
@@ -219,8 +154,10 @@ plugins:
         font_family: Inter
   # Tags for content organization
   - tags:
-      tags: true
       enabled: true
+      tags_slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   # RSS feed generation
   - rss:
       enabled: !ENV [CI, false]
@@ -246,13 +183,11 @@ markdown_extensions:
       toc_depth: 3
   - tables # Tables
   # PyMdown Extensions
-  - pymdownx.arithmatex: # Math notation
-      generic: true
   - pymdownx.betterem: # Better emphasis
       smart_enable: all
   - pymdownx.caret # Insertions and superscript
   - pymdownx.details # Collapsible details
-  - pymdownx.emoji: # Emoji support
+  - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight: # Syntax highlighting
@@ -266,7 +201,7 @@ markdown_extensions:
   - pymdownx.keys # Keyboard keys
   - pymdownx.mark # Highlighting text
   - pymdownx.smartsymbols # Smart symbols
-  - pymdownx.snippets: # Include snippets
+  - pymdownx.snippets # Include snippets
     # auto_append:
     #- includes/abbreviations.md
     # check_paths: true
@@ -350,8 +285,8 @@ extra_css:
   - assets/extra.css
 extra_javascript:
   - assets/format_blocks.js
-#  - assets/extra.js
-#  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - assets/sort_tables.js
+  - https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js
 # Development server configuration
 dev_addr: '127.0.0.1:8000'
 use_directory_urls: true

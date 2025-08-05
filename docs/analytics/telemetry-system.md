@@ -20,7 +20,7 @@ graph TB
     C --> D[Local Event Queue]
     D --> E[Batch Processing]
     E --> F[PostHog Analytics]
-    
+
     G[User Opt-Out] --> B
     H[Privacy Filters] --> C
     I[Hash Functions] --> C
@@ -61,13 +61,13 @@ All data passes through comprehensive sanitization:
 
 ```python
 # File path sanitization
-"/Users/dev/secret-project/src/auth.py" → "path_a1b2c3d4.py"
+"/Users/dev/secret-project/src/auth.py" :material-arrow-right-circle: "path_a1b2c3d4.py"
 
 # Repository name hashing
-"company/proprietary-repo" → "repo_e5f6g7h8" 
+"company/proprietary-repo" :material-arrow-right-circle: "repo_e5f6g7h8"
 
 # Query content removal
-"find authentication in user.py" → "query_type:semantic, complexity:medium"
+"find authentication in user.py" :material-arrow-right-circle: "query_type:semantic, complexity:medium"
 ```
 
 ## Privacy Protection Mechanisms
@@ -94,19 +94,19 @@ def hash_file_path(file_path: str) -> str:
     """Convert file paths to privacy-safe identifiers."""
     path_parts = Path(file_path).parts
     hashed_parts = []
-    
+
     for part in path_parts[:-1]:  # Hash directories
         if part not in SAFE_DIRS:
             hashed_parts.append(f"dir_{hash_string(part)[:8]}")
         else:
             hashed_parts.append(part)
-    
+
     # Preserve file extension for language analysis
     filename = path_parts[-1]
     name, ext = os.path.splitext(filename)
     hashed_name = f"file_{hash_string(name)[:8]}{ext}"
     hashed_parts.append(hashed_name)
-    
+
     return "/".join(hashed_parts)
 ```
 
@@ -353,7 +353,7 @@ Example privacy info response:
     "sanitization_enabled": true,
     "data_collected": [
         "query_patterns",
-        "performance_metrics", 
+        "performance_metrics",
         "error_categories",
         "language_usage"
     ],

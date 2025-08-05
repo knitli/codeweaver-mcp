@@ -659,7 +659,7 @@ grep -oE "CW-[A-Z]+-E-[0-9]{3}" codeweaver.log | sort | uniq -c
 
 ## Next Steps
 
-- **[Troubleshooting Guide →](../getting-started/troubleshooting.md)**: Step-by-step problem resolution
-- **[Configuration Reference →](../getting-started/configuration.md)**: Prevent configuration errors
-- **[Performance Optimization →](./performance-benchmarks.md)**: Optimize for error-free operation
-- **[Monitoring Setup →](../services/monitoring.md)**: Implement error tracking
+- **[Troubleshooting Guide :material-arrow-right-circle:](../getting-started/troubleshooting.md)**: Step-by-step problem resolution
+- **[Configuration Reference :material-arrow-right-circle:](../getting-started/configuration.md)**: Prevent configuration errors
+- **[Performance Optimization :material-arrow-right-circle:](./performance-benchmarks.md)**: Optimize for error-free operation
+- **[Monitoring Setup :material-arrow-right-circle:](../services/monitoring.md)**: Implement error tracking

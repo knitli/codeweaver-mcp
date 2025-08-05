@@ -25,7 +25,7 @@ CodeWeaver operates as a **Model Context Protocol (MCP) server** that sits betwe
 ```plaintext
 Developer Question: "Where is user authentication handled?"
 ↓
-Manual Process: Search files → Read code → Understand context → Find related files
+Manual Process: Search files :material-arrow-right-circle: Read code :material-arrow-right-circle: Understand context :material-arrow-right-circle: Find related files
 ↓
 Time: 10-30 minutes of manual exploration
 ```
@@ -49,7 +49,7 @@ graph LR
     B --> C[Vector Database]
     B --> D[AI Assistant]
     D --> E[Developer Queries]
-    
+
     F[ast-grep] --> B
     G[Embedding Provider] --> B
 ```
@@ -62,7 +62,7 @@ graph LR
 - Fallback parsing for unsupported languages
 - Configurable chunk sizes (50-1500 characters)
 
-**🧠 Semantic Understanding** 
+**🧠 Semantic Understanding**
 - Converts code chunks into high-dimensional embeddings
 - Supports multiple providers: Voyage AI, OpenAI, Cohere, HuggingFace
 - Enables semantic similarity searches beyond keyword matching
@@ -148,7 +148,7 @@ All languages benefit from semantic search and basic structural parsing:
 
 ### Indexing Performance
 - **Small Projects** (<1k files): 1-3 minutes
-- **Medium Projects** (1k-10k files): 5-15 minutes  
+- **Medium Projects** (1k-10k files): 5-15 minutes
 - **Large Projects** (10k+ files): 15+ minutes (depends on file size)
 
 ### Search Performance

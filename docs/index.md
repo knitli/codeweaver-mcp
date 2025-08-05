@@ -29,7 +29,7 @@ CodeWeaver transforms how AI assistants interact with your code:
     - Find related code patterns and architectural decisions
     - Accelerate debugging and feature development
 
-    → [Quick Setup](getting-started/quick-start.md)
+    :material-arrow-right-circle: [Quick Setup](getting-started/quick-start.md)
 
 === "Extension Developers"
     **Build custom integrations and providers**
@@ -39,7 +39,7 @@ CodeWeaver transforms how AI assistants interact with your code:
     - Create specialized data sources and processing pipelines
     - Leverage protocol-based plugin architecture
 
-    → [Extension Development](architecture/index.md)
+    :material-arrow-right-circle: [Extension Development](architecture/index.md)
 
 ## How It Works
 
@@ -66,7 +66,7 @@ Once configured, AI assistants can explore your codebase naturally:
 - "Show me how error handling works"
 - "What are the main API endpoints?"
 
-→ [Complete Setup Guide](getting-started/quick-start.md)
+:material-arrow-right-circle: [Complete Setup Guide](getting-started/quick-start.md)
 
 ## Documentation
 
@@ -135,25 +135,25 @@ CodeWeaver's plugin architecture enables:
 - **Semantic + structural search**: Combines meaning-based and pattern-based code discovery
 - **Auto-scaling indexing**: Intelligent background processing with caching
 
-→ [Architecture Overview](architecture/index.md)
+:material-arrow-right-circle: [Architecture Overview](architecture/index.md)
 
 ## Common Use Cases
 
-**Code Exploration**: "Find all authentication functions" → Semantic search across auth-related code patterns
+**Code Exploration**: "Find all authentication functions" :material-arrow-right-circle: Semantic search across auth-related code patterns
 
-**Architecture Analysis**: "How does error handling work?" → Structural analysis of exception patterns and error flows  
+**Architecture Analysis**: "How does error handling work?" :material-arrow-right-circle: Structural analysis of exception patterns and error flows
 
-**Pattern Discovery**: "Show me API endpoints" → Combined search for route definitions, handlers, and documentation
+**Pattern Discovery**: "Show me API endpoints" :material-arrow-right-circle: Combined search for route definitions, handlers, and documentation
 
-**Legacy Understanding**: "Explain the payment system" → Multi-file analysis connecting related components
+**Legacy Understanding**: "Explain the payment system" :material-arrow-right-circle: Multi-file analysis connecting related components
 
-**Security Review**: "Find potential security issues" → Pattern matching for common vulnerability patterns
+**Security Review**: "Find potential security issues" :material-arrow-right-circle: Pattern matching for common vulnerability patterns
 
 ## Requirements
 
 - **Python 3.11+** with `uv` package manager
 - **Embedding Provider**: Voyage AI, OpenAI, Cohere, or HuggingFace
-- **Vector Database**: Qdrant, Pinecone, Weaviate, or ChromaDB  
+- **Vector Database**: Qdrant, Pinecone, Weaviate, or ChromaDB
 - **AI Assistant**: Claude Desktop, or custom MCP client
 
 ## License

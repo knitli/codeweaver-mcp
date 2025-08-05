@@ -104,12 +104,12 @@ class DetailedHealthReport:
     success_rate: float
     error_count: int
     uptime: float
-    
+
     # Service-specific metrics
     performance_metrics: dict[str, float]
     resource_usage: dict[str, float]
     error_details: list[str]
-    
+
     # Operational metadata
     version: str
     configuration_hash: str
@@ -140,20 +140,20 @@ class ServiceHealthMonitor:
     async def _check_service_health(self, service: ServiceProvider) -> DetailedHealthReport:
         """Perform comprehensive health check on a service."""
         start_time = time.time()
-        
+
         try:
             # Basic health check
             basic_health = await service.health_check()
-            
+
             # Performance metrics
             performance_metrics = await self._collect_performance_metrics(service)
-            
+
             # Resource usage
             resource_usage = await self._collect_resource_usage(service)
-            
+
             # Error analysis
             error_details = await self._analyze_recent_errors(service)
-            
+
             return DetailedHealthReport(
                 service_name=service.service_name,
                 status=basic_health.status,
@@ -170,7 +170,7 @@ class ServiceHealthMonitor:
                 last_restart=service.last_restart_time,
                 dependencies=service.dependencies
             )
-            
+
         except Exception as e:
             return DetailedHealthReport(
                 service_name=service.service_name,
@@ -205,14 +205,14 @@ Each service type collects specialized performance metrics:
         average_chunk_size: float
         ast_parsing_success_rate: float
         fallback_parsing_usage: float
-        
+
         # Performance metrics
         processing_latency_p50: float
         processing_latency_p95: float
         processing_latency_p99: float
         memory_usage_per_file: float
         cpu_usage_percentage: float
-        
+
         # Quality metrics
         chunk_quality_score: float
         semantic_coherence_score: float
@@ -227,13 +227,13 @@ Each service type collects specialized performance metrics:
         directories_scanned_per_second: float
         gitignore_rules_applied: int
         custom_filters_applied: int
-        
+
         # Performance metrics
         scanning_latency_p50: float
         scanning_latency_p95: float
         parallel_scanning_efficiency: float
         cache_hit_rate: float
-        
+
         # Quality metrics
         false_positive_rate: float
         false_negative_rate: float
@@ -248,12 +248,12 @@ Each service type collects specialized performance metrics:
         tokens_processed_per_second: float
         batch_processing_efficiency: float
         provider_response_time: float
-        
+
         # Quality metrics
         embedding_quality_score: float
         semantic_consistency_score: float
         provider_availability: float
-        
+
         # Resource metrics
         api_calls_per_minute: float
         token_usage_rate: float
@@ -268,13 +268,13 @@ Each service type collects specialized performance metrics:
         storage_utilization: float
         index_size_mb: float
         storage_compression_ratio: float
-        
+
         # Query metrics
         queries_per_second: float
         query_latency_p50: float
         query_latency_p95: float
         query_accuracy: float
-        
+
         # Backend metrics
         backend_availability: float
         connection_pool_usage: float
@@ -290,19 +290,19 @@ class SystemMetrics:
     services_healthy_count: int
     services_degraded_count: int
     services_unhealthy_count: int
-    
+
     # Performance aggregates
     total_requests_per_second: float
     average_response_time: float
     total_error_rate: float
     cache_hit_rate_overall: float
-    
+
     # Resource utilization
     total_memory_usage_mb: float
     total_cpu_usage_percentage: float
     disk_usage_percentage: float
     network_io_rate: float
-    
+
     # Business metrics
     codebases_indexed_today: int
     intent_queries_processed_today: int
@@ -321,13 +321,13 @@ alerting:
     - type: slack
       webhook_url: "${SLACK_WEBHOOK_URL}"
       channel: "#codeweaver-alerts"
-    
+
     - type: email
       smtp_host: "${SMTP_HOST}"
       recipients:
         - "ops@company.com"
         - "codeweaver-team@company.com"
-    
+
     - type: pagerduty
       integration_key: "${PAGERDUTY_KEY}"
       severity_mapping:
@@ -341,29 +341,29 @@ alerting:
       condition: "service.status == 'unhealthy'"
       severity: "critical"
       threshold_duration: "2m"
-      
+
     - name: "Service Degraded"
       condition: "service.status == 'degraded'"
       severity: "warning"
       threshold_duration: "5m"
-    
+
     # Performance alerts
     - name: "High Response Time"
       condition: "service.response_time > 5.0"
       severity: "warning"
       threshold_duration: "3m"
-    
+
     - name: "Low Success Rate"
       condition: "service.success_rate < 0.95"
       severity: "critical"
       threshold_duration: "1m"
-    
+
     # Resource alerts
     - name: "High Memory Usage"
       condition: "system.memory_usage > 85%"
       severity: "warning"
       threshold_duration: "5m"
-    
+
     - name: "High CPU Usage"
       condition: "system.cpu_usage > 90%"
       severity: "critical"
@@ -381,45 +381,45 @@ class SmartAlertManager:
 
     async def process_alert(self, alert: Alert):
         """Process an alert with smart filtering and escalation."""
-        
+
         # Check if alert should be suppressed
         if await self._should_suppress_alert(alert):
             logger.info("Alert suppressed: %s", alert.name)
             return
-        
+
         # Apply alert grouping
         grouped_alert = await self._group_with_related_alerts(alert)
-        
+
         # Determine escalation level
         escalation_level = await self._calculate_escalation_level(grouped_alert)
-        
+
         # Send notifications
         await self._send_notifications(grouped_alert, escalation_level)
-        
+
         # Update alert history
         await self._update_alert_history(grouped_alert)
 
     async def _should_suppress_alert(self, alert: Alert) -> bool:
         """Determine if alert should be suppressed based on rules."""
-        
+
         # Check maintenance windows
         if await self._is_in_maintenance_window(alert.service_name):
             return True
-        
+
         # Check alert frequency limits
         if await self._exceeds_frequency_limit(alert):
             return True
-        
+
         # Check dependency-based suppression
         if await self._has_upstream_failure(alert):
             return True
-        
+
         return False
 
     async def _group_with_related_alerts(self, alert: Alert) -> GroupedAlert:
         """Group related alerts to reduce noise."""
         related_alerts = await self._find_related_alerts(alert)
-        
+
         if related_alerts:
             return GroupedAlert(
                 primary_alert=alert,
@@ -427,7 +427,7 @@ class SmartAlertManager:
                 group_id=self._generate_group_id(alert, related_alerts),
                 severity=max(a.severity for a in [alert] + related_alerts)
             )
-        
+
         return GroupedAlert(primary_alert=alert, related_alerts=[], group_id=alert.id, severity=alert.severity)
 ```
 
@@ -447,7 +447,7 @@ interface HealthDashboardData {
     uptime: number;
     version: string;
   };
-  
+
   // Service health grid
   services: Array<{
     name: string;
@@ -457,7 +457,7 @@ interface HealthDashboardData {
     lastCheck: Date;
     trend: 'improving' | 'stable' | 'degrading';
   }>;
-  
+
   // Key metrics
   keyMetrics: {
     totalRequestsPerSecond: number;
@@ -465,7 +465,7 @@ interface HealthDashboardData {
     errorRate: number;
     cacheHitRate: number;
   };
-  
+
   // Active alerts
   activeAlerts: Array<{
     id: string;
@@ -474,7 +474,7 @@ interface HealthDashboardData {
     timestamp: Date;
     service: string;
   }>;
-  
+
   // Resource utilization
   resources: {
     memory: { used: number; total: number; percentage: number };
@@ -497,7 +497,7 @@ interface PerformanceDashboardData {
     errorRate: number[];
     resourceUsage: number[];
   };
-  
+
   // Service performance breakdown
   servicePerformance: Array<{
     service: string;
@@ -508,7 +508,7 @@ interface PerformanceDashboardData {
     errorRate: number;
     trend: 'improving' | 'stable' | 'degrading';
   }>;
-  
+
   // Performance insights
   insights: Array<{
     type: 'bottleneck' | 'optimization' | 'anomaly';
@@ -517,7 +517,7 @@ interface PerformanceDashboardData {
     impact: 'high' | 'medium' | 'low';
     recommendation: string;
   }>;
-  
+
   // SLA compliance
   slaCompliance: {
     availability: { target: number; actual: number; status: 'met' | 'missed' };
@@ -542,33 +542,33 @@ class PrometheusMetricsExporter:
             'Total number of intent queries processed',
             ['intent_type', 'status']
         )
-        
+
         self.service_requests_total = Counter(
             'codeweaver_service_requests_total',
             'Total number of service requests',
             ['service', 'method', 'status']
         )
-        
+
         # Service histograms
         self.service_response_time = Histogram(
             'codeweaver_service_response_time_seconds',
             'Service response time distribution',
             ['service', 'method']
         )
-        
+
         self.intent_processing_time = Histogram(
             'codeweaver_intent_processing_time_seconds',
             'Intent processing time distribution',
             ['intent_type']
         )
-        
+
         # Service gauges
         self.service_health_status = Gauge(
             'codeweaver_service_health_status',
             'Service health status (1=healthy, 0=unhealthy)',
             ['service']
         )
-        
+
         self.active_connections = Gauge(
             'codeweaver_active_connections',
             'Number of active connections',
@@ -578,17 +578,17 @@ class PrometheusMetricsExporter:
     async def export_service_metrics(self, health_report: DetailedHealthReport):
         """Export service metrics to Prometheus."""
         service_name = health_report.service_name
-        
+
         # Update health status
         health_value = 1.0 if health_report.status == HealthStatus.HEALTHY else 0.0
         self.service_health_status.labels(service=service_name).set(health_value)
-        
+
         # Update response time
         self.service_response_time.labels(
             service=service_name,
             method='health_check'
         ).observe(health_report.response_time)
-        
+
         # Update request counters
         status = 'success' if health_report.status == HealthStatus.HEALTHY else 'error'
         self.service_requests_total.labels(
@@ -609,13 +609,13 @@ class OpenTelemetryMonitoring:
     def __init__(self):
         self.tracer = trace.get_tracer(__name__)
         self.meter = metrics.get_meter(__name__)
-        
+
         # Create metrics instruments
         self.intent_counter = self.meter.create_counter(
             "codeweaver.intent.processed",
             description="Number of intents processed"
         )
-        
+
         self.service_latency = self.meter.create_histogram(
             "codeweaver.service.latency",
             description="Service operation latency",
@@ -627,27 +627,27 @@ class OpenTelemetryMonitoring:
         with self.tracer.start_as_current_span("process_intent") as span:
             span.set_attribute("intent.type", intent_type)
             span.set_attribute("intent.query", intent[:100])  # Truncate for privacy
-            
+
             try:
                 # Process intent
                 result = await self._process_intent_impl(intent, intent_type)
-                
+
                 span.set_attribute("intent.status", "success")
                 span.set_attribute("intent.result_count", len(result.items))
-                
+
                 # Record metrics
                 self.intent_counter.add(1, {"type": intent_type, "status": "success"})
-                
+
                 return result
-                
+
             except Exception as e:
                 span.set_attribute("intent.status", "error")
                 span.set_attribute("intent.error", str(e))
                 span.record_exception(e)
-                
+
                 # Record error metrics
                 self.intent_counter.add(1, {"type": intent_type, "status": "error"})
-                
+
                 raise e
 ```
 
@@ -688,17 +688,17 @@ monitoring:
     interval: 15s
     timeout: 5s
     retries: 2
-    
+
   metrics_collection:
     interval: 10s
     retention: 7d
     aggregation_interval: 1m
-    
+
   alerting:
     response_time_threshold: 2s
     error_rate_threshold: 1%
     health_check_failures: 3
-    
+
   dashboards:
     refresh_interval: 5s
     auto_refresh: true
@@ -729,4 +729,4 @@ monitoring:
 
 ---
 
-**Next:** [Health Checks & Auto-Recovery →](health-recovery.md)
+**Next:** [Health Checks & Auto-Recovery :material-arrow-right-circle:](health-recovery.md)

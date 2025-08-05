@@ -374,17 +374,17 @@ from mcp_client import MCPClient
 
 async def analyze_codebase():
     client = MCPClient("codeweaver")
-    
+
     # Sequential analysis workflow
     auth_functions = await client.call_tool("process_intent", {
         "intent": "Find all authentication functions"
     })
-    
+
     security_analysis = await client.call_tool("process_intent", {
         "intent": "Analyze these authentication functions for security vulnerabilities",
         "context": {"previous_results": auth_functions["results"]}
     })
-    
+
     return security_analysis
 
 # Run analysis
@@ -505,4 +505,4 @@ specific_analysis = await process_intent(
 
 ---
 
-**Ready to explore intent patterns?** → [Intent Patterns Library](../../intent-guide/patterns.md)
+**Ready to explore intent patterns?** :material-arrow-right-circle: [Intent Patterns Library](../../intent-guide/patterns.md)

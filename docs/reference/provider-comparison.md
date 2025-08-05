@@ -462,7 +462,7 @@ Data Migration: Full re-indexing required
 
 ## Next Steps
 
-- **[Complete Configuration →](../getting-started/configuration.md)**: Set up your chosen providers
-- **[Troubleshooting Guide →](../getting-started/troubleshooting.md)**: Resolve common provider issues
-- **[Performance Optimization →](../user-guide/performance.md)**: Fine-tune your setup
-- **[Language Support →](./language-support.md)**: Understand language-specific features
+- **[Complete Configuration :material-arrow-right-circle:](../getting-started/configuration.md)**: Set up your chosen providers
+- **[Troubleshooting Guide :material-arrow-right-circle:](../getting-started/troubleshooting.md)**: Resolve common provider issues
+- **[Performance Optimization :material-arrow-right-circle:](../user-guide/performance.md)**: Fine-tune your setup
+- **[Language Support :material-arrow-right-circle:](./language-support.md)**: Understand language-specific features

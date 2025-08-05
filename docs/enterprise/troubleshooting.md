@@ -10,17 +10,17 @@ This comprehensive troubleshooting guide covers common issues, debugging procedu
 ┌─────────────────────────────────────────────────────────────┐
 │                 Troubleshooting Process                     │
 │                                                             │
-│  1. Issue Identification    →    2. Information Gathering  │
+│  1. Issue Identification    :material-arrow-right-circle:    2. Information Gathering  │
 │     • Symptoms Analysis           • Logs Collection        │
 │     • Impact Assessment           • Metrics Review         │
 │     • Scope Definition            • Environment Check      │
 │                                                             │
-│  3. Root Cause Analysis     →    4. Solution Implementation│
+│  3. Root Cause Analysis     :material-arrow-right-circle:    4. Solution Implementation│
 │     • Hypothesis Testing          • Fix Application        │
 │     • System Investigation        • Validation             │
 │     • Pattern Recognition         • Monitoring            │
 │                                                             │
-│  5. Documentation          →     6. Prevention             │
+│  5. Documentation          :material-arrow-right-circle:     6. Prevention             │
 │     • Incident Recording          • Process Improvement    │
 │     • Knowledge Base Update       • Monitoring Enhancement │
 │     • Lessons Learned             • Training Updates       │
@@ -60,7 +60,7 @@ kubectl logs -l app=codeweaver --tail=100 | grep "search"
    ```bash
    # Check Qdrant performance
    curl -s "http://qdrant:6333/metrics" | grep -E "(search_time|index_time)"
-   
+
    # Solution: Optimize collection configuration
    curl -X PUT "http://qdrant:6333/collections/codeweaver/config" \
         -H "Content-Type: application/json" \
@@ -81,7 +81,7 @@ kubectl logs -l app=codeweaver --tail=100 | grep "search"
    r = redis.Redis(host='redis', port=6379)
    info = r.info()
    print(f"Cache hit rate: {info['keyspace_hits'] / (info['keyspace_hits'] + info['keyspace_misses']):.2%}")
-   
+
    # Solution: Implement cache warming
    # See cache warming implementation in scalability.md
    ```
@@ -94,7 +94,7 @@ kubectl logs -l app=codeweaver --tail=100 | grep "search"
         -H "Authorization: Bearer $VOYAGE_API_KEY" \
         -H "Content-Type: application/json" \
         -d '{"input": ["test query"], "model": "voyage-code-2"}'
-   
+
    # Solution: Implement local embedding cache or use batch processing
    ```
 
@@ -128,7 +128,7 @@ go tool pprof heap.prof
    ```bash
    # Check Qdrant memory usage
    curl -s "http://qdrant:6333/metrics" | grep memory
-   
+
    # Solution: Configure memory limits and optimize collections
    curl -X PUT "http://qdrant:6333/collections/codeweaver/config" \
         -H "Content-Type: application/json" \
@@ -147,7 +147,7 @@ go tool pprof heap.prof
    ```bash
    # Check Redis memory usage
    redis-cli info memory
-   
+
    # Solution: Configure memory limits and eviction policy
    redis-cli config set maxmemory 2gb
    redis-cli config set maxmemory-policy allkeys-lru
@@ -158,7 +158,7 @@ go tool pprof heap.prof
    # Monitor memory growth over time
    import psutil
    import time
-   
+
    process = psutil.Process()
    while True:
        memory_mb = process.memory_info().rss / 1024 / 1024
@@ -195,7 +195,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://codeweaver:8080/api/v1/user/permi
    ```bash
    # Check token expiration
    echo $TOKEN | base64 -d | jq '.exp'
-   
+
    # Solution: Implement token refresh mechanism
    curl -X POST "http://auth-service:8080/refresh" \
         -H "Content-Type: application/json" \
@@ -207,7 +207,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://codeweaver:8080/api/v1/user/permi
    # Check user roles and permissions
    kubectl get rolebindings -n codeweaver
    kubectl describe rolebinding codeweaver-users -n codeweaver
-   
+
    # Solution: Update role bindings
    kubectl apply -f - <<EOF
    apiVersion: rbac.authorization.k8s.io/v1
@@ -257,7 +257,7 @@ kubectl exec -it codeweaver-pod -- nc -zv qdrant 6333
    ```python
    # Monitor connection pool usage
    from qdrant_client import QdrantClient
-   
+
    client = QdrantClient(url="http://qdrant:6333")
    # Configure connection limits
    client._client.timeout = 60
@@ -268,7 +268,7 @@ kubectl exec -it codeweaver-pod -- nc -zv qdrant 6333
    ```bash
    # Check Qdrant performance metrics
    curl -s "http://qdrant:6333/metrics" | grep -E "(duration|throughput)"
-   
+
    # Solution: Optimize Qdrant configuration
    # See qdrant-performance.yaml in scalability.md
    ```
@@ -277,7 +277,7 @@ kubectl exec -it codeweaver-pod -- nc -zv qdrant 6333
    ```bash
    # Check network policies
    kubectl get networkpolicies -n codeweaver
-   
+
    # Test inter-pod connectivity
    kubectl exec -it codeweaver-pod -- ping qdrant-service
    ```
@@ -312,7 +312,7 @@ openssl s_client -connect codeweaver.company.com:443 -servername codeweaver.comp
    ```bash
    # Check pod health
    kubectl get pods -l app=codeweaver -o wide
-   
+
    # Fix unhealthy pods
    kubectl delete pod -l app=codeweaver --field-selector status.phase=Failed
    ```
@@ -321,7 +321,7 @@ openssl s_client -connect codeweaver.company.com:443 -servername codeweaver.comp
    ```bash
    # Check certificate expiration
    echo | openssl s_client -servername codeweaver.company.com -connect codeweaver.company.com:443 2>/dev/null | openssl x509 -noout -dates
-   
+
    # Renew certificate with cert-manager
    kubectl delete certificate codeweaver-tls -n codeweaver
    ```
@@ -356,7 +356,7 @@ kubectl describe resourcequota -n codeweaver
    ```bash
    # Check node capacity
    kubectl describe nodes | grep -E "(Name:|Allocatable:|Allocated resources:)" -A 5
-   
+
    # Solution: Scale nodes or adjust resource requests
    kubectl scale deployment codeweaver --replicas=2 -n codeweaver
    ```
@@ -365,10 +365,10 @@ kubectl describe resourcequota -n codeweaver
    ```bash
    # Check PV status
    kubectl get pv,pvc -n codeweaver
-   
+
    # Check storage class
    kubectl get storageclass
-   
+
    # Solution: Fix PV binding issues
    kubectl patch pv pv-name -p '{"spec":{"claimRef":null}}'
    ```
@@ -461,7 +461,7 @@ echo "------------------"
 # Check Qdrant health
 if curl -f -s "$QDRANT_URL/health" >/dev/null 2>&1; then
     echo -e "${GREEN}✓ PASS${NC}: Qdrant health endpoint responding"
-    
+
     # Check collections
     COLLECTIONS=$(curl -s "$QDRANT_URL/collections" | jq -r '.result.collections | length' 2>/dev/null)
     if [ "$COLLECTIONS" -gt 0 ]; then
@@ -572,7 +572,7 @@ class PerformanceAnalyzer:
     def __init__(self, prometheus_url: str, time_range: str = "1h"):
         self.prometheus_url = prometheus_url
         self.time_range = time_range
-        
+
     def query_prometheus(self, query: str) -> Dict[str, Any]:
         """Query Prometheus and return results."""
         try:
@@ -585,12 +585,12 @@ class PerformanceAnalyzer:
         except Exception as e:
             print(f"Error querying Prometheus: {e}")
             return {}
-    
+
     def query_prometheus_range(self, query: str, step: str = "1m") -> Dict[str, Any]:
         """Query Prometheus range data."""
         end_time = datetime.utcnow()
         start_time = end_time - timedelta(hours=1)  # Default 1 hour range
-        
+
         try:
             response = requests.get(
                 f"{self.prometheus_url}/api/v1/query_range",
@@ -606,7 +606,7 @@ class PerformanceAnalyzer:
         except Exception as e:
             print(f"Error querying Prometheus range: {e}")
             return {}
-    
+
     def analyze_response_times(self) -> Dict[str, float]:
         """Analyze response time metrics."""
         queries = {
@@ -615,7 +615,7 @@ class PerformanceAnalyzer:
             "p99": "histogram_quantile(0.99, rate(codeweaver_request_duration_seconds_bucket[5m]))",
             "avg": "rate(codeweaver_request_duration_seconds_sum[5m]) / rate(codeweaver_request_duration_seconds_count[5m])"
         }
-        
+
         results = {}
         for percentile, query in queries.items():
             result = self.query_prometheus(query)
@@ -624,46 +624,46 @@ class PerformanceAnalyzer:
                 results[percentile] = value
             else:
                 results[percentile] = 0.0
-        
+
         return results
-    
+
     def analyze_search_performance(self) -> Dict[str, Any]:
         """Analyze search-specific performance."""
         search_latency = self.query_prometheus(
             "histogram_quantile(0.95, rate(codeweaver_search_latency_seconds_bucket[5m]))"
         )
-        
+
         search_volume = self.query_prometheus(
             "sum(rate(codeweaver_requests_total{endpoint=~'.*search.*'}[5m]))"
         )
-        
+
         result_counts = self.query_prometheus(
             "avg(codeweaver_search_results_count)"
         )
-        
+
         return {
             "latency_p95": float(search_latency.get("data", {}).get("result", [{}])[0].get("value", [0, 0])[1]),
             "search_rate": float(search_volume.get("data", {}).get("result", [{}])[0].get("value", [0, 0])[1]),
             "avg_result_count": float(result_counts.get("data", {}).get("result", [{}])[0].get("value", [0, 0])[1])
         }
-    
+
     def analyze_error_rates(self) -> Dict[str, float]:
         """Analyze error rates by endpoint."""
         total_requests = self.query_prometheus(
             "sum(rate(codeweaver_requests_total[5m])) by (endpoint)"
         )
-        
+
         error_requests = self.query_prometheus(
             "sum(rate(codeweaver_requests_total{status=~'5..'}[5m])) by (endpoint)"
         )
-        
+
         error_rates = {}
-        
+
         if total_requests.get("data", {}).get("result"):
             for result in total_requests["data"]["result"]:
                 endpoint = result["metric"]["endpoint"]
                 total_rate = float(result["value"][1])
-                
+
                 # Find corresponding error rate
                 error_rate = 0.0
                 if error_requests.get("data", {}).get("result"):
@@ -671,71 +671,71 @@ class PerformanceAnalyzer:
                         if error_result["metric"]["endpoint"] == endpoint:
                             error_rate = float(error_result["value"][1])
                             break
-                
+
                 error_rates[endpoint] = (error_rate / total_rate) if total_rate > 0 else 0.0
-        
+
         return error_rates
-    
+
     def analyze_cache_performance(self) -> Dict[str, float]:
         """Analyze cache performance metrics."""
         cache_hit_rate = self.query_prometheus(
             "avg(codeweaver_cache_hit_rate) by (cache_type)"
         )
-        
+
         cache_size = self.query_prometheus(
             "sum(codeweaver_cache_size_bytes) by (cache_type)"
         )
-        
+
         results = {"hit_rates": {}, "sizes": {}}
-        
+
         if cache_hit_rate.get("data", {}).get("result"):
             for result in cache_hit_rate["data"]["result"]:
                 cache_type = result["metric"]["cache_type"]
                 hit_rate = float(result["value"][1])
                 results["hit_rates"][cache_type] = hit_rate
-        
+
         if cache_size.get("data", {}).get("result"):
             for result in cache_size["data"]["result"]:
                 cache_type = result["metric"]["cache_type"]
                 size_bytes = float(result["value"][1])
                 results["sizes"][cache_type] = size_bytes / (1024 * 1024)  # Convert to MB
-        
+
         return results
-    
+
     def analyze_resource_usage(self) -> Dict[str, Dict[str, float]]:
         """Analyze resource usage patterns."""
         memory_query = "avg(codeweaver_memory_usage_bytes) by (component)"
         cpu_query = "avg(rate(codeweaver_cpu_usage_percent[5m])) by (component)"
-        
+
         memory_result = self.query_prometheus(memory_query)
         cpu_result = self.query_prometheus(cpu_query)
-        
+
         resources = {"memory": {}, "cpu": {}}
-        
+
         if memory_result.get("data", {}).get("result"):
             for result in memory_result["data"]["result"]:
                 component = result["metric"]["component"]
                 memory_gb = float(result["value"][1]) / (1024 ** 3)
                 resources["memory"][component] = memory_gb
-        
+
         if cpu_result.get("data", {}).get("result"):
             for result in cpu_result["data"]["result"]:
                 component = result["metric"]["component"]
                 cpu_percent = float(result["value"][1])
                 resources["cpu"][component] = cpu_percent
-        
+
         return resources
-    
+
     def generate_report(self) -> str:
         """Generate comprehensive performance report."""
         print("Collecting performance metrics...")
-        
+
         response_times = self.analyze_response_times()
         search_performance = self.analyze_search_performance()
         error_rates = self.analyze_error_rates()
         cache_performance = self.analyze_cache_performance()
         resource_usage = self.analyze_resource_usage()
-        
+
         report = f"""
 CodeWeaver Performance Analysis Report
 =====================================
@@ -757,45 +757,45 @@ Average Result Count: {search_performance['avg_result_count']:.1f}
 
 Error Rates by Endpoint
 ----------------------"""
-        
+
         for endpoint, rate in error_rates.items():
             report += f"\n{endpoint}: {rate:.3%}"
-        
+
         report += f"""
 
 Cache Performance
 ----------------"""
-        
+
         for cache_type, hit_rate in cache_performance['hit_rates'].items():
             size_mb = cache_performance['sizes'].get(cache_type, 0)
             report += f"\n{cache_type}: {hit_rate:.1%} hit rate, {size_mb:.1f} MB"
-        
+
         report += f"""
 
 Resource Usage
 -------------"""
-        
+
         for component, memory_gb in resource_usage['memory'].items():
             cpu_percent = resource_usage['cpu'].get(component, 0)
             report += f"\n{component}: {memory_gb:.2f} GB memory, {cpu_percent:.1f}% CPU"
-        
+
         # Add recommendations
         recommendations = []
-        
+
         if response_times['p95'] > 2.0:
             recommendations.append("• Response times are high - consider scaling or optimization")
-        
+
         if search_performance['latency_p95'] > 1.0:
             recommendations.append("• Search latency is high - review vector database performance")
-        
+
         for endpoint, rate in error_rates.items():
             if rate > 0.01:  # More than 1% error rate
                 recommendations.append(f"• High error rate for {endpoint}: {rate:.1%}")
-        
+
         for cache_type, hit_rate in cache_performance['hit_rates'].items():
             if hit_rate < 0.7:  # Less than 70% hit rate
                 recommendations.append(f"• Low cache hit rate for {cache_type}: {hit_rate:.1%}")
-        
+
         if recommendations:
             report += f"""
 
@@ -810,7 +810,7 @@ Recommendations
 --------------
 • All metrics within acceptable ranges
 • Continue monitoring for trends"""
-        
+
         return report
 
 def main():
@@ -820,12 +820,12 @@ def main():
     parser.add_argument("--time-range", default="1h",
                        help="Time range for analysis")
     parser.add_argument("--output", "-o", help="Output file (default: stdout)")
-    
+
     args = parser.parse_args()
-    
+
     analyzer = PerformanceAnalyzer(args.prometheus_url, args.time_range)
     report = analyzer.generate_report()
-    
+
     if args.output:
         with open(args.output, 'w') as f:
             f.write(report)
@@ -959,7 +959,7 @@ Error Rate: $(echo "scale=2; $TOTAL_ERRORS * 100 / $TOTAL_LOGS" | bc -l)%
 
 Key Issues Found:
 - Authentication failures: $AUTH_FAILURES
-- Database errors: $DB_ERRORS  
+- Database errors: $DB_ERRORS
 - Failed searches: $FAILED_SEARCHES
 
 Top Error Types:
@@ -1007,50 +1007,50 @@ echo
 
 backup_kubernetes_resources() {
     echo "1. Backing up Kubernetes resources..."
-    
+
     # Backup deployments
     kubectl get deployments -n $NAMESPACE -o yaml > "$BACKUP_PATH/deployments.yaml"
-    
+
     # Backup services
     kubectl get services -n $NAMESPACE -o yaml > "$BACKUP_PATH/services.yaml"
-    
+
     # Backup configmaps
     kubectl get configmaps -n $NAMESPACE -o yaml > "$BACKUP_PATH/configmaps.yaml"
-    
+
     # Backup secrets (be careful with sensitive data)
     kubectl get secrets -n $NAMESPACE -o yaml > "$BACKUP_PATH/secrets.yaml"
-    
+
     # Backup ingress
     kubectl get ingress -n $NAMESPACE -o yaml > "$BACKUP_PATH/ingress.yaml"
-    
+
     # Backup persistent volume claims
     kubectl get pvc -n $NAMESPACE -o yaml > "$BACKUP_PATH/pvc.yaml"
-    
+
     echo "  ✓ Kubernetes resources backed up"
 }
 
 backup_vector_database() {
     echo "2. Backing up vector database..."
-    
+
     # Get list of collections
     COLLECTIONS=$(curl -s "http://qdrant:6333/collections" | jq -r '.result.collections[].name')
-    
+
     for collection in $COLLECTIONS; do
         echo "  Backing up collection: $collection"
-        
+
         # Create snapshot
         SNAPSHOT_NAME="${collection}_${TIMESTAMP}"
         curl -X POST "http://qdrant:6333/collections/$collection/snapshots" \
              -H "Content-Type: application/json" \
              -d "{\"name\": \"$SNAPSHOT_NAME\"}"
-        
+
         # Wait for snapshot creation
         sleep 5
-        
+
         # Download snapshot
         curl -X GET "http://qdrant:6333/collections/$collection/snapshots/$SNAPSHOT_NAME/download" \
              -o "$BACKUP_PATH/${collection}.snapshot"
-        
+
         # Verify snapshot
         if [ -f "$BACKUP_PATH/${collection}.snapshot" ]; then
             echo "    ✓ Collection $collection backed up"
@@ -1062,19 +1062,19 @@ backup_vector_database() {
 
 backup_configuration() {
     echo "3. Backing up configuration files..."
-    
+
     # Backup application configuration
     if [ -d "/opt/codeweaver/config" ]; then
         tar -czf "$BACKUP_PATH/app-config.tar.gz" /opt/codeweaver/config/
         echo "  ✓ Application configuration backed up"
     fi
-    
+
     # Backup monitoring configuration
     if [ -d "/opt/monitoring/config" ]; then
         tar -czf "$BACKUP_PATH/monitoring-config.tar.gz" /opt/monitoring/config/
         echo "  ✓ Monitoring configuration backed up"
     fi
-    
+
     # Backup SSL certificates
     if [ -d "/etc/ssl/codeweaver" ]; then
         tar -czf "$BACKUP_PATH/ssl-certs.tar.gz" /etc/ssl/codeweaver/
@@ -1084,11 +1084,11 @@ backup_configuration() {
 
 backup_metrics_data() {
     echo "4. Backing up metrics data..."
-    
+
     # Export Prometheus data (last 7 days)
     END_TIME=$(date -u +%s)
     START_TIME=$((END_TIME - 604800))  # 7 days ago
-    
+
     # Export key metrics
     METRICS=(
         "codeweaver_requests_total"
@@ -1096,7 +1096,7 @@ backup_metrics_data() {
         "codeweaver_memory_usage_bytes"
         "codeweaver_cache_hit_rate"
     )
-    
+
     for metric in "${METRICS[@]}"; do
         curl -s "http://prometheus:9090/api/v1/query_range" \
              -d "query=$metric" \
@@ -1105,13 +1105,13 @@ backup_metrics_data() {
              -d "step=300" \
              --data-urlencode > "$BACKUP_PATH/${metric}.json"
     done
-    
+
     echo "  ✓ Metrics data exported"
 }
 
 create_manifest() {
     echo "5. Creating backup manifest..."
-    
+
     cat > "$BACKUP_PATH/manifest.json" << EOF
 {
     "backup_id": "$TIMESTAMP",
@@ -1127,50 +1127,50 @@ create_manifest() {
     "size_mb": $(du -sm "$BACKUP_PATH" | cut -f1)
 }
 EOF
-    
+
     echo "  ✓ Backup manifest created"
 }
 
 upload_to_s3() {
     echo "6. Uploading to S3..."
-    
+
     # Compress backup
     tar -czf "$BACKUP_DIR/codeweaver-backup-$TIMESTAMP.tar.gz" -C "$BACKUP_PATH" .
-    
+
     # Upload to S3
     aws s3 cp "$BACKUP_DIR/codeweaver-backup-$TIMESTAMP.tar.gz" \
         "s3://$S3_BUCKET/backups/codeweaver-backup-$TIMESTAMP.tar.gz"
-    
+
     # Upload manifest separately for easy listing
     aws s3 cp "$BACKUP_PATH/manifest.json" \
         "s3://$S3_BUCKET/manifests/manifest-$TIMESTAMP.json"
-    
+
     echo "  ✓ Backup uploaded to S3"
 }
 
 cleanup_old_backups() {
     echo "7. Cleaning up old backups..."
-    
+
     # Remove local backups older than retention period
     find "$BACKUP_DIR" -name "codeweaver-backup-*.tar.gz" -mtime +$RETENTION_DAYS -delete
     find "$BACKUP_DIR" -maxdepth 1 -type d -mtime +$RETENTION_DAYS -exec rm -rf {} +
-    
+
     # Remove old S3 backups
     aws s3 ls "s3://$S3_BUCKET/backups/" | while read -r line; do
         backup_date=$(echo $line | awk '{print $1}')
         backup_file=$(echo $line | awk '{print $4}')
-        
+
         # Calculate age in days
         backup_epoch=$(date -d "$backup_date" +%s)
         current_epoch=$(date +%s)
         age_days=$(((current_epoch - backup_epoch) / 86400))
-        
+
         if [ $age_days -gt $RETENTION_DAYS ]; then
             aws s3 rm "s3://$S3_BUCKET/backups/$backup_file"
             aws s3 rm "s3://$S3_BUCKET/manifests/manifest-${backup_file%.tar.gz}.json" 2>/dev/null || true
         fi
     done
-    
+
     echo "  ✓ Old backups cleaned up"
 }
 
@@ -1222,30 +1222,30 @@ mkdir -p "$RESTORE_DIR"
 
 download_backup() {
     echo "1. Downloading backup from S3..."
-    
+
     # Download backup archive
     aws s3 cp "s3://$S3_BUCKET/backups/codeweaver-backup-$BACKUP_ID.tar.gz" \
         "$RESTORE_DIR/codeweaver-backup-$BACKUP_ID.tar.gz"
-    
+
     # Extract backup
     tar -xzf "$RESTORE_DIR/codeweaver-backup-$BACKUP_ID.tar.gz" -C "$RESTORE_DIR"
-    
+
     # Download and verify manifest
     aws s3 cp "s3://$S3_BUCKET/manifests/manifest-$BACKUP_ID.json" \
         "$RESTORE_DIR/manifest.json"
-    
+
     echo "  ✓ Backup downloaded and extracted"
 }
 
 verify_backup() {
     echo "2. Verifying backup integrity..."
-    
+
     # Check manifest
     if [ ! -f "$RESTORE_DIR/manifest.json" ]; then
         echo "  ✗ Manifest file missing"
         exit 1
     fi
-    
+
     # Verify components
     COMPONENTS=$(jq -r '.components | keys[]' "$RESTORE_DIR/manifest.json")
     for component in $COMPONENTS; do
@@ -1284,34 +1284,34 @@ verify_backup() {
 
 prepare_environment() {
     echo "3. Preparing recovery environment..."
-    
+
     # Stop existing services
     kubectl scale deployment codeweaver --replicas=0 -n $NAMESPACE 2>/dev/null || true
     kubectl scale statefulset qdrant --replicas=0 -n $NAMESPACE 2>/dev/null || true
-    
+
     # Wait for pods to terminate
     echo "  Waiting for pods to terminate..."
     kubectl wait --for=delete pod -l app=codeweaver -n $NAMESPACE --timeout=300s 2>/dev/null || true
     kubectl wait --for=delete pod -l app=qdrant -n $NAMESPACE --timeout=300s 2>/dev/null || true
-    
+
     echo "  ✓ Environment prepared"
 }
 
 restore_configuration() {
     echo "4. Restoring configuration..."
-    
+
     # Restore application configuration
     if [ -f "$RESTORE_DIR/app-config.tar.gz" ]; then
         tar -xzf "$RESTORE_DIR/app-config.tar.gz" -C /
         echo "    ✓ Application configuration restored"
     fi
-    
+
     # Restore monitoring configuration
     if [ -f "$RESTORE_DIR/monitoring-config.tar.gz" ]; then
         tar -xzf "$RESTORE_DIR/monitoring-config.tar.gz" -C /
         echo "    ✓ Monitoring configuration restored"
     fi
-    
+
     # Restore SSL certificates
     if [ -f "$RESTORE_DIR/ssl-certs.tar.gz" ]; then
         tar -xzf "$RESTORE_DIR/ssl-certs.tar.gz" -C /
@@ -1321,34 +1321,34 @@ restore_configuration() {
 
 restore_kubernetes_resources() {
     echo "5. Restoring Kubernetes resources..."
-    
+
     # Restore ConfigMaps first
     if [ -f "$RESTORE_DIR/configmaps.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/configmaps.yaml"
         echo "    ✓ ConfigMaps restored"
     fi
-    
+
     # Restore Secrets
     if [ -f "$RESTORE_DIR/secrets.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/secrets.yaml"
         echo "    ✓ Secrets restored"
     fi
-    
+
     # Restore PVCs
     if [ -f "$RESTORE_DIR/pvc.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/pvc.yaml"
         echo "    ✓ Persistent Volume Claims restored"
     fi
-    
+
     # Wait for PVCs to be bound
     kubectl wait --for=condition=Bound pvc --all -n $NAMESPACE --timeout=300s
-    
+
     # Restore Services
     if [ -f "$RESTORE_DIR/services.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/services.yaml"
         echo "    ✓ Services restored"
     fi
-    
+
     # Restore Ingress
     if [ -f "$RESTORE_DIR/ingress.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/ingress.yaml"
@@ -1358,33 +1358,33 @@ restore_kubernetes_resources() {
 
 restore_vector_database() {
     echo "6. Restoring vector database..."
-    
+
     # Start Qdrant first
     kubectl scale statefulset qdrant --replicas=3 -n $NAMESPACE
     kubectl wait --for=condition=Ready pod -l app=qdrant -n $NAMESPACE --timeout=300s
-    
+
     # Wait for Qdrant to be healthy
     echo "  Waiting for Qdrant to be ready..."
     while ! curl -f -s "http://qdrant:6333/health" >/dev/null 2>&1; do
         sleep 5
     done
-    
+
     # Restore collections from snapshots
     for snapshot in "$RESTORE_DIR"/*.snapshot; do
         if [ -f "$snapshot" ]; then
             collection_name=$(basename "$snapshot" .snapshot)
             echo "    Restoring collection: $collection_name"
-            
+
             # Upload snapshot
             curl -X POST "http://qdrant:6333/collections/$collection_name/snapshots/upload" \
                  -F "snapshot=@$snapshot"
-            
+
             # Recover from snapshot
             snapshot_filename=$(basename "$snapshot")
             curl -X PUT "http://qdrant:6333/collections/$collection_name/snapshots/recover" \
                  -H "Content-Type: application/json" \
                  -d "{\"location\": \"$snapshot_filename\", \"priority\": \"snapshot\"}"
-            
+
             echo "      ✓ Collection $collection_name restored"
         fi
     done
@@ -1392,22 +1392,22 @@ restore_vector_database() {
 
 restore_application() {
     echo "7. Restoring application..."
-    
+
     # Restore Deployments
     if [ -f "$RESTORE_DIR/deployments.yaml" ]; then
         kubectl apply -f "$RESTORE_DIR/deployments.yaml"
         echo "    ✓ Deployments restored"
     fi
-    
+
     # Wait for deployments to be ready
     kubectl wait --for=condition=Available deployment --all -n $NAMESPACE --timeout=600s
-    
+
     echo "    ✓ Application restored and running"
 }
 
 verify_recovery() {
     echo "8. Verifying recovery..."
-    
+
     # Check application health
     if curl -f -s "http://codeweaver:8080/health" >/dev/null 2>&1; then
         echo "    ✓ CodeWeaver health check passed"
@@ -1415,7 +1415,7 @@ verify_recovery() {
         echo "    ✗ CodeWeaver health check failed"
         return 1
     fi
-    
+
     # Check vector database health
     if curl -f -s "http://qdrant:6333/health" >/dev/null 2>&1; then
         echo "    ✓ Qdrant health check passed"
@@ -1423,11 +1423,11 @@ verify_recovery() {
         echo "    ✗ Qdrant health check failed"
         return 1
     fi
-    
+
     # Check collections
     COLLECTIONS=$(curl -s "http://qdrant:6333/collections" | jq -r '.result.collections[].name' | wc -l)
     echo "    ✓ $COLLECTIONS collections restored"
-    
+
     # Test search functionality
     if curl -f -s -X POST "http://codeweaver:8080/api/v1/search" \
            -H "Content-Type: application/json" \
@@ -1441,9 +1441,9 @@ verify_recovery() {
 
 generate_recovery_report() {
     echo "9. Generating recovery report..."
-    
+
     RECOVERY_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-    
+
     cat > "$RESTORE_DIR/recovery-report.json" << EOF
 {
     "recovery_id": "REC-$(date +%Y%m%d%H%M%S)",
@@ -1463,7 +1463,7 @@ generate_recovery_report() {
     }
 }
 EOF
-    
+
     echo "  ✓ Recovery report generated"
 }
 
@@ -1551,7 +1551,7 @@ class EscalationMatrix:
                 tier=SupportTier.EMERGENCY,
                 response_time_hours=1
             ),
-            
+
             # High severity performance issues
             EscalationRule(
                 category=IssueCategory.PERFORMANCE,
@@ -1560,7 +1560,7 @@ class EscalationMatrix:
                 tier=SupportTier.TIER_2,
                 response_time_hours=2
             ),
-            
+
             # System bugs
             EscalationRule(
                 category=IssueCategory.BUG,
@@ -1569,7 +1569,7 @@ class EscalationMatrix:
                 tier=SupportTier.TIER_3,
                 response_time_hours=4
             ),
-            
+
             # Configuration issues
             EscalationRule(
                 category=IssueCategory.CONFIGURATION,
@@ -1578,7 +1578,7 @@ class EscalationMatrix:
                 tier=SupportTier.TIER_2,
                 response_time_hours=8
             ),
-            
+
             # User errors
             EscalationRule(
                 category=IssueCategory.USER_ERROR,
@@ -1588,12 +1588,12 @@ class EscalationMatrix:
                 response_time_hours=24
             )
         ]
-    
-    def determine_escalation(self, issue_description: str, 
+
+    def determine_escalation(self, issue_description: str,
                            reported_severity: Severity) -> Dict[str, Any]:
         """Determine appropriate escalation tier and response time."""
         issue_lower = issue_description.lower()
-        
+
         # Check for emergency keywords first
         emergency_keywords = ["down", "outage", "critical", "security breach"]
         if any(keyword in issue_lower for keyword in emergency_keywords):
@@ -1602,13 +1602,13 @@ class EscalationMatrix:
                 "response_time_hours": 1,
                 "reason": "Emergency keywords detected"
             }
-        
+
         # Find matching rules
         matching_rules = []
         for rule in self.rules:
             if any(keyword in issue_lower for keyword in rule.keywords):
                 matching_rules.append(rule)
-        
+
         if not matching_rules:
             # Default escalation based on reported severity
             if reported_severity == Severity.CRITICAL:
@@ -1629,11 +1629,11 @@ class EscalationMatrix:
                     "response_time_hours": 24,
                     "reason": "Default tier assignment"
                 }
-        
+
         # Choose the highest priority matching rule
-        highest_priority_rule = min(matching_rules, 
+        highest_priority_rule = min(matching_rules,
                                   key=lambda r: (r.tier.value, r.response_time_hours))
-        
+
         return {
             "tier": highest_priority_rule.tier,
             "response_time_hours": highest_priority_rule.response_time_hours,

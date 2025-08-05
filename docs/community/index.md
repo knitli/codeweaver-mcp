@@ -75,13 +75,13 @@ Questions about the CLA? [Email Adam](mailto:adam@knit.li) or ask in [discussion
 ### Core Documentation
 - **[Extension Development Guide](../extension-development/index.md)** - Comprehensive development documentation
 - **[Development Patterns](development_patterns.md)** - Coding standards and patterns
-- **[Services Layer Guide](../archive/SERVICES_LAYER_GUIDE.md)** - Service integration patterns
 - **[Architecture Overview](../architecture/index.md)** - System design and components
 
 ### API References
 - **[Protocols Reference](../reference/protocols.md)** - Interface definitions
 - **[Error Codes](../reference/error-codes.md)** - Error handling patterns
 - **[Performance Benchmarks](../reference/performance-benchmarks.md)** - Performance expectations
+- **[Full API Reference](../api/index.md)** - Complete API documentation
 
 ### Examples and Templates
 - **[Provider Examples](../extension-development/providers.md)** - Embedding provider templates
@@ -117,21 +117,20 @@ Contributors who make significant impact get featured in our documentation and p
 
 Thank you to everyone who has contributed to CodeWeaver! Every contribution, no matter how small, makes a difference.
 
-*[View all contributors on GitHub →](https://github.com/knitli/codeweaver-mcp/graphs/contributors)*
+*[View all contributors on GitHub :material-arrow-right-circle:](https://github.com/knitli/codeweaver-mcp/graphs/contributors)*
 
 ## 🗺️ Roadmap & Priorities
 
 ### High Priority Areas
-1. **New Provider Support** - OpenAI, Anthropic, Cohere integrations
-2. **Vector Database Backends** - Milvus, LanceDB, Weaviate support
-3. **Performance Optimization** - Faster indexing and search
-4. **Developer Experience** - Better error messages, documentation, examples
+1. **New Backends** - Expand DocArray providers (Milvus, Redis, etc.)
+2. **New Sources** - Add support for more data sources (git, github, web/Tavily, SQL, Context7?)
+2. **Performance Optimization** - Faster indexing and search
+3. **Better Intent Recognition** - Improve search relevance and intent understanding
 
 ### Medium Priority Areas
-1. **Advanced Search Features** - Hybrid search, filtering, facets
+1. **Advanced Search Features** - facets, filtering, ranking improvements
 2. **Enterprise Features** - Multi-tenancy, security, compliance
-3. **Monitoring & Observability** - Metrics, logging, health checks
-4. **Data Source Expansion** - GitHub, Slack, database support
+3. **Monitoring & Observability** - better Metrics, logging, health checks
 
 ### Community Suggestions
 We regularly review and prioritize community suggestions. Share your ideas in [GitHub Discussions](https://github.com/knitli/codeweaver-mcp/discussions)!
