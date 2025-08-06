@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Environment Variables
 
 CodeWeaver uses environment variables for secure configuration and deployment flexibility. All settings can be configured via environment variables using the `CW_` prefix.
@@ -39,31 +46,31 @@ uv run codeweaver
 ### Required Variables
 
 #### `CW_EMBEDDING_API_KEY`
-**Purpose:** API key for your embedding provider  
-**Required for:** VoyageAI, OpenAI, Cohere providers  
+**Purpose:** API key for your embedding provider
+**Required for:** VoyageAI, OpenAI, Cohere providers
 **Example:** `export CW_EMBEDDING_API_KEY="voyage-abc123..."`
 
 #### `CW_VECTOR_BACKEND_URL`
-**Purpose:** URL for your vector database  
-**Required for:** Qdrant, Pinecone, Weaviate backends  
+**Purpose:** URL for your vector database
+**Required for:** Qdrant, Pinecone, Weaviate backends
 **Example:** `export CW_VECTOR_BACKEND_URL="https://xyz.qdrant.io"`
 
 ### Optional Core Variables
 
 #### `CW_VECTOR_BACKEND_API_KEY`
-**Purpose:** Authentication for vector database  
-**Default:** None (uses public access)  
+**Purpose:** Authentication for vector database
+**Default:** None (uses public access)
 **Example:** `export CW_VECTOR_BACKEND_API_KEY="qdrant-key-456"`
 
 #### `CW_VECTOR_BACKEND_COLLECTION`
-**Purpose:** Collection/index name for embeddings  
-**Default:** `"code-embeddings"`  
+**Purpose:** Collection/index name for embeddings
+**Default:** `"code-embeddings"`
 **Example:** `export CW_VECTOR_BACKEND_COLLECTION="my-project"`
 
 #### `CW_PROFILE_NAME`
-**Purpose:** Select configuration profile  
-**Default:** `"codeweaver_original"`  
-**Options:** `"codeweaver_original"`, `"minimal"`, `"performance"`  
+**Purpose:** Select configuration profile
+**Default:** `"codeweaver_default"`
+**Options:** `"codeweaver_default"`, `"minimal"`, `"performance"`
 **Example:** `export CW_PROFILE_NAME="performance"`
 
 ## Provider-Specific Variables

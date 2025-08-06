@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Building Custom Services
 
 This guide covers building custom service providers for CodeWeaver. Services provide middleware functionality and cross-cutting concerns like chunking, filtering, validation, and caching.

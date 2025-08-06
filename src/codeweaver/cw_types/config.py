@@ -41,8 +41,11 @@ class ServiceType(BaseEnum):
     """Types of services in the system."""
 
     # Core services
+    AUTO_INDEXING = "auto_indexing"
     CHUNKING = "chunking"
     FILTERING = "filtering"
+    # Telemetry is completely optional, but it's important for improving results and user experience, so we'll call it a core service.
+    TELEMETRY = "telemetry"
 
     # Middleware services (FastMCP integration)
     LOGGING = "logging"
@@ -50,26 +53,24 @@ class ServiceType(BaseEnum):
     ERROR_HANDLING = "error_handling"
     RATE_LIMITING = "rate_limiting"
 
-    # Optional services
-    VALIDATION = "validation"
-    CACHE = "cache"
-    MONITORING = "monitoring"
-    METRICS = "metrics"
-    TELEMETRY = "telemetry"
-
     # Intent layer services
     INTENT = "intent"
-    AUTO_INDEXING = "auto_indexing"
-
-    # Phase 3 Intent layer services - LLM-focused optimization
     IMPLICIT_LEARNING = "implicit_learning"
     CONTEXT_INTELLIGENCE = "context_intelligence"
     ZERO_SHOT_OPTIMIZATION = "zero_shot_optimization"
 
+    # TODO: These services all have protocols and configurations, but aren't implemented in CodeWeaver yet. They are still available if someone wants to extend CodeWeaver with them.
+    # We *do* have validation... because pydantic.
+    VALIDATION = "validation"
+    MONITORING = "monitoring"
+    METRICS = "metrics"
+    CACHE = "cache"
+
+
     @classmethod
     def get_core_services(cls) -> tuple["ServiceType"]:
         """Get core services required for basic operation."""
-        return (cls.CHUNKING, cls.FILTERING)
+        return (cls.AUTO_INDEXING, cls.CHUNKING, cls.FILTERING, cls.TELEMETRY)
 
     @classmethod
     def get_middleware_services(cls) -> tuple["ServiceType"]:
@@ -77,16 +78,21 @@ class ServiceType(BaseEnum):
         return (cls.LOGGING, cls.TIMING, cls.ERROR_HANDLING, cls.RATE_LIMITING)
 
     @classmethod
-    def get_optional_services(cls) -> tuple["ServiceType"]:
-        """Get optional services for enhanced functionality."""
-        return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS, cls.TELEMETRY)
+    def get_available_but_unimplemented_services(cls) -> tuple["ServiceType"] | tuple[None]:
+        """A list of services that are available *to implement* but not yet implemented in CodeWeaver. They have full protocols and configurations, but no implementations.
+        """
+        return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS)
+
+    @classmethod
+    def get_optional_services(cls) -> tuple["ServiceType"] | tuple[None]:
+        """Get optional services that can be enabled based on user needs."""
+        return ()
 
     @classmethod
     def get_intent_services(cls) -> tuple["ServiceType"]:
         """Get intent layer services for natural language processing."""
         return (
             cls.INTENT,
-            cls.AUTO_INDEXING,
             cls.IMPLICIT_LEARNING,
             cls.CONTEXT_INTELLIGENCE,
             cls.ZERO_SHOT_OPTIMIZATION,
@@ -94,12 +100,13 @@ class ServiceType(BaseEnum):
 
     @classmethod
     def get_all_services(cls) -> tuple["ServiceType"]:
-        """Get all available service types."""
+        """Get all service types."""
         return (
             *cls.get_core_services(),
             *cls.get_middleware_services(),
             *cls.get_optional_services(),
             *cls.get_intent_services(),
+            *cls.get_available_but_unimplemented_services(),
         )
 
 
@@ -116,7 +123,7 @@ class ValidationLevel(BaseEnum):
     """DISABLED: No validation; it's the wild west :gun: :cowboy_hat_face: 🔫"""
 
 
-# ConfigurationError moved to config.py to avoid circular imports
+# ConfigurationError moved to root config.py to avoid circular imports
 
 
 class BaseComponentConfig(BaseModel):

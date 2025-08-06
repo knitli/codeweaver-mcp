@@ -6,12 +6,25 @@
 """
 CLI-specific types and enums for CodeWeaver CLI.
 """
-
+from codeweaver.cw_types.base_enum import BaseEnum
+from codeweaver.cw_types.services.enums import Service
 from typing import Literal
 
 
-# Output format options
-OutputFormat = Literal["table", "json", "yaml", "text"]
+class OutputFormatEnum(BaseEnum):
+    """Enumeration for output formats supported by the CLI."""
+
+    TABLE = "table"
+    JSON = "json"
+    YAML = "yaml"
+    TEXT = "text"
+
+    @classmethod
+    def choices(cls) -> tuple[str]:
+        """Return all available output format choices."""
+        return cls.get_values()
+
+
 
 # Service names that can be managed via CLI
 ServiceName = Literal[
@@ -28,9 +41,7 @@ ServiceName = Literal[
 MCPTarget = Literal["claude-desktop", "claude-code", "cursor", "mcp-json"]
 
 # Configuration profiles
-ConfigProfile = Literal[
-    "codeweaver_original", "minimal", "performance", "development", "production"
-]
+ConfigProfile = Literal["codeweaver_default", "minimal", "performance", "development", "production"]
 
 
 class CLIError(Exception):

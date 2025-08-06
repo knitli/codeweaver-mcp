@@ -71,6 +71,7 @@ __pycache__/
 .pytest_cache
 
 dist/
+site/
 *.tar
 *.tar.*
 *.jar

@@ -8,7 +8,7 @@
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # sourcery skip: avoid-global-variables
-
+# ruff: noqa: S603
 """Update licenses for files in the repository.
 
 TODO: Add interactive prompt for contributors.
@@ -31,7 +31,7 @@ from cyclopts import App, Group, Parameter, validators
 
 
 BASE_PATH = Path(__file__).parent.parent
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 CONTRIBUTORS_GROUP = Group(
     "Contributors",
     default_parameter=Parameter(negative=()),
@@ -48,7 +48,6 @@ CONTRIBUTORS = Parameter(
 INTERACTIVE = Parameter(
     "-i",
     "--interactive",
-    action="store_true",
     negative=(),
     help="Run the script in interactive mode, prompting for contributors.",
 )
@@ -242,7 +241,7 @@ def get_files_with_missing() -> list[Path] | None:
         return sorted({BASE_PATH / file for file in missing_files})
 
 
-def get_empty_lists() -> tuple[list, list, list]:
+def get_empty_lists() -> tuple[list, list]:
     """Get empty lists for code paths, and non-code paths."""
     return ([], [])
 
@@ -275,10 +274,30 @@ def process_contributors(contributors: list[str]) -> list[str]:
     return list(processed)
 
 
+def get_contributor() -> str:
+    """Get a contributor from the user."""
+    # first check if we're in an interactive shell
+    if not sys.stdin.isatty():
+        print("Not in an interactive shell. Please provide contributors via command line arguments.")
+        sys.exit(1)
+    # if we are, prompt for the contributor
+    if contributor := input("What's your name and email? (e.g. 'Adam Poulemanos <adam@knit.li>'): ").strip():
+        if "<" in contributor and ">" in contributor:
+            return contributor
+        if "@" in contributor and "@" in contributor.split(" ")[-1]:
+            parts = contributor.split(" ")
+            name = " ".join(parts[:-1])
+            email = f"<{parts[-1]}>"
+            return f"{name} {email}"
+        # assume they just provided a name; which is fine.
+        return contributor
+    raise ValueError("No contributor provided. Please provide a name and email in the format 'Name <email>'.")
+
+
 @app.command(
     help="Update all licenses in the repository. Will check every file in the repository and add license information if it's missing."
 )
-def update_all(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS) -> None:
+def update_all(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS, interactive: Annotated[bool, INTERACTIVE] = False) -> None:
     """Update all licenses in the repository."""
     path_obj = sort_paths()
     BASE_CMD.extend(process_contributors(contributors))
@@ -291,7 +310,7 @@ def update_all(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CON
 @app.command(
     help="Add licenses for only those files missing license information in the repository. Will check every file in the repository and add license information if it's missing."
 )
-def missing(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS) -> None:
+def missing(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS, interactive: Annotated[bool, INTERACTIVE] = False) -> None:
     """Add licenses for only those files missing license information in the repository."""
     missing_files = get_files_with_missing()
     if not missing_files:
@@ -308,7 +327,7 @@ def missing(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRI
 @app.command(
     help="Update licenses for staged files in the repository. Will only check files that are staged for commit."
 )
-def staged(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS) -> None:
+def staged(*, contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS, interactive: Annotated[bool, INTERACTIVE] = False) -> None:
     """Update licenses for staged files in the repository."""
     staged_files = get_staged_files()
     if not staged_files:
@@ -330,6 +349,7 @@ def add(
         list[Path],
         Parameter(
             validator=validators.Path(exists=True),
+            parse=lambda x: x.split(" ") if isinstance(x, str) else x,
             required=True,
             consume_multiple=True,
             json_list=True,
@@ -337,6 +357,7 @@ def add(
     ],
     *,
     contributors: Annotated[list[str], CONTRIBUTORS] = DEFAULT_CONTRIBUTORS,
+    interactive: Annotated[bool, INTERACTIVE] = False,
 ) -> None:
     """Update licenses for specific files in the repository."""
     if not files:

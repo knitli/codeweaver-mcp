@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Backend Configuration
 
 Vector database backends store and search your code embeddings. CodeWeaver supports multiple backends with different capabilities, performance characteristics, and deployment options.

@@ -22,13 +22,20 @@ local linters = new Mapping<String, Step> {
         fix = "typos --write-changes --config {{ workspace_indicator }} {{ files }}"
     }
 
+    ["fix-ruff-patterns"] = new Step {
+        glob = "src/**/*.py"
+        fix = "./scripts/fix-ruff-patterns.sh {{ files }}"
+        check = "./scripts/fix-ruff-patterns.sh --dry-run {{ files }}"
+    }
+
     ["ruff"] = (Builtins.ruff) {
         fix = "ruff check --fix {{ files }} && ruff check --select I --fix {{ files }} && ruff format {{ files }}"
     }
 
     ["reuse"] = new Step {
         check = "reuse lint"
-        fix = "./scripts/update-licenses.py add {{ files }}"
+        interactive = true
+        fix = "./scripts/update-licenses.py add --interactive {{ files }}"
     }
 
     ["shellcheck"] = Builtins.shellcheck
@@ -36,10 +43,16 @@ local linters = new Mapping<String, Step> {
     ["shfmt"] = Builtins.shfmt
 
     // define a custom linter
-    ["pkl"] {
+    ["pkl"] = new Step{
         glob = "*.pkl"
         check = "pkl eval {{files}} >/dev/null"
     }
+
+    ["add-marks"] = new Step {
+        glob = "tests/**/*.py"
+        fix = "./scripts/apply_test_marks.py {{ files }}"
+    }
+
 }
 
 hooks {

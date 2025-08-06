@@ -10,6 +10,8 @@ Manages FastMCP client connections for MCP client wrapper commands,
 providing connection pooling and lifecycle management.
 """
 
+import asyncio
+
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, ClassVar
@@ -20,7 +22,7 @@ from codeweaver.cli.types import CLIError
 from codeweaver.cli.utils.client_logger import get_logger
 
 
-logger = get_logger(__name__)
+logger = asyncio.run(get_logger())
 
 
 Operation = Callable[[Any, Any], Awaitable[Any]]

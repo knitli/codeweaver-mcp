@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Intent Layer Configuration
 
 The Intent Layer provides extensive configuration options for customizing how natural language requests are parsed, routed, and executed. This guide covers all configuration patterns, from basic setup to advanced customization.

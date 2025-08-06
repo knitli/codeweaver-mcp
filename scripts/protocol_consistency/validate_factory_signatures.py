@@ -52,9 +52,9 @@ def validate_factory_method_signatures() -> bool:
             package_path = src_path / "codeweaver" / package
 
             if package_path.exists():
-                violations = check_package_signatures(package_path, method_name, expected_sig)
-
-                if violations:
+                if violations := check_package_signatures(
+                    package_path, method_name, expected_sig
+                ):
                     success = False
                     print(f"  ❌ {package} package violations:")
                     for violation in violations:
@@ -81,8 +81,7 @@ def check_package_signatures(package_path: Path, method_name: str, expected_sig:
             import re
 
             method_pattern = rf"(async\s+)?def\s+{method_name}\s*\([^)]*\)\s*(?:->\s*[^:]*)?:"
-            if matches := re.findall(method_pattern, content):
-                if match := re.search(method_pattern, content):
+            if re.findall(method_pattern, content) and (match := re.search(method_pattern, content)):
                     actual_sig = match.group(0).strip()
                     if actual_sig != expected_sig.strip():
                         violations.append(f"{py_file.name}: {actual_sig}")
@@ -94,9 +93,7 @@ def check_package_signatures(package_path: Path, method_name: str, expected_sig:
 
 
 if __name__ == "__main__":
-    success = validate_factory_method_signatures()
-
-    if success:
+    if success := validate_factory_method_signatures():
         print("\n✅ All factory method signatures are consistent!")
         sys.exit(0)
     else:

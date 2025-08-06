@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Building Custom Vector Backends
 
 This guide covers building custom vector backends for CodeWeaver. Vector backends handle storage, indexing, and search operations for semantic code search.

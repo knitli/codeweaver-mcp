@@ -2,11 +2,10 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
-id: fix-exception-logging-comma
-message: "Remove redundant exception and trailing comma from logging"
+id: fix-exception-logging-dash
+message: "Remove redundant exception and trailing dash from logging"
 severity: info
 language: python
 rule:
-  pattern: '$LOGGER.exception("$PREFIX, %s", $EXC)'
+  pattern: '$LOGGER.exception("$PREFIX - %s", $EXC)'
 fix: '$LOGGER.exception("$PREFIX")'

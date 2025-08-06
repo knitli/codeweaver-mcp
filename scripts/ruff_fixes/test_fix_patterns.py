@@ -2,7 +2,7 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
+# ruff: noqa: S603
 """
 Comprehensive test script for fix-ruff-patterns.sh
 Generates test files with various ruff violations and validates fixes.
@@ -147,7 +147,8 @@ class RuffPatternTester:
             validation_results[filename] = issues
         return validation_results
 
-    def run_comprehensive_test(self) -> bool:
+    def run_comprehensive_test(self) -> bool:  # noqa: C901
+        # sourcery skip: no-long-functions
         """Run the complete test suite."""
         print("🚀 Starting comprehensive test of fix-ruff-patterns.sh")
         print("=" * 60)

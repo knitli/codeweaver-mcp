@@ -23,6 +23,9 @@ from codeweaver.cw_types import (
 from codeweaver.services.providers.intent_orchestrator import IntentOrchestrator
 
 
+@pytest.mark.async_test
+@pytest.mark.mock_only
+@pytest.mark.unit
 class TestIntentOrchestrator:
     """Test intent orchestrator using existing testing framework."""
 
@@ -272,6 +275,9 @@ class TestIntentOrchestrator:
 
 
 @pytest.mark.integration
+@pytest.mark.async_test
+@pytest.mark.mock_only
+@pytest.mark.unit
 class TestIntentOrchestratorIntegration:
     """Integration tests for intent orchestrator with real dependencies."""
 

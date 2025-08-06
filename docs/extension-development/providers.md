@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Building Custom Providers
 
 This guide covers building custom embedding and reranking providers for CodeWeaver. Providers handle model inference for semantic search and content ranking.

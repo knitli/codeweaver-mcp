@@ -12,6 +12,7 @@ Script to apply pytest marks to test files based on their location and patterns.
 """
 
 import re
+import sys
 
 from pathlib import Path
 
@@ -171,6 +172,7 @@ def process_test_file(file_path: Path) -> None:
 
 def main() -> None:
     """Main function to process all test files."""
+    test_files = [Path(f) for f in sys.argv[1:]] if len(sys.argv) > 1 else []
     test_dir = Path("tests")
 
     if not test_dir.exists():
@@ -178,9 +180,7 @@ def main() -> None:
         return
 
     # Find all Python test files
-    test_files = []
-    for pattern in ["test_*.py", "*_test.py"]:
-        test_files.extend(test_dir.rglob(pattern))
+    test_files = test_files or test_files.extend(test_dir.rglob("*.py"))
 
     # Filter out __pycache__ and other non-test files
     test_files = [f for f in test_files if "__pycache__" not in str(f) and f.name != "__init__.py"]

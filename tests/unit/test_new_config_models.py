@@ -26,7 +26,7 @@ class DefaultsConfig(BaseModel):
     model_config = ConfigDict(extra="allow", validate_assignment=True)
 
     profile: Annotated[
-        str, Field(default="codeweaver_original", description="Configuration profile to use")
+        str, Field(default="codeweaver_default", description="Configuration profile to use")
     ]
     auto_configure: Annotated[
         bool, Field(default=True, description="Automatically configure based on profile")
@@ -207,7 +207,7 @@ class TestNewConfigModels:
         """Test that DefaultsConfig can be created with default values."""
         config = DefaultsConfig()
 
-        assert config.profile == "codeweaver_original"
+        assert config.profile == "codeweaver_default"
         assert config.auto_configure is True
         assert config.validate_setup is True
         assert config.strict_validation is False

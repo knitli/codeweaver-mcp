@@ -2,7 +2,6 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
 # TRY300: Move return from try to else block - simple case
 id: fix-try-return-simple
 message: "Move return statement from try to else block"

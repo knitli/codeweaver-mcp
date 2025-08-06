@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Production Monitoring and Observability
 
 This guide covers comprehensive monitoring, observability, and alerting strategies for CodeWeaver in enterprise environments. It includes metrics collection, logging, alerting, and business intelligence for production deployments.

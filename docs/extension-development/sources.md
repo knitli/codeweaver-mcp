@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Building Custom Data Sources
 
 This guide covers building custom data source connectors for CodeWeaver. Data sources provide content discovery and retrieval from various repositories and systems.

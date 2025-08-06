@@ -15,7 +15,7 @@ Contains individual command implementations organized by functionality:
 """
 
 # Import command modules for easy access
-from codeweaver.cli import (
+from codeweaver.cli.commands import (
     client_commands,
     config_commands,
     index_commands,

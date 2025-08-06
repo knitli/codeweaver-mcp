@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Intent Layer Overview
 
 The Intent Layer is CodeWeaver's intelligent interface that transforms natural language requests from LLMs into precise, context-rich operations. Rather than exposing LLMs to multiple tools and complex APIs, the Intent Layer provides a single, intelligent entry point that resolves user intent into the exact context needed for successful task completion.

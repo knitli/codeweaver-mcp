@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Performance Guidelines for Extensions
 
 This guide covers performance optimization strategies for CodeWeaver extensions, including benchmarking, profiling, and best practices for high-performance implementations.

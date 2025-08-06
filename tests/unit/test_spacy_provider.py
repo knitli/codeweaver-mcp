@@ -14,6 +14,9 @@ from codeweaver.providers.config import SpaCyProviderConfig
 from codeweaver.providers.nlp.spacy import SpaCyProvider
 
 
+@pytest.mark.async_test
+@pytest.mark.mock_only
+@pytest.mark.unit
 class TestSpaCyProvider:
     """Test suite for spaCy NLP provider following development patterns."""
 

@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
 """
 The language constants module provides default ast-grep and NER patterns for various programming languages. Users can override or extend these in the configuration. Contributions for new languages are welcome!
 

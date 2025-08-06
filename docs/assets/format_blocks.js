@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2025 Knitli Inc.
+// SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+//
+// SPDX-License-Identifier: MIT OR Apache-2.0
+
 window.addEventListener('DOMContentLoaded', function() {
 
     const dontshow = ["bash", "toml", "yaml", "json", "python", "python3", "shell", "sh", "javascript", "js", "typescript", "ts", "html", "css", "scss", "less", "xml", "svg", "md", "markdown", "plaintext", "text", "text only", "plain text"];

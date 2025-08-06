@@ -41,7 +41,6 @@ CodeWeaver Factory System
 
 ```python
 from codeweaver.backends.providers.docarray.config import DocArrayConfigFactory
-from codeweaver.cw_types import ProviderKind
 
 # Create DocArray Qdrant backend configuration
 config = DocArrayConfigFactory.create_config(

@@ -33,7 +33,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-version = "0.1.0"
+dynamic = ["version"]
 description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
 readme = { file= "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
@@ -48,6 +48,7 @@ dependencies = [
     "rich>=14.0.0",
     "rignore>=0.6.4",
     "spacy>=3.8.7",
+    "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "voyageai>=0.3.4",
     "watchdog>=6.0.0",
@@ -95,7 +96,7 @@ keywords = [
 
 
 [project.scripts]
-code-weaver = "codeweaver:main"
+codeweaver = "codeweaver:cli.run_async_cli"
 
 [project.urls]
 Changelog = "https://github.com/knitli/codeweaver-mcp/blob/main/CHANGELOG.md"
@@ -105,11 +106,11 @@ Issues = "https://github.com/knitli/codeweaver-mcp/issues"
 Repository = "https://github.com/knitli/codeweaver-mcp"
 
 [build-system]
-requires = ["hatchling>=1.14.1"]
+requires = ["hatchling>=1.14.1", "uv-dynamic-versioning>=0.7.0"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-build = ["hatchling>=1.14.1"]
+build = ["hatchling>=1.14.1", "uv-dynamic-versioning>=0.7.0"]
 test = [
     "docarray>=0.40.1",
     "pytest>=8.4.1",
@@ -122,6 +123,8 @@ test = [
     "pytest-httpx>=0.35.0",
     "pytest-report>=0.2.1",
     "pytest-timeout>=2.4.0",
+    "dirty-equals>=0.9.0",
+    "pdbpp>=0.11.7",
 ]
 docs = [
     "mkdocs>=1.6.1",
@@ -143,6 +146,9 @@ dev = [
     "uv>=0.8.2,<0.9.0",
     "ipython>=9.4.0",
     "jsonlines>=4.0.0",
+    "copychat>=0.7.2",
+    "pdbpp>=0.11.7",
+    "pyperclip>=1.9.0",
 ]
 typing = ["pylance>=0.32.0"]
 
@@ -153,13 +159,6 @@ recommended = [
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
-    "qdrant-client>=1.15.0",
-    "rich>=14.0.0",
-    "spacy>=3.8.7",
-    "tomli-w>=1.2.0",
-    "voyageai>=0.3.4",
-    "watchdog>=6.0.0",
-    "posthog>=6.3.0",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
@@ -167,6 +166,7 @@ recommended = [
     "rignore>=0.6.4",
     "spacy>=3.8.7",
     "tomli-w>=1.2.0",
+    "tiktoken>=0.1.0",
     "voyageai>=0.3.4",
     "watchdog>=6.0.0",
     ]
@@ -176,18 +176,13 @@ recommended-no-telemetry = [
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
-    "qdrant-client>=1.15.0",
-    "rich>=14.0.0",
-    "spacy>=3.8.7",
-    "tomli-w>=1.2.0",
-    "voyageai>=0.3.4",
-    "watchdog>=6.0.0",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
     "rignore>=0.6.4",
     "spacy>=3.8.7",
+    "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "voyageai>=0.3.4",
     "watchdog>=6.0.0",
@@ -206,7 +201,17 @@ minimal = [
     "rignore>=0.6.4",
 ]
 
-cli = ["cyclopts>=3.22.5", "rich>=14.0.0", "tomli-w>=1.2.0"]
+cli = [
+    "ast-grep-py>=0.39.1",
+    "cyclopts>=3.22.5",
+    "fastmcp>=2.10.6",
+    "rich>=14.0.0",
+    "tiktoken>=0.1.0",
+    "tomli-w>=1.2.0",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "rignore>=0.6.4",
+    "watchdog>=6.0.0",]
 
 # ==== Providers ====
 provider-cohere = ["cohere>=5.16.1"]
@@ -239,10 +244,19 @@ backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
 # backend-docarray-redis = ["docarray[redis]>=0.40.1"]
 # backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
 
+[tool.uv-dynamic-versioning]
+vcs = "git"
+style = "semver"
+bump = true
+fallback-version = "0.0.0"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [tool.hatch.build.targets.wheel]
 artifacts = ["*.so", "src/**"]
 packages = ["src/codeweaver"]
+
 [tool.hatch.build.targets.sdist]
 include = [
     "src/**",

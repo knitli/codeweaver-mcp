@@ -9,6 +9,11 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 !!! tip "5-Minute Setup"
     Get CodeWeaver running with Claude Desktop in 5 minutes. Enable semantic code search for any AI assistant.
 
+!!! info "Telemetry Notice"
+    CodeWeaver includes optional usage analytics to help us improve the platform. [Learn more about our privacy-first telemetry →](telemetry.md)
+
+**CodeWeaver** is the first full-stack MCP platform: a powerful server, extensible framework, and natural language interface for semantic code search.
+
 Get semantic code search working with Claude Desktop in 5 minutes. This guide covers installation, configuration, and first usage.
 
 ## Prerequisites
@@ -27,19 +32,19 @@ Get semantic code search working with Claude Desktop in 5 minutes. This guide co
 === "Using uv (Recommended)"
     ```bash
     # Install CodeWeaver
-    uv add codeweaver
+    uv add codeweaver-mcp
 
     # Verify installation
-    uv run codeweaver --version
+    uv run python -c "import codeweaver; print('CodeWeaver', codeweaver.__version__, 'installed successfully')"
     ```
 
 === "Using pip"
     ```bash
     # Install CodeWeaver
-    pip install codeweaver
+    pip install codeweaver-mcp
 
     # Verify installation
-    codeweaver --version
+    python -c "import codeweaver; print('CodeWeaver', codeweaver.__version__, 'installed successfully')"
     ```
 
 === "From Source"
@@ -52,7 +57,7 @@ Get semantic code search working with Claude Desktop in 5 minutes. This guide co
     uv sync
 
     # Verify installation
-    uv run codeweaver --version
+    uv run python -c "import codeweaver; print('CodeWeaver', codeweaver.__version__, 'installed successfully')"
     ```
 
 ## Step 2: Get Your API Keys
@@ -109,7 +114,7 @@ Add CodeWeaver to your Claude Desktop configuration:
       "mcpServers": {
         "codeweaver": {
           "command": "uv",
-          "args": ["run", "codeweaver"],
+          "args": ["run", "python", "-m", "codeweaver.main"],
           "env": {
             "CW_EMBEDDING_API_KEY": "pa-your-voyage-key",
             "CW_VECTOR_BACKEND_URL": "https://your-cluster.qdrant.io:6333",
@@ -128,7 +133,7 @@ Add CodeWeaver to your Claude Desktop configuration:
       "mcpServers": {
         "codeweaver": {
           "command": "uv",
-          "args": ["run", "codeweaver"],
+          "args": ["run", "python", "-m", "codeweaver.main"],
           "env": {
             "CW_EMBEDDING_API_KEY": "pa-your-voyage-key",
             "CW_VECTOR_BACKEND_URL": "https://your-cluster.qdrant.io:6333",
@@ -152,6 +157,9 @@ You should see CodeWeaver's intent processing tools:
 - `process_intent` - Natural language codebase interaction
 - `get_intent_capabilities` - Available intent types and features
 
+!!! note "Interface Design"
+    CodeWeaver uses an intent-based interface designed for AI assistants. Instead of calling multiple tools directly, you simply describe what you want to accomplish in natural language.
+
 ## Step 6: Try It Out
 
 Test semantic code search with your codebase. **No manual indexing required** - CodeWeaver automatically handles indexing when AI assistants explore code.
@@ -166,8 +174,26 @@ Can you help me understand the authentication system in /path/to/your/project?
 
 CodeWeaver will:
 - Automatically index relevant files in your codebase
-- Search for authentication-related code semantically
+- Search for authentication-related code semantically  
 - Provide comprehensive analysis of how authentication works
+
+### Available CLI Commands
+
+CodeWeaver also provides a rich CLI interface for direct interaction:
+
+```bash
+# Client operations
+uv run python -m codeweaver.cli client search "authentication logic"
+
+# Configuration management
+uv run python -m codeweaver.cli config show
+
+# Service management
+uv run python -m codeweaver.cli services status
+
+# Indexing operations
+uv run python -m codeweaver.cli index create /path/to/project
+```
 
 ### Example Queries
 
@@ -241,7 +267,7 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 ```plaintext
 # Single natural language query
 "Explain the authentication system in this project"
-# :material-arrow-right-circle: Automatic semantic search + structural analysis + result synthesis
+# → Automatic semantic search + structural analysis + result synthesis
 ```
 
 ## Troubleshooting
@@ -277,4 +303,4 @@ You now have semantic code search working with Claude Desktop. Here's what to ex
 
 ---
 
-**Next:** [User Guide :material-arrow-right-circle:](../user-guide/how-it-works.md)
+**Next:** [User Guide →](../user-guide/how-it-works.md)

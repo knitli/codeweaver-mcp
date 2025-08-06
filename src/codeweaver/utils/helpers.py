@@ -23,3 +23,12 @@ def walk_down_to_git_root(path: Path) -> Path:
 def in_codeweaver_clone(path: Path) -> bool:
     """Check if the current repo is CodeWeaver."""
     return "codeweaver" in str(path).lower() or "code-weaver" in str(path).lower()
+
+
+def estimate_tokens(text: str | bytes) -> int:
+    """Estimate the number of tokens in a text."""
+    import tiktoken
+    encoding = tiktoken.get_encoding("cl100k_base")
+    if isinstance(text, bytes):
+        text = text.decode("utf-8", errors="ignore")
+    return len(encoding.encode(text))

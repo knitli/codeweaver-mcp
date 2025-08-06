@@ -2,7 +2,6 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
 id: fix-exception-logging-colon
 message: "Remove redundant exception and trailing colon from logging"
 severity: info

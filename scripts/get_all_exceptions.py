@@ -4,7 +4,7 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""Retrieves all exceptions available in the CodeWeaver codebase."""
+"""Helper that retrieves all exceptions available in the CodeWeaver codebase, and also all used exceptions."""
 
 import contextlib
 import pkgutil
@@ -12,7 +12,7 @@ import pkgutil
 from types import ModuleType
 
 
-def find_builtin_usage_in_source(module: ModuleType, builtins: set[str]) -> set[tuple[str, str]]:
+def find_builtin_usage_in_source(module: ModuleType, builtins: set[str]) -> set[tuple[str, str]]:  # noqa: C901
     """Check if the module uses any built-in exceptions by analyzing source code."""
     import ast
     import inspect
@@ -79,9 +79,9 @@ def safe_walk_packages(package, prefix) -> "iter[pkgutil.ModuleInfo]":
         yield from pkgutil.walk_packages(package.__path__, prefix, onerror=onerror)
 
 
-def scan_source_files_for_exceptions(
+def scan_source_files_for_exceptions(  # noqa: C901
     base_path: str, builtin_exceptions: set[str]
-) -> tuple[set[tuple[str, str]], list[str]]:
+) -> tuple[set[tuple[str, str]], list[str]]:  # sourcery skip: low-code-quality
     """Scan Python source files directly for exception usage and definitions."""
     import ast
     import os

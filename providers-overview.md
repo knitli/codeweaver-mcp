@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Overview of all CodeWeaver Component Providers
 
 In the docs, we should probably present each provider with its corresponding configuration options, usage examples, and any specific requirements or limitations. This will help users understand how to integrate each provider into their CodeWeaver setup effectively.

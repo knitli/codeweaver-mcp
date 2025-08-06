@@ -6,18 +6,23 @@ SPDX-License-Identifier: MIT OR Apache-2.0
 
 # How CodeWeaver Works
 
-**Seamless semantic code search for your development workflow**
+**The first full-stack MCP platform: a powerful server, extensible framework, and natural language interface**
 
-CodeWeaver transforms how you explore and understand codebases by providing intelligent semantic search through your AI assistant. Rather than replacing your development tools, it enhances them by giving your AI assistant deep, contextual understanding of your code.
+CodeWeaver transforms how you explore and understand codebases by providing intelligent semantic search through a natural language interface. Rather than replacing your development tools, it enhances them by giving your AI assistant deep, contextual understanding of your code.
 
 ## Core Concept
 
-CodeWeaver operates as a **Model Context Protocol (MCP) server** that sits between your AI assistant (like Claude) and your codebase. It provides four fundamental capabilities:
+CodeWeaver operates as a **Model Context Protocol (MCP) server** that provides intelligent semantic code search through a natural language interface. Instead of individual tools, it uses an **intent-based architecture** where you describe what you want to accomplish, and CodeWeaver determines the best approach.
 
-1. **Semantic Code Indexing** - Intelligently chunks and embeds your codebase
-2. **Natural Language Search** - Find code using plain English descriptions
+### Primary Interface
+- **`process_intent`** - Natural language interface for all operations
+- **`get_intent_capabilities`** - Discover what CodeWeaver can do
+
+### Key Capabilities
+1. **Automatic Background Indexing** - Codebases are indexed automatically when needed
+2. **Natural Language Search** - Find code using plain English descriptions  
 3. **Structural Pattern Matching** - Locate code patterns using ast-grep syntax
-4. **Language-Aware Processing** - Support for 20+ programming languages
+4. **Language-Aware Processing** - Support for 25+ programming languages
 
 ## The Development Workflow Integration
 
@@ -34,7 +39,7 @@ Time: 10-30 minutes of manual exploration
 ```plaintext
 Developer Question: "Where is user authentication handled?"
 ↓
-AI Assistant + CodeWeaver: Semantic search + contextual understanding
+AI Assistant + CodeWeaver: process_intent("find user authentication code")
 ↓
 Result: Instant identification of auth files, middleware, and related components
 ↓
@@ -81,9 +86,9 @@ graph LR
 
 ### Code Exploration
 ```plaintext
-Query: "How does error handling work in this API?"
+Intent: "How does error handling work in this API?"
 ↓
-CodeWeaver finds:
+CodeWeaver's process_intent analyzes and finds:
 - Exception middleware definitions
 - Error response formatting
 - Logging implementations
@@ -92,9 +97,9 @@ CodeWeaver finds:
 
 ### Feature Development
 ```plaintext
-Query: "Show me examples of database migrations"
+Intent: "Show me examples of database migrations"
 ↓
-CodeWeaver locates:
+CodeWeaver's process_intent locates:
 - Migration file patterns
 - Schema change examples
 - Rollback implementations
@@ -103,9 +108,9 @@ CodeWeaver locates:
 
 ### Debugging
 ```plaintext
-Query: "Find code that processes payment webhooks"
+Intent: "Find code that processes payment webhooks"
 ↓
-CodeWeaver identifies:
+CodeWeaver's process_intent identifies:
 - Webhook endpoint handlers
 - Payment processing logic
 - Validation and security checks
@@ -114,9 +119,9 @@ CodeWeaver identifies:
 
 ### Code Review
 ```plaintext
-Query: "Show security patterns in authentication code"
+Intent: "Show security patterns in authentication code"
 ↓
-CodeWeaver highlights:
+CodeWeaver's process_intent highlights:
 - Input validation examples
 - Secure token handling
 - Rate limiting implementations
@@ -125,66 +130,77 @@ CodeWeaver highlights:
 
 ## Language Support and Capabilities
 
-### First-Class Support (Native Patterns)
-Languages with optimized ast-grep patterns and structural understanding:
+### AST-Grep Supported Languages (Advanced Parsing)
+Languages with native ast-grep support for structural understanding:
 
-- **JavaScript/TypeScript** - React components, async patterns, module imports
-- **Python** - Class definitions, decorators, async/await patterns
-- **Rust** - Ownership patterns, trait implementations, error handling
-- **Go** - Interface implementations, goroutine patterns, error handling
+**Programming Languages**: Python, JavaScript, TypeScript, Java, C#, C/C++, Rust, Go, PHP, Ruby, Swift, Kotlin, Scala
+**Web Technologies**: HTML, CSS, JSX, TSX  
+**Configuration**: JSON, YAML
+**Systems**: Bash, Haskell, Elixir, Lua, Nix, Solidity
 
-### Universal Support
-All languages benefit from semantic search and basic structural parsing:
-
-**Web Technologies**: HTML, CSS, Vue, Svelte, React TSX
-**Systems Languages**: C/C++, C#, Zig
-**JVM Languages**: Java, Kotlin, Scala
-**Dynamic Languages**: Ruby, PHP, Swift, Dart
-**Functional Languages**: Haskell, OCaml, Elm, Elixir, Erlang, Clojure
-**Configuration**: JSON, YAML, TOML, XML, SQL
-**Scripts**: Bash, PowerShell, Docker, Make, CMake
+### Universal Support (Semantic Search)
+All text-based files benefit from semantic search with basic structural parsing. Languages not in the AST-grep list still get intelligent chunking and semantic understanding.
 
 ## Performance Characteristics
 
-### Indexing Performance
-- **Small Projects** (<1k files): 1-3 minutes
-- **Medium Projects** (1k-10k files): 5-15 minutes
-- **Large Projects** (10k+ files): 15+ minutes (depends on file size)
+CodeWeaver is designed for efficient operation with large codebases:
 
-### Search Performance
-- **Semantic Search**: 200-500ms average response time
-- **Pattern Search**: 50-200ms average response time
-- **Batch Operations**: Optimized for multiple concurrent searches
+### Indexing Approach
+- **Automatic Background Indexing** - Triggered when needed, not manual
+- **Intelligent Chunking** - AST-aware segmentation for better context
+- **Configurable Limits** - Skip large files (>1MB default), respect gitignore
 
-### Resource Usage
-- **Memory**: ~100MB base + ~1MB per 1000 code chunks
-- **Storage**: Vector embeddings ~2-5x source code size
-- **Network**: API calls to embedding provider during indexing
+### Search Optimization
+- **Hybrid Approach** - Combines semantic similarity with structural patterns
+- **Batch Processing** - Efficient handling of multiple files
+- **Smart Filtering** - File type, language, and directory-based filtering
+
+### Resource Management
+- **Memory Efficient** - Configurable chunk sizes and batch processing
+- **Storage** - Vector embeddings stored in your chosen backend
+- **Network** - API calls only to your configured embedding provider
 
 ## Integration Points
 
 ### AI Assistant Integration
 CodeWeaver integrates with any MCP-compatible AI assistant:
 
-- **Claude Desktop** - Primary integration target
-- **Claude Code** - Enhanced development workflows
-- **Custom MCP Clients** - Build your own integrations
+- **Claude Desktop** - Primary integration target with natural language interface
+- **Claude Code** - Enhanced development workflows through intent processing
+- **Other MCP Clients** - Any client supporting the MCP protocol
 
 ### Development Tool Integration
 Works alongside your existing tools:
 
 - **IDEs** - Supplementary to built-in search and navigation
-- **Git Workflows** - Understand changes across branches and commits
-- **CI/CD** - Automated code analysis and documentation generation
-- **Code Review** - Context-aware review assistance
+- **Git Workflows** - Understands repository structure and changes
+- **Command Line** - Comprehensive CLI for direct developer interaction
+- **Code Review** - Context-aware assistance through AI integration
+
+### Developer Tools
+
+#### Command Line Interface
+CodeWeaver provides extensive CLI commands for direct developer interaction:
+
+```bash
+# Service management
+codeweaver services start          # Start all services  
+codeweaver services status         # Check service health
+codeweaver index start            # Start auto-indexing
+
+# Testing and diagnostics
+codeweaver client test <server>   # Test MCP connection
+codeweaver health                 # Quick health check
+codeweaver config generate        # Generate configuration
+```
 
 ### Data Source Flexibility
 Extensible architecture supports multiple data sources:
 
-- **Local Filesystem** - Direct file system access
-- **Git Repositories** - Branch and commit-aware indexing
-- **Remote APIs** - Integration with code hosting platforms
-- **Databases** - Custom data source implementations
+- **Local Filesystem** - Direct file system access with intelligent filtering
+- **Git Integration** - Repository-aware indexing with gitignore support
+- **Extensible Plugin System** - Factory pattern for custom data sources
+- **Configuration-Driven** - Easy setup through TOML configuration files
 
 ## What Makes CodeWeaver Different
 
@@ -193,14 +209,19 @@ Extensible architecture supports multiple data sources:
 - **Syntax-aware** - Language-specific tokenization
 - **Fast but limited** - Quick but requires knowing exact terms
 
-### CodeWeaver's Semantic Search
-- **Intent-based** - Understands what you're looking for conceptually
-- **Context-aware** - Considers surrounding code and relationships
-- **Language-neutral** - Works across different programming paradigms
-- **Extensible** - Plugin architecture for custom providers and backends
+### CodeWeaver's Approach
+- **Intent-based Interface** - Natural language descriptions of what you need
+- **Context-aware Analysis** - Understands code relationships and structure
+- **Language-neutral Semantic Search** - Works across programming paradigms
+- **Extensible Architecture** - Plugin system for providers, backends, and sources
+- **Automatic Background Processing** - No manual indexing workflows required
 
 ### Best of Both Worlds
-CodeWeaver combines semantic understanding with traditional pattern matching, giving you the speed of exact search with the intelligence of semantic understanding.
+CodeWeaver combines semantic understanding with structural pattern matching through a unified natural language interface, giving you conceptual search power with the precision of structural queries.
+
+## Privacy and Telemetry
+
+CodeWeaver includes optional usage analytics to help improve the platform. For complete information about data collection and privacy, see our [telemetry documentation](../getting-started/telemetry.md).
 
 ## Next Steps
 

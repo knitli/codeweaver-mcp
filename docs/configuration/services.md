@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Services Configuration
 
 CodeWeaver's service layer provides clean abstraction between FastMCP middleware and the factory pattern system. This enables dependency injection, health monitoring, and extensible service providers for enhanced functionality.

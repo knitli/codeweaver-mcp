@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Testing Framework for Extensions
 
 This guide covers comprehensive testing strategies for CodeWeaver extensions, including unit tests, integration tests, protocol compliance, and performance testing.

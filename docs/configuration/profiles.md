@@ -1,10 +1,17 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Configuration Profiles
 
 CodeWeaver includes built-in configuration profiles that provide optimized setups for common use cases. Profiles allow you to get started quickly while still maintaining full customization control.
 
 ## Built-in Profiles
 
-### `codeweaver_original` (Default)
+### `codeweaver_default` (Default)
 
 **Best for production use** - The recommended configuration for most users.
 
@@ -19,7 +26,7 @@ CodeWeaver includes built-in configuration profiles that provide optimized setup
 **Configuration:**
 ```toml
 [profile]
-name = "codeweaver_original"
+name = "codeweaver_default"
 ```
 
 **Required Environment Variables:**
@@ -167,11 +174,11 @@ CodeWeaver selects profiles in this order:
 
 1. **Explicit configuration** - `[profile] name = "..."`
 2. **Environment variable** - `CW_PROFILE_NAME`
-3. **Default profile** - `codeweaver_original`
+3. **Default profile** - `codeweaver_default`
 
 ## Profile Comparison
 
-| Feature | codeweaver_original | minimal | performance |
+| Feature | codeweaver_default | minimal | performance |
 |---------|-------------------|---------|-------------|
 | **Chunking** | AST-grep structural | Simple text | Large chunks |
 | **Embedding** | VoyageAI (cloud) | SentenceTransformers (local) | VoyageAI (cloud) |
@@ -188,12 +195,12 @@ CodeWeaver selects profiles in this order:
 Error: Profile 'myprofile' not found
 ```
 
-**Solution:** Use one of the built-in profiles (`codeweaver_original`, `minimal`, `performance`) or create a custom configuration.
+**Solution:** Use one of the built-in profiles (`codeweaver_default`, `minimal`, `performance`) or create a custom configuration.
 
 ### Missing API Keys
 
 ```plaintext
-Error: CW_EMBEDDING_API_KEY is required for profile 'codeweaver_original'
+Error: CW_EMBEDDING_API_KEY is required for profile 'codeweaver_default'
 ```
 
 **Solution:** Set the required environment variables or switch to the `minimal` profile for testing.

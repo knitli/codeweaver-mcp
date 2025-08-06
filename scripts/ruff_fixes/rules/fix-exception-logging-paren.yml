@@ -2,11 +2,10 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
-id: fix-exception-fstring-dash
-message: "Remove redundant exception and trailing dash from f-string logging"
+id: fix-exception-logging-paren
+message: "Remove redundant exception from parentheses in logging"
 severity: info
 language: python
 rule:
-  pattern: '$LOGGER.exception(f"$PREFIX - {$EXC}")'
+  pattern: '$LOGGER.exception("$PREFIX (%s)", $EXC)'
 fix: '$LOGGER.exception("$PREFIX")'

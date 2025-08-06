@@ -2,11 +2,10 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
-id: fix-exception-fstring-paren
-message: "Remove redundant exception from parentheses in f-string logging"
+id: fix-exception-logging-comma
+message: "Remove redundant exception and trailing comma from logging"
 severity: info
 language: python
 rule:
-  pattern: '$LOGGER.exception(f"$PREFIX ({$EXC})")'
+  pattern: '$LOGGER.exception("$PREFIX, %s", $EXC)'
 fix: '$LOGGER.exception("$PREFIX")'

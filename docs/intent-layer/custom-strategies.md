@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Custom Strategies Guide
 
 This guide shows you how to develop custom strategies for the Intent Layer, enabling specialized handling of domain-specific use cases and advanced processing workflows.

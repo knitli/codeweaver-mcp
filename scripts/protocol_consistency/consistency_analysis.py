@@ -33,6 +33,7 @@ class RefinedConsistencyAnalyzer:
     """More targeted consistency analysis."""
 
     def __init__(self, src_path: Path):
+        """Initialize the analyzer with the source path."""
         self.src_path = src_path
         self.test_path = src_path.parent / "tests"
 
@@ -50,10 +51,9 @@ class RefinedConsistencyAnalyzer:
             "get_capabilities",
         }
 
-        method_usage = {}
-        for method in target_methods:
-            method_usage[method] = MethodUsage(method_name=method)
-
+        method_usage = {
+            method: MethodUsage(method_name=method) for method in target_methods
+        }
         # Analyze each package for these methods
         packages = ["providers", "backends", "sources", "services"]
 
@@ -80,8 +80,7 @@ class RefinedConsistencyAnalyzer:
 
         for py_file in python_files:
             try:
-                with open(py_file, "r", encoding="utf-8") as f:
-                    content = f.read()
+                content = py_file.read_text(encoding="utf-8")
 
                 tree = ast.parse(content)
 
@@ -109,8 +108,7 @@ class RefinedConsistencyAnalyzer:
 
         for test_file in test_files:
             try:
-                with open(test_file, "r", encoding="utf-8") as f:
-                    content = f.read()
+                content = test_file.read_text(encoding="utf-8")
 
                 for method_name in method_usage:
                     if method_name in content or f".{method_name}(" in content:
@@ -137,8 +135,7 @@ class RefinedConsistencyAnalyzer:
 
         for factory_file in factory_files:
             try:
-                with open(factory_file, "r", encoding="utf-8") as f:
-                    content = f.read()
+                content = factory_file.read_text(encoding="utf-8")
 
                 for method_name in method_usage:
                     if f".{method_name}(" in content or f"await {method_name}(" in content:
@@ -164,8 +161,7 @@ class RefinedConsistencyAnalyzer:
 
         for service_file in service_files:
             try:
-                with open(service_file, "r", encoding="utf-8") as f:
-                    content = f.read()
+                content = service_file.read_text(encoding="utf-8")
 
                 tree = ast.parse(content)
 
@@ -178,15 +174,13 @@ class RefinedConsistencyAnalyzer:
                             service_implementations["implements_base"].append(
                                 f"{node.name} ({service_file.name})"
                             )
-                        else:
-                            # Check if it's a service class (ends with Service or Provider)
-                            if (
+                        elif (
                                 node.name.endswith(("Service", "Provider"))
                                 and node.name != "BaseServiceProvider"
                             ):
-                                service_implementations["missing_base"].append(
-                                    f"{node.name} ({service_file.name})"
-                                )
+                            service_implementations["missing_base"].append(
+                                f"{node.name} ({service_file.name})"
+                            )
 
                         # Identify service types
                         service_implementations["service_types"].append(node.name)
@@ -200,11 +194,9 @@ class RefinedConsistencyAnalyzer:
         """Extract base class name from AST node."""
         if isinstance(base, ast.Name):
             return base.id
-        if isinstance(base, ast.Attribute):
-            return base.attr
-        return ast.unparse(base)
+        return base.attr if isinstance(base, ast.Attribute) else ast.unparse(base)
 
-    def analyze_protocol_specificity(self) -> dict[str, dict[str, list[str]]]:
+    def analyze_protocol_specificity(self) -> dict[str, dict[str, list[str]]]:  # noqa: C901
         """Analyze which protocols are specific to certain implementations."""
         protocol_analysis = {
             "providers": {"embedding_only": [], "reranking_only": [], "combined": []},
@@ -231,8 +223,7 @@ class RefinedConsistencyAnalyzer:
                     continue
 
                 try:
-                    with open(py_file, "r", encoding="utf-8") as f:
-                        content = f.read()
+                    content = py_file.read_text(encoding="utf-8")
 
                     file_stem = py_file.stem
 
@@ -254,8 +245,7 @@ class RefinedConsistencyAnalyzer:
                     continue
 
                 try:
-                    with open(py_file, "r", encoding="utf-8") as f:
-                        content = f.read()
+                    content = py_file.read_text(encoding="utf-8")
 
                     file_stem = py_file.stem
 
@@ -299,80 +289,62 @@ def generate_refined_report(
 
         if usage.implementations:
             report.append("**Implementations found:**")
-            for impl in usage.implementations:
-                report.append(f"- {impl}")
+            report.extend(f"- {impl}" for impl in usage.implementations)
         else:
             report.append("**⚠️  No implementations found**")
 
         if usage.factory_usage:
             report.append("**Used by factories:**")
-            for factory in usage.factory_usage:
-                report.append(f"- {factory}")
+            report.extend(f"- {factory}" for factory in usage.factory_usage)
         else:
             report.append("**⚠️  Not used by factories**")
 
         if usage.test_files:
             report.append("**Test coverage:**")
-            for test in usage.test_files:
-                report.append(f"- {test}")
+            report.extend(f"- {test}" for test in usage.test_files)
         else:
             report.append("**⚠️  No test coverage found**")
 
         report.append("")
 
     # Service implementations analysis
-    report.append("## Service Implementations Analysis\n")
-
-    report.append("### ✅ Services implementing BaseServiceProvider:")
-    for service in service_analysis["implements_base"]:
-        report.append(f"- {service}")
-
+    report.extend(("## Service Implementations Analysis\n", "### ✅ Services implementing BaseServiceProvider:"))
+    report.extend(
+        f"- {service}" for service in service_analysis["implements_base"]
+    )
     if service_analysis["missing_base"]:
         report.append("\n### ⚠️  Services NOT implementing BaseServiceProvider:")
-        for service in service_analysis["missing_base"]:
-            report.append(f"- {service}")
-
+        report.extend(f"- {service}" for service in service_analysis["missing_base"])
     report.append("\n### All Service Types Found:")
-    for service_type in service_analysis["service_types"]:
-        report.append(f"- {service_type}")
-
-    report.append("")
-
-    # Protocol specificity analysis
-    report.append("## Protocol Specificity Analysis\n")
-    report.append("Not all implementations need all protocols - this is by design:\n")
+    report.extend(
+        f"- {service_type}"
+        for service_type in service_analysis["service_types"]
+    )
+    report.extend(["", "## Protocol Specificity Analysis\n",
+                   "Not all implementations need all protocols - this is by design:\n"])
 
     for category, protocols in protocol_analysis.items():
         report.append(f"### {category.title()}")
         for protocol_type, implementations in protocols.items():
             if implementations:
                 report.append(f"**{protocol_type.replace('_', ' ').title()}:**")
-                for impl in implementations:
-                    report.append(f"- {impl}")
-        report.append("")
-
-    # Targeted recommendations
-    report.append("## Targeted Recommendations\n")
-
-    report.append("### 🎯 High Priority")
-    report.append(
-        "1. **Service BaseServiceProvider compliance**: Ensure all services inherit from BaseServiceProvider"
-    )
-    report.extend((
-        "2. **Factory utility method consistency**: Standardize signatures for methods used by factories",
-        "3. **Test coverage**: Add tests for utility methods that lack coverage\n",
-        "### 🔧 Medium Priority",
-        "1. **Protocol-specific validation**: Don't force all protocols on all implementations",
-        "2. **Factory integration**: Ensure factory methods actually use the utility methods",
-        "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n",
-    ))
-    report.append("### 💡 Low Priority")
-    report.append(
-        "1. **Service-specific protocols**: ChunkingService only for chunking services, etc."
-    )
-    report.append(
-        "2. **Optional capabilities**: Some backends don't need hybrid search, some providers don't need reranking"
-    )
+                report.extend(f"- {impl}" for impl in implementations)
+        report.extend((
+            "",
+            "## Targeted Recommendations\n",
+            "### 🎯 High Priority",
+            "1. **Service BaseServiceProvider compliance**: Ensure all services inherit from BaseServiceProvider",
+            "2. **Factory utility method consistency**: Standardize signatures for methods used by factories",
+            "3. **Test coverage**: Add tests for utility methods that lack coverage\n",
+            "### 🔧 Medium Priority",
+            "1. **Protocol-specific validation**: Don't force all protocols on all implementations",
+            "2. **Factory integration**: Ensure factory methods actually use the utility methods",
+            "3. **Lifecycle management**: Standardize start/stop vs initialize/shutdown patterns\n",
+            "### 💡 Low Priority",
+            "1. **Service-specific protocols**: ChunkingService only for chunking services, etc.",
+            "2. **Optional capabilities**: Some backends don't need hybrid search, some providers don't need reranking",
+            "\n---\n",
+        ))
 
     return "\n".join(report)
 
@@ -407,8 +379,7 @@ def main() -> int:
     # Generate report
     report = generate_refined_report(factory_methods, service_analysis, protocol_analysis)
 
-    with open(args.output, "w") as f:
-        f.write(report)
+    (args.output).write_text(report, encoding="utf-8")
 
     print(f"📄 Refined report written to {args.output}")
     print("\n✅ Refined analysis complete!")

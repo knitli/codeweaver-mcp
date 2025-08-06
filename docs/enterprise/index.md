@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Enterprise Deployment Guide
 
 This section provides comprehensive guidance for deploying CodeWeaver in enterprise environments. It covers production-ready architectures, security hardening, scalability considerations, and operational best practices for IT teams and DevOps engineers.

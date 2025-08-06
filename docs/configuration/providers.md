@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Provider Configuration
 
 Providers are the AI services that power CodeWeaver's semantic search capabilities. This includes embedding models for vector search, reranking models for result refinement, and NLP models for enhanced context.

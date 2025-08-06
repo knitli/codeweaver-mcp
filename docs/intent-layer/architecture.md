@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Intent Layer Architecture
 
 This document provides a comprehensive technical reference for the Intent Layer architecture, designed for extension developers who need to understand the internal structure and extensibility points.

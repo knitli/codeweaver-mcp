@@ -2,27 +2,26 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-
 # TRY300: Multiple except blocks with as clauses
 id: fix-try-return-multiple-as
 message: "Move return statement from try to else block (multiple except with as)"
 severity: info
 language: python
 rule:
-    pattern: |
-        try:
-            $$BODY
-            return $RET
-        except $EXC1 as $VAR1:
-            $$HANDLER1
-        except $EXC2 as $VAR2:
-            $$HANDLER2
-fix: |
+  pattern: |
     try:
         $$BODY
+        return $RET
     except $EXC1 as $VAR1:
         $$HANDLER1
     except $EXC2 as $VAR2:
         $$HANDLER2
-    else:
-        return $RET
+fix: |
+  try:
+      $$BODY
+  except $EXC1 as $VAR1:
+      $$HANDLER1
+  except $EXC2 as $VAR2:
+      $$HANDLER2
+  else:
+      return $RET

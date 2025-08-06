@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Production Deployment Patterns
 
 This guide covers production-ready deployment architectures for CodeWeaver in enterprise environments. Each pattern addresses different scale, availability, and performance requirements.

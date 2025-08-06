@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Scalability and Performance
 
 This guide covers scaling CodeWeaver for large organizations, multiple teams, and massive codebases. It includes horizontal and vertical scaling strategies, multi-tenant architectures, and performance optimization techniques.

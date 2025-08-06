@@ -66,6 +66,7 @@ TOTAL_FILES_PROCESSED=0
 
 # Get script directory for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SUBSCRIPT_DIR="$SCRIPT_DIR/ruff_fixes"
 
 # Function to calculate file checksums for change detection
 calculate_checksums()
@@ -151,7 +152,7 @@ debug_log "Running f_string_converter.py on targets: ${TARGETS[*]}"
 if [ "$DRY_RUN" = true ]; then
     echo -e "${BLUE}[DRY RUN] Would run f-string conversion${NC}"
 else
-    python3 "$SCRIPT_DIR/f_string_converter.py" "${TARGETS[@]}"
+    python3 "$SUBSCRIPT_DIR/f_string_converter.py" "${TARGETS[@]}"
     fstring_exit_code=$?
     debug_log "F-string converter exit code: $fstring_exit_code"
     if [ $fstring_exit_code -eq 0 ]; then
@@ -181,7 +182,7 @@ debug_log "Running punctuation_cleaner.py on targets: ${TARGETS[*]}"
 if [ "$DRY_RUN" = true ]; then
     echo -e "${BLUE}[DRY RUN] Would run punctuation cleanup${NC}"
 else
-    python3 "$SCRIPT_DIR/punctuation_cleaner.py" "${TARGETS[@]}"
+    python3 "$SUBSCRIPT_DIR/punctuation_cleaner.py" "${TARGETS[@]}"
     punctuation_exit_code=$?
     debug_log "Punctuation cleaner exit code: $punctuation_exit_code"
     if [ $punctuation_exit_code -eq 0 ]; then
@@ -209,8 +210,8 @@ if [ "$DRY_RUN" = true ]; then
     echo -e "${BLUE}[DRY RUN] Would run try/return fixes${NC}"
 else
     # Check if try_return_fixer.py exists, if not fall back to ast-grep rules
-    if [ -f "$SCRIPT_DIR/try_return_fixer.py" ]; then
-        if python3 "$SCRIPT_DIR/try_return_fixer.py" "${TARGETS[@]}"; then
+    if [ -f "$SUBSCRIPT_DIR/try_return_fixer.py" ]; then
+        if python3 "$SUBSCRIPT_DIR/try_return_fixer.py" "${TARGETS[@]}"; then
             if files_changed; then
                 CHANGES_MADE=$((CHANGES_MADE + 1))
                 echo -e "${GREEN}✅ Try/return fixes applied changes${NC}"
@@ -227,7 +228,7 @@ else
         ast_grep_changes=0
         for rule in fix-try-return-simple fix-try-return-as fix-try-return-multiple fix-try-return-multiple-as fix-try-return-bare-except; do
             debug_log "Applying ast-grep rule: $rule"
-            if ast-grep scan -r "$SCRIPT_DIR/rules/$rule.yml" --update-all "${TARGETS[@]}" > /dev/null 2>&1; then
+            if ast-grep scan -r "$SUBSCRIPT_DIR/rules/$rule.yml" --update-all "${TARGETS[@]}" > /dev/null 2>&1; then
                 if files_changed; then
                     ((ast_grep_changes++))
                     debug_log "Rule $rule made changes"
@@ -279,8 +280,20 @@ elif command -v ruff &> /dev/null; then
         violation_count=$(echo "$violation_output" | grep -c "TRY401\|G004\|TRY300" || echo "0")
         if [ "$violation_count" -gt 0 ]; then
             echo -e "${YELLOW}⚠️  $violation_count violation(s) remain and may need manual review${NC}"
+            # Print summary of violations: filepath, lint code, line number
+            echo -e "${YELLOW}Unfixed violations:${NC}"
+            echo "$violation_output" | grep -E "TRY401|G004|TRY300" | awk -F: '{
+                # Format: filepath:line:col: code [message]
+                split($0, parts, ":");
+                filepath=parts[1];
+                line=parts[2];
+                rest=substr($0, index($0,$3));
+                match(rest, /([A-Z0-9]+) /, codearr);
+                code=codearr[1];
+                printf("%s:%s - %s\n", filepath, line, code);
+            }'
             if [ "$DEBUG" = true ]; then
-                echo -e "${BLUE}[DEBUG] Remaining violations:${NC}"
+                echo -e "${BLUE}[DEBUG] Remaining violations (full details):${NC}"
                 echo "$violation_output" | grep "TRY401\|G004\|TRY300" | head -10
             fi
         else

@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Enterprise Troubleshooting Guide
 
 This comprehensive troubleshooting guide covers common issues, debugging procedures, and support processes for CodeWeaver enterprise deployments. It includes diagnostic tools, resolution procedures, and escalation processes.

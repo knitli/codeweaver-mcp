@@ -20,7 +20,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 from codeweaver.backends import VectorBackend
@@ -74,29 +74,25 @@ class BenchmarkResult:
             f"(avg: {self.average_duration_ms:.2f}ms)"
         )
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert benchmark result to dictionary."""
-        return {
-            "benchmark_name": self.benchmark_name,
-            "operation": self.operation,
-            "implementation_name": self.implementation_name,
-            "total_duration_ms": self.total_duration_ms,
-            "average_duration_ms": self.average_duration_ms,
-            "median_duration_ms": self.median_duration_ms,
-            "min_duration_ms": self.min_duration_ms,
-            "max_duration_ms": self.max_duration_ms,
-            "std_deviation_ms": self.std_deviation_ms,
-            "operations_per_second": self.operations_per_second,
-            "items_per_second": self.items_per_second,
-            "iterations": self.iterations,
-            "batch_size": self.batch_size,
-            "test_data_size": self.test_data_size,
-            "memory_usage_mb": self.memory_usage_mb,
-            "cpu_usage_percent": self.cpu_usage_percent,
-            "success_rate": self.success_rate,
-            "error_count": self.error_count,
-            "metadata": self.metadata,
-        }
+
+class ComponentBenchmarkResult(BaseModel):
+
+    """Result of a component-specific benchmark."""
+
+    component_name: str
+    """Name of the component being benchmarked."""
+    result: BenchmarkResult
+    """The benchmark result for this component."""
+
+
+class BenchmarkResults(BaseModel):
+    """Container for multiple benchmark results."""
+
+    results: list[ComponentBenchmarkResult] = Field(default_factory=list)
+
+    def add_result(self, result: ComponentBenchmarkResult) -> None:
+        """Add a single benchmark result."""
+        self.results.append(result)
 
 
 class BenchmarkSuite:
@@ -703,13 +699,12 @@ def print_benchmark_results(results: dict[str, list[BenchmarkResult]]) -> None:
 
 def save_benchmark_results(results: dict[str, list[BenchmarkResult]], filename: str) -> None:
     """Save benchmark results to JSON file."""
-    import json
+    from pathlib import Path
 
-    serializable_results = {
-        component_type: [result.to_dict() for result in component_results]
-        for component_type, component_results in results.items()
-    }
-    with open(filename, "w") as f:
-        json.dump(serializable_results, f, indent=2)
-
+    serializable_results = BenchmarkResults.model_validate(results).model_dump_json(
+        indent=2, exclude_unset=True, exclude_none=True
+    )
+    file_path = Path(filename)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text(serializable_results, encoding="utf-8")
     logger.info("Benchmark results saved to: %s", filename)

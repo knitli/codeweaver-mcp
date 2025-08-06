@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Extension Development Guide
 
 Welcome to CodeWeaver's extension development documentation. CodeWeaver implements a comprehensive plugin architecture that enables developers to extend its capabilities through custom providers, backends, sources, and services.

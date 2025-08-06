@@ -3,6 +3,8 @@
 
 """Configuration classes for DocArray backend integration."""
 
+import contextlib
+
 from typing import Annotated, Any, ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -180,14 +182,16 @@ class DocArrayBackendKind(BaseEnum):
     @property
     def member_to_class(self) -> tuple[Self, type[DocArrayBackendConfig]]:
         """Convert enum member to (kind, config class) tuple."""
-        return (self, self.config_class)
+        with contextlib.suppress(NotImplementedError):
+            return (self, self.config_class)
 
     @classmethod
     def member_to_class_mapping(
         cls,
     ) -> dict[type["DocArrayBackendKind"], type[DocArrayBackendConfig]]:
         """Get mapping of enum members to their configuration classes."""
-        return {member: member.config_class for member in cls.members()}
+        with contextlib.suppress(NotImplementedError):
+            return {member: member.config_class for member in cls.members() if member.config_class}
 
 
 # Configuration factory

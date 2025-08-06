@@ -9,8 +9,9 @@ Defines *client* log handler for FastMCP.
 """
 
 import logging
+import os
 
-from typing import Any
+from typing import Any, Literal
 
 from fastmcp.client.logging import LogHandler, LogMessage
 from pydantic import ConfigDict
@@ -20,10 +21,14 @@ from rich.logging import RichHandler
 
 console = Console(stderr=True, markup=True, emoji=True)
 
-DEFAULT_LOG_LEVEL = logging.INFO
+LogLevel = Literal[logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL]
+
+IS_CI: bool = os.environ.get("GH_ACTIONS", "false").lower() == "true"
+DEBUG: bool = os.environ.get("CW_DEBUG", "false").lower() == "true"
+DEFAULT_LOG_LEVEL: LogLevel = logging.DEBUG if DEBUG else logging.INFO
 
 
-async def get_logger() -> logging.Logger:
+async def get_logger() -> logging.Logger:  # noqa: RUF029
     """
     Get the logger for CodeWeaver.
 
@@ -32,14 +37,24 @@ async def get_logger() -> logging.Logger:
     """
     logger = logging.getLogger("[orange]codeweaver[/orange]")
     if not logger.hasHandlers():
-        logger.addHandler(async_log_handler)
+        # Create a proper logging handler, not the FastMCP handler function
+        handler = RichHandler(console=console, markup=True, rich_tracebacks=DEBUG)
+
+        if IS_CI:
+            # Use StreamHandler for CI environments
+            handler = logging.StreamHandler()
+
+        handler.setLevel(DEFAULT_LOG_LEVEL)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(handler)
+        logger.setLevel(DEFAULT_LOG_LEVEL)
     return logger
 
 
 class CodeWeaverLogMessage(LogMessage):
     """Custom log message for CodeWeaver with enhanced formatting and metadata."""
 
-    level: logging.LoggingLevel
+    level: LogLevel
     """The severity of this log message."""
     logger: str
     """An optional name of the logger issuing this message."""
@@ -50,7 +65,9 @@ class CodeWeaverLogMessage(LogMessage):
     """
     model_config = ConfigDict(extra="allow")
 
-    def __init__(self, level: logging.LoggingLevel, data: Any, logger: str = "~~codeweaver~~"):
+    def __init__(
+        self, level: LogLevel | str | None = None, logger: str | None = None, data: Any = None
+    ):
         """
         Initialize a CodeWeaverLogMessage.
 
@@ -59,7 +76,22 @@ class CodeWeaverLogMessage(LogMessage):
             data: The data to be logged.
             logger: An optional name of the logger issuing this message.
         """
-        super().__init__(level=level, data=data, logger=logger)
+        # Process level
+        if not level:
+            level = DEFAULT_LOG_LEVEL
+        if isinstance(level, str):
+            level = getattr(logging, level.upper())
+
+        # Process logger
+        if not logger:
+            logger = "~codeweaver~" if IS_CI else "[orange]codeweaver[/orange]"
+
+        # Process data
+        if data is None:
+            data = ""
+
+        # Call parent constructor with processed values
+        super().__init__(level=level, logger=logger, data=data)
 
 
 def get_handler() -> LogHandler:
@@ -69,29 +101,38 @@ def get_handler() -> LogHandler:
     Returns:
         A log handler instance that can be registered with FastMCP.
     """
+    # Return the actual handler function for FastMCP registration
     return async_log_handler
 
 
-@LogHandler.register(CodeWeaverLogMessage)
-async def async_log_handler(message: CodeWeaverLogMessage) -> None:
+async def async_log_handler(message: CodeWeaverLogMessage) -> None:  # noqa: RUF029
     """
     Handle log messages from FastMCP.
 
     Args:
         message: The log message to handle.
     """
-    level = message.level.upper() or DEFAULT_LOG_LEVEL
-    logger = message.logger or "[orange]codeweaver[/orange]"
+    level = message.level or DEFAULT_LOG_LEVEL
+    logger_name = message.logger or "[orange]codeweaver[/orange]"
     data = message.data
 
-    # Use RichHandler for better formatting in console
-    rich_handler = RichHandler(console=console)
-    rich_handler.setFormatter(logging.Formatter("%(message)s"))
+    # Get the actual logger instance
+    logger = logging.getLogger(logger_name)
 
-    # Log the message
-    logger.add_handler(rich_handler)
-    rich_handler.emit(
-        logging.LogRecord(
-            name=logger, level=level, pathname="", lineno=0, msg=data, args=(), exc_info=None
-        )
-    )
+    # Use RichHandler for better formatting in console
+    handler = RichHandler(console=console, markup=True, rich_tracebacks=DEBUG)
+
+    if IS_CI:
+        # If running in GitHub Actions, use the default logging
+        handler = logging.StreamHandler()
+
+    handler.setLevel(level)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+
+    # Add handler to logger if it doesn't have any handlers
+    if not logger.hasHandlers():
+        logger.addHandler(handler)
+        logger.setLevel(level)
+
+    # Log the message using the logger
+    logger.log(level, data)

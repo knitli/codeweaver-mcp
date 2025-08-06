@@ -13,6 +13,9 @@ from codeweaver.cw_types import IntentResult, ServiceIntegrationError, ServiceTy
 from codeweaver.intent.middleware.intent_bridge import IntentServiceBridge
 
 
+@pytest.mark.async_test
+@pytest.mark.mock_only
+@pytest.mark.unit
 class TestIntentServiceBridge:
     """Test intent service bridge functionality."""
 
@@ -284,6 +287,9 @@ class TestIntentServiceBridge:
 
 
 @pytest.mark.integration
+@pytest.mark.async_test
+@pytest.mark.mock_only
+@pytest.mark.unit
 class TestIntentServiceBridgeIntegration:
     """Integration tests for intent service bridge."""
 

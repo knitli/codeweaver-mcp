@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2025 Knitli Inc.
+SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+-->
+
 # Configuration Overview
 
 CodeWeaver provides a flexible, hierarchical configuration system designed to be **useful out of the box** while allowing complete customization for advanced use cases.
@@ -18,7 +25,7 @@ CodeWeaver includes built-in configuration profiles that cover common use cases:
     # Optional for authentication
     export CW_VECTOR_BACKEND_API_KEY="your-qdrant-api-key"
 
-    # Uses 'codeweaver_original' profile automatically
+    # Uses 'codeweaver_default' profile automatically
     uv run codeweaver
     ```
 
@@ -79,9 +86,9 @@ CodeWeaver loads configuration from multiple sources in priority order:
 Here's a complete TOML configuration example:
 
 ```toml
-# Profile selection (optional - defaults to 'codeweaver_original')
+# Profile selection (optional - defaults to 'codeweaver_default')
 [profile]
-name = "codeweaver_original"
+name = "codeweaver_default"
 
 # Vector database backend
 [backend]

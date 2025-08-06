@@ -28,19 +28,6 @@ Key Features:
 CodeWeaver is the context layer for AI-driven coding.
 """
 
-from codweaver.factories import (
-    BackendPlugin,
-    CodeWeaverFactory,
-    ComponentFactory,
-    ComponentRegistry,
-    ExtensibilityManager,
-    FactoryContext,
-    ProviderPlugin,
-    SourcePlugin,
-)
-
-import codeweaver.cli
-
 from codeweaver.backends import (
     BackendConfig,
     BackendConfigExtended,
@@ -50,6 +37,16 @@ from codeweaver.backends import (
     HybridSearchBackend,
     VectorBackend,
     VectorPoint,
+)
+from codeweaver.factories import (
+    BackendPlugin,
+    CodeWeaverFactory,
+    ComponentFactory,
+    ComponentRegistry,
+    ExtensibilityManager,
+    FactoryContext,
+    ProviderPlugin,
+    SourcePlugin,
 )
 from codeweaver.intent import (
     AdaptiveStrategy,
@@ -86,6 +83,18 @@ __version__ = "0.1.0"
 
 
 if __name__ == "__main__":
+    import warnings
+
+    # Suppress this specific pydantic warning. Every import in CodeWeaver is from the top-level `pydantic` package, so the warning is coming from a dependency.
+    # This is a temporary workaround until all dependencies are updated.
+    warnings.filterwarnings(
+        "ignore",
+        message=r".*`pydantic\.error_wrappers:ValidationError` has been moved to `pydantic:ValidationError`\.",
+        category=UserWarning,
+        module="pydantic._migration",
+    )
+    # If this module is run directly, start the server
+
     import asyncio
 
     import codeweaver.main

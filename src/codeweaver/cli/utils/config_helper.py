@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import ClassVar, Literal, LiteralString
 
 from codeweaver.cli.types import CLIError, MCPTarget
-from codeweaver.config.manager import get_config_manager
+from codeweaver.config import get_config_manager
 
 
 logger = logging.getLogger(__name__)
@@ -68,8 +68,7 @@ class ConfigHelper:
             default_config = config_manager.get_config()
             config_data = cls._apply_template(default_config, template)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open("w") as f:
-                json.dump(config_data.model_dump(), f, indent=2)
+            output_path.write_text(config_data.model_dump_json(indent=2, exclude_unset=True, exclude_none=True), encoding="utf-8")
             logger.info("Generated configuration file: %s", output_path)
         except Exception as e:
             logger.exception("Failed to generate configuration file")
