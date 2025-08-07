@@ -45,13 +45,12 @@ app = App(
     version="0.1.0",
     default_parameter=cyclopts.Parameter(show_default=True, show_choices=True),
 )
-
 # Add command groups
-app.add_command(client_commands.app, name="client")
-app.add_command(services_commands.app, name="services")
-app.add_command(index_commands.app, name="index")
-app.add_command(stats_commands.app, name="stats")
-app.add_command(config_commands.app, name="config")
+app.command(client_commands.app, name="client")
+app.command(services_commands.app, name="services")
+app.command(index_commands.app, name="index")
+app.command(stats_commands.app, name="stats")
+app.command(config_commands.app, name="config")
 
 
 @app.default

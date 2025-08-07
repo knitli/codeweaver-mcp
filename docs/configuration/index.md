@@ -25,7 +25,7 @@ CodeWeaver includes built-in configuration profiles that cover common use cases:
     # Optional for authentication
     export CW_VECTOR_BACKEND_API_KEY="your-qdrant-api-key"
 
-    # Uses 'codeweaver_default' profile automatically
+    # Uses 'recommended' profile automatically
     uv run codeweaver
     ```
 
@@ -86,9 +86,9 @@ CodeWeaver loads configuration from multiple sources in priority order:
 Here's a complete TOML configuration example:
 
 ```toml
-# Profile selection (optional - defaults to 'codeweaver_default')
+# Profile selection (optional - defaults to 'recommended')
 [profile]
-name = "codeweaver_default"
+name = "recommended"
 
 # Vector database backend
 [backend]

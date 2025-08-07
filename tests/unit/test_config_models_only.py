@@ -39,7 +39,7 @@ def test_defaults_config_direct():
     from codeweaver.config import DefaultsConfig
 
     config = DefaultsConfig()
-    assert config.profile == "codeweaver_default"
+    assert config.profile == "recommended"
     assert config.auto_configure is True
     assert config.validate_setup is True
     assert config.strict_validation is False

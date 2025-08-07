@@ -11,7 +11,7 @@ CodeWeaver includes built-in configuration profiles that provide optimized setup
 
 ## Built-in Profiles
 
-### `codeweaver_default` (Default)
+### `recommended` (Default)
 
 **Best for production use** - The recommended configuration for most users.
 
@@ -26,7 +26,7 @@ CodeWeaver includes built-in configuration profiles that provide optimized setup
 **Configuration:**
 ```toml
 [profile]
-name = "codeweaver_default"
+name = "recommended"
 ```
 
 **Required Environment Variables:**
@@ -174,11 +174,11 @@ CodeWeaver selects profiles in this order:
 
 1. **Explicit configuration** - `[profile] name = "..."`
 2. **Environment variable** - `CW_PROFILE_NAME`
-3. **Default profile** - `codeweaver_default`
+3. **Default profile** - `recommended`
 
 ## Profile Comparison
 
-| Feature | codeweaver_default | minimal | performance |
+| Feature | recommended | minimal | performance |
 |---------|-------------------|---------|-------------|
 | **Chunking** | AST-grep structural | Simple text | Large chunks |
 | **Embedding** | VoyageAI (cloud) | SentenceTransformers (local) | VoyageAI (cloud) |
@@ -195,12 +195,12 @@ CodeWeaver selects profiles in this order:
 Error: Profile 'myprofile' not found
 ```
 
-**Solution:** Use one of the built-in profiles (`codeweaver_default`, `minimal`, `performance`) or create a custom configuration.
+**Solution:** Use one of the built-in profiles (`recommended`, `minimal`, `performance`) or create a custom configuration.
 
 ### Missing API Keys
 
 ```plaintext
-Error: CW_EMBEDDING_API_KEY is required for profile 'codeweaver_default'
+Error: CW_EMBEDDING_API_KEY is required for profile 'recommended'
 ```
 
 **Solution:** Set the required environment variables or switch to the `minimal` profile for testing.

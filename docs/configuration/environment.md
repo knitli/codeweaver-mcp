@@ -69,8 +69,8 @@ uv run codeweaver
 
 #### `CW_PROFILE_NAME`
 **Purpose:** Select configuration profile
-**Default:** `"codeweaver_default"`
-**Options:** `"codeweaver_default"`, `"minimal"`, `"performance"`
+**Default:** `"recommended"`
+**Options:** `"recommended"`, `"minimal"`, `"performance"`
 **Example:** `export CW_PROFILE_NAME="performance"`
 
 ## Provider-Specific Variables

@@ -20,7 +20,7 @@ from typing import Annotated
 
 from cyclopts import App, Parameter
 
-from codeweaver.cli.types import OutputFormat, ServiceName
+from codeweaver.cli.types import OutputFormat, ServiceType
 from codeweaver.cli.utils import ServerManager
 
 
@@ -36,10 +36,10 @@ async def _resolve_service_names(services, services_manager, mode="start"):
     if services is not None:
         return [s.value if hasattr(s, "value") else str(s) for s in services]
     if mode == "start":
-        return [s.value for s in ServiceName]
+        return [s.value for s in ServiceType]
     if mode == "stop":
         running_services = await services_manager.list_services()
-        return [s for s in running_services if s in [sn.value for sn in ServiceName]]
+        return [s for s in running_services if s in ServiceType.get_values()]
     return []
 
 
@@ -79,7 +79,7 @@ def _format_service_results(results, fmt, action):
 @app.command
 async def start(
     services: Annotated[
-        list[ServiceName] | None,
+        list[ServiceType] | None,
         Parameter(help="Specific services to start (if not provided, starts all services)"),
     ] = None,
     config: Annotated[
@@ -154,7 +154,7 @@ async def start(
 @app.command
 async def stop(
     services: Annotated[
-        list[ServiceName] | None,
+        list[ServiceType] | None,
         Parameter(help="Specific services to stop (if not provided, stops all services)"),
     ] = None,
     config: Annotated[
@@ -234,7 +234,7 @@ async def stop(
 @app.command
 async def restart(
     services: Annotated[
-        list[ServiceName] | None,
+        list[ServiceType] | None,
         Parameter(help="Specific services to restart (if not provided, restarts all services)"),
     ] = None,
     config: Annotated[
@@ -305,7 +305,7 @@ async def status(
     try:
         config_path = str(config) if config else None
         services_manager = await ServerManager.get_services_manager(config_path)
-        all_services = [s.value for s in ServiceName]
+        all_services = ServiceType.get_values()
         await services_manager.list_services()
         status_data = await _gather_service_status(services_manager, all_services, detailed)
         if fmt == OutputFormat.JSON:
@@ -358,7 +358,7 @@ async def list_services(
             running_services = await services_manager.list_services()
             all_running_services = running_services
         else:
-            all_running_services = [s.value for s in ServiceName]
+            all_running_services = ServiceType.get_values()
         if fmt == OutputFormat.JSON:
             print(json.dumps({"services": all_running_services}, indent=2))
         else:

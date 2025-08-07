@@ -15,7 +15,7 @@ import logging
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Literal, LiteralString
+from typing import ClassVar, Literal, LiteralString, TypedDict
 
 from codeweaver.cli.types import CLIError, MCPTarget
 from codeweaver.config import get_config_manager
@@ -24,27 +24,57 @@ from codeweaver.config import get_config_manager
 logger = logging.getLogger(__name__)
 
 
+class MCPConfigFiles(TypedDict):
+    """Typed dictionary for MCP configuration file paths."""
+    project: LiteralString
+    windows: LiteralString
+    macos: LiteralString
+    linux: LiteralString
+
+
 class ConfigHelper:
     """Helper for configuration management and MCP integration."""
 
-    MCP_CONFIG_PATHS: ClassVar[
-        MCPTarget, dict[Literal["windows", "macos", "linux"], LiteralString]
+    MCP_CONFIG_PATHS: ClassVar[dict[
+        MCPTarget, MCPConfigFiles]
     ] = {
         MCPTarget.CLAUDE_DESKTOP: {
+            "project": ".mcp.json",
             "windows": "~/AppData/Roaming/Claude/claude_desktop_config.json",
             "macos": "~/Library/Application Support/Claude/claude_desktop_config.json",
             "linux": "~/.config/claude/claude_desktop_config.json",
         },
         MCPTarget.CLAUDE_CODE: {
-            "windows": "~/.vscode/extensions/anthropic.claude-dev-*/claude_desktop_config.json",
-            "macos": "~/.vscode/extensions/anthropic.claude-dev-*/claude_desktop_config.json",
-            "linux": "~/.vscode/extensions/anthropic.claude-dev-*/claude_desktop_config.json",
+            "project": ".mcp.json",
+            "windows": "~/.claude.json",
+            "macos": "~/.claude.json",
+            "linux": "~/.claude.json",
         },
-        MCPTarget.CLINE: {
-            "windows": "~/.vscode/extensions/saoudrizwan.claude-dev-*/claude_desktop_config.json",
-            "macos": "~/.vscode/extensions/saoudrizwan.claude-dev-*/claude_desktop_config.json",
-            "linux": "~/.vscode/extensions/saoudrizwan.claude-dev-*/claude_desktop_config.json",
+        MCPTarget.CURSOR: {
+            "project": ".cursor/mcp.json",
+            "windows": "~/AppData/Roaming/Cursor/cursor_config.json",
+            "macos": "~/Library/Application Support/Cursor/cursor_config.json",
+            "linux": "~/.config/cursor/cursor_config.json",
         },
+        MCPTarget.MCP_JSON: {
+            "project": ".mcp.json",
+            # can be anywhere... this is just a placeholder
+            "windows": "~/mcp.json",
+            "macos": "~/mcp.json",
+            "linux": "~/mcp.json",
+        },
+        MCPTarget.VSCODE: {
+            "project": ".vscode/mcp.json",
+            "windows": "~/.vscode/mcp.json",
+            "macos": "~/Library/Application Support/Code/User/mcp.json",
+            "linux": "~/.config/Code/User/mcp.json",
+        },
+        MCPTarget.ROO: {
+            "project": ".roo/mcp.json",
+            "windows": "~/.vscode/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
+            "macos": "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
+            "linux": "~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
+        }
     }
 
     @classmethod

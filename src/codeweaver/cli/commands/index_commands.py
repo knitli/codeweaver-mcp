@@ -172,7 +172,7 @@ async def _format_status_data(
     return status_data
 
 
-def _print_status_intro(status_data: AutoIndexingService) -> None:
+def _print_status_intro(status_data: "AutoIndexingService") -> None:
     """Print introductory status information for auto-indexing service."""
     print("Auto-indexing Service Status")
     print("=" * 30)

@@ -359,8 +359,7 @@ async def performance(
         config_path = str(config) if config else None
         server = await ServerManager.ensure_server("performance monitoring", config_path)
 
-        # Extracted logic for gathering performance metrics
-        def _gather_performance_metrics():
+        async def _gather_performance_metrics():
             nonlocal server, duration
             performance_data, start_time = await _get_performance_data(server, duration)
             if duration > 0:
@@ -371,7 +370,6 @@ async def performance(
                 await _collect_end_metrics(server, performance_data)
             return performance_data
 
-        # Extracted logic for formatting performance output
         def _format_performance_output(performance_data) -> str:
             """Format the output for performance metrics."""
             if performance_data.get("fmt") == OutputFormat.JSON:
@@ -384,7 +382,7 @@ async def performance(
             return "\n".join(output_lines)
 
         # Main logic now delegates to helpers
-        metrics = _gather_performance_metrics()
+        metrics = await _gather_performance_metrics()
         output = _format_performance_output(metrics)
         print(output)
 

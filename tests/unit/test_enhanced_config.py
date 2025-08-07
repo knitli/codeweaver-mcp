@@ -38,7 +38,7 @@ class TestDefaultsConfig:
         """Test that DefaultsConfig can be created with default values."""
         config = DefaultsConfig()
 
-        assert config.profile == "codeweaver_default"
+        assert config.profile == "recommended"
         assert config.auto_configure is True
         assert config.validate_setup is True
         assert config.strict_validation is False
@@ -295,13 +295,13 @@ class TestEnhancedCodeWeaverConfig:
         config = CodeWeaverConfig()
         builtin_profiles = config._get_builtin_profiles()
 
-        assert "codeweaver_default" in builtin_profiles
+        assert "recommended" in builtin_profiles
         assert "minimal" in builtin_profiles
         assert "performance" in builtin_profiles
 
         # Test profile structure
-        original_profile = builtin_profiles["codeweaver_default"]
-        assert original_profile.name == "codeweaver_default"
+        original_profile = builtin_profiles["recommended"]
+        assert original_profile.name == "recommended"
         assert "Original CodeWeaver design" in original_profile.description
         assert original_profile.backend["provider"] == "qdrant"
 
@@ -310,9 +310,9 @@ class TestEnhancedCodeWeaverConfig:
         config = CodeWeaverConfig()
 
         # Test built-in profile retrieval
-        profile = config._get_profile("codeweaver_default")
+        profile = config._get_profile("recommended")
         assert profile is not None
-        assert profile.name == "codeweaver_default"
+        assert profile.name == "recommended"
 
         # Test non-existent profile
         profile = config._get_profile("nonexistent")
@@ -331,7 +331,7 @@ class TestEnhancedCodeWeaverConfig:
     def test_original_defaults_setup(self):
         """Test original defaults setup."""
         config = CodeWeaverConfig()
-        config.defaults.profile = "codeweaver_default"
+        config.defaults.profile = "recommended"
 
         # Trigger the setup
         config._setup_original_defaults()

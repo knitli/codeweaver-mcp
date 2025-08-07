@@ -10,6 +10,18 @@
             "request": "launch",
             "program": "src/codeweaver/cli/__init__.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug Gramfetch Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "scripts/gramfetch.py",
+            "console": "integratedTerminal",
+            "args": [
+                "fetch",
+                "-l",
+                "python"
+            ]
         }
     ]
 }

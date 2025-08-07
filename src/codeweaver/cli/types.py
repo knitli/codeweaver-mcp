@@ -6,12 +6,13 @@
 """
 CLI-specific types and enums for CodeWeaver CLI.
 """
-from codeweaver.cw_types.base_enum import BaseEnum
-from codeweaver.cw_types.services.enums import Service
 from typing import Literal
 
+from codeweaver.cw_types.base_enum import BaseEnum
+from codeweaver.cw_types.config import ServiceType as ServiceType
 
-class OutputFormatEnum(BaseEnum):
+
+class OutputFormat(BaseEnum):
     """Enumeration for output formats supported by the CLI."""
 
     TABLE = "table"
@@ -25,23 +26,24 @@ class OutputFormatEnum(BaseEnum):
         return cls.get_values()
 
 
+class MCPTarget(BaseEnum):
+    """Enumeration for MCP client target applications."""
 
-# Service names that can be managed via CLI
-ServiceName = Literal[
-    "auto_indexing",
-    "chunking",
-    "filtering",
-    "monitoring",
-    "telemetry",
-    "intent_bridge",
-    "intent_orchestrator",
-]
+    CLAUDE_DESKTOP = "claude-desktop"
+    CLAUDE_CODE = "claude-code"
+    CURSOR = "cursor"
+    MCP_JSON = "mcp-json"
+    VSCODE = "vscode"
+    ROO = "roo"
 
-# MCP client target applications
-MCPTarget = Literal["claude-desktop", "claude-code", "cursor", "mcp-json"]
+    @classmethod
+    def choices(cls) -> tuple[str]:
+        """Return all available MCP target choices."""
+        return cls.get_values()
+
 
 # Configuration profiles
-ConfigProfile = Literal["codeweaver_default", "minimal", "performance", "development", "production"]
+ConfigProfile = Literal["recommended", "minimal", "performance", "development", "production"]
 
 
 class CLIError(Exception):

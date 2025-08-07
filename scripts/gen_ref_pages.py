@@ -6,6 +6,8 @@
 
 """
 Generates the API documentation pages and navigation for CodeWeaver.
+
+This script is triggered by `mkdocs-gen-files` during the build process.
 """
 
 import sys
