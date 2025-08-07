@@ -36,35 +36,39 @@ jobs:
           label_trigger: "claude"
           base_branch: "staging"
           max_turns: "30"
-          allowed_tools: &allowed_tools |
-            mcp__context7__resolve-library-id
-            mcp__context7__get-library-docs
-            mcp__sequential-thinking__sequentialthinking
-            Bash(git:*)
-            Bash(jj:*)
-            Bash(mkdir:*)
-            Bash(cp:*)
-            Bash(mv:*)
-            Bash(llm-edit.sh:*)
-            Bash(install-mise.sh:*)
-            Bash(mise:*)
-            Bash(eval 'mise activate')
-            Bash(hk:*)
-            Bash(jq:*)
-            Bash(cargo:*)
+          allowed_tools: |
             Bash(ast-grep:*)
+            Bash(cargo:*)
+            Bash(cp:*)
+            Bash(eval 'mise activate')
+            Bash(git:*)
+            Bash(hk:*)
+            Bash(find:*)
+            Bash(install-mise.sh:*)
+            Bash(jj:*)
+            Bash(jq:*)
+            Bash(llm-edit.sh:*)
+            Bash(mise:*)
+            Bash(mkdir:*)
+            Bash(mv:*)
             Bash(pkl:*)
+            Bash(python:*)
+            Bash(rm:*)
             Bash(reuse:*)
-            Bash(uv:*)
-            Bash(taplo:*)
-            Bash(yamlfmt:*)
             Bash(rustup:*)
-            View
-            GlobTool
-            GrepTool
-            BatchTool
+            Bash(sed:*)
+            Bash(taplo:*)
+            Bash(uv:*)
+            Bash(yamlfmt:*)
+            Batch
+            Glob
+            Grep
             ToDoWrite
-          mcp_config: &mcp_config |
+            View
+            mcp__context7__get-library-docs
+            mcp__context7__resolve-library-id
+            mcp__sequential-thinking__sequentialthinking
+          mcp_config: |
             {
               "mcpServers": {
                 "context7": {
@@ -106,8 +110,60 @@ jobs:
           label_trigger: "claude"
           base_branch: "staging"
           max_turns: "30"
-          allowed_tools: *allowed_tools
-          mcp_config: *mcp_config
+          allowed_tools: |
+            Bash(ast-grep:*)
+            Bash(cargo:*)
+            Bash(cp:*)
+            Bash(eval 'mise activate')
+            Bash(git:*)
+            Bash(hk:*)
+            Bash(find:*)
+            Bash(install-mise.sh:*)
+            Bash(jj:*)
+            Bash(jq:*)
+            Bash(llm-edit.sh:*)
+            Bash(mise:*)
+            Bash(mkdir:*)
+            Bash(mv:*)
+            Bash(pkl:*)
+            Bash(python:*)
+            Bash(rm:*)
+            Bash(reuse:*)
+            Bash(rustup:*)
+            Bash(sed:*)
+            Bash(taplo:*)
+            Bash(uv:*)
+            Bash(yamlfmt:*)
+            Batch
+            Glob
+            Grep
+            ToDoWrite
+            View
+            mcp__context7__get-library-docs
+            mcp__context7__resolve-library-id
+            mcp__sequential-thinking__sequentialthinking
+          mcp_config: |
+            {
+              "mcpServers": {
+                "context7": {
+                  "args": [
+                    "-y",
+                    "@upstash/context7-mcp@latest"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                },
+                "sequential-thinking": {
+                  "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-sequential-thinking"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                }
+              }
+            }
+
           direct_prompt: |
             When a new issue is opened:
               - Review and summarize the issue.
@@ -130,8 +186,59 @@ jobs:
           mode: "agent"
           base_branch: "staging"
           max_turns: "30"
-          allowed_tools: *allowed_tools
-          mcp_config: *mcp_config
+          allowed_tools: |
+            Bash(ast-grep:*)
+            Bash(cargo:*)
+            Bash(cp:*)
+            Bash(eval 'mise activate')
+            Bash(git:*)
+            Bash(hk:*)
+            Bash(find:*)
+            Bash(install-mise.sh:*)
+            Bash(jj:*)
+            Bash(jq:*)
+            Bash(llm-edit.sh:*)
+            Bash(mise:*)
+            Bash(mkdir:*)
+            Bash(mv:*)
+            Bash(pkl:*)
+            Bash(python:*)
+            Bash(rm:*)
+            Bash(reuse:*)
+            Bash(rustup:*)
+            Bash(sed:*)
+            Bash(taplo:*)
+            Bash(uv:*)
+            Bash(yamlfmt:*)
+            Batch
+            Glob
+            Grep
+            ToDoWrite
+            View
+            mcp__context7__get-library-docs
+            mcp__context7__resolve-library-id
+            mcp__sequential-thinking__sequentialthinking
+          mcp_config: |
+            {
+              "mcpServers": {
+                "context7": {
+                  "args": [
+                    "-y",
+                    "@upstash/context7-mcp@latest"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                },
+                "sequential-thinking": {
+                  "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-sequential-thinking"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                }
+              }
+            }
           direct_prompt: |
             When you are asked to review a pull request:
               - Review the changes made in the PR.
@@ -155,8 +262,59 @@ jobs:
           label_trigger: "claude"
           base_branch: "staging"
           max_turns: "30"
-          allowed_tools: *allowed_tools
-          mcp_config: *mcp_config
+          allowed_tools: |
+            Bash(ast-grep:*)
+            Bash(cargo:*)
+            Bash(cp:*)
+            Bash(eval 'mise activate')
+            Bash(git:*)
+            Bash(hk:*)
+            Bash(find:*)
+            Bash(install-mise.sh:*)
+            Bash(jj:*)
+            Bash(jq:*)
+            Bash(llm-edit.sh:*)
+            Bash(mise:*)
+            Bash(mkdir:*)
+            Bash(mv:*)
+            Bash(pkl:*)
+            Bash(python:*)
+            Bash(rm:*)
+            Bash(reuse:*)
+            Bash(rustup:*)
+            Bash(sed:*)
+            Bash(taplo:*)
+            Bash(uv:*)
+            Bash(yamlfmt:*)
+            Batch
+            Glob
+            Grep
+            ToDoWrite
+            View
+            mcp__context7__get-library-docs
+            mcp__context7__resolve-library-id
+            mcp__sequential-thinking__sequentialthinking
+          mcp_config: |
+            {
+              "mcpServers": {
+                "context7": {
+                  "args": [
+                    "-y",
+                    "@upstash/context7-mcp@latest"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                },
+                "sequential-thinking": {
+                  "args": [
+                    "-y",
+                    "@modelcontextprotocol/server-sequential-thinking"
+                  ],
+                  "command": "npx",
+                  "type": "stdio"
+                }
+              }
+            }
           direct_prompt: |
             When you are assigned an issue or it's labeled 'claude':
               - Your job is to resolve it.
@@ -176,4 +334,3 @@ jobs:
                 - Document your changes and the reasoning behind them.
                 - Provide your markdown file with the plan and research information.
               - Submit your solution for review.
-

@@ -24,7 +24,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from functools import cache
 from pathlib import Path
-from typing import Annotated, Any, Literal, Self, TypeGuard
+from typing import Annotated, Any, Literal, LiteralString, Self, TypeGuard
 
 import httpx
 
@@ -307,6 +307,10 @@ class AstGrepSupportedLanguage(Enum):
     LUA = "lua"
     NIX = "nix"
     PHP = "php"
+    PHP_SPARSE = "php_sparse"
+    """PHP has two grammars: standard and what we're calling "sparse".
+
+    The standard grammar supports PHP with other languages embedded (e.g. HTML) where the opening tag is `<?php` but allows for text before/after php tags. What we call `php_sparse` (`php_only` in the grammar's repo) *only* supports pure PHP code (doesn't even require the php tag)."""
     PYTHON = "python"
     RUBY = "ruby"
     RUST = "rust"
@@ -314,13 +318,14 @@ class AstGrepSupportedLanguage(Enum):
     SOLIDITY = "solidity"
     SWIFT = "swift"
     TYPESCRIPT = "typescript"
+    TSX = "tsx"
     YAML = "yaml"
 
     # Special case for all languages
     _ALL = "all"
 
     @classmethod
-    def from_str(cls, value: str) -> AstGrepSupportedLanguage:
+    def from_str(cls, value: str) -> AstGrepSupportedLanguage:  # noqa: C901
         """Returns the enum member from a string."""
         try:
             normalized_value = value.strip().replace("-", "_").lower()
@@ -328,6 +333,8 @@ class AstGrepSupportedLanguage(Enum):
                 case "all":
                     return cls._ALL
                 # handle common aliases
+                case "php_only" | "php_sparse" | "just_php":
+                    return cls.PHP_SPARSE
                 case "c_sharp" | "c#":
                     return cls.CSHARP
                 case "yml":
@@ -364,7 +371,7 @@ class AstGrepSupportedLanguage(Enum):
         return tuple(type(self).members())
 
     @property
-    def repo_tuple(self) -> TreeSitterRepo | tuple[TreeSitterRepo, ...]:
+    def repo_tuple(self) -> TreeSitterRepo | tuple[TreeSitterRepo, ...]:  # noqa: C901
         """Returns the repository tuple for the language."""
         tree_sitter_name = f"tree-sitter-{self.value}" if self != AstGrepSupportedLanguage.CSHARP else "tree-sitter-c-sharp"
         match self:
@@ -396,15 +403,27 @@ class AstGrepSupportedLanguage(Enum):
                     repo=f"tree-sitter/{tree_sitter_name}",
                     branch="master",
                 )
+            case AstGrepSupportedLanguage.PHP_SPARSE:
+                return TreeSitterRepo(
+                    language=self,
+                    repo="tree-sitter/tree-sitter-php",
+                    branch="master",
+                )
+            case AstGrepSupportedLanguage.TSX:
+                return TreeSitterRepo(
+                    language=self,
+                    repo="tree-sitter/tree-sitter-typescript",
+                    branch="master",
+                )
             case AstGrepSupportedLanguage.ELIXIR:
                 return TreeSitterRepo(
                     language=self,
                     repo=f"elixir-lang/{tree_sitter_name}",
                     branch="main",
                 )
-            case AstGrepSupportedLanguage.KOTLIN | AstGrepSupportedLanguage.LUA:
+            case AstGrepSupportedLanguage.KOTLIN | AstGrepSupportedLanguage.LUA | AstGrepSupportedLanguage.YAML:
                 return TreeSitterRepo(
-                    language=self, repo=f"tree-sitter-grammars/{tree_sitter_name}", branch="master" if self == AstGrepSupportedLanguage.KOTLIN else "main"
+                    language=self, repo=f"tree-sitter-grammars/{tree_sitter_name}", branch="main" if self == AstGrepSupportedLanguage.LUA else "master"
                 )
             case AstGrepSupportedLanguage.NIX:
                 return TreeSitterRepo(
@@ -418,14 +437,19 @@ class AstGrepSupportedLanguage(Enum):
                 return TreeSitterRepo(
                     language=self, repo=f"alex-pinkus/{tree_sitter_name}", branch="main"
                 )
-            case AstGrepSupportedLanguage.YAML:
-                return TreeSitterRepo(
-                    language=self, repo=f"tree-sitter-grammars/{tree_sitter_name}", branch="master"
-                )
             case _:
                 raise ValueError(
                     f"{self.value} is not a valid AstGrepSupportedLanguage."
                 )
+
+    @property
+    def keep_dirs(self) -> LiteralString:
+        """Directories to keep when saving the grammar."""
+        if self == AstGrepSupportedLanguage.PHP_SPARSE:
+            return "php_only/src"
+        if self in (AstGrepSupportedLanguage.TYPESCRIPT, AstGrepSupportedLanguage.TSX, AstGrepSupportedLanguage.PHP):
+            return f"{self}/src"
+        return "src"
 
     def __str__(self) -> str:
         """Returns the string representation of the language."""

@@ -12,16 +12,11 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Debug Gramfetch Script",
+            "name": "Debug Fetch Grammars Script",
             "type": "debugpy",
             "request": "launch",
-            "program": "scripts/gramfetch.py",
+            "program": "scripts/fetch_grammars.py",
             "console": "integratedTerminal",
-            "args": [
-                "fetch",
-                "-l",
-                "python"
-            ]
         }
     ]
 }
