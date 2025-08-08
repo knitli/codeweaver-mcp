@@ -95,6 +95,10 @@ Response Shape: <!-- shape of the response object, including fields and types --
 Variants/Pagination: <!-- any variants or pagination strategies used -->
 Auth Requirements: <!-- authentication requirements for the endpoint -->
 
+## Patterns
+
+<!-- common patterns used in the API, such as error handling, pagination, authentication, etc. -->
+
 ## Differences vs Project
 
 Gap: <!-- any gaps between the external API and the current project abstractions -->
@@ -132,7 +136,7 @@ Non-blocking Questions: <!-- any non-blocking questions that could improve under
 
 ## Length:
 
-- **Concise**: Aim for 1-2 pages of markdown, focusing on the most relevant information.
+- **Concise**: Aim for ~2 pages of markdown, focusing on the most relevant information.
 - **No filler**: Avoid unnecessary explanations or context that doesn't directly contribute to understanding the feature integration. Concrete examples and technical details are preferred over high-level summaries.
 - **Direct and actionable**: Provide clear, actionable insights that can be directly applied to the feature implementation.
 - **Avoid repetition**: You can modify the output format to better suit the feature being researched, and to avoid repeating information that you covered in previous sections. However, ensure that the output remains clear and structured.
