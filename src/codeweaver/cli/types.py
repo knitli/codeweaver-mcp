@@ -6,6 +6,7 @@
 """
 CLI-specific types and enums for CodeWeaver CLI.
 """
+
 from typing import Literal
 
 from codeweaver.cw_types.base_enum import BaseEnum

@@ -64,8 +64,16 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
     def _check_enabled(self) -> bool:
         """Check if telemetry is enabled through various opt-out mechanisms."""
         # Environment variable override
-        if (env_enabled := os.environ.get("CW_TELEMETRY_ENABLED", "").lower()) and env_enabled in ("false", "0", "no", "off", "disabled"):
-            self._logger.info("Telemetry explicitly disabled via CW_TELEMETRY_ENABLED environment variable")
+        if (env_enabled := os.environ.get("CW_TELEMETRY_ENABLED", "").lower()) and env_enabled in (
+            "false",
+            "0",
+            "no",
+            "off",
+            "disabled",
+        ):
+            self._logger.info(
+                "Telemetry explicitly disabled via CW_TELEMETRY_ENABLED environment variable"
+            )
             return False
 
         # Configuration setting
@@ -73,8 +81,16 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             return False
 
         # Check for explicit opt-out in environment
-        if (no_telemetry := os.environ.get("CW_NO_TELEMETRY", "").lower()) and no_telemetry not in ("true", "1", "yes", "on", "enabled"):
-            self._logger.info("Telemetry explicitly disabled via CW_NO_TELEMETRY environment variable")
+        if (no_telemetry := os.environ.get("CW_NO_TELEMETRY", "").lower()) and no_telemetry not in (
+            "true",
+            "1",
+            "yes",
+            "on",
+            "enabled",
+        ):
+            self._logger.info(
+                "Telemetry explicitly disabled via CW_NO_TELEMETRY environment variable"
+            )
             return False
         return True
 
@@ -140,7 +156,9 @@ class PostHogTelemetryProvider(BaseServiceProvider, TelemetryService):
             return
 
         # Get API key from config or environment
-        api_key = self._config.api_key or os.environ.get("CW_POSTHOG_API_KEY") or CODEWEAVER_PROJECT_KEY
+        api_key = (
+            self._config.api_key or os.environ.get("CW_POSTHOG_API_KEY") or CODEWEAVER_PROJECT_KEY
+        )
 
         # Allow mock mode for testing
         if self._config.mock_mode:

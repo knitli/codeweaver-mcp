@@ -107,7 +107,7 @@ graph TB
     end
 
     subgraph "CodeWeaver MCP Server"
-        B --> C[process_intent Tool]
+        B --> C[get_context Tool]
         C --> D[Query Processing]
         D --> E[Auto-Indexing]
         D --> F[Semantic Search]

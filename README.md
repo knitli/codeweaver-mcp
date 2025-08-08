@@ -22,20 +22,25 @@ Built on factory patterns and protocol-based interfaces. Mix and match embedding
 Choose from best-in-class providers: Voyage AI (`voyage-code-3`), OpenAI, Cohere, HuggingFace, or bring your own. Each optimized for code understanding with automatic fallbacks.
 
 🗃️ **Multiple Backend Options**
-Support for Qdrant, Pinecone, Weaviate, ChromaDB and more. Start local and scale to cloud with zero code changes.
+Support for Qdrant and easily extensible to other providers (more planned). Start local and scale to cloud with zero code changes.
 
 📚 **Rich Data Sources**
 Index from filesystem, git repositories, databases, APIs, and web sources. Unified interface across all source types.
 
-🔍 **Dual Search Modes**
-- **Semantic Search**: "Find authentication middleware" → Understands meaning and context
-- **Structural Search**: `"def $_($$$_): $$$_"` → Finds exact code patterns using ast-grep
+🔍 **Powered by Multiple Search Strategies**
+- **Semantic Search**: Natural language queries with embedding reranking
+- **Structural Search**: ast-grep patterns for precise code structure matching
+- **Hybrid Search**: Combines semantic and structural search for best results
+- **Support for multiple index and search strategies**: CodeWeaver intelligently selects the best approach based on your query intent, and can combined results from multiple strategies.
 
 ⚙️ **Configuration-Driven**
-Hierarchical TOML configuration with environment variable overrides. No code changes needed to switch providers or backends.
+- **Configure *everything* with TOML or environment variables**. No code changes needed to switch providers, backends, data sources, services, or even search and intent strategies.
+- **Hierarchical TOML configuration** with environment variable overrides. No code changes needed to switch providers or backends.
 
 🎯 **Production Ready**
-Smart batching, advanced filtering, robust error handling, and comprehensive testing framework.
+Smart batching, advanced filtering, robust error handling, and comprehensive testing framework.[^1]
+
+[^1]: We're still in alpha though, so expect some rough edges. But we have a solid foundation and are actively improving!
 
 ## Our Design Philosophy
 
@@ -45,13 +50,13 @@ CodeWeaver is designed to be intuitive and easy to use. We prioritize developer 
 - **Simple Configuration**: Hierarchical TOML files or environment variables
 - **Unified Interface**: Consistent API across all providers and backends
 - **Extensive Documentation**: Clear examples, tutorials, and best practices
-- **Community Driven**: Open source with active discussions and contributions
+- **Community Driven**: Open source with active discussions and contributions and responsive core dev team (of one...)
 - **MCP Integration**: Seamless compatibility with AI assistants like Claude.
-- **Make AI Useful for Your Codebase**: CodeWeaver is built to help AI assistants like Claude understand your codebase better, enabling them to answer questions, find patterns, and assist with development tasks. Less tokens. More context. Better results.
+- **Make AI Useful for Your Codebase**: We built CodeWeaver to help AI assistants like Claude understand your codebase better, enabling them to answer questions, find patterns, and assist with development tasks. Less tokens. More context. Better results.
 
 ### **Revolutionary Intent-Based Interface**
 
-- **Natural Language First**. CodeWeaver uses a single `process_intent` tool that understands natural language queries like "find authentication functions" or "analyze database patterns". No complex tool selection or parameter configuration required.
+- **Natural Language First**. CodeWeaver uses a single `get_context` tool that understands natural language queries like "find authentication functions" or "analyze database patterns". No complex tool selection or parameter configuration required.
   - Traditional MCP servers force AI assistants to choose between multiple tools (`index_codebase`, `search_code`, `ast_grep_search`). CodeWeaver eliminates this complexity with intelligent intent processing.
 - **Automatic Background Indexing**. CodeWeaver automatically indexes your codebase in the background using file system monitoring. No manual indexing required - just start asking questions about your code.
 - **Intent-Driven Architecture**. Our sophisticated intent processing pipeline understands what you want to accomplish and automatically selects the best combination of search strategies, providers, and processing techniques.
@@ -156,7 +161,7 @@ dimensions = 1024        # 256, 512, 1024, 2048
 
 [reranking]
 provider = "voyage"
-model = "voyage-rerank-2"
+model = "voyage-rerank-3"
 ```
 
 **OpenAI**
@@ -429,8 +434,8 @@ host = "localhost"
 
 | Tool | Description | Status |
 |------|-------------|--------|
-| `process_intent` | **Primary Tool** - Natural language intent processing for all codebase interactions | ✅ Active |
-| `get_intent_capabilities` | Query available intent capabilities and supported operations | ✅ Active |
+| `get_context` | **Primary Tool** - Natural language intent processing for all codebase interactions | ✅ Active |
+| `get_context_capabilities` | Query available intent capabilities and supported operations | ✅ Active |
 | `index_codebase` | **Legacy** - Manual indexing (replaced by automatic background indexing) | ⚠️ Deprecated |
 | `search_code` | **Legacy** - Direct search (replaced by intent processing) | ⚠️ Deprecated |
 | `ast_grep_search` | **Legacy** - Structural search (integrated into intent processing) | ⚠️ Deprecated |

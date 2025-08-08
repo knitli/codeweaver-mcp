@@ -131,13 +131,14 @@ async def _get_service_health(
 @app.command
 async def health(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     detailed: Annotated[
-        bool, Parameter("--detailed", "-d", help="Show detailed health information")
+        bool, Parameter(name=["--detailed", "-d"], help="Show detailed health information")
     ] = False,
 ) -> None:
     """Show comprehensive health status of CodeWeaver server and services."""
@@ -177,13 +178,14 @@ async def _get_services_stats(services_manager, available_services, include_stat
 @app.command
 async def services(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     include_stats: Annotated[
-        bool, Parameter("--stats", "-s", help="Include service statistics")
+        bool, Parameter(name=["--stats", "-s"], help="Include service statistics")
     ] = False,
 ) -> None:
     """Show statistics for all services."""
@@ -270,13 +272,14 @@ def indexing_output(indexing_stats: dict[str, Any], fmt: OutputFormat, *, detail
 @app.command
 async def indexing(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     detailed: Annotated[
-        bool, Parameter("--detailed", "-d", help="Show detailed indexing statistics")
+        bool, Parameter(name=["--detailed", "-d"], help="Show detailed indexing statistics")
     ] = False,
 ) -> None:
     """Show auto-indexing service statistics."""
@@ -345,13 +348,14 @@ async def _collect_end_metrics(server, performance_data):
 @app.command
 async def performance(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     duration: Annotated[
-        int, Parameter("--duration", "-d", help="Duration in seconds to collect metrics")
+        int, Parameter(name=["--duration", "-d"], help="Duration in seconds to collect metrics")
     ] = 60,
 ) -> None:
     """Show performance metrics and resource usage."""
@@ -499,10 +503,11 @@ def _format_indexing_status(indexing, output_lines):
 @app.command
 async def summary(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> str:
     """Summarize stats and format output."""
@@ -530,4 +535,4 @@ async def summary(
 
 if __name__ == "__main__":
     # Allow running individual command module for testing
-    app.parse_args()
+    app()

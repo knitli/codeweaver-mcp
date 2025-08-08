@@ -624,13 +624,13 @@ class OpenTelemetryMonitoring:
 
     async def trace_intent_processing(self, intent: str, intent_type: str):
         """Trace intent processing with distributed tracing."""
-        with self.tracer.start_as_current_span("process_intent") as span:
+        with self.tracer.start_as_current_span("get_context") as span:
             span.set_attribute("intent.type", intent_type)
             span.set_attribute("intent.query", intent[:100])  # Truncate for privacy
 
             try:
                 # Process intent
-                result = await self._process_intent_impl(intent, intent_type)
+                result = await self._get_context_impl(intent, intent_type)
 
                 span.set_attribute("intent.status", "success")
                 span.set_attribute("intent.result_count", len(result.items))

@@ -28,7 +28,7 @@ Through delegated file-by-file analysis, I identified extensive systematic fabri
 
 ✅ What Actually Works (Real Implementation)
 
-- Core MCP server with intent-based process_intent tool ✅
+- Core MCP server with intent-based get_context tool ✅
 - Embedding providers: VoyageAI, OpenAI, Cohere, HuggingFace ✅
 - Vector backend: Qdrant (only backend that exists) ✅
 - Plugin architecture with factory patterns ✅

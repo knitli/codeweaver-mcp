@@ -10,6 +10,14 @@ This module provides a single import point for all commonly used types,
 classes, and functions from the _types subpackage, eliminating circular
 dependency issues and simplifying import statements.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal
+
+
+if TYPE_CHECKING:
+    from fastmcp import Client, FastMCP
+    from fastmcp.client import FastMCPTransport
 
 from codeweaver.cw_types.backends import (
     BACKEND_PROVIDER_REGISTRY,
@@ -78,49 +86,6 @@ from codeweaver.cw_types.exceptions import (
     ServiceProviderError,
     SourceProviderError,
 )
-
-
-# Configuration exceptions - define locally to avoid circular imports
-class ConfigurationError(Exception):
-    """Configuration-related errors."""
-
-
-class ProfileError(ConfigurationError):
-    """Profile-related configuration errors."""
-
-
-class PluginConfigurationError(ConfigurationError):
-    """Plugin configuration errors."""
-
-
-# Factory exceptions - define locally to avoid circular import with factories module
-class CodeWeaverFactoryError(Exception):
-    """Base exception for factory-related errors."""
-
-
-class ComponentCreationError(CodeWeaverFactoryError):
-    """Error during component creation."""
-
-
-class ComponentNotFoundError(CodeWeaverFactoryError):
-    """Requested component not found in registry."""
-
-
-class ComponentUnavailableError(CodeWeaverFactoryError):
-    """Component found but not available for use."""
-
-
-class PluginError(CodeWeaverFactoryError):
-    """Plugin-related error."""
-
-
-class RegistrationError(CodeWeaverFactoryError):
-    """Component registration error."""
-
-
-class ValidationError(CodeWeaverFactoryError):
-    """Validation failure error."""
-
 
 # Factories and data structures
 from codeweaver.cw_types.factories import (
@@ -285,6 +250,52 @@ from codeweaver.cw_types.sources import (
 )
 
 
+CodeWeaver = FastMCP[Literal["CodeWeaver"]]
+CodeWeaverClient = Client[FastMCPTransport]
+
+
+# Configuration exceptions - define locally to avoid circular imports
+class ConfigurationError(Exception):
+    """Configuration-related errors."""
+
+
+class ProfileError(ConfigurationError):
+    """Profile-related configuration errors."""
+
+
+class PluginConfigurationError(ConfigurationError):
+    """Plugin configuration errors."""
+
+
+# Factory exceptions - define locally to avoid circular import with factories module
+class CodeWeaverFactoryError(Exception):
+    """Base exception for factory-related errors."""
+
+
+class ComponentCreationError(CodeWeaverFactoryError):
+    """Error during component creation."""
+
+
+class ComponentNotFoundError(CodeWeaverFactoryError):
+    """Requested component not found in registry."""
+
+
+class ComponentUnavailableError(CodeWeaverFactoryError):
+    """Component found but not available for use."""
+
+
+class PluginError(CodeWeaverFactoryError):
+    """Plugin-related error."""
+
+
+class RegistrationError(CodeWeaverFactoryError):
+    """Component registration error."""
+
+
+class ValidationError(CodeWeaverFactoryError):
+    """Validation failure error."""
+
+
 __all__ = (
     "BACKEND_PROVIDER_REGISTRY",
     "PROVIDER_REGISTRY",
@@ -317,6 +328,8 @@ __all__ = (
     "ChunkingStats",
     "ChunkingStrategy",
     "CodeChunk",
+    "CodeWeaver",
+    "CodeWeaverClient",
     "CodeWeaverError",
     "CodeWeaverFactoryError",
     "CohereModel",

@@ -17,7 +17,7 @@ graph TB
     end
 
     subgraph "CodeWeaver MCP Server"
-        B --> C[process_intent Tool]
+        B --> C[get_context Tool]
         C --> D[Query Processing]
         D --> E[Service Layer]
     end
@@ -47,8 +47,8 @@ graph TB
 
 ### MCP Server
 The main server implements the Model Context Protocol and exposes tools for AI assistants:
-- **process_intent**: Natural language interface for code exploration
-- **get_intent_capabilities**: Discover available features and capabilities
+- **get_context**: Natural language interface for code exploration
+- **get_context_capabilities**: Discover available features and capabilities
 
 ### Query Processing Engine
 Converts natural language queries into structured operations:

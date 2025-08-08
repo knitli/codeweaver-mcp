@@ -10,6 +10,7 @@ A foundational enum class for the CodeWeaver project for common functionality.
 import enum
 
 
+@enum.unique
 class BaseEnum(enum.Enum):
     """Base class for all enums in the codebase."""
 

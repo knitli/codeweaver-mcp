@@ -76,7 +76,6 @@ class BenchmarkResult:
 
 
 class ComponentBenchmarkResult(BaseModel):
-
     """Result of a component-specific benchmark."""
 
     component_name: str

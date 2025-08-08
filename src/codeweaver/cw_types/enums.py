@@ -169,7 +169,7 @@ class Language(BaseEnum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def ast_grep_languages(cls) -> tuple["Language"]:
+    def ast_grep_languages(cls) -> tuple["Language", ...]:
         """Languages supported by Ast-Grep's builtin parsers."""
         return tuple(
             sorted(

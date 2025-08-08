@@ -33,14 +33,6 @@
             "args": ["mcp-server-fetch"],
             "command": "uvx"
         },
-        "filesystem": {
-            "args": [
-                "--bun",
-                "@modelcontextprotocol/server-filesystem",
-                "${workspaceFolder}"
-            ],
-            "command": "bunx"
-        },
         "github-remote": {
             "headers": {
                 "Authorization": "Bearer ${input:github_mcp_pat}"
@@ -64,19 +56,6 @@
             ],
             "command": "bunx",
             "type": "stdio"
-        },
-        "mem0-memory-mcp": {
-            "command": "bunx",
-            "args": [
-                "--bun",
-                "@smithery/cli@latest",
-                "run",
-                "@mem0ai/mem0-memory-mcp",
-                "--key",
-                "${env:MEM0}",
-                "--profile",
-                "${env:SMITHERY_PROFILE}"
-            ]
         },
         "tavily": {
             "command": "bunx",

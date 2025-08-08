@@ -96,7 +96,7 @@ keywords = [
 
 
 [project.scripts]
-codeweaver = "codeweaver:cli.run_async_cli"
+codeweaver = "codeweaver.cli.app:run_async_cli"
 
 [project.urls]
 Changelog = "https://github.com/knitli/codeweaver-mcp/blob/main/CHANGELOG.md"
@@ -149,8 +149,9 @@ dev = [
     "copychat>=0.7.2",
     "pdbpp>=0.11.7",
     "pyperclip>=1.9.0",
+    "pydantic-ai>=0.6.2",
 ]
-typing = ["pylance>=0.32.0"]
+typing = ["pyright>=1.1.403"]
 
 [project.optional-dependencies]
 
@@ -243,6 +244,28 @@ backend-docarray = ["docarray>=0.40.1"]
 backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
 # backend-docarray-redis = ["docarray[redis]>=0.40.1"]
 # backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
+
+# ==== Authentication and Authorization Middleware ====
+# Optional middleware to add authentication and authorization capabilities to the CodeWeaver server.
+# This allows you to secure your CodeWeaver instance with various authentication providers and authorization policies.
+# The middleware can be used to enforce access control policies, authenticate users, and manage permissions.
+
+# TODO: Implement authentication and authorization middleware -- should be simple to add
+# permit.io middleware - see https://gofastmcp.com/integrations/permit
+auth-permitio = ["permit-fastmcp>=0.1.1"]
+
+# eunomia middleware - see https://gofastmcp.com/integrations/eunomia-authorization
+auth-eunomia = ["eunomia-mcp>=0.3.9"]
+
+# workos AuthKit middleware - see https://gofastmcp.com/integrations/authkit
+# No additional dependencies required, it's purely REST-based.
+# Enable with environment variables:
+#  ## Instruct FastMCP to use the AuthKit provider:
+#    FASTMCP_SERVER_AUTH=AUTHKIT
+
+#     configure the AuthKit provider
+#     FASTMCP_SERVER_AUTH_AUTHKITPROVIDER_AUTHKIT_DOMAIN="https://your-project-12345.authkit.app"
+#     FASTMCP_SERVER_AUTH_AUTHKITPROVIDER_BASE_URL="http://localhost:8000"
 
 [tool.uv-dynamic-versioning]
 vcs = "git"
@@ -338,3 +361,27 @@ markers = [
 asyncio_mode = "auto"
 timeout = 300
 timeout_method = "thread"
+
+[tool.pyright]
+strict = ["src/codeweaver/**/*.py"]
+include = ["src/codeweaver/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
+exclude = ["src/codeweaver/parsers/**/*.py", ".venv/**", "dist/**", "build/**", "docs/**", "tests/data/**"]
+autoImportCompletions = true
+deprecateTypingAliases = true
+pythonPlatform = "Linux"
+pythonVersion = "3.11"
+reportCallnDefaultInitializer = "information"
+reportImplicitStringConcatenation = "error"
+reportImportCycles = "warning"
+reportPropertyTypeMismatch = "error"
+reportShadowedImports = "error"
+reportUninitializedInstanceVariable = "information"
+reportUnusedCallResult = "information"
+strictDictionaryInference = true
+strictListInference = true
+strictParameterNoneValue = true
+strictSetInference = true
+venvPath = ".venv"
+# we use standard for internal scripts and tooling,
+# the `strict` parameter above sets strict for the main codebase
+typeCheckingMode = "standard"

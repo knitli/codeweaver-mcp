@@ -99,7 +99,7 @@ class IntentServiceBridge(BaseServiceProvider):
             self.logger.info("Intent service bridge is healthy")
             return True
 
-    async def process_intent(self, user_input: str, context: dict[str, Any]) -> IntentResult:
+    async def get_context(self, user_input: str, context: dict[str, Any]) -> IntentResult:
         # sourcery skip: use-fstring-for-concatenation
         """
         Process intent through the orchestrator.
@@ -123,7 +123,7 @@ class IntentServiceBridge(BaseServiceProvider):
                 "Processing intent through bridge: %s",
                 user_input[:100] + "..." if len(user_input) > 100 else user_input,
             )
-            result = await self.intent_orchestrator.process_intent(user_input, context)
+            result = await self.intent_orchestrator.get_context(user_input, context)
             self.logger.info(
                 "Intent processed successfully: %s (strategy: %s)",
                 result.success,
@@ -135,7 +135,7 @@ class IntentServiceBridge(BaseServiceProvider):
         else:
             return result
 
-    async def get_intent_capabilities(self) -> dict[str, Any]:
+    async def get_context_capabilities(self) -> dict[str, Any]:
         """
         Get intent layer capabilities.
 
@@ -183,7 +183,7 @@ class IntentServiceBridge(BaseServiceProvider):
             if self.auto_indexing_service:
                 context["auto_indexing_service"] = self.auto_indexing_service
             context["intent_bridge"] = self
-            context["intent_capabilities"] = await self.get_intent_capabilities()
+            context["intent_capabilities"] = await self.get_context_capabilities()
             self.logger.debug("Intent services injected into FastMCP context")
         except Exception:
             self.logger.exception("Failed to inject intent services into context")

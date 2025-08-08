@@ -61,19 +61,22 @@ async def _handle_service_start(
 @app.command
 async def start(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     paths: Annotated[
         list[str] | None,
-        Parameter("--paths", "-p", help="Specific paths to index (overrides config)"),
+        Parameter(name=["--paths", "-p"], help="Specific paths to index (overrides config)"),
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     watch: Annotated[
-        bool, Parameter("--watch", "-w", help="Enable file watching for real-time updates")
+        bool, Parameter(name=["--watch", "-w"], help="Enable file watching for real-time updates")
     ] = True,
-    force: Annotated[bool, Parameter("--force", help="Force restart if already running")] = False,
+    force: Annotated[
+        bool, Parameter(name=["--force"], help="Force restart if already running")
+    ] = False,
 ) -> None:
     """Start the auto-indexing service."""
     try:
@@ -124,13 +127,14 @@ async def start(
 @app.command
 async def stop(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     force: Annotated[
-        bool, Parameter("--force", help="Force stop without graceful shutdown")
+        bool, Parameter(name=["--force"], help="Force stop without graceful shutdown")
     ] = False,
 ) -> None:
     """Stop the auto-indexing service."""
@@ -187,13 +191,14 @@ def _print_status_intro(status_data: "AutoIndexingService") -> None:
 @app.command
 async def status(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     detailed: Annotated[
-        bool, Parameter("--detailed", "-d", help="Show detailed indexing statistics")
+        bool, Parameter(name=["--detailed", "-d"], help="Show detailed indexing statistics")
     ] = False,
 ) -> None:
     """Show auto-indexing service status and statistics."""
@@ -222,13 +227,14 @@ async def status(
 async def add_path(
     path: Annotated[str, Parameter(help="Path to add to indexing")],
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     recursive: Annotated[
-        bool, Parameter("--recursive", "-r", help="Index path recursively")
+        bool, Parameter(name=["--recursive", "-r"], help="Index path recursively")
     ] = True,
 ) -> None:
     """Add a path to auto-indexing."""
@@ -267,10 +273,11 @@ async def add_path(
 async def remove_path(
     path: Annotated[str, Parameter(help="Path to remove from indexing")],
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """Remove a path from auto-indexing."""
@@ -331,18 +338,21 @@ async def reindex(
         Parameter(help="Specific paths to reindex (if not provided, reindexes all)"),
     ] = None,
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     wait: Annotated[
-        bool, Parameter("--wait", "-w", help="Wait for reindexing to complete")
+        bool, Parameter(name=["--wait", "-w"], help="Wait for reindexing to complete")
     ] = False,
     connection_timeout: Annotated[
         float,
         Parameter(
-            "--timeout", "-t", alias="timeout", help="Timeout in seconds to wait for completion"
+            name=["--timeout", "-t"],
+            alias="timeout",
+            help="Timeout in seconds to wait for completion",
         ),
     ] = 300.0,
 ) -> None:
@@ -381,10 +391,11 @@ async def reindex(
 async def watch(
     enable: Annotated[bool, Parameter(help="Enable (true) or disable (false) file watching")],
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """Enable or disable file watching for real-time indexing."""
@@ -422,4 +433,4 @@ async def watch(
 
 
 if __name__ == "__main__":
-    app.parse_args()
+    app()

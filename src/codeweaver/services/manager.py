@@ -5,27 +5,18 @@
 
 """Services manager for coordinating all service providers."""
 
+from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
-
-
-if TYPE_CHECKING:
-    from fastmcp import FastMCP
+from typing import Any
 
 from codeweaver.cw_types import (
-    CacheService,
-    ContextIntelligenceService,
-    ErrorHandlingService,
+    CodeWeaver,
     HealthStatus,
-    ImplicitLearningService,
-    LoggingService,
-    MetricsService,
-    MonitoringService,
-    RateLimitingService,
     ServiceConfig,
     ServiceCreationError,
     ServiceInitializationError,
@@ -34,10 +25,6 @@ from codeweaver.cw_types import (
     ServicesConfig,
     ServicesHealthReport,
     ServiceType,
-    TelemetryService,
-    TimingService,
-    ValidationService,
-    ZeroShotOptimizationService,
 )
 from codeweaver.factories.service_registry import ServiceRegistry
 from codeweaver.services.providers.chunking import ChunkingService
@@ -51,12 +38,12 @@ class ServicesManager:
         self,
         config: ServicesConfig,
         logger: logging.Logger | None = None,
-        fastmcp_server: "FastMCP | None" = None,  # NEW: FastMCP server reference
+        fastmcp_server: CodeWeaver | None = None,  # FastMCP server reference
     ):
         """Initialize the services manager with configuration, logger, and FastMCP server."""
         self._config = config
         self._logger = logger or logging.getLogger("codeweaver.services.manager")
-        self._fastmcp_server = fastmcp_server  # NEW: Store FastMCP server reference
+        self._fastmcp_server: CodeWeaver | None = fastmcp_server  # Store FastMCP server reference
 
         # Service registry
         self._registry = ServiceRegistry(self._logger)
@@ -137,59 +124,59 @@ class ServicesManager:
         except Exception:
             self._logger.exception("Error during services manager shutdown")
 
-    def get_chunking_service(self) -> ChunkingService:
+    def get_chunking_service(self) -> ServiceProvider:
         """Get the chunking service."""
         if service := self._services.get(ServiceType.CHUNKING):
             return service
         raise ServiceNotFoundError(ServiceType.CHUNKING)
 
-    def get_filtering_service(self) -> FilteringService:
+    def get_filtering_service(self) -> ServiceProvider:
         """Get the filtering service."""
         if service := self._services.get(ServiceType.FILTERING):
             return service
         raise ServiceNotFoundError(ServiceType.FILTERING)
 
-    def get_validation_service(self) -> ValidationService | None:
+    def get_validation_service(self) -> ServiceProvider | None:
         """Get the validation service if available."""
         service = self._services.get(ServiceType.VALIDATION)
         return service or None
 
-    def get_cache_service(self) -> CacheService | None:
+    def get_cache_service(self) -> ServiceProvider | None:
         """Get the cache service if available."""
         service = self._services.get(ServiceType.CACHE)
         return service or None
 
-    def get_monitoring_service(self) -> MonitoringService | None:
+    def get_monitoring_service(self) -> ServiceProvider | None:
         """Get the monitoring service if available."""
         service = self._services.get(ServiceType.MONITORING)
         return service or None
 
-    def get_metrics_service(self) -> MetricsService | None:
+    def get_metrics_service(self) -> ServiceProvider | None:
         """Get the metrics service if available."""
         service = self._services.get(ServiceType.METRICS)
         return service or None
 
-    def get_telemetry_service(self) -> "TelemetryService | None":
+    def get_telemetry_service(self) -> ServiceProvider | None:
         """Get the telemetry service if available."""
         service = self._services.get(ServiceType.TELEMETRY)
         return service or None
 
-    def get_implicit_learning_service(self) -> "ImplicitLearningService | None":
+    def get_implicit_learning_service(self) -> ServiceProvider | None:
         """Get the implicit learning service if available."""
         service = self._services.get(ServiceType.IMPLICIT_LEARNING)
         return service or None
 
-    def get_context_intelligence_service(self) -> "ContextIntelligenceService | None":
+    def get_context_intelligence_service(self) -> ServiceProvider | None:
         """Get the context intelligence service if available."""
         service = self._services.get(ServiceType.CONTEXT_INTELLIGENCE)
         return service or None
 
-    def get_zero_shot_optimization_service(self) -> "ZeroShotOptimizationService | None":
+    def get_zero_shot_optimization_service(self) -> ServiceProvider | None:
         """Get the zero-shot optimization service if available."""
         service = self._services.get(ServiceType.ZERO_SHOT_OPTIMIZATION)
         return service or None
 
-    async def get_service(self, service_type: ServiceType | str) -> ServiceProvider | None:
+    async def get_service(self, service_type: ServiceType) -> ServiceProvider | None:
         """Get any service by type or string identifier."""
         # Handle string keys for special services like intent_bridge
         return self._services.get(service_type)
@@ -203,7 +190,7 @@ class ServicesManager:
         for service in self._services.values():
             if hasattr(service, "start"):
                 try:
-                    service.start()
+                    service.initialize()
                     self._logger.info("Started service: %s", service.service_type.value)
                 except Exception:
                     self._logger.exceptions(
@@ -215,24 +202,24 @@ class ServicesManager:
         for service in self._services.values():
             if hasattr(service, "stop"):
                 try:
-                    service.stop()
+                    service.shutdown()
                     self._logger.info("Stopped service: %s", service.service_type.value)
                 except Exception:
                     self._logger.exception("Failed to stop service %s", service.service_type.value)
 
-    def get_logging_service(self) -> LoggingService | None:
+    def get_logging_service(self) -> ServiceProvider | None:
         """Get the logging middleware service."""
         return self._middleware_services.get(ServiceType.LOGGING)
 
-    def get_timing_service(self) -> TimingService | None:
+    def get_timing_service(self) -> ServiceProvider | None:
         """Get the timing middleware service."""
         return self._middleware_services.get(ServiceType.TIMING)
 
-    def get_error_handling_service(self) -> ErrorHandlingService | None:
+    def get_error_handling_service(self) -> ServiceProvider | None:
         """Get the error handling middleware service."""
         return self._middleware_services.get(ServiceType.ERROR_HANDLING)
 
-    def get_rate_limiting_service(self) -> RateLimitingService | None:
+    def get_rate_limiting_service(self) -> ServiceProvider | None:
         """Get the rate limiting middleware service."""
         return self._middleware_services.get(ServiceType.RATE_LIMITING)
 

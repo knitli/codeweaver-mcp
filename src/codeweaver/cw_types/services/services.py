@@ -5,6 +5,8 @@
 
 """Service protocol interfaces for CodeWeaver."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
@@ -308,19 +310,19 @@ class MonitoringService(Protocol):
         """Stop monitoring services."""
         ...
 
-    async def add_service(self, service_type: "ServiceType", service: Any) -> None:
+    async def add_service(self, service_type: ServiceType, service: Any) -> None:
         """Add a service to monitoring."""
         ...
 
-    async def remove_service(self, service_type: "ServiceType") -> None:
+    async def remove_service(self, service_type: ServiceType) -> None:
         """Remove a service from monitoring."""
         ...
 
-    async def get_health_status(self) -> dict["ServiceType", ServiceHealth]:
+    async def get_health_status(self) -> dict[ServiceType, ServiceHealth]:
         """Get health status of all monitored services."""
         ...
 
-    async def check_service_health(self, service_type: "ServiceType") -> ServiceHealth:
+    async def check_service_health(self, service_type: ServiceType) -> ServiceHealth:
         """Check health of a specific service."""
         ...
 

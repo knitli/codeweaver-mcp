@@ -35,7 +35,7 @@ class TestIntentServiceBridge:
     def mock_intent_orchestrator(self):
         """Mock intent orchestrator."""
         orchestrator = Mock()
-        orchestrator.process_intent = AsyncMock()
+        orchestrator.get_context = AsyncMock()
         orchestrator.get_capabilities = AsyncMock()
         orchestrator.health_check = AsyncMock()
         return orchestrator
@@ -130,7 +130,7 @@ class TestIntentServiceBridge:
         is_healthy = await intent_bridge._check_health()
         assert is_healthy is False
 
-    async def test_process_intent_success(self, intent_bridge, mock_intent_orchestrator):
+    async def test_get_context_success(self, intent_bridge, mock_intent_orchestrator):
         """Test successful intent processing."""
         intent_bridge.bridge_initialized = True
         intent_bridge.intent_orchestrator = mock_intent_orchestrator
@@ -141,23 +141,23 @@ class TestIntentServiceBridge:
             metadata={"intent_type": "SEARCH"},
             strategy_used="simple_search",
         )
-        mock_intent_orchestrator.process_intent.return_value = expected_result
+        mock_intent_orchestrator.get_context.return_value = expected_result
 
-        result = await intent_bridge.process_intent("find auth functions", {})
+        result = await intent_bridge.get_context("find auth functions", {})
 
         assert result == expected_result
-        mock_intent_orchestrator.process_intent.assert_called_once_with("find auth functions", {})
+        mock_intent_orchestrator.get_context.assert_called_once_with("find auth functions", {})
 
-    async def test_process_intent_not_initialized(self, intent_bridge):
+    async def test_get_context_not_initialized(self, intent_bridge):
         """Test intent processing when bridge is not initialized."""
         intent_bridge.bridge_initialized = False
 
         with pytest.raises(
             ServiceIntegrationError, match="Intent service bridge not properly initialized"
         ):
-            await intent_bridge.process_intent("test intent", {})
+            await intent_bridge.get_context("test intent", {})
 
-    async def test_get_intent_capabilities_success(self, intent_bridge, mock_intent_orchestrator):
+    async def test_get_context_capabilities_success(self, intent_bridge, mock_intent_orchestrator):
         """Test getting intent capabilities."""
         intent_bridge.bridge_initialized = True
         intent_bridge.intent_orchestrator = mock_intent_orchestrator
@@ -169,18 +169,18 @@ class TestIntentServiceBridge:
         }
         mock_intent_orchestrator.get_capabilities.return_value = mock_orchestrator_capabilities
 
-        capabilities = await intent_bridge.get_intent_capabilities()
+        capabilities = await intent_bridge.get_context_capabilities()
 
         assert capabilities["available"] is True
         assert capabilities["intent_types"] == ["SEARCH", "UNDERSTAND", "ANALYZE"]
         assert capabilities["background_indexing"] is True
         assert "intent_types" in capabilities
 
-    async def test_get_intent_capabilities_not_initialized(self, intent_bridge):
+    async def test_get_context_capabilities_not_initialized(self, intent_bridge):
         """Test getting capabilities when not initialized."""
         intent_bridge.bridge_initialized = False
 
-        capabilities = await intent_bridge.get_intent_capabilities()
+        capabilities = await intent_bridge.get_context_capabilities()
 
         assert capabilities["available"] is False
         assert "Intent service bridge not initialized" in capabilities["error"]
@@ -195,7 +195,7 @@ class TestIntentServiceBridge:
 
         context = {}
 
-        with patch.object(intent_bridge, "get_intent_capabilities") as mock_capabilities:
+        with patch.object(intent_bridge, "get_context_capabilities") as mock_capabilities:
             mock_capabilities.return_value = {"available": True}
 
             await intent_bridge.inject_services_into_context(context)

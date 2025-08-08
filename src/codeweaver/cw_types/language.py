@@ -179,7 +179,7 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "Makefile",
                         language_type=ConfigLanguage.MAKEFILE,
-                        dependency_key_paths=(("CXXFLAGS",), ("LDFLAGS",))
+                        dependency_key_paths=(("CXXFLAGS",), ("LDFLAGS",)),
                     ),
                 )
             case SemanticSearchLanguage.C_SHARP:
@@ -191,8 +191,14 @@ class SemanticSearchLanguage(BaseEnum):
                         dependency_key_paths=(
                             ("configuration", "appSettings", "add"),
                             ("configuration", "connectionStrings", "add"),
-                            ("configuration", "runtime", "assemblyBinding", "dependentAssembly", "assemblyIdentity"),
-                        )
+                            (
+                                "configuration",
+                                "runtime",
+                                "assemblyBinding",
+                                "dependentAssembly",
+                                "assemblyIdentity",
+                            ),
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -211,23 +217,15 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "mix.exs",
                         language_type=ConfigLanguage.SELF,
-                        dependency_key_paths=(
-                            ("deps",),
-                            ("aliases", "deps"),
-                        ),
+                        dependency_key_paths=(("deps",), ("aliases", "deps")),
                     ),
                 )
             case SemanticSearchLanguage.GO:
-                return (
-                    LanguageConfigFile(
-                        language=self,
-                        path=PROJECT_ROOT / "go.mod",
-                        language_type=ConfigLanguage.INI,
-                        dependency_key_paths=(
-                            ("require",),
-                            ("replace",)
-                        )
-                    )
+                return LanguageConfigFile(
+                    language=self,
+                    path=PROJECT_ROOT / "go.mod",
+                    language_type=ConfigLanguage.INI,
+                    dependency_key_paths=(("require",), ("replace",)),
                 )
             case SemanticSearchLanguage.HASKELL:
                 return (
@@ -235,18 +233,13 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "package.yaml",
                         language_type=ConfigLanguage.YAML,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                            ("build-depends",),
-                        )
+                        dependency_key_paths=(("dependencies",), ("build-depends",)),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=Path(os.environ.get("STACK_YAML", PROJECT_ROOT / "stack.yml")),
                         language_type=ConfigLanguage.YAML,
-                        dependency_key_paths=(
-                            ("extra-deps",),
-                        )
+                        dependency_key_paths=(("extra-deps",),),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -257,7 +250,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("library", "build-depends"),
                             ("executable", "build-depends"),
                         ),
-                    )
+                    ),
                 )
             case SemanticSearchLanguage.JAVA:
                 return (
@@ -268,7 +261,7 @@ class SemanticSearchLanguage(BaseEnum):
                         dependency_key_paths=(
                             ("project", "dependencies", "dependency"),
                             ("project", "dependencyManagement", "dependencies", "dependency"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -278,7 +271,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("dependencies",),
                             ("configurations", "compileClasspath", "dependencies"),
                             ("configurations", "runtimeClasspath", "dependencies"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -288,7 +281,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("dependencies",),
                             ("configurations", "compileClasspath", "dependencies"),
                             ("configurations", "runtimeClasspath", "dependencies"),
-                        )
+                        ),
                     ),
                 )
             case (
@@ -302,9 +295,7 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "package.json",
                         language_type=ConfigLanguage.JSON,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",),),
                     ),
                 )
             case SemanticSearchLanguage.KOTLIN:
@@ -317,7 +308,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("dependencies",),
                             ("configurations", "compileClasspath", "dependencies"),
                             ("configurations", "runtimeClasspath", "dependencies"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -326,7 +317,7 @@ class SemanticSearchLanguage(BaseEnum):
                         dependency_key_paths=(
                             ("dependencyResolutionManagement", "repositories"),
                             ("pluginManagement", "repositories"),
-                        )
+                        ),
                     ),
                 )
             case SemanticSearchLanguage.LUA:
@@ -335,28 +326,19 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "luarocks.json",
                         language_type=ConfigLanguage.JSON,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                            ("build_dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",), ("build_dependencies",)),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "rockspec.json",
                         language_type=ConfigLanguage.JSON,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                            ("build_dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",), ("build_dependencies",)),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "rockspec",
                         language_type=ConfigLanguage.INI,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                            ("build_dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",), ("build_dependencies",)),
                     ),
                 )
             case SemanticSearchLanguage.NIX:
@@ -371,7 +353,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("nativeBuildInputs",),
                             ("propagatedBuildInputs",),
                             ("buildInputs", "dependencies"),
-                        )
+                        ),
                     ),
                 )
             case SemanticSearchLanguage.PHP:
@@ -380,9 +362,7 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "composer.json",
                         language_type=ConfigLanguage.JSON,
-                        dependency_key_paths=(
-                            ("require",),
-                        )
+                        dependency_key_paths=(("require",),),
                     ),
                 )
             case SemanticSearchLanguage.PYTHON:
@@ -407,7 +387,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("gems",),
                             ("source", "gems"),
                             ("source", "gemspec", "gems"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -417,15 +397,13 @@ class SemanticSearchLanguage(BaseEnum):
                             ("gems",),
                             ("source", "gems"),
                             ("source", "gemspec", "gems"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "gemspec",
                         language_type=ConfigLanguage.SELF,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",),),
                     ),
                     LanguageConfigFile(
                         language=self,
@@ -435,7 +413,7 @@ class SemanticSearchLanguage(BaseEnum):
                             ("gems",),
                             ("source", "gems"),
                             ("source", "gemspec", "gems"),
-                        )
+                        ),
                     ),
                 )
             case SemanticSearchLanguage.RUST:
@@ -444,9 +422,7 @@ class SemanticSearchLanguage(BaseEnum):
                         language=self,
                         path=PROJECT_ROOT / "Cargo.toml",
                         language_type=ConfigLanguage.TOML,
-                        dependency_key_paths=(
-                            ("dependencies",),
-                        )
+                        dependency_key_paths=(("dependencies",),),
                     ),
                 )
             case SemanticSearchLanguage.SCALA:
@@ -459,15 +435,13 @@ class SemanticSearchLanguage(BaseEnum):
                             ("libraryDependencies",),
                             ("compile", "dependencies"),
                             ("runtime", "dependencies"),
-                        )
+                        ),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "project" / "build.properties",
                         language_type=ConfigLanguage.PROPERTIES,
-                        dependency_key_paths=(
-                            ("sbt.version",),
-                        )
+                        dependency_key_paths=(("sbt.version",),),
                     ),
                 )
             case SemanticSearchLanguage.SWIFT:
@@ -479,8 +453,8 @@ class SemanticSearchLanguage(BaseEnum):
                         dependency_key_paths=(
                             ("dependencies",),
                             ("targets", "dependencies"),
-                            ("products", "dependencies")
-                        )
+                            ("products", "dependencies"),
+                        ),
                     ),
                 )
             case _:
@@ -510,7 +484,9 @@ class SemanticSearchLanguage(BaseEnum):
         all_paths = []
         for lang in cls.members():
             if lang.config_files:
-                all_paths.extend(config_file.path for config_file in lang.config_files if config_file)
+                all_paths.extend(
+                    config_file.path for config_file in lang.config_files if config_file
+                )
         return tuple(all_paths)
 
     @classmethod
@@ -562,6 +538,7 @@ class SemanticSearchLanguage(BaseEnum):
 
 # Helper functions
 
+
 def find_config_files() -> tuple[Path, ...] | None:
     """
     Finds all configuration files in the project root directory.
@@ -584,6 +561,8 @@ def languages_present_from_configs() -> tuple[SemanticSearchLanguage, ...]:
     """
     if config_files := find_config_files():
         return tuple(
-            SemanticSearchLanguage.language_from_config_file(config_file) for config_file in config_files if config_file
+            SemanticSearchLanguage.language_from_config_file(config_file)
+            for config_file in config_files
+            if config_file
         )
     return ()

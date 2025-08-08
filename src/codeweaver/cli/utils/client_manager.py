@@ -16,8 +16,6 @@ from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
-from fastmcp import Client
-
 from codeweaver.cli.types import CLIError
 from codeweaver.cli.utils.client_logger import get_logger
 
@@ -69,7 +67,7 @@ class ClientManager:
         raise ValueError(f"Invalid server path: {server_path}")
 
     @classmethod
-    def _make_cache_key(cls, server_path: str, kwargs: dict) -> str:
+    def _make_cache_key(cls, server_path: str, kwargs: dict[str, Any]) -> str:
         """Create cache key for client based on path and options."""
         return f"{server_path}:{hash(frozenset(kwargs.items()))}"
 

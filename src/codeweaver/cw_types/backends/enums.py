@@ -73,11 +73,11 @@ class FilterOperator(BaseEnum):
             self.GE: operator.ge,
             self.LT: operator.lt,
             self.LE: operator.le,
-            self.IN: lambda a, b: a in b,
-            self.NIN: lambda a, b: a not in b,
-            self.CONTAINS: lambda a, b: operator.contains(a, b),
-            self.REGEX: lambda a, b: bool(re.search(b, a)) if isinstance(a, str) else False,
-        }[self]
+            self.IN: lambda a, b: a in b,  # type: ignore
+            self.NIN: lambda a, b: a not in b,  # type: ignore
+            self.CONTAINS: lambda a, b: operator.contains(a, b),  # type: ignore
+            self.REGEX: lambda a, b: bool(re.search(b, a)) if isinstance(a, str) else False,  # type: ignore
+        }[self] # type: ignore
 
     @property
     def operator_symbols(self) -> tuple[str, ...]:

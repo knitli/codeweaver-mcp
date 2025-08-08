@@ -28,6 +28,7 @@ def in_codeweaver_clone(path: Path) -> bool:
 def estimate_tokens(text: str | bytes) -> int:
     """Estimate the number of tokens in a text."""
     import tiktoken
+
     encoding = tiktoken.get_encoding("cl100k_base")
     if isinstance(text, bytes):
         text = text.decode("utf-8", errors="ignore")

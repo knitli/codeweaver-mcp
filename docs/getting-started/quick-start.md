@@ -154,8 +154,8 @@ Add CodeWeaver to your Claude Desktop configuration:
 3. **Verify MCP connection** by asking: "What MCP tools do you have available?"
 
 You should see CodeWeaver's intent processing tools:
-- `process_intent` - Natural language codebase interaction
-- `get_intent_capabilities` - Available intent types and features
+- `get_context` - Natural language codebase interaction
+- `get_context_capabilities` - Available intent types and features
 
 !!! note "Interface Design"
     CodeWeaver uses an intent-based interface designed for AI assistants. Instead of calling multiple tools directly, you simply describe what you want to accomplish in natural language.
@@ -174,7 +174,7 @@ Can you help me understand the authentication system in /path/to/your/project?
 
 CodeWeaver will:
 - Automatically index relevant files in your codebase
-- Search for authentication-related code semantically  
+- Search for authentication-related code semantically
 - Provide comprehensive analysis of how authentication works
 
 ### Available CLI Commands

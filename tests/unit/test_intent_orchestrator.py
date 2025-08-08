@@ -98,7 +98,7 @@ class TestIntentOrchestrator:
         is_healthy = await intent_orchestrator._check_health()
         assert is_healthy is False
 
-    async def test_process_intent_basic_fallback(self, intent_orchestrator, mock_parsed_intent):
+    async def test_get_context_basic_fallback(self, intent_orchestrator, mock_parsed_intent):
         """Test basic intent processing with fallback."""
         # Setup mocks
         mock_parser = Mock()
@@ -107,7 +107,7 @@ class TestIntentOrchestrator:
         intent_orchestrator.strategy_registry = None  # No registry, should use fallback
 
         # Process intent
-        result = await intent_orchestrator.process_intent("find auth functions", {})
+        result = await intent_orchestrator.get_context("find auth functions", {})
 
         # Verify results
         assert isinstance(result, IntentResult)
@@ -117,7 +117,7 @@ class TestIntentOrchestrator:
         assert result.metadata["intent_type"] == "search"
         assert result.metadata["fallback_used"] is True
 
-    async def test_process_intent_with_caching(self, intent_orchestrator, mock_parsed_intent):
+    async def test_get_context_with_caching(self, intent_orchestrator, mock_parsed_intent):
         """Test intent processing with caching."""
         # Setup cache mock
         mock_cache = Mock()
@@ -131,14 +131,14 @@ class TestIntentOrchestrator:
         intent_orchestrator.parser = mock_parser
 
         # Process intent
-        result = await intent_orchestrator.process_intent("find auth functions", {})
+        result = await intent_orchestrator.get_context("find auth functions", {})
 
         # Verify caching was attempted
         mock_cache.get.assert_called_once()
         mock_cache.set.assert_called_once()
         assert result.success is True
 
-    async def test_process_intent_cache_hit(self, intent_orchestrator):
+    async def test_get_context_cache_hit(self, intent_orchestrator):
         """Test intent processing with cache hit."""
         from datetime import UTC, datetime
 
@@ -155,7 +155,7 @@ class TestIntentOrchestrator:
         mock_cache.get = AsyncMock(return_value=cached_result)
         intent_orchestrator.cache_service = mock_cache
 
-        result = await intent_orchestrator.process_intent("cached query", {})
+        result = await intent_orchestrator.get_context("cached query", {})
 
         assert result == cached_result
         assert intent_orchestrator._intent_stats["cached_hits"] == 1
@@ -180,7 +180,7 @@ class TestIntentOrchestrator:
         mock_parser.parse = AsyncMock(return_value=index_intent)
         intent_orchestrator.parser = mock_parser
 
-        result = await intent_orchestrator.process_intent("index this codebase", {})
+        result = await intent_orchestrator.get_context("index this codebase", {})
 
         # Should be converted to SEARCH
         assert result.metadata.get("intent_type") != "INDEX"
@@ -221,7 +221,7 @@ class TestIntentOrchestrator:
         mock_parser.parse = AsyncMock(side_effect=Exception("Parse failed"))
         intent_orchestrator.parser = mock_parser
 
-        result = await intent_orchestrator.process_intent("invalid intent", {})
+        result = await intent_orchestrator.get_context("invalid intent", {})
 
         assert result.success is False
         assert "Intent processing failed" in result.error_message
@@ -235,7 +235,7 @@ class TestIntentOrchestrator:
         intent_orchestrator.parser = mock_parser
 
         # Process successful intent
-        result = await intent_orchestrator.process_intent("test intent", {})
+        result = await intent_orchestrator.get_context("test intent", {})
 
         assert intent_orchestrator._intent_stats["total_processed"] == 1
         assert intent_orchestrator._intent_stats["successful_intents"] == 1
@@ -264,7 +264,7 @@ class TestIntentOrchestrator:
         intent_orchestrator.parser = mock_parser
 
         # Process multiple intents concurrently
-        tasks = [intent_orchestrator.process_intent(f"intent {i}", {}) for i in range(5)]
+        tasks = [intent_orchestrator.get_context(f"intent {i}", {}) for i in range(5)]
 
         results = await asyncio.gather(*tasks)
 
@@ -293,7 +293,7 @@ class TestIntentOrchestratorIntegration:
 
             await orchestrator._initialize_provider()
 
-            result = await orchestrator.process_intent("find authentication functions", {})
+            result = await orchestrator.get_context("find authentication functions", {})
 
             assert result.success is True
             assert result.metadata["intent_type"] in ["search", "understand", "analyze"]

@@ -4,17 +4,17 @@ SPDX-FileCopyrightText: 2025 Knitli Inc.
 SPDX-License-Identifier: MIT OR Apache-2.0
 -->
 
-# process_intent Tool API Reference
+# get_context Tool API Reference
 
 !!! tip "Primary Interface"
-    `process_intent` is CodeWeaver's primary tool for natural language codebase interaction. This single tool replaces all traditional MCP tools with intelligent intent processing.
+    `get_context` is CodeWeaver's primary tool for natural language codebase interaction. This single tool replaces all traditional MCP tools with intelligent intent processing.
 
-The `process_intent` tool provides natural language interface for all codebase analysis operations. Instead of orchestrating multiple tools manually, simply express your intent in natural language and let CodeWeaver handle the implementation details.
+The `get_context` tool provides natural language interface for all codebase analysis operations. Instead of orchestrating multiple tools manually, simply express your intent in natural language and let CodeWeaver handle the implementation details.
 
 ## Function Signature
 
 ```python
-async def process_intent(
+async def get_context(
     ctx: Context,
     intent: str,
     context: dict[str, Any] | None = None
@@ -51,16 +51,16 @@ Find specific code, patterns, or functionality within the codebase.
 **Example Queries:**
 ```python
 # Basic search
-await process_intent("Find all authentication functions")
+await get_context("Find all authentication functions")
 
 # Scoped search
-await process_intent("Find React components that use useState in /src/components")
+await get_context("Find React components that use useState in /src/components")
 
 # Technology-specific search
-await process_intent("Search for Express.js middleware in the API server")
+await get_context("Search for Express.js middleware in the API server")
 
 # Pattern-based search
-await process_intent("Find all classes that inherit from BaseModel")
+await get_context("Find all classes that inherit from BaseModel")
 ```
 
 **Response Structure:**
@@ -100,16 +100,16 @@ Gain comprehensive understanding of systems, architectures, and code relationshi
 **Example Queries:**
 ```python
 # System understanding
-await process_intent("Explain how the authentication system works")
+await get_context("Explain how the authentication system works")
 
 # Architecture analysis
-await process_intent("Help me understand the data flow from API to database")
+await get_context("Help me understand the data flow from API to database")
 
 # Component relationships
-await process_intent("What is the relationship between User and Profile models?")
+await get_context("What is the relationship between User and Profile models?")
 
 # Technology integration
-await process_intent("How does the caching layer integrate with the application?")
+await get_context("How does the caching layer integrate with the application?")
 ```
 
 **Response Structure:**
@@ -158,16 +158,16 @@ Perform deep analysis for code quality, performance, security, and patterns.
 **Example Queries:**
 ```python
 # Security analysis
-await process_intent("Analyze potential security vulnerabilities in the authentication code")
+await get_context("Analyze potential security vulnerabilities in the authentication code")
 
 # Performance analysis
-await process_intent("What are the performance bottlenecks in the API layer?")
+await get_context("What are the performance bottlenecks in the API layer?")
 
 # Quality analysis
-await process_intent("Review the code quality and identify refactoring opportunities")
+await get_context("Review the code quality and identify refactoring opportunities")
 
 # Pattern analysis
-await process_intent("Analyze the error handling patterns used throughout the codebase")
+await get_context("Analyze the error handling patterns used throughout the codebase")
 ```
 
 **Response Structure:**
@@ -227,7 +227,7 @@ Provide additional context to refine intent processing:
 
 ```python
 # Specify scope or constraints
-await process_intent(
+await get_context(
     intent="Find authentication functions",
     context={
         "scope": "/src/backend",
@@ -237,7 +237,7 @@ await process_intent(
 )
 
 # Provide previous query context
-await process_intent(
+await get_context(
     intent="Now analyze these functions for security issues",
     context={
         "previous_query": "Find authentication functions",
@@ -246,7 +246,7 @@ await process_intent(
 )
 
 # Specify analysis depth
-await process_intent(
+await get_context(
     intent="Explain the user registration flow",
     context={
         "analysis_depth": "detailed",
@@ -262,13 +262,13 @@ Combine multiple intent types in a single query:
 
 ```python
 # Search + Analyze
-await process_intent("Find all payment processing functions and analyze them for PCI compliance")
+await get_context("Find all payment processing functions and analyze them for PCI compliance")
 
 # Understand + Search
-await process_intent("Explain how the caching system works and find all cache invalidation points")
+await get_context("Explain how the caching system works and find all cache invalidation points")
 
 # Sequential analysis
-await process_intent("Find the user authentication middleware, explain how it works, and identify any security vulnerabilities")
+await get_context("Find the user authentication middleware, explain how it works, and identify any security vulnerabilities")
 ```
 
 ### **Comparative Analysis**
@@ -277,13 +277,13 @@ Compare different components or implementations:
 
 ```python
 # Compare implementations
-await process_intent("Compare the error handling patterns between the REST API and GraphQL API")
+await get_context("Compare the error handling patterns between the REST API and GraphQL API")
 
 # Version comparison
-await process_intent("Analyze the differences between the old and new payment processing implementations")
+await get_context("Analyze the differences between the old and new payment processing implementations")
 
 # Technology comparison
-await process_intent("Compare the performance characteristics of the Redis and Memcached caching implementations")
+await get_context("Compare the performance characteristics of the Redis and Memcached caching implementations")
 ```
 
 ## Error Handling
@@ -340,13 +340,13 @@ await process_intent("Compare the performance characteristics of the Redis and M
 
 ```python
 # Efficient: Specific scope reduces processing time
-await process_intent("Find authentication functions in /src/auth")
+await get_context("Find authentication functions in /src/auth")
 
 # Less efficient: Broad scope requires more processing
-await process_intent("Find authentication functions in the entire codebase")
+await get_context("Find authentication functions in the entire codebase")
 
 # Efficient: Use context to refine queries
-await process_intent(
+await get_context(
     "Find security issues",
     context={"focus": "authentication", "severity": "high"}
 )
@@ -358,7 +358,7 @@ await process_intent(
 
 ```typescript
 // Example Claude Desktop usage
-const result = await mcp.callTool("process_intent", {
+const result = await mcp.callTool("get_context", {
     intent: "Find all React components that manage user state"
 });
 
@@ -376,11 +376,11 @@ async def analyze_codebase():
     client = MCPClient("codeweaver")
 
     # Sequential analysis workflow
-    auth_functions = await client.call_tool("process_intent", {
+    auth_functions = await client.call_tool("get_context", {
         "intent": "Find all authentication functions"
     })
 
-    security_analysis = await client.call_tool("process_intent", {
+    security_analysis = await client.call_tool("get_context", {
         "intent": "Analyze these authentication functions for security vulnerabilities",
         "context": {"previous_results": auth_functions["results"]}
     })
@@ -404,7 +404,7 @@ intents = [
 
 results = []
 for intent in intents:
-    result = await client.call_tool("process_intent", {"intent": intent})
+    result = await client.call_tool("get_context", {"intent": intent})
     results.append(result)
 
 # Combine results for comprehensive analysis
@@ -448,7 +448,7 @@ comprehensive_report = {
 
 ```python
 # Effective context usage
-await process_intent(
+await get_context(
     intent="Find performance bottlenecks",
     context={
         "scope": "/src/api",
@@ -463,10 +463,10 @@ await process_intent(
 
 ```python
 # Start broad, then narrow
-broad_results = await process_intent("Find all authentication code")
+broad_results = await get_context("Find all authentication code")
 
 # Refine based on initial results
-specific_analysis = await process_intent(
+specific_analysis = await get_context(
     "Analyze the JWT token handling for security vulnerabilities",
     context={"focus_area": "jwt_processing"}
 )
@@ -489,7 +489,7 @@ specific_analysis = await process_intent(
 
     Comprehensive examples of effective intent queries
 
--   :material-api: **[get_intent_capabilities](get-intent-capabilities.md)**
+-   :material-api: **[get_context_capabilities](get-intent-capabilities.md)**
 
     Discover available intent types and system capabilities
 

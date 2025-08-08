@@ -15,12 +15,12 @@ CodeWeaver transforms how you explore and understand codebases by providing inte
 CodeWeaver operates as a **Model Context Protocol (MCP) server** that provides intelligent semantic code search through a natural language interface. Instead of individual tools, it uses an **intent-based architecture** where you describe what you want to accomplish, and CodeWeaver determines the best approach.
 
 ### Primary Interface
-- **`process_intent`** - Natural language interface for all operations
-- **`get_intent_capabilities`** - Discover what CodeWeaver can do
+- **`get_context`** - Natural language interface for all operations
+- **`get_context_capabilities`** - Discover what CodeWeaver can do
 
 ### Key Capabilities
 1. **Automatic Background Indexing** - Codebases are indexed automatically when needed
-2. **Natural Language Search** - Find code using plain English descriptions  
+2. **Natural Language Search** - Find code using plain English descriptions
 3. **Structural Pattern Matching** - Locate code patterns using ast-grep syntax
 4. **Language-Aware Processing** - Support for 25+ programming languages
 
@@ -39,7 +39,7 @@ Time: 10-30 minutes of manual exploration
 ```plaintext
 Developer Question: "Where is user authentication handled?"
 ↓
-AI Assistant + CodeWeaver: process_intent("find user authentication code")
+AI Assistant + CodeWeaver: get_context("find user authentication code")
 ↓
 Result: Instant identification of auth files, middleware, and related components
 ↓
@@ -88,7 +88,7 @@ graph LR
 ```plaintext
 Intent: "How does error handling work in this API?"
 ↓
-CodeWeaver's process_intent analyzes and finds:
+CodeWeaver's get_context analyzes and finds:
 - Exception middleware definitions
 - Error response formatting
 - Logging implementations
@@ -99,7 +99,7 @@ CodeWeaver's process_intent analyzes and finds:
 ```plaintext
 Intent: "Show me examples of database migrations"
 ↓
-CodeWeaver's process_intent locates:
+CodeWeaver's get_context locates:
 - Migration file patterns
 - Schema change examples
 - Rollback implementations
@@ -110,7 +110,7 @@ CodeWeaver's process_intent locates:
 ```plaintext
 Intent: "Find code that processes payment webhooks"
 ↓
-CodeWeaver's process_intent identifies:
+CodeWeaver's get_context identifies:
 - Webhook endpoint handlers
 - Payment processing logic
 - Validation and security checks
@@ -121,7 +121,7 @@ CodeWeaver's process_intent identifies:
 ```plaintext
 Intent: "Show security patterns in authentication code"
 ↓
-CodeWeaver's process_intent highlights:
+CodeWeaver's get_context highlights:
 - Input validation examples
 - Secure token handling
 - Rate limiting implementations
@@ -134,7 +134,7 @@ CodeWeaver's process_intent highlights:
 Languages with native ast-grep support for structural understanding:
 
 **Programming Languages**: Python, JavaScript, TypeScript, Java, C#, C/C++, Rust, Go, PHP, Ruby, Swift, Kotlin, Scala
-**Web Technologies**: HTML, CSS, JSX, TSX  
+**Web Technologies**: HTML, CSS, JSX, TSX
 **Configuration**: JSON, YAML
 **Systems**: Bash, Haskell, Elixir, Lua, Nix, Solidity
 
@@ -184,7 +184,7 @@ CodeWeaver provides extensive CLI commands for direct developer interaction:
 
 ```bash
 # Service management
-codeweaver services start          # Start all services  
+codeweaver services start          # Start all services
 codeweaver services status         # Check service health
 codeweaver index start            # Start auto-indexing
 

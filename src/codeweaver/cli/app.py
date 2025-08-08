@@ -17,8 +17,9 @@ import contextlib
 import logging
 import sys
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import cyclopts
 
@@ -46,28 +47,28 @@ app = App(
     default_parameter=cyclopts.Parameter(show_default=True, show_choices=True),
 )
 # Add command groups
-app.command(client_commands.app, name="client")
-app.command(services_commands.app, name="services")
-app.command(index_commands.app, name="index")
-app.command(stats_commands.app, name="stats")
-app.command(config_commands.app, name="config")
+app.command(client_commands.app, name="client")  # pyright: ignore[reportUnusedCallResult]
+app.command(services_commands.app, name="services")  # pyright: ignore[reportUnusedCallResult]
+app.command(index_commands.app, name="index")  # pyright: ignore[reportUnusedCallResult]
+app.command(stats_commands.app, name="stats")  # pyright: ignore[reportUnusedCallResult]
+app.command(config_commands.app, name="config")  # pyright: ignore[reportUnusedCallResult]
 
 
 @app.default
 def main(
     config: Annotated[
-        Path | None, cyclopts.Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, cyclopts.Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     verbose: Annotated[
-        bool, cyclopts.Parameter("--verbose", "-v", help="Enable verbose logging")
+        bool, cyclopts.Parameter(name=["--verbose", "-v"], help="Enable verbose logging")
     ] = False,
     quiet: Annotated[
-        bool, cyclopts.Parameter("--quiet", "-q", help="Suppress non-error output")
+        bool, cyclopts.Parameter(name=["--quiet", "-q"], help="Suppress non-error output")
     ] = False,
     fmt: Annotated[
         OutputFormat,
         cyclopts.Parameter(
-            "--format", "-f", alias="format", help="Output format for command results"
+            name=["--format", "-f"], alias="format", help="Output format for command results"
         ),
     ] = OutputFormat.TEXT,
 ) -> None:
@@ -121,10 +122,11 @@ def version() -> None:
 @app.command
 async def health(
     config: Annotated[
-        Path | None, cyclopts.Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, cyclopts.Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, cyclopts.Parameter("--format", "-f", alias="format", help="Output format")
+        OutputFormat,
+        cyclopts.Parameter(name=["--format", "-f"], alias="format", help="Output format"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """Quick health check of CodeWeaver server and services."""
@@ -135,7 +137,7 @@ async def health(
         server = await ServerManager.ensure_server("health check", str(config) if config else None)
 
         # Collect health information
-        health_data = {"server_running": ServerManager.is_running(), "services": {}}
+        health_data: dict[str, bool | dict[Any, Any]] = {"server_running": ServerManager.is_running(), "services": {}}
 
         # Check services if available
         if server.services_manager:
@@ -172,10 +174,10 @@ async def health(
 @app.command
 async def shutdown(
     config: Annotated[
-        Path | None, cyclopts.Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, cyclopts.Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     force: Annotated[
-        bool, cyclopts.Parameter("--force", help="Force shutdown without graceful cleanup")
+        bool, cyclopts.Parameter(name=["--force"], help="Force shutdown without graceful cleanup")
     ] = False,
 ) -> None:
     """Shutdown CodeWeaver server and clean up resources."""
@@ -194,7 +196,7 @@ async def shutdown(
             sys.exit(1)
 
 
-def run_cli(args: list | None = None) -> None:
+def run_cli(args: str | Iterable[str] | None = None) -> None:
     """
     Run the CLI application.
 
@@ -203,7 +205,7 @@ def run_cli(args: list | None = None) -> None:
     """
     try:
         # Parse and run commands
-        app.parse_args(args)
+        app()
     except KeyboardInterrupt:
         print("\nOperation cancelled.")
         sys.exit(1)
@@ -213,7 +215,7 @@ def run_cli(args: list | None = None) -> None:
         sys.exit(1)
 
 
-def run_async_cli(args: list | None = None) -> None:
+def run_async_cli() -> None:
     """
     Run the CLI application with async support.
 
@@ -227,7 +229,7 @@ def run_async_cli(args: list | None = None) -> None:
             asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
         # Run the CLI application
-        app.parse_args(args)
+        app()
 
     except KeyboardInterrupt:
         print("\nOperation cancelled.")

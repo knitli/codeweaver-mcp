@@ -16,7 +16,7 @@ This is the new clean server implementation that integrates:
 import logging
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastmcp import Context, FastMCP
 
@@ -56,7 +56,7 @@ class CodeWeaverServer:
         from codeweaver.config import get_config
 
         self.config = config or get_config()
-        self.mcp = FastMCP("CodeWeaver")
+        self.mcp: FastMCP[Literal["CodeWeaver"]] = FastMCP("CodeWeaver")
         self.extensibility_manager = ExtensibilityManager(
             config=self.config, extensibility_config=extensibility_config
         )
@@ -234,7 +234,7 @@ class CodeWeaverServer:
             return await self._get_supported_languages_handler(ctx)
 
         @self.mcp.tool()
-        async def process_intent(
+        async def get_context(
             ctx: Context, intent: str, context: dict[str, Any] | None = None
         ) -> dict[str, Any]:
             """
@@ -254,10 +254,10 @@ class CodeWeaverServer:
 
             Note: Indexing happens automatically in background - no INDEX intent needed
             """
-            return await self._process_intent_handler(ctx, intent, context or {})
+            return await self._get_context_handler(ctx, intent, context or {})
 
         @self.mcp.tool()
-        async def get_intent_capabilities(ctx: Context) -> dict[str, Any]:
+        async def get_context_capabilities(ctx: Context) -> dict[str, Any]:
             """
             Get information about supported intent types and capabilities.
 
@@ -265,7 +265,7 @@ class CodeWeaverServer:
                 Information about what types of requests can be processed
                 (INDEX not included - handled automatically in background)
             """
-            return await self._get_intent_capabilities_handler(ctx)
+            return await self._get_context_capabilities_handler(ctx)
 
         logger.info("MCP tools registered successfully")
 
@@ -397,7 +397,7 @@ class CodeWeaverServer:
             "extensibility": component_info,
         }
 
-    async def _process_intent_handler(
+    async def _get_context_handler(
         self, ctx: Context, intent: str, context: dict[str, Any]
     ) -> dict[str, Any]:
         """Process natural language intent through the intent layer."""
@@ -424,7 +424,7 @@ class CodeWeaverServer:
                 "server_components": self._components,
                 "services_manager": self.services_manager,
             }
-            result = await intent_bridge.process_intent(intent, enhanced_context)
+            result = await intent_bridge.get_context(intent, enhanced_context)
         except Exception as e:
             logger.exception("Intent processing failed in handler")
             return {
@@ -449,7 +449,7 @@ class CodeWeaverServer:
                 "suggestions": None if result.success else result.suggestions,
             }
 
-    async def _get_intent_capabilities_handler(self, ctx: Context) -> dict[str, Any]:
+    async def _get_context_capabilities_handler(self, ctx: Context) -> dict[str, Any]:
         """Get intent layer capabilities and status."""
         try:
             intent_bridge = await self._get_intent_bridge()
@@ -461,13 +461,13 @@ class CodeWeaverServer:
                     "background_indexing": False,
                     "fallback_tools": ["search_code", "ast_grep_search", "get_supported_languages"],
                 }
-            capabilities = await intent_bridge.get_intent_capabilities()
+            capabilities = await intent_bridge.get_context_capabilities()
             capabilities.update({
                 "server_type": "services_integrated",
                 "intent_layer_version": "1.0.0",
                 "mcp_tools": {
-                    "process_intent": "Natural language intent processing",
-                    "get_intent_capabilities": "Intent system capabilities",
+                    "get_context": "Natural language intent processing",
+                    "get_context_capabilities": "Intent system capabilities",
                 },
                 "background_services": {
                     "auto_indexing": bool(await self._get_auto_indexing_service()),

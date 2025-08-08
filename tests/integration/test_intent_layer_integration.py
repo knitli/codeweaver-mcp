@@ -123,7 +123,7 @@ class TestIntentLayerIntegration:
         intent_bridge = await services_manager.get_service("intent_bridge")
 
         # Process an intent
-        result = await intent_bridge.process_intent("find authentication functions", {})
+        result = await intent_bridge.get_context("find authentication functions", {})
 
         # Verify result
         assert isinstance(result, IntentResult)
@@ -136,7 +136,7 @@ class TestIntentLayerIntegration:
         await services_manager.initialize()
 
         intent_bridge = await services_manager.get_service("intent_bridge")
-        capabilities = await intent_bridge.get_intent_capabilities()
+        capabilities = await intent_bridge.get_context_capabilities()
 
         assert capabilities["available"] is True
         assert "SEARCH" in capabilities["intent_types"]
@@ -240,8 +240,8 @@ class TestServerIntentIntegration:
                 server._register_tools()
 
         # Check that intent tools are registered
-        assert any("process_intent" in tool for tool in registered_tools)
-        assert any("get_intent_capabilities" in tool for tool in registered_tools)
+        assert any("get_context" in tool for tool in registered_tools)
+        assert any("get_context_capabilities" in tool for tool in registered_tools)
 
     @patch("codeweaver.server.CodeWeaverServer._get_intent_bridge")
     async def test_server_intent_handlers(self, mock_get_bridge):
@@ -260,8 +260,8 @@ class TestServerIntentIntegration:
             metadata={"intent_type": "SEARCH"},
             strategy_used="simple_search",
         )
-        mock_bridge.process_intent = AsyncMock(return_value=mock_result)
-        mock_bridge.get_intent_capabilities = AsyncMock(
+        mock_bridge.get_context = AsyncMock(return_value=mock_result)
+        mock_bridge.get_context_capabilities = AsyncMock(
             return_value={"available": True, "intent_types": ["SEARCH", "UNDERSTAND", "ANALYZE"]}
         )
 
@@ -269,14 +269,14 @@ class TestServerIntentIntegration:
 
         # Test process intent handler
         ctx = Mock()
-        result = await server._process_intent_handler(ctx, "find auth functions", {})
+        result = await server._get_context_handler(ctx, "find auth functions", {})
 
         assert result["success"] is True
         assert result["data"]["found"] == "functions"
         assert result["metadata"]["intent_type"] == "SEARCH"
 
         # Test capabilities handler
-        capabilities = await server._get_intent_capabilities_handler(ctx)
+        capabilities = await server._get_context_capabilities_handler(ctx)
 
         assert capabilities["available"] is True
         assert "SEARCH" in capabilities["intent_types"]
@@ -294,7 +294,7 @@ class TestServerIntentIntegration:
             mock_get_bridge.return_value = None
 
             ctx = Mock()
-            result = await server._process_intent_handler(ctx, "test intent", {})
+            result = await server._get_context_handler(ctx, "test intent", {})
 
             assert result["success"] is False
             assert "Intent service not available" in result["error"]
@@ -319,7 +319,7 @@ class TestIntentLayerPerformance:
         start_time = time.time()
 
         tasks = []
-        tasks.extend(intent_bridge.process_intent(f"find function {i}", {}) for i in range(10))
+        tasks.extend(intent_bridge.get_context(f"find function {i}", {}) for i in range(10))
         # Process all intents
         import asyncio
 
@@ -340,7 +340,7 @@ class TestIntentLayerPerformance:
         # Process many intents concurrently
         import asyncio
 
-        tasks = [intent_bridge.process_intent(f"concurrent intent {i}", {}) for i in range(20)]
+        tasks = [intent_bridge.get_context(f"concurrent intent {i}", {}) for i in range(20)]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 

@@ -168,7 +168,7 @@ class IntentOrchestrator(BaseServiceProvider):
     def _raise_intent_error(self, error: Exception, msg: str | None = None) -> None:
         raise error(msg) if msg else error
 
-    async def process_intent(self, intent_text: str, context: dict[str, Any]) -> IntentResult:
+    async def get_context(self, intent_text: str, context: dict[str, Any]) -> IntentResult:
         """
         Process intent with full service integration and performance monitoring.
 
@@ -591,7 +591,7 @@ class IntentOrchestrator(BaseServiceProvider):
         """Record metrics at the start of intent processing."""
         if self.metrics_service:
             await self.metrics_service.increment_counter(
-                "intent.requests.total", tags={"operation": "process_intent"}
+                "intent.requests.total", tags={"operation": "get_context"}
             )
 
     async def _record_success_metrics(
@@ -623,7 +623,7 @@ class IntentOrchestrator(BaseServiceProvider):
             await self.telemetry_service.track_error(
                 error_type=type(error).__name__,
                 error_category="intent_processing",
-                operation="process_intent",
+                operation="get_context",
                 error_message=str(error),
             )
 

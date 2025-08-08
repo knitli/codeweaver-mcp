@@ -17,17 +17,17 @@ from codeweaver.cw_types import (
     DirectoryStats,
     FileMetadata,
     FilteringError,
-    FilteringService,
     FilteringServiceConfig,
     FilteringStats,
     ServiceCapabilities,
     ServiceType,
 )
+from codeweaver.cw_types import FilteringService as FileFilteringService
 from codeweaver.middleware.filtering import FileFilteringMiddleware
 from codeweaver.services.providers.base_provider import BaseServiceProvider
 
 
-class FilteringService(BaseServiceProvider, FilteringService):
+class FilteringService(BaseServiceProvider, FileFilteringService):
     """FastMCP-based filtering service provider."""
 
     VERSION = "1.0.0"

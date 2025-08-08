@@ -66,7 +66,6 @@ class ServiceType(BaseEnum):
     METRICS = "metrics"
     CACHE = "cache"
 
-
     @classmethod
     def get_core_services(cls) -> tuple["ServiceType"]:
         """Get core services required for basic operation."""
@@ -79,8 +78,7 @@ class ServiceType(BaseEnum):
 
     @classmethod
     def get_available_but_unimplemented_services(cls) -> tuple["ServiceType"] | tuple[None]:
-        """A list of services that are available *to implement* but not yet implemented in CodeWeaver. They have full protocols and configurations, but no implementations.
-        """
+        """A list of services that are available *to implement* but not yet implemented in CodeWeaver. They have full protocols and configurations, but no implementations."""
         return (cls.VALIDATION, cls.CACHE, cls.MONITORING, cls.METRICS)
 
     @classmethod

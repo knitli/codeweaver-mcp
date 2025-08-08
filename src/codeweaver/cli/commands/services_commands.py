@@ -83,13 +83,15 @@ async def start(
         Parameter(help="Specific services to start (if not provided, starts all services)"),
     ] = None,
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     wait: Annotated[
-        bool, Parameter("--wait", "-w", help="Wait for services to fully start before returning")
+        bool,
+        Parameter(name=["--wait", "-w"], help="Wait for services to fully start before returning"),
     ] = True,
     connection_timeout: Annotated[
         float,
@@ -158,13 +160,14 @@ async def stop(
         Parameter(help="Specific services to stop (if not provided, stops all services)"),
     ] = None,
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     force: Annotated[
-        bool, Parameter("--force", help="Force stop services without graceful shutdown")
+        bool, Parameter(name=["--force"], help="Force stop services without graceful shutdown")
     ] = False,
     connection_timeout: Annotated[
         float,
@@ -238,15 +241,18 @@ async def restart(
         Parameter(help="Specific services to restart (if not provided, restarts all services)"),
     ] = None,
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     restart_timeout: Annotated[
         float,
         Parameter(
-            "--timeout", "-t", alias="timeout", help="Timeout in seconds for stop/start operations"
+            name=["--timeout", "-t"],
+            alias="timeout",
+            help="Timeout in seconds for stop/start operations",
         ),
     ] = 30.0,
 ) -> None:
@@ -292,13 +298,14 @@ async def _gather_service_status(services_manager, all_services, detailed):
 @app.command
 async def status(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     detailed: Annotated[
-        bool, Parameter("--detailed", "-d", help="Show detailed service information")
+        bool, Parameter(name=["--detailed", "-d"], help="Show detailed service information")
     ] = False,
 ) -> None:
     """Show status of CodeWeaver services."""
@@ -341,13 +348,14 @@ async def status(
 @app.command(alias="list")
 async def list_services(
     config: Annotated[
-        Path | None, Parameter("--config", "-c", help="Path to configuration file")
+        Path | None, Parameter(name=["--config", "-c"], help="Path to configuration file")
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     running_only: Annotated[
-        bool, Parameter("--running-only", "-r", help="Show only running services")
+        bool, Parameter(name=["--running-only", "-r"], help="Show only running services")
     ] = False,
 ) -> None:
     """List available CodeWeaver services."""
@@ -377,4 +385,4 @@ async def list_services(
 
 
 if __name__ == "__main__":
-    app.parse_args()
+    app()

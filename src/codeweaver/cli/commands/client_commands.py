@@ -31,11 +31,13 @@ app = App(name="client", help="MCP client operations - connect to and interact w
 @app.command
 async def test(
     server_path: Annotated[str, Parameter(help="Path or URL to MCP server")],
+    *,
     connection_timeout: Annotated[
-        float, Parameter("--timeout", "-t", help="Connection timeout in seconds")
+        float, Parameter(name=["--timeout", "-t"], help="Connection timeout in seconds")
     ] = 30.0,  # noqa: PT028
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,  # noqa: PT028
 ) -> None:
     """Test connection to an MCP server."""
@@ -66,11 +68,14 @@ async def test(
 @app.command
 async def list_tools(
     server_path: Annotated[str, Parameter(help="Path or URL to MCP server")],
+    *,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
     detailed: Annotated[
-        bool, Parameter("--detailed", "-d", help="Show detailed tool information including schemas")
+        bool,
+        Parameter(["--detailed", "-d"], help="Show detailed tool information including schemas"),
     ] = False,
 ) -> None:
     """List tools available from an MCP server."""
@@ -104,14 +109,23 @@ async def list_tools(
 async def call_tool(
     server_path: Annotated[str, Parameter(help="Path or URL to MCP server")],
     tool_name: Annotated[str, Parameter(help="Name of tool to call")],
+    *,
     arguments: Annotated[
-        str | None, Parameter("--args", "-a", help="Tool arguments as JSON string")
+        str | None,
+        Parameter(
+            name=["--args", "-a"],
+            help="Tool arguments as JSON string",
+            json_list=True,
+            consume_multiple=True,
+        ),
     ] = None,
     args_file: Annotated[
-        Path | None, Parameter("--args-file", help="Path to file containing tool arguments as JSON")
+        Path | None,
+        Parameter(name=["--args-file"], help="Path to file containing tool arguments as JSON"),
     ] = None,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """Call a specific tool on an MCP server."""
@@ -167,8 +181,10 @@ def _print_tool_result(result: dict, tool_name: str, fmt: OutputFormat) -> None:
 @app.command
 async def list_resources(
     server_path: Annotated[str, Parameter(help="Path or URL to MCP server")],
+    *,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """List resources available from an MCP server."""
@@ -203,11 +219,13 @@ async def list_resources(
 @app.command
 async def inspect(
     server_path: Annotated[str, Parameter(help="Path or URL to MCP server")],
+    *,
     connection_timeout: Annotated[
-        float, Parameter("--timeout", "-t", help="Connection timeout in seconds")
+        float, Parameter(name=["--timeout", "-t"], help="Connection timeout in seconds")
     ] = 10.0,
     fmt: Annotated[
-        OutputFormat, Parameter("--format", "-f", alias="format", help="Output format for results")
+        OutputFormat,
+        Parameter(name=["--format", "-f"], alias="format", help="Output format for results"),
     ] = OutputFormat.TEXT,
 ) -> None:
     """Inspect an MCP server's capabilities (tools and resources)."""
@@ -282,8 +300,7 @@ def _print_inspection_output(inspection_data: dict, fmt: OutputFormat) -> None:
             print(f"Server info: {inspection_data['server_info']}")
         print()
         print(f"Tools ({inspection_data['tools_count']}):")
-        tools = inspection_data.get("tools", [])
-        if tools:
+        if tools := inspection_data.get("tools", []):
             for tool in tools:
                 print(f"  • {tool['name']}")
                 if tool.get("description"):
@@ -292,8 +309,7 @@ def _print_inspection_output(inspection_data: dict, fmt: OutputFormat) -> None:
             print("  No tools available")
         print()
         print(f"Resources ({inspection_data['resources_count']}):")
-        resources = inspection_data.get("resources", [])
-        if resources:
+        if resources := inspection_data.get("resources", []):
             for resource in resources:
                 print(f"  • {resource['uri']}")
                 if resource.get("name"):
@@ -325,4 +341,4 @@ async def close(
 
 
 if __name__ == "__main__":
-    app.parse_args()
+    app()

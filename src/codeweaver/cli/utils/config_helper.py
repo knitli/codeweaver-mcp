@@ -15,7 +15,7 @@ import logging
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Literal, LiteralString, TypedDict
+from typing import ClassVar, LiteralString, TypedDict
 
 from codeweaver.cli.types import CLIError, MCPTarget
 from codeweaver.config import get_config_manager
@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class MCPConfigFiles(TypedDict):
     """Typed dictionary for MCP configuration file paths."""
+
     project: LiteralString
     windows: LiteralString
     macos: LiteralString
@@ -35,9 +36,7 @@ class MCPConfigFiles(TypedDict):
 class ConfigHelper:
     """Helper for configuration management and MCP integration."""
 
-    MCP_CONFIG_PATHS: ClassVar[dict[
-        MCPTarget, MCPConfigFiles]
-    ] = {
+    MCP_CONFIG_PATHS: ClassVar[dict[MCPTarget, MCPConfigFiles]] = {
         MCPTarget.CLAUDE_DESKTOP: {
             "project": ".mcp.json",
             "windows": "~/AppData/Roaming/Claude/claude_desktop_config.json",
@@ -74,7 +73,7 @@ class ConfigHelper:
             "windows": "~/.vscode/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
             "macos": "~/Library/Application Support/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
             "linux": "~/.config/Code/User/globalStorage/rooveterinaryinc.roo-cline/settings/mcp_settings.json",
-        }
+        },
     }
 
     @classmethod
@@ -98,7 +97,10 @@ class ConfigHelper:
             default_config = config_manager.get_config()
             config_data = cls._apply_template(default_config, template)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(config_data.model_dump_json(indent=2, exclude_unset=True, exclude_none=True), encoding="utf-8")
+            output_path.write_text(
+                config_data.model_dump_json(indent=2, exclude_unset=True, exclude_none=True),
+                encoding="utf-8",
+            )
             logger.info("Generated configuration file: %s", output_path)
         except Exception as e:
             logger.exception("Failed to generate configuration file")

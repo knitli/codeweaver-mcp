@@ -20,7 +20,6 @@ from codeweaver.cli.app import run_async_cli, run_cli
 
 
 if __name__ == "__main__":
-
     import warnings
 
     # Suppress this specific pydantic warning. Every import in CodeWeaver is from the top-level `pydantic` package, so the warning is coming from a dependency.

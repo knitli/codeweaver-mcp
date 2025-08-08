@@ -28,6 +28,7 @@ hk.local.pkl.license
 
 # Leave launch.json public
 !.vscode/launch.json
+!.vscode/launch.json.license
 
 # Playwright
 logs
