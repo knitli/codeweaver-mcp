@@ -35,7 +35,7 @@ classifiers = [
 
 dynamic = ["version"]
 description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
-readme = { file= "README.md", content-type = "text/markdown" }
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
 dependencies = [
     "ast-grep-py>=0.39.1",
@@ -43,7 +43,6 @@ dependencies = [
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
     "pydantic-ai>=0.6.2",
-    "pydantic-graph>=0.6.2",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
@@ -53,7 +52,7 @@ dependencies = [
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "voyageai>=0.3.4",
-    "watchlist>=0.0.7",
+    "watchfiles>=1.1.0",
 ]
 keywords = [
     "ai",
@@ -98,7 +97,7 @@ keywords = [
 
 
 [project.scripts]
-codeweaver = "codeweaver.cli.app:run_async_cli"
+codeweaver = "codeweaver.cli.app:main"
 
 [project.urls]
 Changelog = "https://github.com/knitli/codeweaver-mcp/blob/main/CHANGELOG.md"
@@ -114,7 +113,6 @@ build-backend = "hatchling.build"
 [dependency-groups]
 build = ["hatchling>=1.14.1", "uv-dynamic-versioning>=0.7.0"]
 test = [
-    "docarray>=0.40.1",
     "pytest>=8.4.1",
     "pytest-asyncio>=1.1.0",
     "pytest-cov>=6.2.1",
@@ -144,7 +142,6 @@ docs = [
 dev = [
     "ruff>=0.12.4",
     "superclaude>=3.0.0.2",
-    "uv_build>=0.8.2,<0.9.0",
     "uv>=0.8.2,<0.9.0",
     "ipython>=9.4.0",
     "jsonlines>=4.0.0",
@@ -152,8 +149,8 @@ dev = [
     "pdbpp>=0.11.7",
     "pyperclip>=1.9.0",
     "pydantic-ai>=0.6.2",
+    "pyright>=1.1.403",
 ]
-typing = ["pyright>=1.1.403"]
 
 [project.optional-dependencies]
 
@@ -167,12 +164,11 @@ recommended = [
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
     "rignore>=0.6.4",
-    "spacy>=3.8.7",
     "tomli-w>=1.2.0",
     "tiktoken>=0.1.0",
     "voyageai>=0.3.4",
-    "watchdog>=6.0.0",
-    ]
+    "watchfiles>=1.1.0",
+]
 
 recommended-no-telemetry = [
     "ast-grep-py>=0.39.1",
@@ -188,7 +184,7 @@ recommended-no-telemetry = [
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "voyageai>=0.3.4",
-    "watchdog>=6.0.0",
+    "watchfiles>=1.1.0",
 ]
 
 # Absolute bare minimum to run CodeWeaver
@@ -199,6 +195,7 @@ minimal = [
     "voyageai>=0.3.4",
     "fastmcp>=2.10.6",
     "pydantic-settings>=2.10.1",
+    "pydantic-ai>=0.6.2",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
@@ -214,15 +211,19 @@ cli = [
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "rignore>=0.6.4",
-    "watchdog>=6.0.0",]
+    "watchdog>=6.0.0",
+]
 
 # ==== Providers ====
-provider-cohere = ["cohere>=5.16.1"]
+provider-cohere = ["pydantic-ai-slim[cohere]>=0.6.2"]
 provider-openai = ["openai>=1.98.0"]
 provider-huggingface = ["huggingface-hub>=0.34.3"]
 provider-sentence_transformers = ["sentence-transformers>=5.0.0"]
 provider-nlp-spacy = ["spacy>=3.8.7"]
-provider-nlp-spacy-transformers = ["spacy>=3.8.7", "spacy-curated-transformers>=0.3.1"]
+provider-nlp-spacy-transformers = [
+    "spacy>=3.8.7",
+    "spacy-curated-transformers>=0.3.1",
+]
 provider-voyageai = ["voyageai>=0.3.4"]
 
 # ==== Sources ====
@@ -235,17 +236,6 @@ source-filesystem = ["watchdog>=6.0.0"]
 # source-github = ["PyGithub>=2.7.0"]
 # source-web = ["httpx>=0.28.1"]
 
-# ==== Backends ====
-backend-qdrant = ["qdrant-client>=1.15.0"]
-
-# DocArray options
-backend-docarray = ["docarray>=0.40.1"]
-# backend-docarray-elasticsearch = ["docarray[elasticsearch]>=0.40.1"]
-# backend-docarray-epsilla = ["docarray[epsilla]>=0.40.1"]
-# backend-docarray-milvus = ["docarray[milvus]>=0.40.1"]
-backend-docarray-qdrant = ["docarray[qdrant]>=0.40.1"]
-# backend-docarray-redis = ["docarray[redis]>=0.40.1"]
-# backend-docarray-weaviate = ["docarray[weaviate]>=0.40.1"]
 
 # ==== Authentication and Authorization Middleware ====
 # Optional middleware to add authentication and authorization capabilities to the CodeWeaver server.
@@ -367,7 +357,14 @@ timeout_method = "thread"
 [tool.pyright]
 strict = ["src/codeweaver/**/*.py"]
 include = ["src/codeweaver/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
-exclude = ["src/codeweaver/parsers/**/*.py", ".venv/**", "dist/**", "build/**", "docs/**", "tests/data/**"]
+exclude = [
+    "src/codeweaver/parsers/**/*.py",
+    ".venv/**",
+    "dist/**",
+    "build/**",
+    "docs/**",
+    "tests/data/**",
+]
 autoImportCompletions = true
 deprecateTypingAliases = true
 pythonPlatform = "Linux"

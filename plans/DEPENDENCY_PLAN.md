@@ -2,7 +2,8 @@
 
 Note: All mentions of `pydantic` refer to the version 2+ API. (We use the latest stable, `pydantic 2.11.7`)
 
-> IMPORTANT:  A word on MPC
+> [!IMPORTANT]
+> ## A word on MPC
 > 
 > CodeWeaver is at its core an MCP server and MCP extension platform. While MCP uses a client-server model, don't make the mistake of assuming it's equivalent to *http* server-client models. `FastMCP` does such a good job of abstracting away the underlying protocols that it can be easy to forget what's happening under the hood. But some key points:
 >    - modern MCP uses one of two transports: 
@@ -14,7 +15,7 @@ Note: All mentions of `pydantic` refer to the version 2+ API. (We use the latest
 >      - You can expose custom http endpoints. You could use this for providing an admin dashboard, for example. (https://gofastmcp.com/deployment/running-server#custom-routes) It is a starlette powered web server *and* and an MCP server.
 >      - There's a `FastMCP` transport that's mostly for debugging/dev -- creating a direct link between the client and server. They also call this the `in-memory` transport. 
 >
->    - While many communications **are *over* http**, the actual data exchange uses `JSON-RPC`. Like I said, `FastMCP` handles all this transparently *if you use its features*. If you venture out of that then you invite those complications on yourself (read: don't). FastMCP provides everything you could want in this regard -- ability to push requests (`elicitation` and `sampling`) and messages (`messages`) to clients, log exchanges, data exchanges, and more. It has a robust dependency injection-driven middleware ability that provides just about anything -- multiple auth, logging, error handling, progress reporting... you name it. If it involves possible communicating with a client, it's best to use FastMCP to do it.
+>    - While many communications **are *over* http**, the actual data exchange uses `JSON-RPC`. Like I said, `FastMCP` handles all this transparently *if you use its features*. If you venture out of that then you invite those complications on yourself (read: don't). FastMCP provides everything you could want in this regard -- you can push requests (`elicitation` and `sampling`) and messages (`messages`) to clients, exchange logs, exchange data, and more. It has a robust dependency injection-driven middleware system that provides just about anything -- multiple auth implementations, logging, error handling, progress reporting... you name it. If it involves possible communication with a client, it's best to use FastMCP to do it.
 >    - **The relationships aren't clean-cut in MCP**. Unlike in most traditional http client-server deployments, the client-server relationships can be much more dynamic:
 >       - A server may routinely act as a client for various tasks, such as to proxy other MCP services either for its own use or to pass on to the client. 
 >       - An LLM 'user' may at times act as both a server asset, using the `sampling` protocol, and as a client, and as its own server.
@@ -90,7 +91,7 @@ Note: All mentions of `pydantic` refer to the version 2+ API. (We use the latest
 
 ## Functional Services
 
-- `watchlist` (also from the creators of pydantic...) is a rust-backed python library for fast/efficient filesystem monitoring. It's basically a fast watchdog. 
+- `watchfiles` (also from the creators of pydantic...) is a rust-backed python library for fast/efficient filesystem monitoring. It's basically a fast watchdog. 
 
 
 - `tiktoken` -- estimating token use, costs for telemetry, user reporting, and sticking to quotas (user config or agent selected caps)
@@ -124,7 +125,7 @@ Fundamentally we have several design goals for the core functionality of CodeWea
    - Pydantic-like abilities for developers allows powerful extension of all parts without adding complexity.
    - For agents, simplicity means "delivering the exact context they need to accomplish a task" -- aggressively minimizing excess and context pollution
      - Agent interfaces should be simple and intuitive, allowing them to focus solely on the task at hand
-     - As such, **we expose the user's agent to a single tool** -- the `code_context` tool
+     - As such, **we expose the user's agent to a single tool** -- the `find_code` tool
         - using the `sampling` capability, we can expose a different instance of the same agent to more internal tooling and use it to sift through data, but we keep that context isolated, exposing CodeWeaver's full capabilities for an agent to curate for the receiving agent.
         - Importantly we don't want to rely entirely on this -- we need very capable fallback options for sandboxed environments, privacy-focused folks, or just when the internet connection is splotchy.
 
@@ -172,7 +173,7 @@ This gives us out-of-the-box local, privacy-friendly, and commercial embedding a
    - tavily search's api (webscraper, site maps, crawler, fast search resolution, etc)
    - duckduckgo search for people who don't want to pay for tavily
    - It also exposes powerful builtin tools for python, node execution in a secure environment
-        - This is one way we could use another data source I'd like to pull in the (node) `context7` mcp tool, which is basically a searchable vector database of library docs, which we could use both directly and with an agent to sift through it. 
+        - This is one way we could use to pull in new data sources. I'd like to pull in the (node) `context7` mcp tool, which is basically a searchable public remote vector database of library docs, which we could use both directly and with an agent to sift through it. 
    - longer term, we can use pydantic-ai's compatibility with the AG-UI protocol to provide a web dashboard for tool monitoring and interaction with the app, which could be combined with fastmcp's custom routes for a variety of uses (ag-ui is a standardized protocol for agent interactions and communications with front end UIs)
 
 - Agent `evals` (pydantic evals is its own dependency) provides a powerful framework for automatically and systematically evaluating model and pipeline performance and results and includes open telemetry support
