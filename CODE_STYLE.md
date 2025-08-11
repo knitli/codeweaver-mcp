@@ -120,3 +120,7 @@ Follow [Google Python Style Guide](https://google.github.io/styleguide/pyguide.h
 **One solid, realistic test > 10 implementation detail tests**
 
 **Integration testing > unit testing** for most cases.
+
+### Make Sure to Include Appropriate Marks for New Tests
+
+We have a long (probably too long) list of pytest marks that allow us to run granular tests.  **If you write a new test, review [the list](./pyproject.toml#L307), and apply all applicable marks.**

@@ -1,0 +1,30 @@
+rule_settings:
+  enable:
+    - default
+    - gpsg
+  disable:
+    - dont-self-assign-variables
+  python_version: '3.11'
+  rule_types:
+    - refactoring
+    - suggestion
+    - comment
+
+ignore:
+  - .env
+  - .git
+  - .github
+  - .tox
+  - .venv
+  - /usr
+  - build
+  - dist
+  - docs
+  - env
+  - external
+  - node_modules
+  - tox
+  - typings
+  - vendor
+  - welcome-to-sourcery.py
+  - '*.pyi'

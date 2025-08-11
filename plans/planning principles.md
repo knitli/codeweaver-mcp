@@ -10,7 +10,7 @@ CodeWeaver's MVP aims to deliver effective and targeted codebase context to deve
 
 #### Architecture
 
-The functional vision: An intelligent codebase context layer that fuses data from anywhere to provide clear, actionable, and situation-specific context to the developer's agent. The goal is to consistently deliver the *exact* information the developers' agent needs to successfully execute its task in a way that completely abstracts the complexity of data retrieval and synthesis from the developer's agent. CodeWeaver exposes *a single tool* to the developer's agent: `**find_code**` with basic parameters (not yet fully designed, but possibly: `query` or `need` or `question` (str description of the desired information), `goal` or `intent` (str description of the developer's task), *maybe* something like an optional `focus` enum (i.e. familiarize, explain, implement, design, fix), `token_limit`: A limit on the tokens returned (a hard cap would be available in developer settings that would govern this -- an agent could say "50_000" but it won't get more than 10_000 if the developer set a cap at that level -- we're generally thinking 10_000 is a good default global cap)).
+The functional vision: An intelligent codebase context layer that fuses data from anywhere to provide clear, actionable, and situation-specific context to the developer's agent. The goal is to consistently deliver the *exact* information the developers' agent needs to successfully execute its task in a way that completely abstracts the complexity of data retrieval and synthesis from the developer's agent. CodeWeaver exposes *a single tool* to the developer's agent: `**find_code**` with basic parameters (not yet fully designed, but possibly: `query` or `need` or `question` (str description of the desired information), `project` or `goal` (str description of the developer's task), *maybe* something like an optional `focus` enum (i.e. familiarize, explain, implement, design, fix), `token_limit`: A limit on the tokens returned (a hard cap would be available in developer settings that would govern this -- an agent could say "50_000" but it won't get more than 10_000 if the developer set a cap at that level -- we're generally thinking 10_000 is a good default global cap)).
 
 - Built on `FastMCP`, `pydantic`, `pydantic-settings`, `pydantic-ai`, `pydantic-evals` and `pydantic-graph`. CLI with `cyclopts`.
   - `FastMCP` provides the core server, generic services (logging, error-handling, timing, rate-limiting, optional auth)
@@ -56,8 +56,6 @@ Essentially same as above except the trigger is a developer CLI or API call to g
 
 > [!NOTE]
 > See [the dependency plan](DEPENDENCY_PLAN.md) for more in depth discussion of all planned dependencies and how we'll use them.
-
-
 
 ## Architectural Strengths
 
@@ -143,6 +141,6 @@ Development Timeline Breakdown
   ## Random Thoughts/Considerations
 
   - We need some mechanism in the indexing for invalidating stale/changed results
-    - something like difftastic maybe -- compare semantic reality with the state and somehow apply it as a filter -- if the current state doesn't reflect the core result within a certain level of precision it's filtered out
+    - something like difftastic maybe -- compare semantic reality with the state and somehow apply it as a filter -- if the current state doesn't reflect the core result within a certain level of precision it's filtered out. For example, we don't want to reindex everything because they ran a formatter.
     - We need to consider mapping state changes to branches. This repo right now is a good example of the dangers -- I wiped the original codebase from this branch completely so we could build fresh and without polluting agent context, but a vector search would likely turn up the abandoned structure as a relevant result
     - invalidating vectors? 

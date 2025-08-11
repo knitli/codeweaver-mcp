@@ -33,11 +33,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-dynamic = ["version"]
-description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
-readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.11"
 dependencies = [
+    "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
@@ -54,6 +51,10 @@ dependencies = [
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
+dynamic = ["version"]
+description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.11"
 keywords = [
     "ai",
     "artificial intelligence",
@@ -155,6 +156,7 @@ dev = [
 [project.optional-dependencies]
 
 recommended = [
+    "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
@@ -171,6 +173,7 @@ recommended = [
 ]
 
 recommended-no-telemetry = [
+    "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
@@ -190,6 +193,7 @@ recommended-no-telemetry = [
 # Absolute bare minimum to run CodeWeaver
 # This is the minimum set of dependencies required to run CodeWeaver without any additional features or providers. No CLI, no telemetry, no advanced features.
 minimal = [
+    "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
     "qdrant-client>=1.15.0",
     "voyageai>=0.3.4",
@@ -202,6 +206,7 @@ minimal = [
 ]
 
 cli = [
+    "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
@@ -209,15 +214,16 @@ cli = [
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "pydantic-settings>=2.10.1",
+    "pydantic-ai>=0.6.2",
     "pydantic>=2.11.7",
     "rignore>=0.6.4",
-    "watchdog>=6.0.0",
+    "watchfiles>=1.1.0",
 ]
 
 # ==== Providers ====
 provider-cohere = ["pydantic-ai-slim[cohere]>=0.6.2"]
-provider-openai = ["openai>=1.98.0"]
-provider-huggingface = ["huggingface-hub>=0.34.3"]
+provider-openai = ["pydantic-ai-slim[openai]>=0.6.2"]
+provider-huggingface = ["pydantic-ai-slim[huggingface]>=0.6.2"]
 provider-sentence_transformers = ["sentence-transformers>=5.0.0"]
 provider-nlp-spacy = ["spacy>=3.8.7"]
 provider-nlp-spacy-transformers = [
@@ -228,7 +234,7 @@ provider-voyageai = ["voyageai>=0.3.4"]
 
 # ==== Sources ====
 
-source-filesystem = ["watchdog>=6.0.0"]
+source-filesystem = ["watchfiles>=1.1.0"]
 
 # Not fully implemented:
 # source-sqlmodel = ["sqlmodel>=0.0.24"]
@@ -364,6 +370,7 @@ exclude = [
     "build/**",
     "docs/**",
     "tests/data/**",
+    "typings/**",
 ]
 autoImportCompletions = true
 deprecateTypingAliases = true
