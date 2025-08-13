@@ -439,7 +439,7 @@ if __name__ == "__main__":
 # tools/find_code.py - Core CodeWeaver tool
 from fastmcp import FastMCP
 from fastmcp.context import Context
-from typing import Dict, List, Optional, Any
+from typing import Any
 from pydantic import BaseModel, Field
 
 class CodeSearchResult(BaseModel):

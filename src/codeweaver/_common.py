@@ -49,6 +49,11 @@ class BaseEnum(UniqueEnum):
         """Return the type of the enum member's value."""
         return type(self)._value_type()
 
+    @property
+    def as_variable(self) -> str:
+        """Return the string representation of the enum member as a variable name."""
+        return self.name.lower()
+
     @classmethod
     def members(cls) -> Generator[type["BaseEnum"]]:
         """Return all members of the enum as a tuple."""
@@ -62,10 +67,6 @@ class BaseEnum(UniqueEnum):
     def __str__(self) -> str:
         """Return the string representation of the enum member."""
         return self.name.replace("_", " ").lower()
-
-    def as_variable(self) -> str:
-        """Return the string representation of the enum member as a variable name."""
-        return self.name.lower()
 
     @classmethod
     def members_to_values(cls) -> dict[type["BaseEnum"], str | int]:

@@ -54,6 +54,7 @@ Stop and investigate when:
    - If still unclear: ask user for clarification
 
 ### Never Do
+
 - Create workarounds without explicit user authorization
 - Write placeholder/mock/toy versions
 - Use NotImplementedError or TODO shortcuts

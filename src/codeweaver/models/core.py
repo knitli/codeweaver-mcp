@@ -1,0 +1,148 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+"""Core models for CodeWeaver responses and data structures."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated
+
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    NonNegativeFloat,
+    NonNegativeInt,
+    field_validator,
+    model_validator,
+)
+
+from codeweaver._common import BaseEnum
+
+
+if TYPE_CHECKING:
+    from codeweaver.language import SemanticSearchLanguage
+    from codeweaver.models.intent import QueryIntent
+    from codeweaver.tools.find_code import Span
+
+
+class SearchStrategy(BaseEnum):
+    """Enumeration of search types."""
+
+    COMMIT_SEARCH = "commit_search"
+    FILE_DISCOVERY = "file_discovery"
+    LANGUAGE_SEARCH = "language_search"
+    SYMBOL_SEARCH = "symbol_search"
+    TEXT_SEARCH = "text_search"
+
+
+class CodeMatchType(BaseEnum):
+    """Enumeration of code match types."""
+
+    SEMANTIC = "semantic"
+    SYNTACTIC = "syntactic"
+    KEYWORD = "keyword"
+    FILE_PATTERN = "file_pattern"
+
+
+class CodeMatch(BaseModel):
+    """Individual code match with context and metadata."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "file_path": "src/auth/middleware.py",
+                "language": "python",
+                "content": "class AuthMiddleware(BaseMiddleware): ...",
+                "span": [15, 45],
+                "relevance_score": 0.92,
+                "match_type": "semantic",
+            }
+        }
+    )
+
+    # File information
+    file_path: Annotated[Path, Field(description="Relative path to file from project root")]
+    language: Annotated[
+        SemanticSearchLanguage | str | None, Field(description="Detected programming language")
+    ]
+
+    # Content
+    content: Annotated[str, Field(description="Relevant code content")]
+    span: Annotated[Span, Field(description="Start and end line numbers")]
+
+    # Relevance scoring1
+    relevance_score: Annotated[
+        NonNegativeFloat, Field(le=1.0, description="Relevance score (0.0-1.0)")
+    ]
+    match_type: Annotated[CodeMatchType, Field(description="The type of match for this code match")]
+
+    # Context
+    surrounding_context: Annotated[
+        str | None, Field(description="Additional context around the match")
+    ] = None
+    related_symbols: Annotated[
+        tuple[str],
+        Field(default_factory=tuple, description="Related functions, classes, or symbols"),
+    ]
+
+    @field_validator("file_path")
+    @classmethod
+    def validate_file_path(cls, v: Path) -> Path:
+        """Validate file path format."""
+        if v.is_absolute():
+            # Convert absolute paths to relative for consistency
+            # This will be handled by the service layer
+            pass
+        return v
+
+    @model_validator(mode="after")
+    def validate_span(self) -> CodeMatch:
+        """Validate span consistency."""
+        start, end = self.span
+        if start > end:
+            raise ValueError("Start line must be <= end line")
+        if start < 1:
+            raise ValueError("Line numbers must start from 1")
+        return self
+
+
+class FindCodeResponse(BaseModel):
+    """Structured response from find_code tool."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "matches": [],
+                "summary": "Found authentication middleware in 3 files...",
+                "query_intent": "understand",
+                "total_matches": 15,
+                "total_token_count": 8543,
+                "execution_time_ms": 1234.5,
+                "search_strategy": ["file_discovery", "text_search"],
+                "languages_found": ["python", "typescript"],
+            }
+        }
+    )
+
+    # Core results
+    matches: Annotated[
+        list[CodeMatch], Field(description="Relevant code matches ranked by relevance")
+    ]
+    summary: Annotated[str, Field(description="High-level summary of findings", max_length=1000)]
+
+    # Metadata
+    query_intent: Annotated[QueryIntent, Field(description="Detected or specified intent")]
+    total_matches: Annotated[
+        NonNegativeInt, Field(description="Total matches found before ranking")
+    ]
+    token_count: Annotated[NonNegativeInt, Field(description="Actual tokens used in response")]
+    execution_time_ms: Annotated[NonNegativeFloat, Field(description="Total processing time")]
+
+    # Context information
+    search_strategy: Annotated[tuple[SearchStrategy], Field(description="Search methods used")]
+    languages_found: Annotated[
+        tuple[SemanticSearchLanguage | str], Field(description="Programming languages in results")
+    ]

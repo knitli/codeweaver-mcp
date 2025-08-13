@@ -37,6 +37,7 @@ class FileFilteringMiddleware(Middleware):
             config: Configuration dictionary with filtering parameters
         """
         self.config = config or {}
+        self.ignore_hidden = self.config.get("ignore_hidden", True)
         self.use_gitignore = self.config.get("use_gitignore", True)
         self.max_file_size = self._parse_size(self.config.get("max_file_size", "1MB"))
         self.excluded_dirs = set(
@@ -75,6 +76,8 @@ class FileFilteringMiddleware(Middleware):
         """Handle tool calls that need file filtering services."""
         if self._needs_filtering_service(context):
             fast_ctx = getattr(context, "fastmcp_context", None)
+            # TODO: This method definitely doesn't exist in FastMCP...
+            # TODO: Actual implementation..
             if fast_ctx is not None and hasattr(fast_ctx, "set_state_value"):
                 fast_ctx.set_state_value("filtering_service", self)
             logger.debug("Injected filtering service for tool: %s", context.message.name)
@@ -107,21 +110,15 @@ class FileFilteringMiddleware(Middleware):
         if not base_path.exists():
             logger.warning("Base path does not exist: %s", base_path)
             return found_files
+        rignore_args = {"ignore_hidden": self.ignore_hidden, "read_git_ignore": self.use_gitignore}
         try:
-            if self.use_gitignore:
-                walker = rignore.walk(base_path)
-                for entry in walker:
-                    if entry.is_file():
-                        file_path = Path(entry)
-                        if await self._should_include_file(
-                            file_path, base_path
-                        ) and self._matches_patterns(file_path, patterns):
-                            found_files.append(file_path)
-            else:
-                logger.warning("rignore not available, using fallback file discovery")
-                found_files = await self._fallback_file_discovery(
-                    base_path, patterns, recursive=recursive
-                )
+            for entry in rignore.walk(base_path, **rignore_args):
+                if entry.is_file():
+                    file_path = Path(entry)
+                    if await self._should_include_file(
+                        file_path, base_path
+                    ) and self._matches_patterns(file_path, patterns):
+                        found_files.append(file_path)
         except Exception:
             logger.exception("File discovery error")
             found_files = await self._fallback_file_discovery(
@@ -284,7 +281,6 @@ class FileFilteringMiddleware(Middleware):
         """Get statistics about filtering configuration."""
         return {
             "use_gitignore": self.use_gitignore,
-            "rignore_available": True,
             "max_file_size": self.max_file_size,
             "max_file_size_formatted": self._format_size(self.max_file_size),
             "excluded_dirs": list(self.excluded_dirs),

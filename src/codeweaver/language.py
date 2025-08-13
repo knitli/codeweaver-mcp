@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 
+from collections.abc import Generator
 from pathlib import Path
 from types import MappingProxyType
 from typing import Literal, NamedTuple
@@ -17,6 +18,17 @@ from codeweaver._utils import walk_down_to_git_root
 
 
 PROJECT_ROOT = walk_down_to_git_root(Path.cwd()) or Path.cwd().resolve()
+
+ConfigPathPair = NamedTuple(
+    "ConfigPathPair", (("path", Path), ("language", "type[SemanticSearchLanguage]"))
+)
+
+ConfigNamePair = NamedTuple(
+    "ConfigNamePair",
+    (("filename", str), ("language", "type[SemanticSearchLanguage | ConfigLanguage]")),
+)
+
+ExtPair = NamedTuple("ExtPair", (("extension", str), ("language", "type[SemanticSearchLanguage]")))
 
 
 class LanguageConfigFile(NamedTuple):
@@ -61,17 +73,49 @@ class ConfigLanguage(BaseEnum):
     """
 
     BASH = "bash"
-    CMAKEFILE = "cmakefile"
+    CMAKE = "cmake"
     INI = "ini"
     JSON = "json"
     GROOVY = "groovy"  # Used for Gradle build scripts for Java
     KOTLIN = "kotlin"  # Used for Kotlin build scripts for Java
-    MAKEFILE = "makefile"
+    MAKE = "make"
     PROPERTIES = "properties"
-    SELF = "self"  # Language's config is written in the same language (e.g., Kotlin, Scala)
+    SELF = "self"
+    """Language's config is written in the same language (e.g., Kotlin, Scala)"""
     TOML = "toml"
     XML = "xml"
     YAML = "yaml"
+
+    @property
+    def extensions(self) -> tuple[str, ...]:
+        """
+        Returns the file extensions associated with this configuration language.
+
+        The special value `SELF` indicates that the configuration file is written in the same language as the codebase (e.g., Kotlin, Scala).
+
+        Note: We won't provide extensions that are not commonly used for configuration files, not all extensions associated with the language.
+        """
+        return {
+            ConfigLanguage.BASH: (
+                ".bashrc",
+                ".zshrc",
+                ".zprofile",
+                ".profile",
+                ".bash_profile",
+                ".bash_logout",
+            ),
+            ConfigLanguage.CMAKE: (".cmake", "CMakeLists.txt", "CMakefile", ".cmake.in"),
+            ConfigLanguage.INI: (".ini", ".cfg"),
+            ConfigLanguage.JSON: (".json",),
+            ConfigLanguage.GROOVY: (".gradle", ".gradle.kts"),
+            ConfigLanguage.KOTLIN: (".kts",),
+            ConfigLanguage.MAKE: ("Makefile", "makefile", ".makefile", ".mak", ".make"),
+            ConfigLanguage.PROPERTIES: (".properties",),
+            ConfigLanguage.SELF: ("SELF",),
+            ConfigLanguage.TOML: (".toml",),
+            ConfigLanguage.XML: (".xml",),
+            ConfigLanguage.YAML: (".yaml", ".yml"),
+        }[self]
 
 
 class SemanticSearchLanguage(BaseEnum):
@@ -115,41 +159,41 @@ class SemanticSearchLanguage(BaseEnum):
         """
         return {
             SemanticSearchLanguage.BASH: (
-                "sh",
-                "bash",
-                "zsh",
-                "bashrc",
-                "bash_profile",
-                "zshrc",
-                "profile",
-                "ksh",
+                ".sh",
+                ".bash",
+                ".zsh",
+                ".bashrc",
+                ".bash_profile",
+                ".zshrc",
+                ".profile",
+                ".ksh",
             ),
-            SemanticSearchLanguage.C_LANG: ("c", "h"),
-            SemanticSearchLanguage.C_PLUS_PLUS: ("cpp", "hpp", "cc", "cxx"),
-            SemanticSearchLanguage.C_SHARP: ("cs", "csharp"),
-            SemanticSearchLanguage.CSS: ("css",),
-            SemanticSearchLanguage.ELIXIR: ("ex", "exs"),
-            SemanticSearchLanguage.GO: ("go",),
-            SemanticSearchLanguage.HASKELL: ("hs",),
-            SemanticSearchLanguage.HTML: ("html", "htm", "xhtml"),
-            SemanticSearchLanguage.JAVA: ("java",),
-            SemanticSearchLanguage.JAVASCRIPT: ("js", "mjs", "cjs"),
-            SemanticSearchLanguage.JSON: ("json",),
-            SemanticSearchLanguage.JSX: ("jsx",),
-            SemanticSearchLanguage.KOTLIN: ("kt", "kts", "ktm"),
-            SemanticSearchLanguage.LUA: ("lua",),
-            SemanticSearchLanguage.NIX: ("nix",),
-            SemanticSearchLanguage.PHP: ("php", "phtml"),
-            SemanticSearchLanguage.PYTHON: ("py", "pyi", "py3", "bzl"),
-            SemanticSearchLanguage.RUBY: ("rb", "gemspec", "rake", "ru"),
-            SemanticSearchLanguage.RUST: ("rs",),
-            SemanticSearchLanguage.SCALA: ("scala", "sc", "sbt"),
-            SemanticSearchLanguage.SOLIDITY: ("sol",),
-            SemanticSearchLanguage.SWIFT: ("swift",),
-            SemanticSearchLanguage.TYPESCRIPT: ("ts", "mts", "cts"),
-            SemanticSearchLanguage.TSX: ("tsx",),
-            SemanticSearchLanguage.YAML: ("yaml", "yml"),
-        }.get(self)
+            SemanticSearchLanguage.C_LANG: (".c", ".h"),
+            SemanticSearchLanguage.C_PLUS_PLUS: (".cpp", ".hpp", ".cc", ".cxx"),
+            SemanticSearchLanguage.C_SHARP: (".cs", ".csharp"),
+            SemanticSearchLanguage.CSS: (".css",),
+            SemanticSearchLanguage.ELIXIR: (".ex", ".exs"),
+            SemanticSearchLanguage.GO: (".go",),
+            SemanticSearchLanguage.HASKELL: (".hs",),
+            SemanticSearchLanguage.HTML: (".html", ".htm", ".xhtml"),
+            SemanticSearchLanguage.JAVA: (".java",),
+            SemanticSearchLanguage.JAVASCRIPT: (".js", ".mjs", ".cjs"),
+            SemanticSearchLanguage.JSON: (".json",),
+            SemanticSearchLanguage.JSX: (".jsx",),
+            SemanticSearchLanguage.KOTLIN: (".kt", ".kts", ".ktm"),
+            SemanticSearchLanguage.LUA: (".lua",),
+            SemanticSearchLanguage.NIX: (".nix",),
+            SemanticSearchLanguage.PHP: (".php", ".phtml"),
+            SemanticSearchLanguage.PYTHON: (".py", ".pyi", ".py3", ".bzl"),
+            SemanticSearchLanguage.RUBY: (".rb", ".gemspec", ".rake", ".ru"),
+            SemanticSearchLanguage.RUST: (".rs",),
+            SemanticSearchLanguage.SCALA: (".scala", ".sc", ".sbt"),
+            SemanticSearchLanguage.SOLIDITY: (".sol",),
+            SemanticSearchLanguage.SWIFT: (".swift",),
+            SemanticSearchLanguage.TYPESCRIPT: (".ts", ".mts", ".cts"),
+            SemanticSearchLanguage.TSX: (".tsx",),
+            SemanticSearchLanguage.YAML: (".yaml", ".yml"),
+        }[self]
 
     @property
     def config_files(self) -> tuple[LanguageConfigFile, ...] | None:  # noqa: C901  # it's long, but not complex
@@ -461,12 +505,76 @@ class SemanticSearchLanguage(BaseEnum):
             case _:
                 return None
 
+    @property
+    def is_config_language(self) -> bool:
+        """
+        Returns True if this language is a configuration language.
+        """
+        return self.value in ConfigLanguage.values()
+
     @classmethod
-    def all_extensions(cls) -> tuple[str, ...]:
+    def config_language_exts(cls) -> Generator[str]:
+        """
+        Returns all file extensions associated with the configuration languages.
+        """
+        yield from (
+            ext
+            for lang in cls.members()
+            for ext in lang.extensions
+            if lang.is_config_language and ext and ext != ".sh"
+        )
+
+    @classmethod
+    def config_languages(cls) -> tuple[type[SemanticSearchLanguage], ...]:
+        """
+        Returns all SemanticSearchLanguages that are also configuration languages.
+        """
+        return tuple(lang for lang in cls.members() if lang.is_config_language)
+
+    @classmethod
+    def all_config_paths(cls) -> Generator[Path]:
+        """
+        Returns all configuration file paths for all languages.
+        """
+        for lang in cls.members():
+            if lang.config_files:
+                yield from (
+                    config_file.path for config_file in lang.config_files if config_file.path
+                )
+
+    @classmethod
+    def all_extensions(cls) -> Generator[str]:
         """
         Returns all file extensions for all languages.
         """
-        return tuple(ext for lang in cls.members() for ext in lang.extensions)
+        yield from (ext for lang in cls.members() for ext in lang.extensions)
+
+    @classmethod
+    def filename_pairs(cls) -> Generator[ConfigNamePair]:
+        """
+        Returns a frozenset of tuples containing file names and their corresponding SemanticSearchLanguage.
+        """
+        for lang in cls.members():
+            if lang.config_files:
+                yield from (
+                    ConfigNamePair(
+                        filename=config_file.path.name,
+                        language=config_file.language_type
+                        if config_file.language_type != ConfigLanguage.SELF
+                        else lang,
+                    )
+                    for config_file in lang.config_files
+                    if config_file.path
+                )
+
+    @classmethod
+    def ext_pairs(cls) -> Generator[ExtPair]:
+        """
+        Returns a frozenset of tuples containing file extensions and their corresponding SemanticSearchLanguage.
+        """
+        for lang in cls.members():
+            if lang.extensions:
+                yield from (ExtPair(extension=ext, language=lang) for ext in lang.extensions if ext)
 
     @classmethod
     def ext_map(cls) -> MappingProxyType[str, SemanticSearchLanguage]:
@@ -478,19 +586,19 @@ class SemanticSearchLanguage(BaseEnum):
         })
 
     @classmethod
-    def all_config_paths(cls) -> tuple[Path, ...]:
+    def config_pairs(cls) -> Generator[ConfigPathPair]:
         """
-        Returns a mapping of all config file paths to their corresponding LanguageConfigFile.
+        Returns a tuple mapping of all config file paths to their corresponding LanguageConfigFile.
         """
-        all_paths: list[Path] = []
+        all_paths: list[ConfigPathPair] = []
         for lang in cls.members():
             if lang.config_files:
                 all_paths.extend(
-                    config_file.path
+                    ConfigPathPair(path=config_file.path, language=lang)
                     for config_file in lang.config_files
                     if config_file and config_file.path
                 )
-        return tuple(all_paths)
+        yield from all_paths
 
     @classmethod
     def language_from_config_file(
