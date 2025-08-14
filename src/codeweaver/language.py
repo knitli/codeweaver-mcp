@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 from collections.abc import Generator
+from functools import cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import NamedTuple
@@ -205,7 +206,7 @@ class SemanticSearchLanguage(BaseEnum):
     @property
     def config_files(self) -> tuple[LanguageConfigFile, ...] | None:  # noqa: C901  # it's long, but not complex
         """
-        Returns the LanguageConfigFile associated with this language.
+        Returns the LanguageConfigFiles associated with this language.
 
         TODO: Validate the `dependency_key_paths` for each config file to ensure they are correct. If you use these languages, please let us know if you find any issues with the `dependency_key_paths` in the config files. Some are probably incorrect.
         """
@@ -519,7 +520,7 @@ class SemanticSearchLanguage(BaseEnum):
         """
         Returns True if this language is a configuration language.
         """
-        return self.value in ConfigLanguage.values()
+        return self.value in ConfigLanguage.values() and self is not SemanticSearchLanguage.KOTLIN
 
     @classmethod
     def config_language_exts(cls) -> Generator[str]:
@@ -528,8 +529,8 @@ class SemanticSearchLanguage(BaseEnum):
         """
         yield from (
             ext
-            for lang in cls.members()
-            for ext in cls.extension_map().get(lang.value, ())
+            for lang in cls
+            for ext in cls.extension_map()[lang]
             if isinstance(lang, cls) and lang.is_config_language and ext and ext != ".sh"
         )
 
@@ -538,16 +539,18 @@ class SemanticSearchLanguage(BaseEnum):
         """
         Returns all SemanticSearchLanguages that are also configuration languages.
         """
-        return tuple(lang for lang in cls.members() if lang.is_config_language)
+        return tuple(lang for lang in cls if lang.is_config_language)
 
     @classmethod
     def all_config_paths(cls) -> Generator[Path]:
         """
         Returns all configuration file paths for all languages.
         """
-        for lang, config_files in cls.config_pairs():
+        for _lang, config_files in cls.config_pairs():
             yield from (
-                config_file.path for config_file in config_files if config_file and config_file.path
+                config_file.path
+                for config_file in config_files
+                if config_file and isinstance(config_file, LanguageConfigFile)
             )
 
     @classmethod
@@ -555,17 +558,15 @@ class SemanticSearchLanguage(BaseEnum):
         """
         Returns all file extensions for all languages.
         """
-        yield from (
-            ext for lang in cls.members() for ext in cls.extension_map().get(lang.value, ()) if ext
-        )
+        yield from (ext for lang in cls for ext in cls.extension_map()[lang] if ext)
 
     @classmethod
     def filename_pairs(cls) -> Generator[ConfigNamePair]:
         """
         Returns a frozenset of tuples containing file names and their corresponding SemanticSearchLanguage.
         """
-        for lang in cls.members():
-            if lang.config_files:
+        for lang in cls:
+            if lang.config_files is not None:
                 yield from (
                     ConfigNamePair(
                         filename=config_file.path.name,
@@ -591,17 +592,18 @@ class SemanticSearchLanguage(BaseEnum):
         Returns a tuple mapping of all config file paths to their corresponding LanguageConfigFile.
         """
         all_paths: list[ConfigPathPair] = []
-        for lang in cls.members():
-            if lang.config_files:
-                all_paths.extend(
-                    ConfigPathPair(path=config_file.path, language=lang)
-                    for config_file in lang.config_files
-                    if config_file and config_file.path
-                )
+        for lang in cls:
+            if not lang.config_files:
+                continue
+            all_paths.extend(
+                ConfigPathPair(path=config_file.path, language=lang)
+                for config_file in lang.config_files
+                if config_file and config_file.path
+            )
         yield from all_paths
 
     @classmethod
-    def language_from_config_file(cls, config_file: Path) -> SemanticSearchLanguage | None:
+    def _language_from_config_file(cls, config_file: Path) -> SemanticSearchLanguage | None:
         """
         Returns the SemanticSearchLanguage for a given configuration file path.
 
@@ -622,19 +624,28 @@ class SemanticSearchLanguage(BaseEnum):
             if config_file.name == "Makefile":
                 # C++ is more popular... no other reasoning here
                 return SemanticSearchLanguage.C_PLUS_PLUS
-            # Java more common than Kotlin, but Kotlin is more likely to use 'build.gradle.kts' ... I think. 🤷‍♂️
+            # Java's more common than Kotlin, but Kotlin is more likely to use 'build.gradle.kts' ... I think. 🤷‍♂️
             return SemanticSearchLanguage.KOTLIN
         return next(
             (
                 lang
-                for lang in cls.members()
-                if any(cfg.name for cfg in lang.config_files if cfg.name == config_file.name)
+                for lang in cls
+                if lang.config_files is not None
+                and next(
+                    (
+                        cfg.path.name
+                        for cfg in lang.config_files
+                        if cfg.path.name == config_file.name
+                    ),
+                    None,
+                )
             ),
             None,
         )
 
     @classmethod
     def lang_from_ext(cls, ext: str) -> SemanticSearchLanguage | None:
+        # sourcery skip: equality-identity
         """
         Returns the SemanticSearchLanguage for a given file extension.
 
@@ -644,21 +655,43 @@ class SemanticSearchLanguage(BaseEnum):
         Returns:
             The corresponding SemanticSearchLanguage, or None if not found.
         """
-        return cls.ext_map().get(ext.lstrip(".").lower(), None)
+        return next(
+            (
+                lang
+                for lang in cls
+                if lang.extensions
+                if next((extension for extension in lang.extensions if ext == extension), None)
+            ),
+            None,
+        )
 
 
 # Helper functions
 
 
-def find_config_files() -> tuple[Path, ...] | None:
+def find_config_paths() -> tuple[Path, ...] | None:
     """
     Finds all configuration files in the project root directory.
 
     Returns:
         A tuple of Path objects representing the configuration files, or None if no config files are found.
     """
-    config_files = tuple(p for p in SemanticSearchLanguage.all_config_paths() if p.exists())
-    return config_files or None
+    config_paths = tuple(p for p in SemanticSearchLanguage.all_config_paths() if p.exists())
+    return config_paths or None
+
+
+@cache
+def language_from_config_file(config_file: Path) -> SemanticSearchLanguage | None:
+    """
+    Returns the SemanticSearchLanguage for a given configuration file path.
+
+    Args:
+        config_file: The path to the configuration file.
+
+    Returns:
+        The corresponding SemanticSearchLanguage, or None if not found.
+    """
+    return SemanticSearchLanguage._language_from_config_file(config_file)  # type: ignore  # we want people to use this function instead of the class method directly for caching
 
 
 def languages_present_from_configs() -> tuple[SemanticSearchLanguage, ...] | None:
@@ -670,10 +703,9 @@ def languages_present_from_configs() -> tuple[SemanticSearchLanguage, ...] | Non
 
     TODO: Integrate into indexing and search services to use these languages.
     """
-    if config_files := find_config_files():
-        return tuple(
-            SemanticSearchLanguage.language_from_config_file(config_file)
-            for config_file in config_files
-            if config_file
-        )
+    # We get the Path for each config file that exists and then map it to the corresponding SemanticSearchLanguage.
+    if (config_paths := find_config_paths()) and (
+        associated_languages := [language_from_config_file(p) for p in config_paths]
+    ):
+        return tuple(lang for lang in associated_languages if lang)
     return None

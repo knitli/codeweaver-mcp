@@ -10,8 +10,9 @@ from __future__ import annotations
 import json
 import sys
 
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 import cyclopts
 
@@ -22,6 +23,11 @@ from rich.table import Table
 from codeweaver.exceptions import CodeWeaverError
 from codeweaver.settings import CodeWeaverSettings, get_settings
 from codeweaver.tools.find_code import find_code_implementation
+
+
+if TYPE_CHECKING:
+    from codeweaver.models.core import CodeMatch
+    from codeweaver.models.intent import IntentType
 
 
 # Initialize console for rich output
@@ -75,7 +81,7 @@ async def server(
 async def search(
     query: str,
     *,
-    intent: str | None = None,
+    intent: IntentType | None = None,
     limit: int = 10,
     include_tests: bool = True,
     project_path: Annotated[Path | None, cyclopts.Parameter(name=["--project", "-p"])] = None,
@@ -115,7 +121,7 @@ async def search(
                         "file_path": str(match.file_path),
                         "language": match.language,
                         "relevance_score": match.relevance_score,
-                        "line_range": match.line_range,
+                        "line_range": match.span,
                         "content": (
                             f"{match.content[:200]}..."
                             if len(match.content) > 200
@@ -174,7 +180,7 @@ async def config(
         sys.exit(1)
 
 
-def _display_table_results(query: str, response, matches) -> None:
+def _display_table_results(query: str, response, matches: Sequence[CodeMatch]) -> None:
     """Display search results as a table."""
     console.print(f"\n[bold green]Search Results for: '{query}'[/bold green]")
     console.print(
@@ -201,16 +207,16 @@ def _display_table_results(query: str, response, matches) -> None:
 
         table.add_row(
             str(match.file_path),
-            match.language or "unknown",
+            str(match.language) or "unknown",
             f"{match.relevance_score:.2f}",
-            f"{match.line_range[0]}-{match.line_range[1]}",
+            f"{match.span!s}",
             preview,
         )
 
     console.print(table)
 
 
-def _display_markdown_results(query: str, response, matches) -> None:
+def _display_markdown_results(query: str, response, matches: Sequence[CodeMatch]) -> None:
     """Display search results as markdown."""
     console.print(f"# Search Results for: '{query}'\n")
     console.print(f"Found {response.total_matches} matches in {response.execution_time_ms:.1f}ms\n")
@@ -222,10 +228,10 @@ def _display_markdown_results(query: str, response, matches) -> None:
     for i, match in enumerate(matches, 1):
         console.print(f"## {i}. {match.file_path}")
         console.print(
-            f"**Language:** {match.language or 'unknown'} | **Score:** {match.relevance_score:.2f} | **Lines:** {match.line_range[0]}-{match.line_range[1]}"
+            f"**Language:** {match.language or 'unknown'} | **Score:** {match.relevance_score:.2f} | {match.span!s}"
         )
         console.print(f"```{match.language or ''}")
-        console.print(match.content[:300] + "..." if len(match.content) > 300 else match.content)
+        console.print(f"{match.content[:300]}..." if len(match.content) > 300 else match.content)
         console.print("```\n")
 
 
@@ -256,7 +262,7 @@ def _validate_config(settings: CodeWeaverSettings) -> None:
     """Validate current configuration."""
     console.print("[bold blue]Validating Configuration...[/bold blue]\n")
 
-    issues = []
+    issues: list[str] = []
 
     # Check project path
     if not settings.project_path.exists():
@@ -265,8 +271,10 @@ def _validate_config(settings: CodeWeaverSettings) -> None:
         issues.append(f"Project path is not a directory: {settings.project_path}")
 
     # Check token limits
-    if settings.token_limit > 50000:
-        issues.append("Token limit is very high and may cause performance issues")
+    if settings.token_limit > 500000:  # 500k tokens
+        issues.append(
+            "Token limit is very high and may cause performance issues or set your wallet on fire."
+        )
 
     # Check file size limits
     if settings.max_file_size > 50_000_000:  # 50MB

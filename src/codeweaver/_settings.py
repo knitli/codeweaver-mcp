@@ -45,29 +45,29 @@ class ProviderKind(BaseEnum):
 class Provider(BaseEnum):
     """Enumeration of available providers."""
 
-    VOYAGE = "voyage"  # RR
+    VOYAGE = "voyage"
 
     QDRANT = "qdrant"
 
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    COHERE = "cohere"  # RR
+    COHERE = "cohere"
     MISTRAL = "mistral"
     GOOGLE = "google"
     GROK = "grok"
-    BEDROCK = "bedrock"  # RR
-    HUGGINGFACE = "huggingface"  # RR
+    BEDROCK = "bedrock"
+    HUGGINGFACE = "huggingface"
 
     # OpenAI Compatible with OpenAIModel
     DEEPSEEK = "deepseek"
-    OLLAMA = "ollama"  # RR
+    OLLAMA = "ollama"  # supports rerank, but not on OpenAI API
     OPENROUTER = "openrouter"
     VERCEL = "vercel"
     PERPLEXITY = "perplexity"
     MOONSHOT = "moonshot"
     FIREWORKS = "fireworks"
     TOGETHER = "together"
-    AZURE = "azure"  # RR
+    AZURE = "azure"  # supports rerank, but not on OpenAI API
     HEROKU = "heroku"
     GITHUBMODELS = "githubmodels"
 

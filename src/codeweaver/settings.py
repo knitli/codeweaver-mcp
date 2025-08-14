@@ -16,7 +16,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Any, LiteralString, TypedDict
 
-from pydantic import Field, PositiveInt
+from pydantic import BaseModel, Field, PositiveInt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
@@ -80,6 +80,30 @@ class ProviderModelConfig(TypedDict, total=False):
     ]
 
 
+class FileFilterSettings(BaseModel):
+    """Settings for file filtering."""
+
+    excluded_dirs: Annotated[
+        frozenset[LiteralString], Field(description="Directories to exclude from analysis")
+    ] = DEFAULT_EXCLUDED_DIRS
+    excluded_extensions: Annotated[
+        frozenset[LiteralString],
+        Field(description="File extensions to exclude from search and indexing"),
+    ] = DEFAULT_EXCLUDED_EXTENSIONS
+    use_gitignore: Annotated[bool, Field(description="Whether to use .gitignore for filtering")] = (
+        True
+    )
+    use_other_ignore_files: Annotated[
+        bool,
+        Field(
+            description="Whether to read *other* ignore files (besides .gitignore) for filtering"
+        ),
+    ] = False
+    ignore_hidden: Annotated[
+        bool, Field(description="Whether to ignore hidden files (starting with .) for filtering")
+    ] = True
+
+
 class CodeWeaverSettings(BaseSettings):
     """Main configuration model following pydantic-settings patterns.
 
@@ -132,14 +156,10 @@ class CodeWeaverSettings(BaseSettings):
         ),
     ] = 75
 
-    # File filtering
-    excluded_dirs: Annotated[
-        frozenset[LiteralString], Field(description="Directories to exclude from analysis")
-    ] = DEFAULT_EXCLUDED_DIRS
-    excluded_extensions: Annotated[
-        frozenset[LiteralString],
-        Field(description="File extensions to exclude from search and indexing"),
-    ] = DEFAULT_EXCLUDED_EXTENSIONS
+    filter_settings: Annotated[FileFilterSettings, Field(description="File filtering settings")] = (
+        FileFilterSettings()
+    )
+
     """ # Disabled while implementing...
     # Provider configuration
     embedding: Annotated[

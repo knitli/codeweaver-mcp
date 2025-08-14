@@ -9,20 +9,21 @@ from __future__ import annotations
 import time
 
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, LiteralString, NamedTuple
+from uuid import uuid4
 
 from pydantic import NonNegativeInt, PositiveInt
 
+from codeweaver._data_structures import Span
 from codeweaver._utils import estimate_tokens
 from codeweaver.exceptions import QueryError
-from codeweaver.models.core import CodeMatch, FindCodeResponse
+from codeweaver.models.core import CodeMatch, CodeMatchType, FindCodeResponse, SearchStrategy
 from codeweaver.services.discovery import FileDiscoveryService
 
 
 if TYPE_CHECKING:
-    from codeweaver._data_structures import Span
     from codeweaver.language import SemanticSearchLanguage
-    from codeweaver.models.intent import IntentType
+    from codeweaver.models.intent import QueryIntent
     from codeweaver.settings import CodeWeaverSettings
 
 
@@ -41,10 +42,10 @@ async def find_code_implementation(
     query: str,
     settings: CodeWeaverSettings,
     *,
-    intent: IntentType | None = None,
+    intent: QueryIntent | None = None,
     token_limit: int = 10000,
     include_tests: bool = False,
-    focus_languages: tuple[SemanticSearchLanguage, ...] | None = None,
+    focus_languages: tuple[SemanticSearchLanguage, ...] | LiteralString | None = None,
     max_results: PositiveInt = 50,
 ) -> FindCodeResponse:
     """Phase 1 implementation of find_code tool.
@@ -77,7 +78,7 @@ async def find_code_implementation(
             filtered_files: list[Path] = []
             for file_path in files:
                 language = discovery_service.detect_language(file_path)
-                if language and language in focus_languages:
+                if language and language in [str(lang) for lang in focus_languages]:
                     filtered_files.append(file_path)
             files = filtered_files
 
@@ -88,17 +89,17 @@ async def find_code_implementation(
         execution_time_ms = (time.time() - start_time) * 1000
 
         # Detect languages in results
-        languages_found = list({match.language for match in matches if match.language})
+        languages_found = tuple({match.language for match in matches if match.language})
 
         # Create response
         return FindCodeResponse(
             matches=matches,
             summary=f"Found {len(matches)} matches for '{query}'",
-            query_intent=intent or "understand",
+            query_intent=intent,
             total_matches=len(matches),
             token_count=sum(estimate_tokens(match.content) for match in matches),
             execution_time_ms=execution_time_ms,
-            search_strategy=["file_discovery", "text_search"],
+            search_strategy=(SearchStrategy.FILE_DISCOVERY, SearchStrategy.TEXT_SEARCH),
             languages_found=languages_found,
         )
 
@@ -166,7 +167,7 @@ async def basic_text_search(
                     content=best_section.content,
                     span=best_section.span,
                     relevance_score=min(score / 10.0, 1.0),  # Normalize to 0-1
-                    match_type="keyword",
+                    match_type=CodeMatchType.KEYWORD,
                     surrounding_context=get_surrounding_context(lines, best_section.span),
                 )
 
@@ -197,14 +198,13 @@ def find_best_section(lines: list[str], query_terms: list[str]) -> MatchedSectio
     """
     if not lines:
         return None
-
     best_score = 0
     best_start = 0
     best_end = min(50, len(lines))  # Default section size
 
     # Sliding window approach to find best matching section
     window_size = 50  # Lines per window
-
+    source_id = uuid4()
     for start in range(0, len(lines), 25):  # 50% overlap
         end = min(start + window_size, len(lines))
         section_lines = lines[start:end]
@@ -228,7 +228,7 @@ def find_best_section(lines: list[str], query_terms: list[str]) -> MatchedSectio
 
     return MatchedSection(
         content="\n".join(lines[best_start:best_end]),
-        span=Span(best_start + 1, best_end),  # 1-indexed line numbers
+        span=Span(best_start + 1, best_end, source_id),  # 1-indexed line numbers
         score=best_score,
     )
 

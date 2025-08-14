@@ -21,7 +21,7 @@ class QueryComplexity(BaseEnum):
     COMPLEX = "complex"
 
     @classmethod
-    def default(cls) -> Literal["moderate"]:
+    def default(cls) -> Literal[QueryComplexity.MODERATE]:
         """Return the default query complexity level."""
         return cls.MODERATE
 

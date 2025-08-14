@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Any
 
 from fastmcp import Context, FastMCP
 from pydantic import ConfigDict, Field, NonNegativeInt
@@ -70,6 +70,9 @@ class AppState:
     reranking_tokens_generated: Annotated[
         NonNegativeInt, Field(description="Number of tokens generated for reranking this session.")
     ] = 0
+    health: Annotated[dict[str, Any], Field(description="Health status information")] = Field(
+        default_factory=dict
+    )
 
 
 @asynccontextmanager

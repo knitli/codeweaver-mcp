@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from enum import Enum, unique
 from typing import Self, cast
 
@@ -52,6 +52,11 @@ class BaseEnum(Enum):
         raise TypeError(
             f"All members of {cls.__qualname__} must have the same value type and must be either str or int."
         )
+
+    @classmethod
+    def __iter__(cls) -> Iterator[BaseEnum]:
+        """Return an iterator over the enum members."""
+        yield from cls.__members__.values()
 
     @classmethod
     def is_member(cls, value: EnumValueType) -> bool:

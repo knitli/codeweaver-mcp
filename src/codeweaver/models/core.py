@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, LiteralString
 
 from pydantic import (
     BaseModel,
@@ -117,7 +117,13 @@ class FindCodeResponse(BaseModel):
             "example": {
                 "matches": [],
                 "summary": "Found authentication middleware in 3 files...",
-                "query_intent": "understand",
+                "query_intent": {
+                    "type": "understand",
+                    "confidence": 0.9,
+                    "reasoning": "Query indicates need for authentication setup",
+                    "focus_areas": ["middleware", "authentication"],
+                    "complexity_level": "moderate",
+                },
                 "total_matches": 15,
                 "total_token_count": 8543,
                 "execution_time_ms": 1234.5,
@@ -134,7 +140,7 @@ class FindCodeResponse(BaseModel):
     summary: Annotated[str, Field(description="High-level summary of findings", max_length=1000)]
 
     # Metadata
-    query_intent: Annotated[QueryIntent, Field(description="Detected or specified intent")]
+    query_intent: Annotated[QueryIntent | None, Field(description="Detected or specified intent")]
     total_matches: Annotated[
         NonNegativeInt, Field(description="Total matches found before ranking")
     ]
@@ -142,7 +148,10 @@ class FindCodeResponse(BaseModel):
     execution_time_ms: Annotated[NonNegativeFloat, Field(description="Total processing time")]
 
     # Context information
-    search_strategy: Annotated[tuple[SearchStrategy], Field(description="Search methods used")]
+    search_strategy: Annotated[tuple[SearchStrategy, ...], Field(description="Search methods used")]
     languages_found: Annotated[
-        tuple[SemanticSearchLanguage | str], Field(description="Programming languages in results")
+        tuple[SemanticSearchLanguage | LiteralString, ...],
+        Field(
+            description="Programming languages in results. If the language is supported for semantic search, it will be a `SemanticSearchLanguage`, otherwise a `LiteralString` from languages in `codeweaver._constants.py`"
+        ),
     ]

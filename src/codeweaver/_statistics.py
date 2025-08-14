@@ -151,6 +151,13 @@ class _LanguageStatistics:
 LanguageSummary = dict[OperationsKey | SummaryKey, NonNegativeInt]
 
 
+@cache
+def to_semantic_lang(lang: str) -> SemanticSearchLanguage | None:
+    """Convert a language string to a SemanticSearchLanguage."""
+    with contextlib.suppress(KeyError):
+        return SemanticSearchLanguage.from_string(lang)
+
+
 @dataclass(
     config=ConfigDict(extra="forbid", json_schema_extra={"noTelemetryProps": ["unique_files"]})
 )
@@ -185,16 +192,13 @@ class _CategoryStatistics:
     @property
     def _semantic_languages(self) -> frozenset[SemanticSearchLanguage]:
         """Get all semantic search languages in this category."""
-
-        @cache
-        def to_semantic_lang(lang: str) -> SemanticSearchLanguage | None:
-            """Convert a language string to a SemanticSearchLanguage."""
-            with contextlib.suppress(KeyError):
-                return SemanticSearchLanguage.from_string(lang)
-
-        return frozenset(
-            to_semantic_lang(lang) for lang in self.languages if to_semantic_lang(lang)
-        )
+        if (
+            semantic_languages := [
+                to_semantic_lang(lang) for lang in self.languages if to_semantic_lang(lang)
+            ]
+        ) and (filtered_languages := frozenset(filter(None, semantic_languages))):
+            return filtered_languages
+        return frozenset()
 
     @property
     def operations_with_semantic_support(self) -> NonNegativeInt:

@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from typing import Annotated, Any, Self, TypeGuard
 from uuid import uuid4
 
@@ -253,9 +253,9 @@ class SpanGroup:
         self.spans = self.spans or set()
         self._normalize()
 
-    def _ensure_set(self, spans: Any) -> TypeGuard[set[Span]]:
+    def _ensure_set(self, spans: Sequence[Any]) -> TypeGuard[set[Span]]:
         """Ensure that spans is a set of Span objects."""
-        return spans and isinstance(spans, set) and all(isinstance(s, Span) for s in spans)
+        return bool(spans and isinstance(spans, set) and all(isinstance(s, Span) for s in spans))
 
     def _normalize(self):
         """Merge overlapping/adjacent spans with same source_id."""

@@ -9,7 +9,7 @@ from __future__ import annotations
 import fnmatch
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, LiteralString
 
 import rignore  # type: ignore
 
@@ -53,15 +53,16 @@ class FileDiscoveryService:
             IndexingError: If file discovery fails
         """
         try:
-            discovered = []
+            discovered: list[Path] = []
 
             # Use rignore for gitignore support
             walker = rignore.walk(
-                str(self.settings.project_path),
+                self.settings.project_path,
                 max_filesize=self.settings.max_file_size,
-                read_git_ignore=True,
-                read_ignore_files=True,
-                ignore_hidden=True,
+                read_git_ignore=self.settings.filter_settings.use_gitignore,
+                read_ignore_files=self.settings.filter_settings.use_other_ignore_files,
+                ignore_hidden=self.settings.filter_settings.ignore_hidden,
+                additional_ignore_paths=list(self.settings.filter_settings.excluded_dirs),
             )
 
             for file_path in walker:
@@ -110,13 +111,8 @@ class FileDiscoveryService:
             # File doesn't exist or can't be read
             return False
 
-        # Check excluded directories
-        for excluded_dir in self.settings.excluded_dirs:
-            if excluded_dir in str(file_path):
-                return False
-
         # Check excluded extensions
-        if file_path.suffix.lower() in self.settings.excluded_extensions:
+        if file_path.suffix.lower() in self.settings.filter_settings.excluded_extensions:
             return False
 
         # Check if it's a test file and tests are excluded
@@ -141,7 +137,7 @@ class FileDiscoveryService:
         Returns:
             True if file appears to be a test file
         """
-        file_str = str(file_path).lower()
+        filename = str(file_path).lower()
         test_indicators = [
             "test",
             "tests",
@@ -154,7 +150,7 @@ class FileDiscoveryService:
             "_spec.",
         ]
 
-        return any(indicator in file_str for indicator in test_indicators)
+        return any(indicator in filename for indicator in test_indicators)
 
     def _is_supported_language(self, file_path: Path) -> bool:
         """Check if a file is in a supported programming language.
@@ -171,7 +167,7 @@ class FileDiscoveryService:
         extension = file_path.suffix.lstrip(".")
         return extension in self._language_extensions
 
-    def detect_language(self, file_path: Path) -> str | None:
+    def detect_language(self, file_path: Path) -> SemanticSearchLanguage | LiteralString | None:
         """Detect the programming language of a file.
 
         Args:
@@ -180,24 +176,35 @@ class FileDiscoveryService:
         Returns:
             Language name or None if not supported
         """
+        from codeweaver.language import SemanticSearchLanguage
+
         if not file_path.suffix:
             return None
 
-        extension = file_path.suffix.lstrip(".")
-        return type(self)._language_extensions()
+        if semantic := SemanticSearchLanguage.lang_from_ext(file_path.suffix):
+            return semantic
+        from codeweaver._constants import get_ext_lang_pairs
 
-    async def get_project_languages(self) -> list[str]:
+        return next(
+            (pair.language for pair in get_ext_lang_pairs() if pair.is_same(file_path.name)), None
+        )
+
+    async def get_project_languages(self) -> list[SemanticSearchLanguage | LiteralString]:
         """Get all programming languages present in the project.
 
         Returns:
             List of detected language names
         """
         files = await self.discover_files()
-        languages = set()
+        languages: set[SemanticSearchLanguage | LiteralString] = set()
 
         for file_path in files:
-            language = self.detect_language(file_path)
-            if language:
+            if not file_path.is_file():
+                continue
+            if language := self.detect_language(file_path):
                 languages.add(language)
 
-        return sorted(languages)
+        return sorted(
+            languages,
+            key=lambda lang: lang.value if isinstance(lang, SemanticSearchLanguage) else lang,
+        )

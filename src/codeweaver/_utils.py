@@ -1,3 +1,4 @@
+# sourcery skip: avoid-global-variables
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -6,8 +7,13 @@
 Helper functions for CodeWeaver utilities.
 """
 
+import contextlib
+import os
+
+from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
+from typing import LiteralString
 
 
 def walk_down_to_git_root(path: Path | None = None) -> Path:
@@ -36,6 +42,39 @@ def estimate_tokens(text: str | bytes, encoder: str = "cl100k_base") -> int:
     if isinstance(text, bytes):
         text = text.decode("utf-8", errors="ignore")
     return len(encoding.encode(text))
+
+
+def estimate_voyage_tokens(
+    text: str | bytes | Sequence[str | bytes], model: LiteralString | None = None
+) -> int:
+    """Estimate the number of tokens for VoyageAI models."""
+    if isinstance(text, str | bytes):
+        text = [text if isinstance(text, str) else text.decode("utf-8", errors="ignore")]
+    try:
+        from transformers import AutoTokenizer  # type: ignore
+
+        tokenizer = AutoTokenizer.from_pretrained(model)  # type: ignore
+        return len(tokenizer.encode(text))  # type: ignore
+    except ImportError:
+        result = None
+        if key := os.environ.get(
+            "VOYAGEAI_API_KEY", os.environ.get("CW_EMBEDDING_PROVIDER__API_KEY")
+        ):
+            with contextlib.suppress(Exception):
+                import asyncio
+
+                from voyageai.client_async import AsyncClient
+
+                client = AsyncClient(api_key=key, max_retries=3, timeout=10)
+                result = asyncio.run(client.count_tokens([text]))  # type: ignore
+            if result and isinstance(result, int):
+                return result
+
+    return round(
+        sum(
+            estimate_tokens(txt, "cl100k_base") * 1.3 for txt in text
+        )  # rough estimate -- voyageai's tokenizer tends to create about 30% more tokens
+    )
 
 
 @cache
