@@ -11,7 +11,7 @@ import math
 from pathlib import Path
 from typing import Any, TypeGuard
 
-from codeweaver.providers.base import (
+from codeweaver.vector_providers.base import (
     CodeChunk,
     EmbeddingProvider,
     SearchResult,

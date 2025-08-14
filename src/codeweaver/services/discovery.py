@@ -35,7 +35,7 @@ class FileDiscoveryService:
             settings: CodeWeaver configuration settings
         """
         self.settings = settings
-        self._language_extensions = SemanticSearchLanguage.ext_map()
+        self._language_extensions = SemanticSearchLanguage.extension_map()
 
     async def discover_files(
         self, patterns: list[str] | None = None, *, include_tests: bool = True
@@ -184,9 +184,7 @@ class FileDiscoveryService:
             return None
 
         extension = file_path.suffix.lstrip(".")
-        language = self._language_extensions.get(extension)
-
-        return language.value if language else None
+        return type(self)._language_extensions()
 
     async def get_project_languages(self) -> list[str]:
         """Get all programming languages present in the project.

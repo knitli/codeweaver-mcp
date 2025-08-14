@@ -1,19 +1,27 @@
+# sourcery skip: snake-case-variable-declarations
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """A foundational enum class for the CodeWeaver project for common functionality."""
 
+from __future__ import annotations
+
 from collections.abc import Generator
-from typing import Self
+from enum import Enum, unique
+from typing import Self, cast
 
-from aenum import UniqueEnum, extend_enum  # type: ignore
+from aenum import extend_enum  # type: ignore
 
 
-class BaseEnum(UniqueEnum):
+EnumValueType = str | int
+
+
+@unique
+class BaseEnum(Enum):
     """An enum class that provides common functionality for all enums in the CodeWeaver project. Enum members must be unique and either all strings or all integers.
 
-    BaseEnum extends [`aenum.UniqueEnum`][aenum.UniqueEnum] to ensure that all enum members are unique. `aenum` allows us to dynamically add members, such as for plugin systems.
+    `aenum.extend_enum` allows us to dynamically add members, such as for plugin systems.
 
     BaseEnum provides convenience methods for converting between strings and enum members, checking membership, and retrieving members and members' values, and adding new members dynamically.
     """
@@ -22,27 +30,33 @@ class BaseEnum(UniqueEnum):
     def from_string(cls, value: str) -> Self:
         """Convert a string to the corresponding enum member."""
         try:
-            if cls._value_type() is int:
+            if cls._value_type() is int and value.isdigit():
                 return cls(int(value))
-            return cls.__members__[value.upper().replace("-", "_").replace(" ", "_")]
+            normalized_value = value.replace("-", "_").replace(" ", "_").upper()
+            cls.__members__: dict[str, type[BaseEnum]]  # type: ignore  # noqa: B032
+            return cast(Self, cls.__members__[normalized_value])
         except KeyError:
             raise ValueError(f"{value} is not a valid {cls.__qualname__} value") from None
 
     @classmethod
-    def _value_type(cls) -> type[str] | type[int]:
+    def _value_type(cls) -> type[EnumValueType]:
         """Return the type of the enum values."""
-        if all(isinstance(member.value, str) for member in cls.__members__.values()):
+        if all(isinstance(member.value, str) for member in cls.__members__.values() if member):
             return str
-        if all(isinstance(member.value, int) for member in cls.__members__.values()):
+        if all(
+            isinstance(member.value, int)
+            for member in cls.__members__.values()
+            if member and member.value
+        ):
             return int
         raise TypeError(
             f"All members of {cls.__qualname__} must have the same value type and must be either str or int."
         )
 
     @classmethod
-    def is_member(cls, value: str | int) -> bool:
+    def is_member(cls, value: EnumValueType) -> bool:
         """Check if a value is a member of the enum."""
-        return bool(cls.get(value, None))
+        return value in cls.values()
 
     @property
     def value_type(self) -> type:
@@ -55,12 +69,12 @@ class BaseEnum(UniqueEnum):
         return self.name.lower()
 
     @classmethod
-    def members(cls) -> Generator[type["BaseEnum"]]:
+    def members(cls) -> Generator[BaseEnum]:
         """Return all members of the enum as a tuple."""
         yield from cls.__members__.values()
 
     @classmethod
-    def values(cls) -> Generator[str | int]:
+    def values(cls) -> Generator[EnumValueType]:
         """Return all enum member names as a tuple."""
         yield from (member.value for member in cls.members())
 
@@ -69,11 +83,15 @@ class BaseEnum(UniqueEnum):
         return self.name.replace("_", " ").lower()
 
     @classmethod
-    def members_to_values(cls) -> dict[type["BaseEnum"], str | int]:
+    def members_to_values(cls) -> dict[BaseEnum, EnumValueType]:
         """Return a dictionary mapping member names to their values."""
         return {member: member.value for member in cls.members()}
 
     @classmethod
-    def add_member(cls, name: str, value: str | int) -> type["BaseEnum"]:
+    def add_member(cls, name: str, value: EnumValueType) -> BaseEnum:
         """Dynamically add a new member to the enum."""
-        return extend_enum(cls, name.upper().replace("-", "_").replace(" ", "_"), value)
+        return extend_enum(
+            cls,  # type: ignore -- aenum has no typing, but its EnumType and Enum are derived from stdlib Enum... the author of aenum *is* the stdlib Enum author
+            name.upper().replace("-", "_").replace(" ", "_"),
+            value,  # type: ignore
+        )

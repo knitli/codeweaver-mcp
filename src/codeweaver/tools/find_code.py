@@ -20,32 +20,10 @@ from codeweaver.services.discovery import FileDiscoveryService
 
 
 if TYPE_CHECKING:
+    from codeweaver._data_structures import Span
     from codeweaver.language import SemanticSearchLanguage
     from codeweaver.models.intent import IntentType
     from codeweaver.settings import CodeWeaverSettings
-
-
-class Span(NamedTuple):
-    """Represents a span of text within a file."""
-
-    start: PositiveInt
-    end: PositiveInt
-
-    def __str__(self) -> str:
-        """Return a string representation of the span."""
-        return f"lines: {self.start}-{self.end}"
-
-    def overlap(self, other: Span) -> bool:
-        """Check if this span overlaps with another span."""
-        return self.end >= other.start and self.start <= other.end
-
-    def contains(self, line: int) -> bool:
-        """Check if this span contains a specific line."""
-        return self.start <= line <= self.end
-
-    def combine(self, other: Span) -> Span:
-        """Combine this span with another span."""
-        return Span(min(self.start, other.start), max(self.end, other.end))
 
 
 class MatchedSection(NamedTuple):

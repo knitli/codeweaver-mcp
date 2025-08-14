@@ -11,7 +11,7 @@ import os
 from collections.abc import Generator
 from pathlib import Path
 from types import MappingProxyType
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
 from codeweaver._common import BaseEnum
 from codeweaver._utils import walk_down_to_git_root
@@ -20,15 +20,14 @@ from codeweaver._utils import walk_down_to_git_root
 PROJECT_ROOT = walk_down_to_git_root(Path.cwd()) or Path.cwd().resolve()
 
 ConfigPathPair = NamedTuple(
-    "ConfigPathPair", (("path", Path), ("language", "type[SemanticSearchLanguage]"))
+    "ConfigPathPair", (("path", Path), ("language", "SemanticSearchLanguage"))
 )
 
 ConfigNamePair = NamedTuple(
-    "ConfigNamePair",
-    (("filename", str), ("language", "type[SemanticSearchLanguage | ConfigLanguage]")),
+    "ConfigNamePair", (("filename", str), ("language", "SemanticSearchLanguage | ConfigLanguage"))
 )
 
-ExtPair = NamedTuple("ExtPair", (("extension", str), ("language", "type[SemanticSearchLanguage]")))
+ExtPair = NamedTuple("ExtPair", (("extension", str), ("language", "SemanticSearchLanguage")))
 
 
 class LanguageConfigFile(NamedTuple):
@@ -152,13 +151,14 @@ class SemanticSearchLanguage(BaseEnum):
     TSX = "tsx"
     YAML = "yaml"
 
-    @property
-    def extensions(self) -> tuple[str, ...] | None:
+    @classmethod
+    def extension_map(cls) -> MappingProxyType[SemanticSearchLanguage, tuple[str, ...]]:
         """
-        Returns the file extensions associated with this language.
+        Returns a mapping of file extensions to their corresponding SemanticSearchLanguage.
+        This is used to quickly look up the language based on file extension.
         """
-        return {
-            SemanticSearchLanguage.BASH: (
+        return MappingProxyType({
+            cls.BASH: (
                 ".sh",
                 ".bash",
                 ".zsh",
@@ -168,32 +168,39 @@ class SemanticSearchLanguage(BaseEnum):
                 ".profile",
                 ".ksh",
             ),
-            SemanticSearchLanguage.C_LANG: (".c", ".h"),
-            SemanticSearchLanguage.C_PLUS_PLUS: (".cpp", ".hpp", ".cc", ".cxx"),
-            SemanticSearchLanguage.C_SHARP: (".cs", ".csharp"),
-            SemanticSearchLanguage.CSS: (".css",),
-            SemanticSearchLanguage.ELIXIR: (".ex", ".exs"),
-            SemanticSearchLanguage.GO: (".go",),
-            SemanticSearchLanguage.HASKELL: (".hs",),
-            SemanticSearchLanguage.HTML: (".html", ".htm", ".xhtml"),
-            SemanticSearchLanguage.JAVA: (".java",),
-            SemanticSearchLanguage.JAVASCRIPT: (".js", ".mjs", ".cjs"),
-            SemanticSearchLanguage.JSON: (".json",),
-            SemanticSearchLanguage.JSX: (".jsx",),
-            SemanticSearchLanguage.KOTLIN: (".kt", ".kts", ".ktm"),
-            SemanticSearchLanguage.LUA: (".lua",),
-            SemanticSearchLanguage.NIX: (".nix",),
-            SemanticSearchLanguage.PHP: (".php", ".phtml"),
-            SemanticSearchLanguage.PYTHON: (".py", ".pyi", ".py3", ".bzl"),
-            SemanticSearchLanguage.RUBY: (".rb", ".gemspec", ".rake", ".ru"),
-            SemanticSearchLanguage.RUST: (".rs",),
-            SemanticSearchLanguage.SCALA: (".scala", ".sc", ".sbt"),
-            SemanticSearchLanguage.SOLIDITY: (".sol",),
-            SemanticSearchLanguage.SWIFT: (".swift",),
-            SemanticSearchLanguage.TYPESCRIPT: (".ts", ".mts", ".cts"),
-            SemanticSearchLanguage.TSX: (".tsx",),
-            SemanticSearchLanguage.YAML: (".yaml", ".yml"),
-        }[self]
+            cls.C_LANG: (".c", ".h"),
+            cls.C_PLUS_PLUS: (".cpp", ".hpp", ".cc", ".cxx"),
+            cls.C_SHARP: (".cs", ".csharp"),
+            cls.CSS: (".css",),
+            cls.ELIXIR: (".ex", ".exs"),
+            cls.GO: (".go",),
+            cls.HASKELL: (".hs",),
+            cls.HTML: (".html", ".htm", ".xhtml"),
+            cls.JAVA: (".java",),
+            cls.JAVASCRIPT: (".js", ".mjs", ".cjs"),
+            cls.JSON: (".json",),
+            cls.JSX: (".jsx",),
+            cls.KOTLIN: (".kt", ".kts", ".ktm"),
+            cls.LUA: (".lua",),
+            cls.NIX: (".nix",),
+            cls.PHP: (".php", ".phtml"),
+            cls.PYTHON: (".py", ".pyi", ".py3", ".bzl"),
+            cls.RUBY: (".rb", ".gemspec", ".rake", ".ru"),
+            cls.RUST: (".rs",),
+            cls.SCALA: (".scala", ".sc", ".sbt"),
+            cls.SOLIDITY: (".sol",),
+            cls.SWIFT: (".swift",),
+            cls.TYPESCRIPT: (".ts", ".mts", ".cts"),
+            cls.TSX: (".tsx",),
+            cls.YAML: (".yaml", ".yml"),
+        })
+
+    @property
+    def extensions(self) -> tuple[str, ...] | None:
+        """
+        Returns the file extensions associated with this language.
+        """
+        return type(self).extension_map()[self]
 
     @property
     def config_files(self) -> tuple[LanguageConfigFile, ...] | None:  # noqa: C901  # it's long, but not complex
@@ -208,7 +215,7 @@ class SemanticSearchLanguage(BaseEnum):
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "Makefile",
-                        language_type=ConfigLanguage.MAKEFILE,
+                        language_type=ConfigLanguage.MAKE,
                         dependency_key_paths=(("CFLAGS",), ("LDFLAGS",)),
                     ),
                 )
@@ -217,13 +224,13 @@ class SemanticSearchLanguage(BaseEnum):
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "CMakeLists.txt",
-                        language_type=ConfigLanguage.CMAKEFILE,
+                        language_type=ConfigLanguage.CMAKE,
                         dependency_key_paths=(("CMAKE_CXX_FLAGS",), ("CMAKE_EXE_LINKER_FLAGS",)),
                     ),
                     LanguageConfigFile(
                         language=self,
                         path=PROJECT_ROOT / "Makefile",
-                        language_type=ConfigLanguage.MAKEFILE,
+                        language_type=ConfigLanguage.MAKE,
                         dependency_key_paths=(("CXXFLAGS",), ("LDFLAGS",)),
                     ),
                 )
@@ -266,11 +273,13 @@ class SemanticSearchLanguage(BaseEnum):
                     ),
                 )
             case SemanticSearchLanguage.GO:
-                return LanguageConfigFile(
-                    language=self,
-                    path=PROJECT_ROOT / "go.mod",
-                    language_type=ConfigLanguage.INI,
-                    dependency_key_paths=(("require",), ("replace",)),
+                return (
+                    LanguageConfigFile(
+                        language=self,
+                        path=PROJECT_ROOT / "go.mod",
+                        language_type=ConfigLanguage.INI,
+                        dependency_key_paths=(("require",), ("replace",)),
+                    ),
                 )
             case SemanticSearchLanguage.HASKELL:
                 return (
@@ -520,12 +529,12 @@ class SemanticSearchLanguage(BaseEnum):
         yield from (
             ext
             for lang in cls.members()
-            for ext in lang.extensions
-            if lang.is_config_language and ext and ext != ".sh"
+            for ext in cls.extension_map().get(lang.value, ())
+            if isinstance(lang, cls) and lang.is_config_language and ext and ext != ".sh"
         )
 
     @classmethod
-    def config_languages(cls) -> tuple[type[SemanticSearchLanguage], ...]:
+    def config_languages(cls) -> tuple[SemanticSearchLanguage, ...]:
         """
         Returns all SemanticSearchLanguages that are also configuration languages.
         """
@@ -536,18 +545,19 @@ class SemanticSearchLanguage(BaseEnum):
         """
         Returns all configuration file paths for all languages.
         """
-        for lang in cls.members():
-            if lang.config_files:
-                yield from (
-                    config_file.path for config_file in lang.config_files if config_file.path
-                )
+        for lang, config_files in cls.config_pairs():
+            yield from (
+                config_file.path for config_file in config_files if config_file and config_file.path
+            )
 
     @classmethod
     def all_extensions(cls) -> Generator[str]:
         """
         Returns all file extensions for all languages.
         """
-        yield from (ext for lang in cls.members() for ext in lang.extensions)
+        yield from (
+            ext for lang in cls.members() for ext in cls.extension_map().get(lang.value, ()) if ext
+        )
 
     @classmethod
     def filename_pairs(cls) -> Generator[ConfigNamePair]:
@@ -572,18 +582,8 @@ class SemanticSearchLanguage(BaseEnum):
         """
         Returns a frozenset of tuples containing file extensions and their corresponding SemanticSearchLanguage.
         """
-        for lang in cls.members():
-            if lang.extensions:
-                yield from (ExtPair(extension=ext, language=lang) for ext in lang.extensions if ext)
-
-    @classmethod
-    def ext_map(cls) -> MappingProxyType[str, SemanticSearchLanguage]:
-        """
-        Returns a mapping of extensions to their corresponding SemanticSearchLanguage.
-        """
-        return MappingProxyType({
-            ext: lang for lang in cls.members() for ext in lang.extensions if ext in lang.extensions
-        })
+        for lang, exts in cls.extension_map().items():
+            yield from (ExtPair(extension=ext, language=lang) for ext in exts if ext)
 
     @classmethod
     def config_pairs(cls) -> Generator[ConfigPathPair]:
@@ -601,9 +601,7 @@ class SemanticSearchLanguage(BaseEnum):
         yield from all_paths
 
     @classmethod
-    def language_from_config_file(
-        cls, config_file: Path
-    ) -> type[SemanticSearchLanguage] | Literal["cpp", "kotlin"] | None:
+    def language_from_config_file(cls, config_file: Path) -> SemanticSearchLanguage | None:
         """
         Returns the SemanticSearchLanguage for a given configuration file path.
 

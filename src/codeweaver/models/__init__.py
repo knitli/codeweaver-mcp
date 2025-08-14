@@ -4,13 +4,8 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Pydantic models for CodeWeaver."""
 
-from .core import CodeMatch, FindCodeResponse
-from .intent import IntentResult, QueryIntent
+from codeweaver.models.core import CodeMatch, FindCodeResponse
+from codeweaver.models.intent import IntentResult, QueryIntent
 
 
-__all__ = [
-    "CodeMatch",
-    "FindCodeResponse",
-    "IntentResult",
-    "QueryIntent",
-]
+__all__ = ["CodeMatch", "FindCodeResponse", "IntentResult", "QueryIntent"]

@@ -23,9 +23,9 @@ from codeweaver._common import BaseEnum
 
 
 if TYPE_CHECKING:
+    from codeweaver._data_structures import Span
     from codeweaver.language import SemanticSearchLanguage
     from codeweaver.models.intent import QueryIntent
-    from codeweaver.tools.find_code import Span
 
 
 class SearchStrategy(BaseEnum):

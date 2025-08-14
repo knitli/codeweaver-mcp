@@ -7,26 +7,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
-from pydantic import BaseModel, Field, NonNegativeFloat, NonNegativeInt, model_validator
+from pydantic import BaseModel, Field, NonNegativeFloat
 
 
-@dataclass(frozen=True, order=True, slots=True)
-class Span(BaseModel):
-    """Represents a span of text in a document."""
-
-    start: NonNegativeInt
-    end: NonNegativeInt
-
-    @model_validator(mode="after")
-    def check_span(self) -> Span:
-        """Ensure that the start is less than or equal to the end."""
-        if self.start > self.end:
-            raise ValueError("Start must be less than or equal to end")
-        return self
+if TYPE_CHECKING:
+    from codeweaver._data_structures import Span
 
 
 class SearchResult(BaseModel):

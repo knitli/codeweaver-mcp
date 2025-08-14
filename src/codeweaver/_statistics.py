@@ -47,7 +47,7 @@ def _is_semantic_config_ext(ext: str) -> bool:
 
 
 @cache
-def _has_semantic_extension(ext: str) -> type[SemanticSearchLanguage] | None:
+def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
     """Check if the given extension is a semantic search language."""
     if found_lang := next(
         (lang for lang_ext, lang in SemanticSearchLanguage.ext_pairs() if lang_ext == ext), None
@@ -73,9 +73,9 @@ def process_filename(filename: str) -> ExtKind | None:
     if (semantic_config_language := _has_semantic_extension(extension)) and _is_semantic_config_ext(
         extension
     ):
-        return ExtKind(language=semantic_config_language.language.value, kind="config")
+        return ExtKind(language=semantic_config_language.value, kind="config")
     if semantic_language := _has_semantic_extension(extension):
-        return ExtKind(language=semantic_language.language.value, kind="code")
+        return ExtKind(language=semantic_language.value, kind="code")
     return next(
         (
             ExtKind(language=extpair.language, kind=extpair.category)
@@ -202,7 +202,7 @@ class _CategoryStatistics:
         return sum(
             lang_stats.total_operations
             for lang_stats in self.languages.values()
-            if lang_stats.language in self._semantic_languages
+            if lang_stats.language in SemanticSearchLanguage.values()
         )
 
     @property

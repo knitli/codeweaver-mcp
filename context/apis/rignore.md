@@ -173,7 +173,7 @@ from codeweaver.language import SemanticSearchLanguage
 from co
 
 def is_source_file(path: Path) -> bool:
-    return path.suffix.lstrip(".") in SemanticSearchLanguage.ext_map
+    return path.suffix.lstrip(".") in SemanticSearchLanguage.extensions_map()
 
 def is_config_file(path: Path) -> bool:
     return path in SemanticSearchLanguage.all_config_paths()

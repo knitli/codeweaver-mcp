@@ -1,109 +1,147 @@
+"""Entry point for embedding providers. Defines the abstract base class and includes a utility for retrieving specific provider implementations."""
 
-from pydantic_ai.providers infer_provider
-from codeweaver.embedding_providers.embedding import EmbeddingModel
-
-
-# ... existing code ...
+from abc import ABC, abstractmethod
+from typing import Any, Generic, LiteralString, TypeVar
 
 
-def infer_model(model: Model | KnownModelName | str) -> Model:  # noqa: C901
-    """Infer the model from the name."""
-    if isinstance(model, Model):
-        return model
-    if model == "test":
-        from .test import TestModel
+InterfaceClient = TypeVar("InterfaceClient")
 
-        return TestModel()
 
-    # --- New embedding inference logic start ---
-    # Accepted patterns:
-    #   <provider>-embedding:<embedding_model>
-    #   <provider>:embedding:<embedding_model>
-    # We parse first, then fall through to existing logic for non-embedding kinds.
-    raw = model
-    provider = None
-    model_name = None
-    is_embedding = False
+class EmbeddingProvider(ABC, Generic[InterfaceClient]):
+    """
+    Abstract class for an embedding provider.
 
-    if ":" in raw:
-        first, rest = raw.split(":", 1)
-        if first.endswith("-embedding"):
-            provider = first.removesuffix("-embedding")
-            model_name = rest
-            is_embedding = True
-        elif rest.startswith("embedding:"):
-            provider = first
-            model_name = rest.split(":", 1)[1]
-            is_embedding = True
+    This class mirrors `pydantic_ai.providers.Provider` class to make it simple to use
+    existing implementations of `pydantic_ai.providers.Provider` as embedding providers.
 
-    if is_embedding and provider and model_name:
-        # Build an EmbeddingModel; provider must be known to existing provider inference.
-        return EmbeddingModel(model_name, provider=provider)
+    We chose to separate this from the `pydantic_ai.providers.Provider` class for clarity.
+    We didn't want folks accidentally conflating agent operations with embedding operations. That's kind of a 'dogs and cats living together' 🐕🐈 situation.
 
-    # --- Existing logic (unchanged) ---
-    try:
-        provider, model_name = model.split(":", maxsplit=1)
-    except ValueError:
-        model_name = model
-        # TODO(Marcelo): We should deprecate this way.
-        if model_name.startswith(("gpt", "o1", "o3")):
-            provider = "openai"
-        elif model_name.startswith("claude"):
-            provider = "anthropic"
-        elif model_name.startswith("gemini"):
-            provider = "google-gla"
-        else:
-            raise UserError(f"Unknown model: {model}")
+    Each provider only supports a specific interface, but an interface can be used by multiple providers.
 
-    if provider == "vertexai":
-        provider = "google-vertex"  # pragma: no cover
+    The primary example of this one-to-many relationship is the OpenAI provider, which supports any OpenAI-compatible provider.
+    """
+
+    _client: InterfaceClient
+
+    @property
+    @abstractmethod
+    def name(self) -> LiteralString:
+        """
+        The name of the embedding provider.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def base_url(self) -> str:
+        """
+        The base URL of the embedding provider.
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def client(self) -> InterfaceClient:
+        """
+        The client used to interact with the embedding provider.
+        """
+        raise NotImplementedError
+
+    def model_profile(self) -> ModelProfile | None:
+        """
+        Get the model profile for the embedding provider.
+        """
+        return None
+
+
+def infer_embedding_provider_class(provider: LiteralString) -> type[EmbeddingProvider[Any]]:  # noqa: C901  # long? yes. Complex. No.
+    # sourcery skip: no-long-functions
+    """
+    Infer the embedding provider class from the provider name.
+
+    Args:
+        provider: The name of the embedding provider.
+
+    Returns:
+        The class of the embedding provider.
+    """
+    if provider == "voyage":
+        from codeweaver.models.embedding_providers.voyage import VoyageEmbeddingProvider
+
+        return VoyageEmbeddingProvider
+
+    if provider == "openai":
+        from codeweaver.models.embedding_providers.openai import OpenAIEmbeddingProvider
+
+        return OpenAIEmbeddingProvider
+
+    if provider == "mistral":
+        from codeweaver.models.embedding_providers.mistral import MistralEmbeddingProvider
+
+        return MistralEmbeddingProvider
 
     if provider == "cohere":
-        from .cohere import CohereModel
+        from codeweaver.models.embedding_providers.cohere import CohereEmbeddingProvider
 
-        return CohereModel(model_name, provider=provider)
-    if provider in (
-        "openai",
-        "deepseek",
-        "azure",
-        "openrouter",
-        "vercel",
-        "grok",
-        "moonshotai",
-        "fireworks",
-        "together",
-        "heroku",
-        "github",
-    ):
-        from .openai import OpenAIModel
+        return CohereEmbeddingProvider
 
-        return OpenAIModel(model_name, provider=provider)
-    if provider == "openai-responses":
-        from .openai import OpenAIResponsesModel
+    if provider == "vercel":
+        from codeweaver.models.embedding_providers.vercel import VercelEmbeddingProvider
 
-        return OpenAIResponsesModel(model_name, provider="openai")
-    if provider in ("google-gla", "google-vertex"):
-        from .google import GoogleModel
+        return VercelEmbeddingProvider
 
-        return GoogleModel(model_name, provider=provider)
-    if provider == "groq":
-        from .groq import GroqModel
-
-        return GroqModel(model_name, provider=provider)
-    if provider == "mistral":
-        from .mistral import MistralModel
-
-        return MistralModel(model_name, provider=provider)
-    if provider == "anthropic":
-        from .anthropic import AnthropicModel
-
-        return AnthropicModel(model_name, provider=provider)
     if provider == "bedrock":
-        from .bedrock import BedrockConverseModel
+        from codeweaver.models.embedding_providers.bedrock import BedrockEmbeddingProvider
 
-        return BedrockConverseModel(model_name, provider=provider)
+        return BedrockEmbeddingProvider
+    if provider == "google":
+        from codeweaver.models.embedding_providers.google import GoogleGlaEmbeddingProvider
+
+        return GoogleEmbeddingProvider
     if provider == "huggingface":
-        from .huggingface import HuggingFaceModel
+        from codeweaver.models.embedding_providers.huggingface import HuggingFaceEmbeddingProvider
 
-        return HuggingFaceModel(model_name, provider=provider)
-    raise UserError(f"Unknown model: {model}")  # pragma: no cover
+        return HuggingFaceEmbeddingProvider
+    if provider == "fireworks":
+        from codeweaver.models.embedding_providers.fireworks import FireworksEmbeddingProvider
+
+        return FireworksEmbeddingProvider
+
+    if provider == "ollama":
+        from codeweaver.models.embedding_providers.ollama import OllamaEmbeddingProvider
+
+        return OllamaEmbeddingProvider
+    if provider == "together":
+        from codeweaver.models.embedding_providers.together import TogetherEmbeddingProvider
+
+        return TogetherEmbeddingProvider
+    if provider == "azure-openai":
+        from codeweaver.models.embedding_providers.azure_openai import AzureOpenAIEmbeddingProvider
+
+        return AzureOpenAIEmbeddingProvider
+
+    if provider == "heroku":
+        from codeweaver.models.embedding_providers.heroku import HerokuEmbeddingProvider
+
+        return HerokuEmbeddingProvider
+    if provider == "github":
+        from codeweaver.models.embedding_providers.github import GitHubEmbeddingProvider
+
+        return GitHubEmbeddingProvider
+
+    raise ValueError(f"Unknown embedding provider: {provider}")
+
+
+def infer_provider(provider: LiteralString) -> EmbeddingProvider[Any]:
+    """
+    Infer the embedding provider from the provider name.
+
+    Args:
+        provider: The name of the embedding provider.
+
+    Returns:
+        An instance of the embedding provider.
+    """
+    provider_class = infer_embedding_provider_class(provider)
+    return provider_class()
