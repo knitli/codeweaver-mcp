@@ -1,4 +1,14 @@
+# Copyright (c) 2024 to present Pydantic Services Inc
+# SPDX-License-Identifier: MIT
+# Applies to original code in this directory (`src/codeweaver/embedding_providers/`) from `pydantic_ai`.
+#
+# SPDX-FileCopyrightText: 2025 (c) 2025 Knitli Inc.
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+# applies to new/modified code in this directory (`src/codeweaver/embedding_providers/`)
 # ruff: noqa: S101
+"""OpenAI embedding provider."""
+
 from __future__ import annotations as _annotations
 
 import os
@@ -10,7 +20,6 @@ import httpx
 from pydantic import SecretStr
 from pydantic_ai.models import cached_async_http_client
 
-from codeweaver.embedding_profiles import ModelProfile
 from codeweaver.embedding_profiles.openai import openai_model_profile
 from codeweaver.embedding_providers import EmbeddingProvider
 

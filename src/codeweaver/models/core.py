@@ -20,6 +20,7 @@ from pydantic import (
 )
 
 from codeweaver._common import BaseEnum
+from codeweaver.models.intent import IntentType
 
 
 if TYPE_CHECKING:
@@ -56,7 +57,11 @@ class CodeMatch(BaseModel):
                 "file_path": "src/auth/middleware.py",
                 "language": "python",
                 "content": "class AuthMiddleware(BaseMiddleware): ...",
-                "span": [15, 45],
+                "span": [
+                    15,
+                    45,
+                    "5f6d4c46-39cc-4cf5-8477-3d5b4a9e3c31",
+                ],  # spans have a source_id for the document they came from
                 "relevance_score": 0.92,
                 "match_type": "semantic",
             }
@@ -65,24 +70,28 @@ class CodeMatch(BaseModel):
 
     # File information
     file_path: Annotated[Path, Field(description="Relative path to file from project root")]
+
     language: Annotated[
         SemanticSearchLanguage | str | None, Field(description="Detected programming language")
     ]
 
     # Content
     content: Annotated[str, Field(description="Relevant code content")]
+
     span: Annotated[Span, Field(description="Start and end line numbers")]
 
     # Relevance scoring1
     relevance_score: Annotated[
         NonNegativeFloat, Field(le=1.0, description="Relevance score (0.0-1.0)")
     ]
+
     match_type: Annotated[CodeMatchType, Field(description="The type of match for this code match")]
 
     # Context
     surrounding_context: Annotated[
         str | None, Field(description="Additional context around the match")
     ] = None
+
     related_symbols: Annotated[
         tuple[str],
         Field(default_factory=tuple, description="Related functions, classes, or symbols"),
@@ -137,21 +146,28 @@ class FindCodeResponse(BaseModel):
     matches: Annotated[
         list[CodeMatch], Field(description="Relevant code matches ranked by relevance")
     ]
+
     summary: Annotated[str, Field(description="High-level summary of findings", max_length=1000)]
 
-    # Metadata
-    query_intent: Annotated[QueryIntent | None, Field(description="Detected or specified intent")]
+    # TODO: query_intent should *not* be exposed to the user or user's agent. It needs to be created *from* the information available from them. We can expose the simpler `IntentType` instead, but we shouldn't be asking them to assess their intent.
+    query_intent: Annotated[
+        QueryIntent | IntentType | None, Field(description="Detected or specified intent")
+    ]
+
     total_matches: Annotated[
         NonNegativeInt, Field(description="Total matches found before ranking")
     ]
+
     token_count: Annotated[NonNegativeInt, Field(description="Actual tokens used in response")]
+
     execution_time_ms: Annotated[NonNegativeFloat, Field(description="Total processing time")]
 
     # Context information
     search_strategy: Annotated[tuple[SearchStrategy, ...], Field(description="Search methods used")]
+
     languages_found: Annotated[
         tuple[SemanticSearchLanguage | LiteralString, ...],
         Field(
-            description="Programming languages in results. If the language is supported for semantic search, it will be a `SemanticSearchLanguage`, otherwise a `LiteralString` from languages in `codeweaver._constants.py`"
+            description="Programming languages in the results. If the language is supported for semantic search, it will be a `SemanticSearchLanguage`, otherwise a `LiteralString` from languages in `codeweaver._constants.py`"
         ),
     ]

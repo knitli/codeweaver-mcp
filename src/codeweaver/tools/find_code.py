@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 
 from pathlib import Path
-from typing import TYPE_CHECKING, LiteralString, NamedTuple
+from typing import TYPE_CHECKING, LiteralString, NamedTuple, cast
 from uuid import uuid4
 
 from pydantic import NonNegativeInt, PositiveInt
@@ -23,7 +23,7 @@ from codeweaver.services.discovery import FileDiscoveryService
 
 if TYPE_CHECKING:
     from codeweaver.language import SemanticSearchLanguage
-    from codeweaver.models.intent import QueryIntent
+    from codeweaver.models.intent import IntentType, QueryIntent
     from codeweaver.settings import CodeWeaverSettings
 
 
@@ -42,11 +42,11 @@ async def find_code_implementation(
     query: str,
     settings: CodeWeaverSettings,
     *,
-    intent: QueryIntent | None = None,
+    intent: QueryIntent | IntentType | None = None,
     token_limit: int = 10000,
     include_tests: bool = False,
     focus_languages: tuple[SemanticSearchLanguage, ...] | LiteralString | None = None,
-    max_results: PositiveInt = 50,
+    max_results: PositiveInt = 50,  # TODO: why isn't this used?
 ) -> FindCodeResponse:
     """Phase 1 implementation of find_code tool.
 
@@ -89,7 +89,7 @@ async def find_code_implementation(
         execution_time_ms = (time.time() - start_time) * 1000
 
         # Detect languages in results
-        languages_found = tuple({match.language for match in matches if match.language})
+        languages_found = tuple({match.language for match in matches if match.language is not None})
 
         # Create response
         return FindCodeResponse(
@@ -100,7 +100,9 @@ async def find_code_implementation(
             token_count=sum(estimate_tokens(match.content) for match in matches),
             execution_time_ms=execution_time_ms,
             search_strategy=(SearchStrategy.FILE_DISCOVERY, SearchStrategy.TEXT_SEARCH),
-            languages_found=languages_found,
+            languages_found=cast(
+                tuple[SemanticSearchLanguage | LiteralString, ...], languages_found
+            ),
         )
 
     except Exception as e:
@@ -141,8 +143,11 @@ async def basic_text_search(
         absolute_path = settings.project_path / file_path
 
         try:
-            with absolute_path.open("r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
+            content = absolute_path.read_text(encoding="utf-8", errors="ignore")
+            # do a binary test to ensure the file is text
+            if content and len(content) > 3 and content[:3] == "\xef\xbb\xbf":
+                # Skip binary files
+                continue
 
         except OSError:
             # Skip files that can't be read

@@ -6,13 +6,3 @@
 
 # For Phase 1, provider configurations are defined in settings.py
 # This file is a placeholder for future provider-specific configurations
-
-from codeweaver.settings import EmbeddingConfig, QdrantConfig, VectorStoreConfig, VoyageConfig
-
-
-__all__ = [
-    "EmbeddingConfig",
-    "QdrantConfig",
-    "VectorStoreConfig",
-    "VoyageConfig",
-]

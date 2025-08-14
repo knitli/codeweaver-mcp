@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-import fnmatch
-
 from pathlib import Path
 from typing import TYPE_CHECKING, LiteralString
 
@@ -19,6 +17,8 @@ from codeweaver.exceptions import IndexingError
 if TYPE_CHECKING:
     from codeweaver.language import SemanticSearchLanguage
     from codeweaver.settings import CodeWeaverSettings
+
+    TEST_FILE_PATTERNS = ["*.test.*", "*.spec.*", "test/**/*", "spec/**/*"]
 
 
 class FileDiscoveryService:
@@ -38,7 +38,15 @@ class FileDiscoveryService:
         self._language_extensions = SemanticSearchLanguage.extension_map()
 
     async def discover_files(
-        self, patterns: list[str] | None = None, *, include_tests: bool = True
+        self,
+        patterns: list[str] | None = None,
+        *,
+        include_tests: bool | None = None,
+        max_file_size: int | None = None,
+        read_git_ignore: bool | None = None,
+        read_ignore_files: bool | None = None,
+        ignore_hidden: bool | None = None,
+        additional_ignore_paths: list[Path] | None = None,
     ) -> list[Path]:
         """Discover files using rignore integration with filtering.
 
@@ -54,22 +62,26 @@ class FileDiscoveryService:
         """
         try:
             discovered: list[Path] = []
+            additional_ignore_paths = additional_ignore_paths or []
+            extra_ignores = [str(path) for path in additional_ignore_paths]
+            if not include_tests:
+                extra_ignores.extend(TEST_FILE_PATTERNS)
 
             # Use rignore for gitignore support
             walker = rignore.walk(
                 self.settings.project_path,
-                max_filesize=self.settings.max_file_size,
-                read_git_ignore=self.settings.filter_settings.use_gitignore,
-                read_ignore_files=self.settings.filter_settings.use_other_ignore_files,
-                ignore_hidden=self.settings.filter_settings.ignore_hidden,
-                additional_ignore_paths=list(self.settings.filter_settings.excluded_dirs),
+                max_filesize=max_file_size or self.settings.max_file_size,
+                case_insensitive=True,
+                read_git_ignore=read_git_ignore or self.settings.filter_settings.use_gitignore,
+                read_ignore_files=read_ignore_files
+                or self.settings.filter_settings.use_other_ignore_files,
+                ignore_hidden=ignore_hidden or self.settings.filter_settings.ignore_hidden,
+                additional_ignore_paths=extra_ignores,
             )
 
             for file_path in walker:
                 # rignore returns Path objects directly
-                if file_path.is_file() and self._should_include_file(
-                    file_path, patterns, include_tests=include_tests
-                ):
+                if file_path.is_file():
                     # Convert to relative path from project root
                     try:
                         relative_path = file_path.relative_to(self.settings.project_path)
@@ -89,68 +101,6 @@ class FileDiscoveryService:
                     "Verify that rignore can access the directory",
                 ],
             ) from e
-
-    def _should_include_file(
-        self, file_path: Path, patterns: list[str] | None, *, include_tests: bool
-    ) -> bool:
-        """Determine if a file should be included based on filtering rules.
-
-        Args:
-            file_path: Path to the file to check
-            patterns: Optional patterns to match against
-            include_tests: Whether to include test files
-
-        Returns:
-            True if file should be included
-        """
-        try:
-            # Check file size limits
-            if file_path.stat().st_size > self.settings.max_file_size:
-                return False
-        except OSError:
-            # File doesn't exist or can't be read
-            return False
-
-        # Check excluded extensions
-        if file_path.suffix.lower() in self.settings.filter_settings.excluded_extensions:
-            return False
-
-        # Check if it's a test file and tests are excluded
-        if not include_tests and self._is_test_file(file_path):
-            return False
-
-        # Check if file has a supported language extension
-        if not self._is_supported_language(file_path):
-            return False
-
-        # Apply pattern filtering if specified
-        return not (
-            patterns and not any(fnmatch.fnmatch(str(file_path), pattern) for pattern in patterns)
-        )
-
-    def _is_test_file(self, file_path: Path) -> bool:
-        """Check if a file appears to be a test file.
-
-        Args:
-            file_path: Path to check
-
-        Returns:
-            True if file appears to be a test file
-        """
-        filename = str(file_path).lower()
-        test_indicators = [
-            "test",
-            "tests",
-            "spec",
-            "specs",
-            "__tests__",
-            ".test.",
-            ".spec.",
-            "_test.",
-            "_spec.",
-        ]
-
-        return any(indicator in filename for indicator in test_indicators)
 
     def _is_supported_language(self, file_path: Path) -> bool:
         """Check if a file is in a supported programming language.

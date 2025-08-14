@@ -26,7 +26,7 @@ from codeweaver.tools.find_code import find_code_implementation
 
 
 if TYPE_CHECKING:
-    from codeweaver.models.core import CodeMatch
+    from codeweaver.models.core import CodeMatch, FindCodeResponse
     from codeweaver.models.intent import IntentType
 
 
@@ -53,14 +53,13 @@ async def server(
         from codeweaver.main import start_server
 
         # Load settings with overrides
-        settings = get_settings()
+        settings = get_settings(config_file) if config_file else get_settings()
         if project_path:
             settings.project_path = project_path
 
         console.print("[green]Starting CodeWeaver MCP server...[/green]")
         console.print(f"[blue]Project: {settings.project_path}[/blue]")
         console.print(f"[blue]Server: http://{host}:{port}[/blue]")
-
         await start_server(host=host, port=port, debug=debug)
 
     except CodeWeaverError as e:
@@ -180,7 +179,9 @@ async def config(
         sys.exit(1)
 
 
-def _display_table_results(query: str, response, matches: Sequence[CodeMatch]) -> None:
+def _display_table_results(
+    query: str, response: FindCodeResponse, matches: Sequence[CodeMatch]
+) -> None:
     """Display search results as a table."""
     console.print(f"\n[bold green]Search Results for: '{query}'[/bold green]")
     console.print(
@@ -216,7 +217,9 @@ def _display_table_results(query: str, response, matches: Sequence[CodeMatch]) -
     console.print(table)
 
 
-def _display_markdown_results(query: str, response, matches: Sequence[CodeMatch]) -> None:
+def _display_markdown_results(
+    query: str, response: FindCodeResponse, matches: Sequence[CodeMatch]
+) -> None:
     """Display search results as markdown."""
     console.print(f"# Search Results for: '{query}'\n")
     console.print(f"Found {response.total_matches} matches in {response.execution_time_ms:.1f}ms\n")

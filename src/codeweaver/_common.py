@@ -36,7 +36,12 @@ class BaseEnum(Enum):
             cls.__members__: dict[str, type[BaseEnum]]  # type: ignore  # noqa: B032
             return cast(Self, cls.__members__[normalized_value])
         except KeyError:
-            raise ValueError(f"{value} is not a valid {cls.__qualname__} value") from None
+            try:
+                # try without any dividers
+                normalized_value = value.replace("-", "").replace(" ", "").upper()
+                return cast(Self, cls.__members__[normalized_value])
+            except KeyError as e:
+                raise ValueError(f"{value} is not a valid {cls.__qualname__} value") from e
 
     @classmethod
     def _value_type(cls) -> type[EnumValueType]:

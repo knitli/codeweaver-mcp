@@ -68,11 +68,11 @@ class Span:
 
     def __str__(self) -> str:
         """Return a string representation of the span."""
-        return f"lines {self.start}-{self.end}"
+        return f"lines {self.start}-{self.end} (source: {self._source_id})"
 
     def __repr__(self):
         """Return a string representation of the span."""
-        return f"Span({self.start}, {self.end})"
+        return f"Span({self.start}, {self.end}, {self._source_id})"
 
     def __or__(self, other: Span) -> Span:  # Union
         """Return the union of two spans."""
