@@ -22,6 +22,7 @@ from pydantic_ai.models import cached_async_http_client
 
 from codeweaver.embedding.profiles.openai import openai_model_profile
 from codeweaver.embedding.providers import EmbeddingProvider
+from codeweaver.embedding.profiles import EmbeddingModelProfile
 
 
 try:
@@ -50,7 +51,7 @@ class OpenAIEmbeddingProvider(EmbeddingProvider[AsyncOpenAI]):
         """The OpenAI async client."""
         return self._client
 
-    def model_profile(self, model_name: str) -> ModelProfile | None:
+    def model_profile(self, model_name: str) -> EmbeddingModelProfile | None:
         """Get the model profile for the specified model name."""
         return openai_model_profile(model_name)
 

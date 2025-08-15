@@ -33,6 +33,16 @@ class EmbeddingModelSettings: ...
 class RerankModelSettings: ...
 
 
+def get_embedding_model_provider():
+    """Get embedding model provider."""
+    ...
+
+
+def get_rerank_model_provider():
+    """Get rerank model provider."""
+    ...
+
+
 type KnownEmbeddingModelName = Literal[
     "azure:embed-v-4-0",  # cohere v4
     "azure:onnx-models/all-minilm-l6-v2-onnx",

@@ -24,9 +24,52 @@ from codeweaver.exceptions import ConfigurationError
 
 
 if TYPE_CHECKING:
-    from codeweaver.agent_models import AgentModelSettings
-    from codeweaver.embedding import EmbeddingModelSettings, RerankModelSettings
-    from codeweaver.providers import Provider
+    pass
+
+
+class AgentModelSettings:
+    """Agent model settings stub."""
+    ...
+
+
+class EmbeddingModelSettings:
+    """Embedding model settings stub."""
+    ...
+
+
+class RerankModelSettings:
+    """Rerank model settings stub."""
+    ...
+
+
+class Provider(BaseEnum):
+    """Provider enumeration stub for _settings.py to avoid circular imports."""
+    
+    VOYAGE = "voyage"
+    QDRANT = "qdrant"
+    IN_MEMORY = "in_memory"
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    COHERE = "cohere"
+    MISTRAL = "mistral"
+    GOOGLE = "google"
+    GROK = "grok"
+    BEDROCK = "bedrock"
+    HUGGINGFACE = "huggingface"
+    DEEPSEEK = "deepseek"
+    OLLAMA = "ollama"
+    OPENROUTER = "openrouter"
+    VERCEL = "vercel"
+    PERPLEXITY = "perplexity"
+    MOONSHOT = "moonshot"
+    FIREWORKS = "fireworks"
+    TOGETHER = "together"
+    AZURE = "azure"
+    HEROKU = "heroku"
+    GITHUBMODELS = "githubmodels"
+    DUCKDUCKGO = "duckduckgo"
+    TAVILY = "tavily"
+    _UNSET = "unset"
 
 
 class DataProviderSettings(TypedDict, total=False):

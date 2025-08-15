@@ -143,7 +143,7 @@ class Provider(BaseEnum):
 
             handlers.append(get_rerank_model_provider)
         if "vector_store" in kinds:
-            from codeweaver.vector_store import get_store
+            from codeweaver.vector_stores import get_store
 
             handlers.append(get_store)
         return tuple(handlers)
