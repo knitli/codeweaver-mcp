@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Provider interfaces and implementations for CodeWeaver."""
 
-from typing import TYPE_CHECKING
-
 from codeweaver.vector_stores.base import EmbeddingProvider, SearchResult, VectorStoreProvider
 from codeweaver.vector_stores.memory import InMemoryVectorStore
 from codeweaver._settings import Provider

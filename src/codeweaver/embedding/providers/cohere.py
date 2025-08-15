@@ -8,3 +8,6 @@
 # applies to new/modified code in this directory (`src/codeweaver/embedding_providers/`)
 
 
+class CohereEmbeddingProvider:
+    """Cohere embedding provider."""
+    ...

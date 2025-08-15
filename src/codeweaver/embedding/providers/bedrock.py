@@ -8,7 +8,8 @@
 # applies to new/modified code in this directory (`src/codeweaver/embedding_providers/`)
 
 from codeweaver.embedding.providers import EmbeddingProvider
-from codeweaver.embedding.providers.openai import OpenAIEmbeddingProvider
 
 
-class BedrockEmbeddingProvider(EmbeddingProvider[OpenAIEmbeddingProvider]): ...
+class BedrockEmbeddingProvider(EmbeddingProvider):
+    """Bedrock embedding provider."""
+    ...

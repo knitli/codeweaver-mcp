@@ -22,3 +22,8 @@ except ImportError as _import_error:  # pragma: no cover
 
 
 class AzureEmbeddingModelProfile(EmbeddingModelProfile): ...
+
+
+class AzureEmbeddingProvider:
+    """Azure embedding provider."""
+    ...

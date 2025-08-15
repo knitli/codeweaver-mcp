@@ -11,3 +11,8 @@ from codeweaver.embedding.profiles import EmbeddingModelProfile
 
 
 class OpenAIEmbeddingModelProfile(EmbeddingModelProfile): ...
+
+
+def openai_model_profile(model_name: str) -> EmbeddingModelProfile | None:
+    """Get OpenAI model profile."""
+    ...

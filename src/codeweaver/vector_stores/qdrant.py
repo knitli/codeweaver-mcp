@@ -1,0 +1,3 @@
+class QdrantVectorStore:
+    """Qdrant vector store provider."""
+    ...
