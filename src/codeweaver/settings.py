@@ -22,9 +22,14 @@ from pydantic_ai.settings import merge_model_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
-from codeweaver._settings import default_config_file_locations
+from codeweaver._settings import (
+    DataProviderSettings,
+    DefaultDataProviderSettings,
+    ProviderKind,
+    default_config_file_locations,
+)
 from codeweaver._utils import walk_down_to_git_root
-from codeweaver.exceptions import ConfigurationError
+from codeweaver.exceptions import ConfigurationError, MissingValueError
 
 
 def merge_agent_model_settings(
@@ -56,6 +61,29 @@ class FileFilterSettings(BaseModel):
     ignore_hidden: Annotated[
         bool, Field(description="Whether to ignore hidden files (starting with .) for filtering")
     ] = True
+
+
+class ProviderSettings(BaseModel):
+    """Settings for provider configuration."""
+
+    data: Annotated[
+        tuple[DataProviderSettings, ...] | None, Field(description="Data provider configuration")
+    ] = DefaultDataProviderSettings
+
+    """ COMMENTED OUT WHILE IMPLEMENTING...
+    embedding: Annotated[
+        tuple[EmbeddingProviderSettings, ...], Field(description="Embedding provider configuration")
+    ] = (VoyageEmbeddingProviderSettings(),)
+
+    vector: Annotated[
+        tuple[BaseVectorStoreConfig, ...],
+        Field(default_factory=QdrantVectorStore, description="Vector store provider configuration"),
+    ] = QdrantConfig()
+
+    agent: Annotated[
+        tuple[AgentProviderSettings, ...] | None, Field(description="Agent provider configuration")
+    ] = (DefaultAgentProviderSettings(),) = None
+    """
 
 
 class CodeWeaverSettings(BaseSettings):
@@ -211,3 +239,16 @@ def reload_settings() -> CodeWeaverSettings:
     global _settings
     _settings = None
     return get_settings()
+
+
+def get_provider_settings(provider_kind: ProviderKind | LiteralString) -> Any:
+    """Check a setting value by a tuple of keys (the path to the setting)."""
+    if isinstance(provider_kind, str):
+        provider_kind = ProviderKind.from_string(provider_kind)
+    if provider_kind == ProviderKind._UNSET:  # type: ignore
+        raise MissingValueError(
+            "Provider kind cannot be _UNSET",
+            "settings.get_provider_settings: `provider_kind` is _UNSET",
+            None,
+            ["This may be a bug in CodeWeaver, please report it."],
+        )

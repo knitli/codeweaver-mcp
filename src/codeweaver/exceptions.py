@@ -79,3 +79,30 @@ class ValidationError(CodeWeaverError):
     Raised when there are issues with input validation, data model validation,
     or schema compliance.
     """
+
+
+class MissingValueError(CodeWeaverError):
+    """Missing value errors.
+
+    Raised when a required value is missing in the context of an operation.
+    This is a specific case of validation error.
+    """
+
+    def __init__(
+        self,
+        msg: str | None,
+        field: str,
+        details: dict[str, Any] | None = None,
+        suggestions: list[str] | None = None,
+    ) -> None:
+        """Initialize MissingValueError.
+
+        Args:
+            field: The name of the missing field
+        """
+        super().__init__(
+            message=msg or f"Missing value for field: {field}",
+            details=details,
+            suggestions=suggestions,
+        )
+        self.field = field

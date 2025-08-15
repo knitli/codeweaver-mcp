@@ -13,15 +13,66 @@ clear precedence hierarchy and validation.
 
 from __future__ import annotations
 
-import contextlib
 import os
 import platform
 
 from pathlib import Path
-from typing import Self, cast
+from typing import TYPE_CHECKING, Any, LiteralString, NotRequired, Required, TypedDict
 
 from codeweaver._common import BaseEnum
 from codeweaver.exceptions import ConfigurationError
+
+
+if TYPE_CHECKING:
+    from codeweaver.agent_models import AgentModelSettings
+    from codeweaver.embedding import EmbeddingModelSettings, RerankModelSettings
+    from codeweaver.providers import Provider
+
+
+class DataProviderSettings(TypedDict, total=False):
+    """Settings for data providers."""
+
+    provider: Required[Provider]
+    enabled: Required[bool]
+    api_key: NotRequired[LiteralString | None]
+    settings: NotRequired[dict[str, Any] | None]
+
+
+DefaultDataProviderSettings = (
+    DataProviderSettings(provider=Provider.TAVILY, enabled=False, settings={"api_key": ""}),
+    # DuckDuckGo
+    DataProviderSettings(provider=Provider.DUCKDUCKGO, enabled=True, settings=None),
+)
+
+
+class EmbeddingProviderSettings(TypedDict, total=False):
+    """Settings for embedding models."""
+
+    provider: Required[Provider]
+    model_name: Required[str]
+    model_settings: NotRequired[EmbeddingModelSettings | None]
+    api_key: NotRequired[LiteralString | None]
+    settings: NotRequired[dict[str, Any] | None]
+
+
+class RerankProviderSettings(TypedDict, total=False):
+    """Settings for re-ranking models."""
+
+    provider: Required[Provider]
+    model_name: Required[str]
+    model_settings: NotRequired[RerankModelSettings | None]
+    api_key: NotRequired[LiteralString | None]
+    settings: NotRequired[dict[str, Any] | None]
+
+
+class AgentProviderSettings(TypedDict, total=False):
+    """Settings for agent models."""
+
+    provider: Required[Provider]
+    model_name: Required[str]
+    model_settings: NotRequired[AgentModelSettings | None]
+    api_key: NotRequired[LiteralString | None]
+    settings: NotRequired[dict[str, Any] | None]
 
 
 class ProviderKind(BaseEnum):
@@ -41,94 +92,18 @@ class ProviderKind(BaseEnum):
     _UNSET = "unset"
     """A sentinel setting to identify when a `ProviderKind` is not set or is configured."""
 
-
-class Provider(BaseEnum):
-    """Enumeration of available providers."""
-
-    VOYAGE = "voyage"
-
-    QDRANT = "qdrant"
-
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    COHERE = "cohere"
-    MISTRAL = "mistral"
-    GOOGLE = "google"
-    GROK = "grok"
-    BEDROCK = "bedrock"
-    HUGGINGFACE = "huggingface"
-
-    # OpenAI Compatible with OpenAIModel
-    DEEPSEEK = "deepseek"
-    OLLAMA = "ollama"  # supports rerank, but not on OpenAI API
-    OPENROUTER = "openrouter"
-    VERCEL = "vercel"
-    PERPLEXITY = "perplexity"
-    MOONSHOT = "moonshot"
-    FIREWORKS = "fireworks"
-    TOGETHER = "together"
-    AZURE = "azure"  # supports rerank, but not on OpenAI API
-    HEROKU = "heroku"
-    GITHUBMODELS = "githubmodels"
-
-    DUCKDUCKGO = "duckduckgo"
-    TAVILY = "tavily"
-
-    _UNSET = "unset"
-
-    @classmethod
-    def validate(cls, value: str) -> Self:
-        """Validate provider-specific settings."""
-        with contextlib.suppress(AttributeError, KeyError, ValueError):
-            if value_in_self := cls.from_string(value.strip()):
-                return value_in_self
-        # TODO: We need to allow for dynamic providers in the future, we would check if there's a provider class registered for the value, then register the provider here with `cls.add_member("NEW_PROVIDER", "new_provider")`.
-        raise ConfigurationError(f"Invalid provider: {value}")
-
     @property
-    def kinds(self) -> tuple[ProviderKind, ...]:
-        """Get the kinds of this provider."""
-        # NOTE: Azure and Ollama both *also* support reranking,
-        # But our support for them currently is through OpenAI's API,
-        # which doesn't expose reranking capabilities (because OpenAI doesn't have a reranking model).
-        if self == Provider.VOYAGE:
-            return cast(
-                tuple[ProviderKind, ProviderKind], (ProviderKind.EMBEDDING, ProviderKind.RERANKING)
-            )
-        if self == Provider.QDRANT:
-            return cast(tuple[ProviderKind], (ProviderKind.VECTOR_STORE,))
-        if self in {Provider.COHERE, Provider.BEDROCK, Provider.HUGGINGFACE}:
-            return cast(
-                tuple[ProviderKind, ...],
-                (ProviderKind.EMBEDDING, ProviderKind.RERANKING, ProviderKind.AGENT),
-            )
-        if self in {
-            Provider.AZURE,
-            Provider.FIREWORKS,
-            Provider.GOOGLE,
-            Provider.GITHUBMODELS,
-            Provider.MISTRAL,
-            Provider.HEROKU,
-            Provider.OLLAMA,
-            Provider.OPENAI,
-            Provider.TOGETHER,
-            Provider.VERCEL,
-        }:
-            return cast(
-                tuple[ProviderKind, ProviderKind], (ProviderKind.AGENT, ProviderKind.EMBEDDING)
-            )
-        if self in {
-            Provider.ANTHROPIC,
-            Provider.DEEPSEEK,
-            Provider.OPENROUTER,
-            Provider.PERPLEXITY,
-            Provider.MOONSHOT,
-            Provider.GROK,
-        }:
-            return cast(tuple[ProviderKind], (ProviderKind.AGENT,))
-        if self == Provider._UNSET:
-            return cast(tuple[ProviderKind], (ProviderKind._UNSET,))  # type: ignore
-        return cast(tuple[ProviderKind], (ProviderKind.DATA,))
+    def settings_object(self) -> object:
+        """Get the settings object for this provider kind."""
+        if self == ProviderKind.DATA:
+            return DataProviderSettings
+        if self == ProviderKind.EMBEDDING:
+            return EmbeddingProviderSettings
+        if self == ProviderKind.RERANKING:
+            return RerankProviderSettings
+        if self == ProviderKind.AGENT:
+            return AgentProviderSettings
+        raise ConfigurationError(f"ProviderKind {self} does not have a settings object.")
 
 
 def default_config_file_locations(

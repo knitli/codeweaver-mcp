@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2025 Knitli Inc.
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+"""Provider interfaces and implementations for CodeWeaver."""
+
+from typing import TYPE_CHECKING
+
+from codeweaver.vector_stores.base import EmbeddingProvider, SearchResult, VectorStoreProvider
+from codeweaver.vector_stores.memory import InMemoryVectorStore
+
+
+if TYPE_CHECKING:
+    from codeweaver.providers import Provider as ProviderEnum
+
+
+def get_store(provider: ProviderEnum) -> VectorStoreProvider:
+    """Get the vector store provider."""
+    if provider == ProviderEnum.IN_MEMORY:
+        return InMemoryVectorStore()
+    if provider == ProviderEnum.QDRANT:
+        from codeweaver.vector_stores.qdrant import QdrantVectorStore
+
+        return QdrantVectorStore()
+    raise TypeError(f"Expected VectorStoreProvider, got {type(provider)}")
+
+
+__all__ = ["EmbeddingProvider", "InMemoryVectorStore", "SearchResult", "VectorStoreProvider"]

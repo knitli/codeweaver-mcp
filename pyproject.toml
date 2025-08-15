@@ -40,14 +40,15 @@ dependencies = [
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
     "pydantic-ai>=0.6.2",
+    "pydantic-graph>=0.6.2",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
     "rich>=14.0.0",
     "rignore>=0.6.4",
-    "spacy>=3.8.7",
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
+    "typing_extensions>=4.14.1",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -160,6 +161,8 @@ recommended = [
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
+    "pydantic-ai>=0.6.2",
+    "pydantic-graph>=0.6.2",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
@@ -168,6 +171,7 @@ recommended = [
     "tomli-w>=1.2.0",
     "tiktoken>=0.1.0",
     "transformers>=4.55.2",
+    "typing_extensions>=4.14.1",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -178,6 +182,8 @@ recommended-no-telemetry = [
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
     "posthog>=6.3.0",
+    "pydantic-ai>=0.6.2",
+    "pydantic-graph>=0.6.2",
     "pydantic-settings>=2.10.1",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
@@ -186,6 +192,7 @@ recommended-no-telemetry = [
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "transformers>=4.55.2",
+    "typing-extensions>=4.14.1",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -199,10 +206,12 @@ minimal = [
     "voyageai>=0.3.4",
     "fastmcp>=2.10.6",
     "pydantic-settings>=2.10.1",
-    "pydantic-ai>=0.6.2",
+    "pydantic-ai-slim[openai]>=0.6.2", # really any pydantic-ai-slim
+    "pydantic-graph>=0.6.2",
     "pydantic>=2.11.7",
     "qdrant-client>=1.15.0",
     "rignore>=0.6.4",
+    "typing-extensions>=4.14.1",
 ]
 
 cli = [
@@ -215,8 +224,10 @@ cli = [
     "tomli-w>=1.2.0",
     "pydantic-settings>=2.10.1",
     "pydantic-ai>=0.6.2",
+    "pydantic-graph>=0.6.2",
     "pydantic>=2.11.7",
     "rignore>=0.6.4",
+    "typing-extensions>=4.14.1",
     "watchfiles>=1.1.0",
 ]
 
