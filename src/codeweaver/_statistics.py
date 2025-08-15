@@ -15,7 +15,7 @@ from collections import Counter, defaultdict
 from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal, NamedTuple
+from typing import Annotated, ClassVar, Literal
 
 from pydantic import (
     ConfigDict,
@@ -27,63 +27,8 @@ from pydantic import (
 )
 from pydantic.dataclasses import dataclass
 
-from codeweaver._constants import get_ext_lang_pairs
-from codeweaver._utils import normalize_ext
 from codeweaver.language import SemanticSearchLanguage
-
-
-class ExtKind(NamedTuple):
-    """Represents a file extension and its associated kind."""
-
-    language: str
-    kind: Literal["code", "config", "docs", "other"]
-
-
-@cache
-def _is_semantic_config_ext(ext: str) -> bool:
-    """Check if the given extension is a semantic config file."""
-    ext = normalize_ext(ext)
-    return any(ext == config_ext for config_ext in SemanticSearchLanguage.config_language_exts())
-
-
-@cache
-def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
-    """Check if the given extension is a semantic search language."""
-    if found_lang := next(
-        (lang for lang_ext, lang in SemanticSearchLanguage.ext_pairs() if lang_ext == ext), None
-    ):
-        return found_lang
-    return None
-
-
-def process_filename(filename: str) -> ExtKind | None:
-    """Process a filename to extract its base name and extension."""
-    # The order we do this in is important:
-    if semantic_config_file := next(
-        (
-            config
-            for config in iter(SemanticSearchLanguage.filename_pairs())
-            if config.filename == filename
-        ),
-        None,
-    ):
-        return ExtKind(language=semantic_config_file.language.value, kind="config")
-    filename_parts = tuple(part for part in filename.split(".") if part)
-    extension = normalize_ext(filename_parts[-1]) if filename_parts else filename_parts[0].lower()
-    if (semantic_config_language := _has_semantic_extension(extension)) and _is_semantic_config_ext(
-        extension
-    ):
-        return ExtKind(language=semantic_config_language.value, kind="config")
-    if semantic_language := _has_semantic_extension(extension):
-        return ExtKind(language=semantic_language.value, kind="code")
-    return next(
-        (
-            ExtKind(language=extpair.language, kind=extpair.category)
-            for extpair in get_ext_lang_pairs()
-            if extpair.is_same(filename)
-        ),
-        None,
-    )
+from codeweaver.services.discovery import process_filename
 
 
 OperationsKey = Literal["indexed", "retrieved", "processed", "reindexed", "skipped"]

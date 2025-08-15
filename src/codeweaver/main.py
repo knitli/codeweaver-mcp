@@ -50,6 +50,7 @@ class AppState:
     settings: Annotated[
         CodeWeaverSettings | None, Field(description="CodeWeaver configuration settings")
     ] = get_settings()
+    # TODO: Integrate fastmcp middleware here -- error handling, logging, timing, rate_limiting, etc.
     loaded_middleware: Annotated[
         tuple[type[Middleware], ...], Field(description="Tuple of loaded middleware")
     ] = Field(default_factory=tuple)
@@ -58,10 +59,6 @@ class AppState:
     statistics: Annotated[SessionStatistics, Field(description="Session statistics tracking")] = (
         SessionStatistics()
     )
-    tokens_sent: Annotated[
-        NonNegativeInt,
-        Field(description="Total tokens sent in response to Agent requests this session."),
-    ] = 0
 
     embedding_tokens_generated: Annotated[
         NonNegativeInt, Field(description="Number of tokens generated for embeddings this session.")
@@ -70,6 +67,7 @@ class AppState:
     reranking_tokens_generated: Annotated[
         NonNegativeInt, Field(description="Number of tokens generated for reranking this session.")
     ] = 0
+    # TODO: We need a proper health check system -- this doesn't do anything
     health: Annotated[dict[str, Any], Field(description="Health status information")] = Field(
         default_factory=dict
     )
@@ -89,10 +87,11 @@ async def lifespan(app: FastMCP[AppState]) -> AsyncIterator[AppState]:
 
 
 # Create FastMCP application
+# TODO: Add middleware, dependency injection, etc.
 app: FastMCP[AppState] = FastMCP("CodeWeaver", lifespan=lifespan)
 
 
-@app.tool()
+@app.tool(tags={"user", "external", "code"})
 async def find_code(
     query: str,
     intent: IntentType | None = None,
@@ -124,6 +123,7 @@ async def find_code(
         query="user registration validation logic"
     """
     try:
+        # TODO: handle context properly and inject it into app state
         settings = get_settings()
 
         return await find_code_implementation(
@@ -148,6 +148,7 @@ async def find_code(
         ) from e
 
 
+# TODO: This shouldn't be a tool, but a proper health check endpoint. We can also expose it as a Resource. But not a tool.
 @app.tool()
 async def health() -> dict[str, str]:
     """Health check endpoint for monitoring server status.
@@ -179,6 +180,7 @@ async def start_server(host: str = "localhost", port: int = 8080, *, debug: bool
     """
     import uvicorn
 
+    # TODO: the typechecker doesn't like this and probably neither does uvicorn.
     config = uvicorn.Config(app, host=host, port=port, log_level="debug" if debug else "info")
     server = uvicorn.Server(config)
     await server.serve()

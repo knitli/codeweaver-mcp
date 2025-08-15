@@ -506,6 +506,7 @@ dependencies = [
     { name = "ast-grep-py" },
     { name = "cyclopts" },
     { name = "fastmcp" },
+    { name = "httpx" },
     { name = "posthog" },
     { name = "pydantic" },
     { name = "pydantic-ai" },
@@ -528,6 +529,7 @@ auth-permitio = [
     { name = "permit-fastmcp" },
 ]
 cli = [
+    { name = "aenum" },
     { name = "ast-grep-py" },
     { name = "cyclopts" },
     { name = "fastmcp" },
@@ -541,6 +543,7 @@ cli = [
     { name = "watchfiles" },
 ]
 minimal = [
+    { name = "aenum" },
     { name = "ast-grep-py" },
     { name = "fastmcp" },
     { name = "pydantic" },
@@ -554,7 +557,7 @@ provider-cohere = [
     { name = "pydantic-ai-slim", extra = ["cohere"] },
 ]
 provider-huggingface = [
-    { name = "huggingface-hub" },
+    { name = "pydantic-ai-slim", extra = ["huggingface"] },
 ]
 provider-nlp-spacy = [
     { name = "spacy" },
@@ -564,7 +567,7 @@ provider-nlp-spacy-transformers = [
     { name = "spacy-curated-transformers" },
 ]
 provider-openai = [
-    { name = "openai" },
+    { name = "pydantic-ai-slim", extra = ["openai"] },
 ]
 provider-sentence-transformers = [
     { name = "sentence-transformers" },
@@ -573,6 +576,7 @@ provider-voyageai = [
     { name = "voyageai" },
 ]
 recommended = [
+    { name = "aenum" },
     { name = "ast-grep-py" },
     { name = "cyclopts" },
     { name = "fastmcp" },
@@ -588,6 +592,7 @@ recommended = [
     { name = "watchfiles" },
 ]
 recommended-no-telemetry = [
+    { name = "aenum" },
     { name = "ast-grep-py" },
     { name = "cyclopts" },
     { name = "fastmcp" },
@@ -604,7 +609,7 @@ recommended-no-telemetry = [
     { name = "watchfiles" },
 ]
 source-filesystem = [
-    { name = "watchdog" },
+    { name = "watchfiles" },
 ]
 
 [package.dev-dependencies]
@@ -655,6 +660,10 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "aenum", specifier = ">=3.1.16" },
+    { name = "aenum", marker = "extra == 'cli'", specifier = ">=3.1.16" },
+    { name = "aenum", marker = "extra == 'minimal'", specifier = ">=3.1.16" },
+    { name = "aenum", marker = "extra == 'recommended'", specifier = ">=3.1.16" },
+    { name = "aenum", marker = "extra == 'recommended-no-telemetry'", specifier = ">=3.1.16" },
     { name = "ast-grep-py", specifier = ">=0.39.1" },
     { name = "ast-grep-py", marker = "extra == 'cli'", specifier = ">=0.39.1" },
     { name = "ast-grep-py", marker = "extra == 'minimal'", specifier = ">=0.39.1" },
@@ -670,8 +679,7 @@ requires-dist = [
     { name = "fastmcp", marker = "extra == 'minimal'", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'recommended'", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'recommended-no-telemetry'", specifier = ">=2.10.6" },
-    { name = "huggingface-hub", marker = "extra == 'provider-huggingface'", specifier = ">=0.34.3" },
-    { name = "openai", marker = "extra == 'provider-openai'", specifier = ">=1.98.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "permit-fastmcp", marker = "extra == 'auth-permitio'", specifier = ">=0.1.1" },
     { name = "posthog", specifier = ">=6.3.0" },
     { name = "posthog", marker = "extra == 'recommended'", specifier = ">=6.3.0" },
@@ -685,6 +693,8 @@ requires-dist = [
     { name = "pydantic-ai", marker = "extra == 'cli'", specifier = ">=0.6.2" },
     { name = "pydantic-ai", marker = "extra == 'minimal'", specifier = ">=0.6.2" },
     { name = "pydantic-ai-slim", extras = ["cohere"], marker = "extra == 'provider-cohere'", specifier = ">=0.6.2" },
+    { name = "pydantic-ai-slim", extras = ["huggingface"], marker = "extra == 'provider-huggingface'", specifier = ">=0.6.2" },
+    { name = "pydantic-ai-slim", extras = ["openai"], marker = "extra == 'provider-openai'", specifier = ">=0.6.2" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "pydantic-settings", marker = "extra == 'cli'", specifier = ">=2.10.1" },
     { name = "pydantic-settings", marker = "extra == 'minimal'", specifier = ">=2.10.1" },
@@ -722,11 +732,11 @@ requires-dist = [
     { name = "voyageai", marker = "extra == 'provider-voyageai'", specifier = ">=0.3.4" },
     { name = "voyageai", marker = "extra == 'recommended'", specifier = ">=0.3.4" },
     { name = "voyageai", marker = "extra == 'recommended-no-telemetry'", specifier = ">=0.3.4" },
-    { name = "watchdog", marker = "extra == 'source-filesystem'", specifier = ">=6.0.0" },
     { name = "watchfiles", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'cli'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'recommended'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.1.0" },
+    { name = "watchfiles", marker = "extra == 'source-filesystem'", specifier = ">=1.1.0" },
 ]
 provides-extras = ["auth-eunomia", "auth-permitio", "cli", "minimal", "provider-cohere", "provider-huggingface", "provider-nlp-spacy", "provider-nlp-spacy-transformers", "provider-openai", "provider-sentence-transformers", "provider-voyageai", "recommended", "recommended-no-telemetry", "source-filesystem"]
 

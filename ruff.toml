@@ -38,7 +38,7 @@ fix = true
 line-length = 100
 indent-width = 4
 
-target-version = "py311"
+target-version = "py312"
 
 [format]
 docstring-code-format = true

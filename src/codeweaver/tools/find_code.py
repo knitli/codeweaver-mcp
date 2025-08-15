@@ -17,12 +17,12 @@ from pydantic import NonNegativeInt, PositiveInt
 from codeweaver._data_structures import Span
 from codeweaver._utils import estimate_tokens
 from codeweaver.exceptions import QueryError
+from codeweaver.language import SemanticSearchLanguage
 from codeweaver.models.core import CodeMatch, CodeMatchType, FindCodeResponse, SearchStrategy
 from codeweaver.services.discovery import FileDiscoveryService
 
 
 if TYPE_CHECKING:
-    from codeweaver.language import SemanticSearchLanguage
     from codeweaver.models.intent import IntentType, QueryIntent
     from codeweaver.settings import CodeWeaverSettings
 

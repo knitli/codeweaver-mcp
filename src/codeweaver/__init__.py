@@ -14,6 +14,8 @@ from codeweaver.exceptions import (
 )
 
 
+__version__ = "0.1.0"
+
 __all__ = [
     "CodeWeaverError",
     "ConfigurationError",

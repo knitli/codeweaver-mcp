@@ -30,7 +30,7 @@ __all__ = [
 
 # This is a placeholder implementation for the embedding model profile.
 # We need to create the profiles for the providers and finish the factory function here.
-# To see the overall idea, we're copying the pattern in `pydantic_ai.profiles`
+# To see the overall idea, we're copying the pattern in [`pydantic_ai.profiles`](https://github.com/pydantic/pydantic-ai/tree/main/pydantic_ai_slim/src/profiles)
 
 
 @dataclass
@@ -55,6 +55,8 @@ class EmbeddingModelProfile:
         return replace(self, **non_default_attrs)
 
 
-EmbeddingModelProfileSpec = EmbeddingModelProfile | Callable[[str], EmbeddingModelProfile | None]
+type EmbeddingModelProfileSpec = (
+    EmbeddingModelProfile | Callable[[str], EmbeddingModelProfile | None]
+)
 
 DEFAULT_PROFILE = EmbeddingModelProfile()

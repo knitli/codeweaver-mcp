@@ -253,11 +253,22 @@ class SpanGroup:
         self.spans = self.spans or set()
         self._normalize()
 
+    @classmethod
+    def from_simple_spans(cls, simple_spans: Sequence[tuple[int, int]]) -> SpanGroup:
+        """
+        Create a SpanGroup from a sequence of simple spans. Assumes all input spans are from the same source.
+
+        Intended for ingestion, where a parser identifies spans as simple tuples of (start, end) from a single source/file, and passes them for grouping into a SpanGroup.
+        """
+        source_id = uuid4()  # Default source_id for the group
+        spans = {Span(start, end, source_id) for start, end in simple_spans}
+        return cls(spans)
+
     def _ensure_set(self, spans: Sequence[Any]) -> TypeGuard[set[Span]]:
         """Ensure that spans is a set of Span objects."""
         return bool(spans and isinstance(spans, set) and all(isinstance(s, Span) for s in spans))
 
-    def _normalize(self):
+    def _normalize(self) -> None:
         """Merge overlapping/adjacent spans with same source_id."""
         normalized: list[Span] = []
         for span in sorted(self.spans, key=lambda s: (s.source_id, s.start)):

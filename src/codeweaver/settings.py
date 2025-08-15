@@ -14,70 +14,24 @@ clear precedence hierarchy and validation.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any, LiteralString, TypedDict
+from typing import Annotated, Any, LiteralString
 
 from pydantic import BaseModel, Field, PositiveInt
+from pydantic_ai.settings import ModelSettings as AgentModelSettings
+from pydantic_ai.settings import merge_model_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
-from codeweaver._settings import Provider, default_config_file_locations
+from codeweaver._settings import default_config_file_locations
 from codeweaver._utils import walk_down_to_git_root
 from codeweaver.exceptions import ConfigurationError
 
 
-class ProviderModelConfig(TypedDict, total=False):
-    """
-    Configuration for an AI provider model (chat/agent, embedding, reranking, etc.).
-
-    If a field is not applicable to the model, it should be set to None. If it can be configured, set it to a default value, and mark it as `configurable: True` in the JSON schema extra.
-    """
-
-    model_name: Provider
-    variants: Annotated[
-        tuple[str, ...] | None,
-        Field(
-            description="List of model variants. These are other official names for the model, typically representing versions or training dates like `gpt-5-2025-08-07`."
-        ),
-    ]
-    max_tokens: Annotated[
-        int,
-        Field(description="For ingest. Maximum number of tokens the model can receive in a call."),
-    ]
-    n_completions: Annotated[
-        int | None,
-        Field(
-            description="Number of completions to generate for each prompt, if configurable.",
-            json_schema_extra={"configurable": False},
-        ),
-    ]
-    temperature: Annotated[
-        float | None,
-        Field(
-            description="Sampling temperature for the model's responses, if configurable.",
-            json_schema_extra={"configurable": False},
-        ),
-    ]
-    top_p: Annotated[
-        float | None,
-        Field(
-            description="Nucleus sampling parameter for the model's responses, if configurable.",
-            json_schema_extra={"configurable": False},
-        ),
-    ]
-    presence_penalty: Annotated[
-        float | None,
-        Field(
-            description="Presence penalty for the model's responses, if configurable.",
-            json_schema_extra={"configurable": False},
-        ),
-    ]
-    frequency_penalty: Annotated[
-        float | None,
-        Field(
-            description="Frequency penalty for the model's responses, if configurable.",
-            json_schema_extra={"configurable": False},
-        ),
-    ]
+def merge_agent_model_settings(
+    base: AgentModelSettings | None, override: AgentModelSettings | None
+) -> AgentModelSettings | None:
+    """A convenience re-export of `merge_model_settings` for agent model settings."""
+    return merge_model_settings(base, override)
 
 
 class FileFilterSettings(BaseModel):
@@ -186,12 +140,23 @@ class CodeWeaverSettings(BaseSettings):
     allow_identifying_telemetry: Annotated[
         bool,
         Field(
-            description="DISABLED BY DEFAULT. If you want to *really* help us improve CodeWeaver, you can allow us to collect potentially identifying telemetry data. If it's enabled, we *won't hash file and repository names. We'll still try our best to screen out potential secrets, as well as names and emails, but we can't guarantee complete anonymity. This helps us by giving us real-world usage patterns and information on queries and results. We can use that to make everyone's results better. Like with the default telemetry, we **will not use it for anything else**."
+            description="DISABLED BY DEFAULT. If you want to *really* help us improve CodeWeaver, you can allow us to collect potentially identifying telemetry data. It's not intrusive, it's more like what *most* telemetry collects. If it's enabled, we *won't hash file and repository names. We'll still try our best to screen out potential secrets, as well as names and emails, but we can't guarantee complete anonymity. This helps us by giving us real-world usage patterns and information on queries and results. We can use that to make everyone's results better. Like with the default telemetry, we **will not use it for anything else**."
         ),
     ] = False
     enable_ai_intent_analysis: Annotated[
         bool, Field(description="Enable AI-powered intent analysis via FastMCP sampling")
     ] = False  # ! Phase 2 feature, switch to True when implemented
+    enable_precontext: Annotated[
+        bool,
+        Field(
+            description="Enable precontext code generation. Recommended, but requires you set up an agent model. This allows CodeWeaver to call an agent model outside of an MCP tool request (it still requires either a CLI call from you or a hook you setup). This is required for our recommended *precontext workflow*. This setting dictionary is a `pydantic_ai.settings.ModelSettings` object. If you already use `pydantic_ai.settings.ModelSettings`, then you can provide the same settings here."
+        ),
+    ] = False  # ! Phase 2 feature, switch to True when implemented
+
+    agent_settings: Annotated[
+        AgentModelSettings | None,
+        Field(description="Model settings for ai agents. Required for `enable_precontext`"),
+    ] = None
 
     __version__: Annotated[
         str,
@@ -224,6 +189,8 @@ class CodeWeaverSettings(BaseSettings):
     @property
     def project_root(self) -> Path:
         """Get the project root directory."""
+        if not self.project_path:
+            self.project_path = walk_down_to_git_root()
         return self.project_path.resolve()
 
 
