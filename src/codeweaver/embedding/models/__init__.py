@@ -8,6 +8,8 @@
 # applies to new/modified code in this directory (`src/codeweaver/embedding/`)
 """Entrypoint for CodeWeaver's heavily-pydantic-ai-inspired embedding model system."""
 
+from codeweaver.embedding.profiles import EmbeddingModelProfile
+
 
 class EmbeddingModelSettings: ...
 

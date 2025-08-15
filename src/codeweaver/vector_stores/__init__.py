@@ -8,17 +8,14 @@ from typing import TYPE_CHECKING
 
 from codeweaver.vector_stores.base import EmbeddingProvider, SearchResult, VectorStoreProvider
 from codeweaver.vector_stores.memory import InMemoryVectorStore
+from codeweaver._settings import Provider
 
 
-if TYPE_CHECKING:
-    from codeweaver.providers import Provider as ProviderEnum
-
-
-def get_store(provider: ProviderEnum) -> VectorStoreProvider:
+def get_store(provider: Provider) -> VectorStoreProvider:
     """Get the vector store provider."""
-    if provider == ProviderEnum.IN_MEMORY:
+    if provider == Provider.IN_MEMORY:
         return InMemoryVectorStore()
-    if provider == ProviderEnum.QDRANT:
+    if provider == Provider.QDRANT:
         from codeweaver.vector_stores.qdrant import QdrantVectorStore
 
         return QdrantVectorStore()
