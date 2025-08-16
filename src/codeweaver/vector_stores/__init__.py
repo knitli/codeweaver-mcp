@@ -4,20 +4,22 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Provider interfaces and implementations for CodeWeaver."""
 
-from codeweaver.vector_stores.base import EmbeddingProvider, SearchResult, VectorStoreProvider
-from codeweaver.vector_stores.memory import InMemoryVectorStore
+from typing import Any
+
 from codeweaver._settings import Provider
+from codeweaver.vector_stores.base import SearchResult, VectorStoreProvider
+from codeweaver.vector_stores.memory import InMemoryVectorStore
 
 
-def get_store(provider: Provider) -> VectorStoreProvider:
+def get_store(provider: Provider) -> type[VectorStoreProvider[Any]]:
     """Get the vector store provider."""
-    if provider == Provider.IN_MEMORY:
-        return InMemoryVectorStore()
+    if provider == Provider.FASTEMBED_VECTORSTORE:
+        return InMemoryVectorStore
     if provider == Provider.QDRANT:
         from codeweaver.vector_stores.qdrant import QdrantVectorStore
 
-        return QdrantVectorStore()
+        return QdrantVectorStore
     raise TypeError(f"Expected VectorStoreProvider, got {type(provider)}")
 
 
-__all__ = ["EmbeddingProvider", "InMemoryVectorStore", "SearchResult", "VectorStoreProvider"]
+__all__ = ["InMemoryVectorStore", "SearchResult", "VectorStoreProvider"]

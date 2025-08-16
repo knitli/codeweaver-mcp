@@ -1,4 +1,3 @@
-# sourcery skip: no-complex-if-expressions
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -14,7 +13,7 @@ clear precedence hierarchy and validation.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any, LiteralString
+from typing import TYPE_CHECKING, Annotated, Any, LiteralString
 
 from pydantic import BaseModel, Field, PositiveInt
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
@@ -22,14 +21,20 @@ from pydantic_ai.settings import merge_model_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
-from codeweaver._settings import (
-    DataProviderSettings,
-    DefaultDataProviderSettings,
-    ProviderKind,
-    default_config_file_locations,
-)
+from codeweaver._settings import Provider, default_config_file_locations
 from codeweaver._utils import walk_down_to_git_root
 from codeweaver.exceptions import ConfigurationError, MissingValueError
+
+
+if TYPE_CHECKING:
+    from codeweaver._settings import DataProviderSettings, ProviderKind
+
+
+DefaultDataProviderSettings = (
+    DataProviderSettings(provider=Provider.TAVILY, enabled=False, api_key=None, extra=None),
+    # DuckDuckGo
+    DataProviderSettings(provider=Provider.DUCKDUCKGO, enabled=True, api_key=None, extra=None),
+)
 
 
 def merge_agent_model_settings(

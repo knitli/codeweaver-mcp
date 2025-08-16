@@ -10,6 +10,9 @@ from collections.abc import Generator
 from typing import Literal, LiteralString, NamedTuple
 
 
+METADATA_PATH = "metadata"
+
+
 class ExtLangPair(NamedTuple):
     """
     Mapping of file extensions to their corresponding programming languages.

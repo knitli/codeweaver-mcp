@@ -54,6 +54,10 @@ class AppState:
     loaded_middleware: Annotated[
         tuple[type[Middleware], ...], Field(description="Tuple of loaded middleware")
     ] = Field(default_factory=tuple)
+    # TODO: This is a placeholder. We need to implement the provider registry in _settings_registry.py
+    providers: Annotated[dict[str, Any], Field(description="Registered provider instances")] = (
+        dict()
+    )
     indexer: None = None  # Placeholder for future indexer implementation
 
     statistics: Annotated[SessionStatistics, Field(description="Session statistics tracking")] = (

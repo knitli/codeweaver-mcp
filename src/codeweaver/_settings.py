@@ -1,53 +1,82 @@
-# sourcery skip: no-complex-if-expressions
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # We need to override our generic models with specific types, and type overrides for narrower values is a good thing.
 # pyright: reportIncompatibleMethodOverride=false,reportIncompatibleVariableOverride=false
-"""Unified configuration system for CodeWeaver.
-
-Provides a centralized settings system using pydantic-settings with
-clear precedence hierarchy and validation.
-"""
+"""Core settings and provider definitions."""
 
 from __future__ import annotations
 
+import contextlib
 import os
 import platform
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, LiteralString, NotRequired, Required, TypedDict
+from typing import Any, LiteralString, NotRequired, Required, Self, TypedDict
+
+from pydantic_ai.settings import ModelSettings as AgentModelSettings
 
 from codeweaver._common import BaseEnum
 from codeweaver.exceptions import ConfigurationError
 
 
-if TYPE_CHECKING:
-    pass
+class BaseProviderSettings(TypedDict, total=False):
+    """Base settings for all providers."""
+
+    provider: Required[Provider]
+    enabled: Required[bool]
+    api_key: NotRequired[LiteralString | None]
+    extra: NotRequired[dict[str, Any] | None]
 
 
-class AgentModelSettings:
-    """Agent model settings stub."""
-    ...
+class DataProviderSettings(BaseProviderSettings):
+    """Settings for data providers."""
 
 
 class EmbeddingModelSettings:
     """Embedding model settings stub."""
-    ...
 
 
 class RerankModelSettings:
     """Rerank model settings stub."""
-    ...
+
+
+class EmbeddingProviderSettings(BaseProviderSettings):
+    """Settings for embedding models."""
+
+    model: Required[str]
+    model_settings: NotRequired[EmbeddingModelSettings | None]
+
+
+class RerankProviderSettings(BaseProviderSettings):
+    """Settings for re-ranking models."""
+
+    models: Required[str | tuple[str, ...]]  # Tuple of model names
+    """A model name or a tuple of model names to use for re-ranking in order of preference."""
+    model_settings: NotRequired[RerankModelSettings | tuple[RerankModelSettings, ...] | None]
+    """Settings for the re-ranking model(s)."""
+    extra: NotRequired[dict[str, Any] | None]
+
+
+class AgentProviderSettings(BaseProviderSettings):
+    """Settings for agent models."""
+
+    models: Required[str | tuple[str, ...]]
+    """A model name or a tuple of model names to use for agent in order of preference."""
+    model_settings: NotRequired[AgentModelSettings | tuple[AgentModelSettings, ...] | None]
+    """Settings for the agent model(s)."""
 
 
 class Provider(BaseEnum):
-    """Provider enumeration stub for _settings.py to avoid circular imports."""
-    
+    """Enumeration of available providers."""
+
     VOYAGE = "voyage"
+    FASTEMBED = "fastembed"
+
     QDRANT = "qdrant"
-    IN_MEMORY = "in_memory"
+    FASTEMBED_VECTORSTORE = "fastembed_vectorstore"
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     COHERE = "cohere"
@@ -56,66 +85,33 @@ class Provider(BaseEnum):
     GROK = "grok"
     BEDROCK = "bedrock"
     HUGGINGFACE = "huggingface"
+
+    # OpenAI Compatible with OpenAIModel
     DEEPSEEK = "deepseek"
-    OLLAMA = "ollama"
+    OLLAMA = "ollama"  # supports rerank, but not w/ OpenAI API
     OPENROUTER = "openrouter"
     VERCEL = "vercel"
     PERPLEXITY = "perplexity"
     MOONSHOT = "moonshot"
     FIREWORKS = "fireworks"
     TOGETHER = "together"
-    AZURE = "azure"
+    AZURE = "azure"  # supports rerank, but not w/ OpenAI API
     HEROKU = "heroku"
-    GITHUBMODELS = "githubmodels"
+    GITHUB = "github"
+
     DUCKDUCKGO = "duckduckgo"
     TAVILY = "tavily"
+
     _UNSET = "unset"
 
-
-class DataProviderSettings(TypedDict, total=False):
-    """Settings for data providers."""
-
-    provider: Required[Provider]
-    enabled: Required[bool]
-    api_key: NotRequired[LiteralString | None]
-    settings: NotRequired[dict[str, Any] | None]
-
-
-DefaultDataProviderSettings = (
-    DataProviderSettings(provider=Provider.TAVILY, enabled=False, settings={"api_key": ""}),
-    # DuckDuckGo
-    DataProviderSettings(provider=Provider.DUCKDUCKGO, enabled=True, settings=None),
-)
-
-
-class EmbeddingProviderSettings(TypedDict, total=False):
-    """Settings for embedding models."""
-
-    provider: Required[Provider]
-    model_name: Required[str]
-    model_settings: NotRequired[EmbeddingModelSettings | None]
-    api_key: NotRequired[LiteralString | None]
-    settings: NotRequired[dict[str, Any] | None]
-
-
-class RerankProviderSettings(TypedDict, total=False):
-    """Settings for re-ranking models."""
-
-    provider: Required[Provider]
-    model_name: Required[str]
-    model_settings: NotRequired[RerankModelSettings | None]
-    api_key: NotRequired[LiteralString | None]
-    settings: NotRequired[dict[str, Any] | None]
-
-
-class AgentProviderSettings(TypedDict, total=False):
-    """Settings for agent models."""
-
-    provider: Required[Provider]
-    model_name: Required[str]
-    model_settings: NotRequired[AgentModelSettings | None]
-    api_key: NotRequired[LiteralString | None]
-    settings: NotRequired[dict[str, Any] | None]
+    @classmethod
+    def validate(cls, value: str) -> Self:
+        """Validate provider-specific settings."""
+        with contextlib.suppress(AttributeError, KeyError, ValueError):
+            if value_in_self := cls.from_string(value.strip()):
+                return value_in_self
+        # TODO: We need to allow for dynamic providers in the future, we would check if there's a provider class registered for the value, then register the provider here with `cls.add_member("NEW_PROVIDER", "new_provider")`.
+        raise ConfigurationError(f"Invalid provider: {value}")
 
 
 class ProviderKind(BaseEnum):

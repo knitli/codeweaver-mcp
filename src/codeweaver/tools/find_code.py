@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import time
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, LiteralString, NamedTuple, cast
 from uuid import uuid4
 
 from pydantic import NonNegativeInt, PositiveInt
 
-from codeweaver._data_structures import Span
+from codeweaver._data_structures import DiscoveredFile, Span
 from codeweaver._utils import estimate_tokens
 from codeweaver.exceptions import QueryError
 from codeweaver.language import SemanticSearchLanguage
@@ -71,25 +72,21 @@ async def find_code_implementation(
         discovery_service = FileDiscoveryService(settings)
 
         # Discover files
-        files = await discovery_service.discover_files(include_tests=include_tests)
+        discovered_files, _filtered_files = await discovery_service.get_discovered_files()
 
         # Filter by languages if specified
         if focus_languages:
-            filtered_files: list[Path] = []
-            for file_path in files:
-                language = discovery_service.detect_language(file_path)
-                if language and language in [str(lang) for lang in focus_languages]:
-                    filtered_files.append(file_path)
-            files = filtered_files
+            test_languages: set[str] = {str(lang) for lang in focus_languages}
+            focus_filtered_languages: list[DiscoveredFile] = [
+                file for file in discovered_files if str(file.ext_kind.language) in test_languages
+            ]
+            discovered_files = focus_filtered_languages
 
         # Perform basic text search
-        matches = await basic_text_search(query, files, settings, token_limit)
+        matches = await basic_text_search(query, discovered_files, settings, token_limit)
 
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
-
-        # Detect languages in results
-        languages_found = tuple({match.language for match in matches if match.language is not None})
 
         # Create response
         return FindCodeResponse(
@@ -101,7 +98,8 @@ async def find_code_implementation(
             execution_time_ms=execution_time_ms,
             search_strategy=(SearchStrategy.FILE_DISCOVERY, SearchStrategy.TEXT_SEARCH),
             languages_found=cast(
-                tuple[SemanticSearchLanguage | LiteralString, ...], languages_found
+                tuple[SemanticSearchLanguage | LiteralString, ...],
+                tuple(str(file.ext_kind.language) for file in discovered_files),
             ),
         )
 
@@ -118,7 +116,7 @@ async def find_code_implementation(
 
 
 async def basic_text_search(
-    query: str, files: list[Path], settings: CodeWeaverSettings, token_limit: int
+    query: str, files: Sequence[DiscoveredFile], settings: CodeWeaverSettings, token_limit: int
 ) -> list[CodeMatch]:
     """Basic keyword-based search implementation for Phase 1.
 
@@ -135,20 +133,15 @@ async def basic_text_search(
     query_terms = query.lower().split()
     current_token_count = 0
 
-    # Initialize file discovery service for language detection
-    discovery_service = FileDiscoveryService(settings)
-
-    for file_path in files:
-        # Convert to absolute path for reading
-        absolute_path = settings.project_path / file_path
+    for file in files:
+        abs_path = file.path.absolute()
 
         try:
-            content = absolute_path.read_text(encoding="utf-8", errors="ignore")
+            content = abs_path.read_text(encoding="utf-8", errors="ignore")
             # do a binary test to ensure the file is text
             if content and len(content) > 3 and content[:3] == "\xef\xbb\xbf":
                 # Skip binary files
                 continue
-
         except OSError:
             # Skip files that can't be read
             continue
@@ -161,13 +154,9 @@ async def basic_text_search(
             # Find best matching section
             lines = content.split("\n")
             if best_section := find_best_section(lines, query_terms):
-                # Detect language
-                language = discovery_service.detect_language(file_path)
-
                 # Create code match
                 match = CodeMatch(
-                    file_path=file_path,
-                    language=language,
+                    file=file,
                     related_symbols=("",),  # Not implemented in Phase 1
                     content=best_section.content,
                     span=best_section.span,

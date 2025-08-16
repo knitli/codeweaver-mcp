@@ -8,7 +8,7 @@
 # applies to new/modified code in this directory (`src/codeweaver/embedding_providers/`)
 """This module re-exports agentic model providers and associated utilities from Pydantic AI."""
 
-from typing import Any, LiteralString, TypeVar
+from typing import TYPE_CHECKING, LiteralString, Self
 
 from pydantic_ai.providers import Provider as AgentProvider
 from pydantic_ai.toolsets import (
@@ -24,96 +24,95 @@ from pydantic_ai.toolsets import (
     WrapperToolset,
 )
 
-from codeweaver.providers import Provider as ProviderEnum
+
+if TYPE_CHECKING:
+    from codeweaver._settings import Provider
 
 
-InterfaceClient = TypeVar("InterfaceClient", bound="AgentProvider[Any]")
-
-
-def get_agent_model_provider(provider: ProviderEnum) -> type[AgentProvider[InterfaceClient]]:  # type: ignore  # noqa: C901
+def get_agent_model_provider(provider: Provider) -> type[AgentProvider[Self]]:  # type: ignore  # noqa: C901
     # sourcery skip: low-code-quality, no-long-functions
     """Get the agent model provider."""
-    if provider == ProviderEnum.OPENAI:
-        from pydantic_ai.providers.openai import OpenAIProvider
+    if provider == Provider.OPENAI:
+        from pydantic_ai.providers.openai import OpenAIProvider as OpenAIAgentProvider
 
-        return OpenAIProvider
-    if provider == ProviderEnum.DEEPSEEK:
-        from pydantic_ai.providers.deepseek import DeepSeekProvider
+        return OpenAIAgentProvider
+    if provider == Provider.DEEPSEEK:
+        from pydantic_ai.providers.deepseek import DeepSeekProvider as DeepSeekAgentProvider
 
-        return DeepSeekProvider
-    if provider == ProviderEnum.OPENROUTER:
-        from pydantic_ai.providers.openrouter import OpenRouterProvider
+        return DeepSeekAgentProvider
+    if provider == Provider.OPENROUTER:
+        from pydantic_ai.providers.openrouter import OpenRouterProvider as OpenRouterAgentProvider
 
-        return OpenRouterProvider
-    if provider == ProviderEnum.VERCEL:
-        from pydantic_ai.providers.vercel import VercelProvider
+        return OpenRouterAgentProvider
+    if provider == Provider.VERCEL:
+        from pydantic_ai.providers.vercel import VercelProvider as VercelAgentProvider
 
-        return VercelProvider
-    if provider == ProviderEnum.AZURE:
-        from pydantic_ai.providers.azure import AzureProvider
+        return VercelAgentProvider
+    if provider == Provider.AZURE:
+        from pydantic_ai.providers.azure import AzureProvider as AzureAgentProvider
 
-        return AzureProvider
+        return AzureAgentProvider
 
     # NOTE: We don't test for auth because there are many ways the `boto3.client` can retrieve the credentials.
-    if provider == ProviderEnum.BEDROCK:
-        from pydantic_ai.providers.bedrock import BedrockProvider
+    if provider == Provider.BEDROCK:
+        from pydantic_ai.providers.bedrock import BedrockProvider as BedrockAgentProvider
 
-        return BedrockProvider
-    if provider == ProviderEnum.GOOGLE:
-        from pydantic_ai.providers.google import GoogleProvider
+        return BedrockAgentProvider
+    if provider == Provider.GOOGLE:
+        from pydantic_ai.providers.google import GoogleProvider as GoogleAgentProvider
 
-        return GoogleProvider
-    if provider == ProviderEnum.GROK:
-        from pydantic_ai.providers.grok import GrokProvider
+        return GoogleAgentProvider
+    if provider == Provider.GROK:
+        from pydantic_ai.providers.grok import GrokProvider as GrokAgentProvider
 
-        return GrokProvider
-    if provider == ProviderEnum.ANTHROPIC:
-        from pydantic_ai.providers.anthropic import AnthropicProvider
+        return GrokAgentProvider
+    if provider == Provider.ANTHROPIC:
+        from pydantic_ai.providers.anthropic import AnthropicProvider as AnthropicAgentProvider
 
-        return AnthropicProvider
-    if provider == ProviderEnum.MISTRAL:
-        from pydantic_ai.providers.mistral import MistralProvider
+        return AnthropicAgentProvider
+    if provider == Provider.MISTRAL:
+        from pydantic_ai.providers.mistral import MistralProvider as MistralAgentProvider
 
-        return MistralProvider
-    if provider == ProviderEnum.COHERE:
-        from pydantic_ai.providers.cohere import CohereProvider
+        return MistralAgentProvider
+    if provider == Provider.COHERE:
+        from pydantic_ai.providers.cohere import CohereProvider as CohereAgentProvider
 
-        return CohereProvider
-    if provider == ProviderEnum.MOONSHOTAI:
-        from pydantic_ai.providers.moonshotai import MoonshotAIProvider
+        return CohereAgentProvider
+    if provider == Provider.MOONSHOT:
+        from pydantic_ai.providers.moonshotai import MoonshotAIProvider as MoonshotAIAgentProvider
 
-        return MoonshotAIProvider
-    if provider == ProviderEnum.FIREWORKS:
-        from pydantic_ai.providers.fireworks import FireworksProvider
+        return MoonshotAIAgentProvider
+    if provider == Provider.FIREWORKS:
+        from pydantic_ai.providers.fireworks import FireworksProvider as FireworksAgentProvider
 
-        return FireworksProvider
-    if provider == ProviderEnum.TOGETHER:
-        from pydantic_ai.providers.together import TogetherProvider
+        return FireworksAgentProvider
+    if provider == Provider.TOGETHER:
+        from pydantic_ai.providers.together import TogetherProvider as TogetherAgentProvider
 
-        return TogetherProvider
-    if provider == ProviderEnum.HEROKU:
-        from pydantic_ai.providers.heroku import HerokuProvider
+        return TogetherAgentProvider
+    if provider == Provider.HEROKU:
+        from pydantic_ai.providers.heroku import HerokuProvider as HerokuAgentProvider
 
-        return HerokuProvider
-    if provider == ProviderEnum.HUGGINGFACE:
-        from pydantic_ai.providers.huggingface import HuggingFaceProvider
+        return HerokuAgentProvider
+    if provider == Provider.HUGGINGFACE:
+        from pydantic_ai.providers.huggingface import (
+            HuggingFaceProvider as HuggingFaceAgentProvider,
+        )
 
-        return HuggingFaceProvider
-    if provider == ProviderEnum.GITHUB:
-        from pydantic_ai.providers.github import GitHubProvider
+        return HuggingFaceAgentProvider
+    if provider == Provider.GITHUB:
+        from pydantic_ai.providers.github import GitHubProvider as GitHubAgentProvider
 
-        return GitHubProvider
+        return GitHubAgentProvider
     # pragma: no cover
     raise ValueError(f"Unknown provider: {provider}")
 
 
-def infer_agent_provider_class(
-    provider: LiteralString | ProviderEnum,
-) -> AgentProvider[InterfaceClient]:  # type: ignore
+def infer_agent_provider_class(provider: LiteralString | Provider) -> AgentProvider[Provider]:
     """Infer the provider from the provider name."""
-    if not isinstance(provider, ProviderEnum):
-        provider = ProviderEnum.from_string(provider)
-    provider_class: type[AgentProvider[InterfaceClient]] = get_agent_model_provider(provider)  # type: ignore
+    if not isinstance(provider, Provider):
+        provider = Provider.from_string(provider)
+    provider_class: type[AgentProvider[Provider]] = get_agent_model_provider(provider)  # type: ignore
     return provider_class()
 
 

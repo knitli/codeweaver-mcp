@@ -6,14 +6,12 @@
 
 from __future__ import annotations
 
-from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, LiteralString, NamedTuple
+from typing import TYPE_CHECKING
 
 import rignore  # type: ignore
 
-from codeweaver._constants import get_ext_lang_pairs
-from codeweaver._utils import normalize_ext
+from codeweaver._data_structures import DiscoveredFile
 from codeweaver.exceptions import IndexingError
 from codeweaver.language import SemanticSearchLanguage
 
@@ -22,66 +20,6 @@ if TYPE_CHECKING:
     from codeweaver.settings import CodeWeaverSettings
 
 TEST_FILE_PATTERNS = ["*.test.*", "*.spec.*", "test/**/*", "spec/**/*"]
-
-# TODO: Add process_filename implementation and probably remove detect_language. It probably makes the most sense to unify returning paths, ExtKind/language detection into a single data structure. A TypedDict would do it, or just add to ExtKind.
-
-
-class ExtKind(NamedTuple):
-    """Represents a file extension and its associated kind."""
-
-    language: str
-    kind: Literal["code", "config", "docs", "other"]
-
-    def __str__(self) -> str:
-        """Return a string representation of the extension kind."""
-        return f"{self.kind}: {self.language}"
-
-
-def process_filename(filename: str) -> ExtKind | None:
-    """Process a filename to extract its base name and extension."""
-    # The order we do this in is important:
-    if semantic_config_file := next(
-        (
-            config
-            for config in iter(SemanticSearchLanguage.filename_pairs())
-            if config.filename == filename
-        ),
-        None,
-    ):
-        return ExtKind(language=semantic_config_file.language.value, kind="config")
-    filename_parts = tuple(part for part in filename.split(".") if part)
-    extension = normalize_ext(filename_parts[-1]) if filename_parts else filename_parts[0].lower()
-    if (semantic_config_language := _has_semantic_extension(extension)) and _is_semantic_config_ext(
-        extension
-    ):
-        return ExtKind(language=semantic_config_language.value, kind="config")
-    if semantic_language := _has_semantic_extension(extension):
-        return ExtKind(language=semantic_language.value, kind="code")
-    return next(
-        (
-            ExtKind(language=extpair.language, kind=extpair.category)
-            for extpair in get_ext_lang_pairs()
-            if extpair.is_same(filename)
-        ),
-        None,
-    )
-
-
-@cache
-def _is_semantic_config_ext(ext: str) -> bool:
-    """Check if the given extension is a semantic config file."""
-    ext = normalize_ext(ext)
-    return any(ext == config_ext for config_ext in SemanticSearchLanguage.config_language_exts())
-
-
-@cache
-def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
-    """Check if the given extension is a semantic search language."""
-    if found_lang := next(
-        (lang for lang_ext, lang in SemanticSearchLanguage.ext_pairs() if lang_ext == ext), None
-    ):
-        return found_lang
-    return None
 
 
 class FileDiscoveryService:
@@ -100,7 +38,7 @@ class FileDiscoveryService:
         self.settings = settings
         self._language_extensions = SemanticSearchLanguage.extension_map()
 
-    async def discover_files(
+    async def _discover_files(
         self,
         *,
         include_tests: bool | None = None,
@@ -164,59 +102,20 @@ class FileDiscoveryService:
                 ],
             ) from e
 
-    def _is_supported_language(self, file_path: Path) -> bool:
-        """Check if a file is in a supported programming language.
-
-        Args:
-            file_path: Path to check
+    async def get_discovered_files(self) -> tuple[tuple[DiscoveredFile, ...], tuple[Path, ...]]:
+        """Get all discovered files and filtered files.
 
         Returns:
-            True if file is in a supported language
+            Tuple of discovered files and filtered files
         """
-        if not file_path.suffix:
-            return False
-
-        extension = file_path.suffix.lstrip(".")
-        return extension in self._language_extensions
-
-    def detect_language(self, file_path: Path) -> SemanticSearchLanguage | LiteralString | None:
-        """Detect the programming language of a file.
-
-        Args:
-            file_path: Path to analyze
-
-        Returns:
-            Language name or None if not supported
-        """
-        from codeweaver.language import SemanticSearchLanguage
-
-        if not file_path.suffix:
-            return None
-
-        if semantic := SemanticSearchLanguage.lang_from_ext(file_path.suffix):
-            return semantic
-        from codeweaver._constants import get_ext_lang_pairs
-
-        return next(
-            (pair.language for pair in get_ext_lang_pairs() if pair.is_same(file_path.name)), None
-        )
-
-    async def get_project_languages(self) -> list[SemanticSearchLanguage | LiteralString]:
-        """Get all programming languages present in the project.
-
-        Returns:
-            List of detected language names
-        """
-        files = await self.discover_files()
-        languages: set[SemanticSearchLanguage | LiteralString] = set()
+        files = await self._discover_files()
+        discovered_files: list[DiscoveredFile] = []
+        filtered_files: list[Path] = []
 
         for file_path in files:
-            if not file_path.is_file():
-                continue
-            if language := self.detect_language(file_path):
-                languages.add(language)
+            if discovered_file := DiscoveredFile.from_path(file_path):
+                discovered_files.append(discovered_file)
+            else:
+                filtered_files.append(file_path)
 
-        return sorted(
-            languages,
-            key=lambda lang: lang.value if isinstance(lang, SemanticSearchLanguage) else lang,
-        )
+        return tuple(discovered_files), tuple(filtered_files)

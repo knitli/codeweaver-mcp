@@ -55,7 +55,7 @@ dependencies = [
 dynamic = ["version"]
 description = "Extensible MCP server for semantic code search with plugin architecture supporting multiple embedding providers, vector databases, and data sources."
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 keywords = [
     "ai",
     "artificial intelligence",
@@ -141,6 +141,7 @@ docs = [
     "pygments>=2.19.1",
 ]
 dev = [
+    #    "fastembed-vectorstore>=0.1.6",
     "ruff>=0.12.4",
     "superclaude>=3.0.0.2",
     "uv>=0.8.2,<0.9.0",
@@ -197,54 +198,117 @@ recommended-no-telemetry = [
     "watchfiles>=1.1.0",
 ]
 
+recommended-local-only = [
+    "aenum>=3.1.16",
+    "fastembed>=0.7.1",
+    "transformers>=4.55.2",
+    "ast-grep-py>=0.39.1",
+    "cyclopts>=3.22.5",
+    "fastmcp>=2.10.6",
+    "posthog>=6.3.0",
+    "pydantic-graph>=0.6.2",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "rignore>=0.6.4",
+    "tiktoken>=0.1.0",
+    "tomli-w>=1.2.0",
+    "transformers>=4.55.2",
+    "typing-extensions>=4.14.1",
+    "watchfiles>=1.1.0",
+]
+# !! IMPORTANT: FASTEMBED-vectorstore is temporarily disabled.
+#    it is a rust-based project with pyO3 bindings, but only has a wheel on pypi for python 3.11
+#    We're going to submit a PR to build/release for 3.12 and 3.13, and if that doesn't get accepted,
+#    we'll vendor it.
 # Absolute bare minimum to run CodeWeaver
 # This is the minimum set of dependencies required to run CodeWeaver without any additional features or providers. No CLI, no telemetry, no advanced features.
+# Uses `fastembed-vectorstore` for vector in-memory and json-based simple storage, and for local embedding generation.
 minimal = [
     "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
-    "qdrant-client>=1.15.0",
-    "voyageai>=0.3.4",
     "fastmcp>=2.10.6",
     "pydantic-settings>=2.10.1",
-    "pydantic-ai-slim[openai]>=0.6.2", # really any pydantic-ai-slim
+    "pydantic-ai-slim[openai]>=0.6.2", # really any pydantic-ai-slim, this just gives a lot of providers for one dependency
     "pydantic-graph>=0.6.2",
     "pydantic>=2.11.7",
-    "qdrant-client>=1.15.0",
+    #    "fastembed-vectorstore>=0.1.6",
     "rignore>=0.6.4",
     "typing-extensions>=4.14.1",
 ]
 
-cli = [
+# =================  A-La-Carte =================
+# Pick and choose what you want. You need:
+# 1. The `required-core` dependencies
+# 2. At least one provider for embedding generation (e.g. `provider-openai`)
+#      - If that provider is `provider-fastembed` or `provider-voyage` you also need to include
+#         any provider that uses pydantic-ai, like `provider-huggingface` or `provider-openai` or `provider-anthropic`
+# 3. At least one vector store provider (e.g. `provider-qdrant`)
+# **strongly recommended:**
+#    - `provider-filesystem` -- without it, you'll need to manually initiate indexing and handle file changes yourself
+#    - One agent-capable provider (e.g. `provider-openai`)
+#        We use agents to significantly improve results when you give us the necessary information (model, API key, installed client)
+#        We can do that without it, but we *can't do it outside of an MCP request*, such as for our `precontext` feature
+# Example install:
+#    `uv pip install 'codeweaver-mcp[required-core,provider-openai,provider-qdrant,source-filesystem]'`
+#    `uv pip install 'codeweaver-mcp[required-core,pre-context,provider-anthropic,provider-voyage,provider-qdrant]'`
+required-core = [
     "aenum>=3.1.16",
     "ast-grep-py>=0.39.1",
-    "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
-    "rich>=14.0.0",
-    "tiktoken>=0.1.0",
-    "tomli-w>=1.2.0",
     "pydantic-settings>=2.10.1",
-    "pydantic-ai>=0.6.2",
     "pydantic-graph>=0.6.2",
     "pydantic>=2.11.7",
     "rignore>=0.6.4",
     "typing-extensions>=4.14.1",
+    "tiktoken>=0.1.0",
+]
+
+cli = ["cyclopts>=3.22.5", "rich>=14.0.0", "tomli-w>=1.2.0"]
+
+# also requires one agent-capable provider, one embedding-capable provider, and a vector store
+pre-context = [
+    "cyclopts>=3.22.5",
+    "rich>=14.0.0",
+    "tomli-w>=1.2.0",
     "watchfiles>=1.1.0",
 ]
 
 # ==== Providers ====
+#    --- Agent-only Providers --- (no embedding/rerank)
 provider-anthropic = ["pydantic-ai-slim[anthropic]>=0.6.2"]
+provider-groq = ["pydantic-ai-slim[groq]>=0.6.2"]
+
+#    --- Embedding and Agent Providers --- (no rerank)
+provider-google = ["pydantic-ai-slim[google]>=0.6.2"]
+provider-openai = ["pydantic-ai-slim[openai]>=0.6.2"]
+# OpenAI includes support for:
+#   DeekSeek, Ollama, OpenRouter, Vercel, Perplexity, Moonshot, FireworksAI, 
+#   TogetherAI, Azure AI Foundry, Heroku, and Github Models
+# which all use the OpenAI API
+provider-mistral = ["pydantic-ai-slim[mistral]>=0.6.2"]
+
+#    --- Embedding, Rerank and Agent Providers --- (the trifecta)
+provider-huggingface = ["pydantic-ai-slim[huggingface]>=0.6.2"]
 provider-bedrock = ["pydantic-ai-slim[bedrock]>=0.6.2"]
 provider-cohere = ["pydantic-ai-slim[cohere]>=0.6.2"]
-provider-google = ["pydantic-ai-slim[google]>=0.6.2"]
-provider-groq = ["pydantic-ai-slim[groq]>=0.6.2"]
-provider-huggingface = ["pydantic-ai-slim[huggingface]>=0.6.2"]
-provider-mistral = ["pydantic-ai-slim[mistral]>=0.6.2"]
-provider-openai = ["pydantic-ai-slim[openai]>=0.6.2"]
-provider-voyageai = ["voyageai>=0.3.4"]
 
-# ==== Sources ====
+#    --- Embedding and Rerank Only --- (no agent)
+provider-voyageai = ["voyageai>=0.3.4"]
+provider-fastembed = ["fastembed>=0.7.1", "transformers>=4.55.2"]
+provider-fastembed-gpu = ["fastembed-gpu>=0.7.1", "transformers>=4.55.2"]
+# Requires additional setup, see https://qdrant.github.io/fastembed/examples/FastEmbed_GPU/
+
+# ==== Vector Stores ====
+# provider-in-memory = ["fastembed-vectorstore>=0.1.6", "transformers>=4.55.2"]
+provider-qdrant = ["qdrant-client>=1.15.0"]
+
+# ==== Data Sources ====
 
 source-filesystem = ["watchfiles>=1.1.0"]
+source-tavily = ["pydantic-ai-slim[tavily]>=0.6.2"]
+source-duckduckgo = ["pydantic-ai-slim[duckduckgo]>=0.6.2"]
 
 
 # ==== Authentication and Authorization Middleware ====

@@ -20,6 +20,7 @@ from pydantic import (
 )
 
 from codeweaver._common import BaseEnum
+from codeweaver._data_structures import DiscoveredFile
 from codeweaver.models.intent import IntentType
 
 
@@ -54,26 +55,26 @@ class CodeMatch(BaseModel):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
-                "file_path": "src/auth/middleware.py",
-                "language": "python",
+                "file": {
+                    "path": "src/auth/middleware.py",
+                    "language": "python",
+                    "file_hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+                    "file_size": 1234,
+                },
                 "content": "class AuthMiddleware(BaseMiddleware): ...",
                 "span": [
                     15,
                     45,
                     "5f6d4c46-39cc-4cf5-8477-3d5b4a9e3c31",
-                ],  # spans have a source_id for the document they came from
+                ],  # spans have a source_id for the chunk they came from
                 "relevance_score": 0.92,
-                "match_type": "semantic",
+                "match_type": "text_search",
             }
         }
     )
 
     # File information
-    file_path: Annotated[Path, Field(description="Relative path to file from project root")]
-
-    language: Annotated[
-        SemanticSearchLanguage | str | None, Field(description="Detected programming language")
-    ]
+    file: Annotated[DiscoveredFile, Field(description="File information")]
 
     # Content
     content: Annotated[str, Field(description="Relevant code content")]
