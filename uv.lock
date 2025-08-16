@@ -481,6 +481,7 @@ cli = [
 minimal = [
     { name = "aenum" },
     { name = "ast-grep-py" },
+    { name = "fastembed-vectorstore" },
     { name = "fastmcp" },
     { name = "pydantic" },
     { name = "pydantic-ai-slim", extra = ["openai"] },
@@ -488,6 +489,12 @@ minimal = [
     { name = "pydantic-settings" },
     { name = "rignore" },
     { name = "typing-extensions" },
+]
+pre-context = [
+    { name = "cyclopts" },
+    { name = "rich" },
+    { name = "tomli-w" },
+    { name = "watchfiles" },
 ]
 provider-anthropic = [
     { name = "pydantic-ai-slim", extra = ["anthropic"] },
@@ -614,6 +621,7 @@ build = [
 ]
 dev = [
     { name = "copychat" },
+    { name = "fastembed-vectorstore" },
     { name = "ipython" },
     { name = "jsonlines" },
     { name = "pdbpp" },
@@ -668,6 +676,7 @@ requires-dist = [
     { name = "ast-grep-py", marker = "extra == 'required-core'", specifier = ">=0.39.1" },
     { name = "cyclopts", specifier = ">=3.22.5" },
     { name = "cyclopts", marker = "extra == 'cli'", specifier = ">=3.22.5" },
+    { name = "cyclopts", marker = "extra == 'pre-context'", specifier = ">=3.22.5" },
     { name = "cyclopts", marker = "extra == 'recommended'", specifier = ">=3.22.5" },
     { name = "cyclopts", marker = "extra == 'recommended-local-only'", specifier = ">=3.22.5" },
     { name = "cyclopts", marker = "extra == 'recommended-no-telemetry'", specifier = ">=3.22.5" },
@@ -675,6 +684,7 @@ requires-dist = [
     { name = "fastembed", marker = "extra == 'provider-fastembed'", specifier = ">=0.7.1" },
     { name = "fastembed", marker = "extra == 'recommended-local-only'", specifier = ">=0.7.1" },
     { name = "fastembed-gpu", marker = "extra == 'provider-fastembed-gpu'", specifier = ">=0.7.1" },
+    { name = "fastembed-vectorstore", marker = "extra == 'minimal'", specifier = ">=0.2.0" },
     { name = "fastmcp", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'minimal'", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'recommended'", specifier = ">=2.10.6" },
@@ -726,6 +736,7 @@ requires-dist = [
     { name = "qdrant-client", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.15.0" },
     { name = "rich", specifier = ">=14.0.0" },
     { name = "rich", marker = "extra == 'cli'", specifier = ">=14.0.0" },
+    { name = "rich", marker = "extra == 'pre-context'", specifier = ">=14.0.0" },
     { name = "rich", marker = "extra == 'recommended'", specifier = ">=14.0.0" },
     { name = "rich", marker = "extra == 'recommended-local-only'", specifier = ">=14.0.0" },
     { name = "rich", marker = "extra == 'recommended-no-telemetry'", specifier = ">=14.0.0" },
@@ -742,6 +753,7 @@ requires-dist = [
     { name = "tiktoken", marker = "extra == 'required-core'", specifier = ">=0.1.0" },
     { name = "tomli-w", specifier = ">=1.2.0" },
     { name = "tomli-w", marker = "extra == 'cli'", specifier = ">=1.2.0" },
+    { name = "tomli-w", marker = "extra == 'pre-context'", specifier = ">=1.2.0" },
     { name = "tomli-w", marker = "extra == 'recommended'", specifier = ">=1.2.0" },
     { name = "tomli-w", marker = "extra == 'recommended-local-only'", specifier = ">=1.2.0" },
     { name = "tomli-w", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.2.0" },
@@ -761,12 +773,13 @@ requires-dist = [
     { name = "voyageai", marker = "extra == 'recommended'", specifier = ">=0.3.4" },
     { name = "voyageai", marker = "extra == 'recommended-no-telemetry'", specifier = ">=0.3.4" },
     { name = "watchfiles", specifier = ">=1.1.0" },
+    { name = "watchfiles", marker = "extra == 'pre-context'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'recommended'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'recommended-local-only'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'source-filesystem'", specifier = ">=1.1.0" },
 ]
-provides-extras = ["auth-eunomia", "auth-permitio", "cli", "minimal", "provider-anthropic", "provider-bedrock", "provider-cohere", "provider-fastembed", "provider-fastembed-gpu", "provider-google", "provider-groq", "provider-huggingface", "provider-mistral", "provider-openai", "provider-qdrant", "provider-voyageai", "recommended", "recommended-local-only", "recommended-no-telemetry", "required-core", "source-duckduckgo", "source-filesystem", "source-tavily"]
+provides-extras = ["auth-eunomia", "auth-permitio", "cli", "minimal", "pre-context", "provider-anthropic", "provider-bedrock", "provider-cohere", "provider-fastembed", "provider-fastembed-gpu", "provider-google", "provider-groq", "provider-huggingface", "provider-mistral", "provider-openai", "provider-qdrant", "provider-voyageai", "recommended", "recommended-local-only", "recommended-no-telemetry", "required-core", "source-duckduckgo", "source-filesystem", "source-tavily"]
 
 [package.metadata.requires-dev]
 build = [
@@ -775,6 +788,7 @@ build = [
 ]
 dev = [
     { name = "copychat", specifier = ">=0.7.2" },
+    { name = "fastembed-vectorstore", specifier = ">=0.2.0" },
     { name = "ipython", specifier = ">=9.4.0" },
     { name = "jsonlines", specifier = ">=4.0.0" },
     { name = "pdbpp", specifier = ">=0.11.7" },
@@ -1332,6 +1346,33 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8f/c8/40794f336e57169e97128244828053becea8b6e59290eac2d7e4f286e3d1/fastembed_gpu-0.7.1.tar.gz", hash = "sha256:a4168514da078fd535f2196b021c3033bd07d5d007ecd48a863409667276b632", size = 62279, upload-time = "2025-06-16T09:02:07.2Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3c/b3/b985741704df730358b29cffbaea285d441ae9cd5564288f9f710818ef50/fastembed_gpu-0.7.1-py3-none-any.whl", hash = "sha256:c04dd6d67f0fc4e8cafb0ce29a1065e42547d6e4626193f34333ad89a522fa5e", size = 100908, upload-time = "2025-06-16T09:02:06.257Z" },
+]
+
+[[package]]
+name = "fastembed-vectorstore"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/a0/59d3a5b09eaa8c1d86cd84ae757dde0dc60e00f62378db1f8b0e2dbf1281/fastembed_vectorstore-0.2.0.tar.gz", hash = "sha256:78216719673a68ca3e32ca3f85eab2256ae64eed3228efd730f1ccd5a0825058", size = 40622, upload-time = "2025-08-16T18:15:59.003Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/70/c5/d402e05e86b75299ccdb8afd5786a043faea2b663fc1aa84242ae6f1cf81/fastembed_vectorstore-0.2.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:915150aa8b4f7937353031d49d8ec8d19545448db0d9a9f1144be1d48b212e8d", size = 9805468, upload-time = "2025-08-16T18:15:53.161Z" },
+    { url = "https://files.pythonhosted.org/packages/18/88/1fa9f1f82eeca509805ccc42e6826894d4ed7ed6b4e3f5e99c323c16be8a/fastembed_vectorstore-0.2.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9a6758ec6d964be4bd699809daee6351eddc392c4c4f871c27b76d8fc6d0295e", size = 8627004, upload-time = "2025-08-16T18:15:47.115Z" },
+    { url = "https://files.pythonhosted.org/packages/98/fd/0d2c0dd7ef93c44366c3848c6bce6037443d4bb5471162795fa4010f81af/fastembed_vectorstore-0.2.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6f866c86a6aa34b80e892c3c67545f7f317c957420ad712b8ddd19adfb396e6a", size = 10788641, upload-time = "2025-08-16T18:15:10.399Z" },
+    { url = "https://files.pythonhosted.org/packages/88/8f/de65206504affe7b7d82d0be0a865d3963521130155d6a24979cad9e6f81/fastembed_vectorstore-0.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:18497ac3907e9067923bd8a89949db22f2740e9438a32a7269098f9771c99d05", size = 11755796, upload-time = "2025-08-16T18:15:31.042Z" },
+    { url = "https://files.pythonhosted.org/packages/07/3f/9aca43e485face0be31f21a39237b5655b7aa8e73274f4520803c887a481/fastembed_vectorstore-0.2.0-cp311-cp311-win_amd64.whl", hash = "sha256:df658505a0685ff96531494d2c7f35275fdab5b297cd4ccb66c67a00a71957d0", size = 8549571, upload-time = "2025-08-16T18:16:01.476Z" },
+    { url = "https://files.pythonhosted.org/packages/70/08/6dd38cba987af5679ad9db794f69cc671bd8713d8c55a39d05bdabbe0af6/fastembed_vectorstore-0.2.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:b7f622b787626363506268833a0dc138c54d1c28ef1356547ed70193dc626838", size = 9802118, upload-time = "2025-08-16T18:15:55.266Z" },
+    { url = "https://files.pythonhosted.org/packages/36/4c/10961c19dd72ec2ef719ae0787f107f9dd641d72e6a251a532727caa7ba9/fastembed_vectorstore-0.2.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f3c7a5db30d2d83193bd2d392297df15de30e1260769916181b5cb6467e9b3b6", size = 8624960, upload-time = "2025-08-16T18:15:49.205Z" },
+    { url = "https://files.pythonhosted.org/packages/df/84/129ffc2b99c9487700be4d16d526f11435fac916f097d947687b4cd34bdb/fastembed_vectorstore-0.2.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7e22a1469a79c57c0428a463a2f2c775c44fa0fa82d1def8063026140506eec1", size = 10787158, upload-time = "2025-08-16T18:15:12.518Z" },
+    { url = "https://files.pythonhosted.org/packages/0c/1c/0158b85b296ab273b4afecd7f466d88bcec69d2df697041a0a6fa3490d48/fastembed_vectorstore-0.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:43d9893c97757ca4be77f8a38b007afb68c2d156f49435856551ad8336aededa", size = 11754917, upload-time = "2025-08-16T18:15:33.209Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/f6/081f30db8485fce6caecc9726315a9855ea030df269088440a8e53eee0ea/fastembed_vectorstore-0.2.0-cp312-cp312-win_amd64.whl", hash = "sha256:8e1a84befb040775ea7804d22d2e281c6750da48aec623dac95e726ce5ee7609", size = 8553495, upload-time = "2025-08-16T18:16:03.076Z" },
+    { url = "https://files.pythonhosted.org/packages/70/73/9e6ef33d6810b3dc06c5eab7376177809830fd2666e094132d842831ed83/fastembed_vectorstore-0.2.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:8a7d59f28bd78f05d4d0fb079be13dc30731c6db30d677ee824227749c23376d", size = 9801987, upload-time = "2025-08-16T18:15:57.339Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/7b/b75444eb08bbfc7461c43d6fd51193c61f71094f972e375bb67fd3aed17a/fastembed_vectorstore-0.2.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:e5a1d19a156878ea263b43fab83bc1575ceee9e602472ae09d0a19671a22dc51", size = 8625079, upload-time = "2025-08-16T18:15:51.062Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/db/2ec5db598a8d9153dc736628cb3437864bed7441bdc0401d5c6f96ca08ef/fastembed_vectorstore-0.2.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:16ed8032e6a54018cd0412f8ad0f2b9e6348757d7de11c91392ebf70944430dd", size = 10788178, upload-time = "2025-08-16T18:15:14.285Z" },
+    { url = "https://files.pythonhosted.org/packages/58/12/ac7a8e0a716a1fe1a7816ac523e40ada28d4f3c1c5a7cdf651bcda692bf9/fastembed_vectorstore-0.2.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1cb92526078d4086aaaa6062e1d3a7e70b4951653ad1e98ec38520f4bf6dfa4c", size = 11755556, upload-time = "2025-08-16T18:15:35.019Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/30/7034a5b0033708e881d722dcb22b1701fae545788ce5ccec83f21bd4f5be/fastembed_vectorstore-0.2.0-cp313-cp313-win_amd64.whl", hash = "sha256:59f35c1d0c4fbf5f2aeb382ffc5492468203245a34ea900cb6da373ad2cfb5f0", size = 8552876, upload-time = "2025-08-16T18:16:05.121Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/a5/012b002b1aa5094404cc95ae016370577e75058ef584169611215cf9e0d2/fastembed_vectorstore-0.2.0-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:817e158eb2699a5f24ee03d54cd915d5e470a202cd2e1b599c3e562a9061b24c", size = 10786561, upload-time = "2025-08-16T18:15:16.398Z" },
+    { url = "https://files.pythonhosted.org/packages/db/34/3b54e4f90e8185a5ef1901302b6e21eb53ab43c41f75daff5a2d8e20c683/fastembed_vectorstore-0.2.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1858e874463edc394ed6d0d8447a3085c9beb96440b96039b06bf5b939847178", size = 11753584, upload-time = "2025-08-16T18:15:37.133Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/84/f488b8658ede7ac6d7552ae5086291fbce2c838496d23aa847245cf6bc17/fastembed_vectorstore-0.2.0-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:89c41e0585c208d85dddacbd862ef85cbc232a0eccdf7003f1901c1023801208", size = 10791068, upload-time = "2025-08-16T18:15:24.74Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/b7/906d4ee85ad1bf011ffb570977827fff69ecc759a9cd405afafa906e5de4/fastembed_vectorstore-0.2.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:47e315ae1a0fe6f839af77a738910af5cfaa9224fd72d86e9d55b3c311f38f80", size = 11756331, upload-time = "2025-08-16T18:15:45.372Z" },
 ]
 
 [[package]]

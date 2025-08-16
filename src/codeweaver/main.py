@@ -51,6 +51,7 @@ class AppState:
         CodeWeaverSettings | None, Field(description="CodeWeaver configuration settings")
     ] = get_settings()
     # TODO: Integrate fastmcp middleware here -- error handling, logging, timing, rate_limiting, etc.
+    # import from fastmcp.server.middleware.{error_handling, logging, timing, rate_limiting}
     loaded_middleware: Annotated[
         tuple[type[Middleware], ...], Field(description="Tuple of loaded middleware")
     ] = Field(default_factory=tuple)

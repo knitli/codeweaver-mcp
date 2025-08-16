@@ -33,9 +33,7 @@ class DiscoveredFile:
     path: Annotated[Path, Field(description="Relative path to the discovered file")]
     ext_kind: ExtKind
 
-    file_hash: Annotated[
-        str, Field(description="Hash of the file contents, computed on demand", init=False)
-    ]
+    file_hash: Annotated[str, Field(description="sha256 hash of the file contents", init=False)]
 
     @classmethod
     def from_path(cls, path: Path) -> DiscoveredFile | None:

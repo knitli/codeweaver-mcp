@@ -2,13 +2,16 @@
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
 # SPDX-License-Identifier: MIT OR Apache-2.0
-"""In-memory provider implementations for Phase 1 development."""
-# TODO: Transition to fastembed-vectorstore
-# It has a simple api --`load`, `embed_documents`, `search`, `save`  -- load and save are for persistence with json and take a string path.
-# The constructor takes a provider, which is an Enum, `FastembedEmbeddingModel`.
-# Instantiate with `FastembedVectorStore(FastembedEmbeddingModel.model)` -- for dev, use something lightweight like `FastembedEmbeddingModel.BGESmallENV15Q` (bge small quantized)
-# uses cosine similarity for search.
-# Note that it is both an embedding provider and a vector store provider, so it can be used for both embedding and searching.
+"""In-memory provider implementations."""
+# uses `fastembed_vectorstore` for in-memory vector storage.
+# fastembed_vectorstore is a combined implementation of an in-memory vector store using `fastembed` for embeddings.
+# It can persist vectors with json serialization and supports searching for similar vectors.
+# TODO: We should consider a few things to improve this implementation:
+#  - should we use a context manager to ensure the state is saved before exiting? (if it has a path in settings)
+#  - should we implement a way to delete vectors by file path?
+#  - Once we have a provider registry, we can register this provider with the registry.
+#  - The 'search' method takes a string query because `fastembed_vectorstore` expects a string so that it can embed it.
+#    - that's NOT how we planned the overall API for vector stores. One approach might be to use dependency injection to give vector stores an embedding provider, and then the store becomes the primary interface for embedding.
 
 from __future__ import annotations
 
@@ -21,41 +24,53 @@ from codeweaver.vector_stores.base import CodeChunk, SearchResult, VectorStorePr
 
 
 try:
-    from fastembed_vectorstore import FastembedEmbeddingModel, FastembedVectorStore
+    import fastembed_vectorstore
+
+    from fastembed_vectorstore import FastembedEmbeddingModel, FastembedVectorstore
 except ImportError:
     # noop stubs
-    type FastembedVectorStore = None
-    type FastembedEmbeddingModel = None
+    if not hasattr(__builtins__, "FastembedVectorstore"):
+        type FastembedVectorstore = None
+    else:
+        type FastembedVectorstore = fastembed_vectorstore.FastembedVectorstore
+    if not hasattr(__builtins__, "FastembedEmbeddingModel"):
+        type FastembedEmbeddingModel = None
+    else:
+        type FastembedEmbeddingModel = fastembed_vectorstore.FastembedEmbeddingModel
 
 
-class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorStore]):
+class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore]):
     """In-memory vector store for code chunks."""
 
-    _client: FastembedVectorStore | None = None
+    _client: FastembedVectorstore | None = None
     _model_settings: EmbeddingModelSettings | None = None
-    _store: FastembedVectorStore | None = None
+    _store: FastembedVectorstore | None = None
 
     def __init__(
         self, embedding_model_settings: EmbeddingModelSettings, path: Path | None = None
     ) -> None:
         """Initialize the in-memory vector store."""
-        self._client = FastembedVectorStore(embedding_model_settings.model)
+        if not isinstance(FastembedVectorstore, type) or not isinstance(
+            FastembedEmbeddingModel, type
+        ):  # type: ignore
+            raise TypeError("fastembed_vectorstore is not installed or not available.")
+        self._client = FastembedVectorstore(embedding_model_settings.model)
         self._model_settings = embedding_model_settings
         self.path = path
         if self.path and self.path.exists():
             with contextlib.suppress(OSError):
-                self._store = FastembedVectorStore.load(self.path)
+                self._store = FastembedVectorstore.load(self.path)
 
-    async def search(self, vector: list[float]) -> list[SearchResult] | None:
+    async def search(self, query: list[str]) -> list[SearchResult] | None:
         """Search for similar vectors.
 
         Args:
-            vector: Query vector
+            query: Query text
 
         Returns:
             List of search results
         """
-        return self._client.search(vector, limit=self._model_settings.search_limit)
+        return self._client.search(query, n=self._model_settings.search_limit)
 
     async def upsert_chunks(self, chunks: list[CodeChunk]) -> None:
         """Insert or update code chunks in the vector store.

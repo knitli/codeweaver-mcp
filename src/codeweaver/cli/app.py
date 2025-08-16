@@ -117,8 +117,8 @@ async def search(
                 "total_matches": response.total_matches,
                 "matches": [
                     {
-                        "file_path": str(match.file_path),
-                        "language": match.language,
+                        "file_path": str(match.file.path),
+                        "language": match.file.ext_kind.language,
                         "relevance_score": match.relevance_score,
                         "line_range": match.span,
                         "content": (
@@ -207,8 +207,8 @@ def _display_table_results(
         )
 
         table.add_row(
-            str(match.file_path),
-            str(match.language) or "unknown",
+            str(match.file.path),
+            str(match.file.ext_kind.language) or "unknown",
             f"{match.relevance_score:.2f}",
             f"{match.span!s}",
             preview,

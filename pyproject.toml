@@ -141,7 +141,7 @@ docs = [
     "pygments>=2.19.1",
 ]
 dev = [
-    #    "fastembed-vectorstore>=0.1.6",
+    "fastembed-vectorstore>=0.2.0",
     "ruff>=0.12.4",
     "superclaude>=3.0.0.2",
     "uv>=0.8.2,<0.9.0",
@@ -152,6 +152,7 @@ dev = [
     "pyperclip>=1.9.0",
     "pydantic-ai>=0.6.2",
     "pyright>=1.1.403",
+    "fastembed-vectorstore>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -218,10 +219,7 @@ recommended-local-only = [
     "typing-extensions>=4.14.1",
     "watchfiles>=1.1.0",
 ]
-# !! IMPORTANT: FASTEMBED-vectorstore is temporarily disabled.
-#    it is a rust-based project with pyO3 bindings, but only has a wheel on pypi for python 3.11
-#    We're going to submit a PR to build/release for 3.12 and 3.13, and if that doesn't get accepted,
-#    we'll vendor it.
+
 # Absolute bare minimum to run CodeWeaver
 # This is the minimum set of dependencies required to run CodeWeaver without any additional features or providers. No CLI, no telemetry, no advanced features.
 # Uses `fastembed-vectorstore` for vector in-memory and json-based simple storage, and for local embedding generation.
@@ -233,7 +231,7 @@ minimal = [
     "pydantic-ai-slim[openai]>=0.6.2", # really any pydantic-ai-slim, this just gives a lot of providers for one dependency
     "pydantic-graph>=0.6.2",
     "pydantic>=2.11.7",
-    #    "fastembed-vectorstore>=0.1.6",
+    "fastembed-vectorstore>=0.2.0",    # assuming you want something light weight here.. if not, you can pick and choose from below
     "rignore>=0.6.4",
     "typing-extensions>=4.14.1",
 ]
