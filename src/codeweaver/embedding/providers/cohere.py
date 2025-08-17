@@ -10,4 +10,3 @@
 
 class CohereEmbeddingProvider:
     """Cohere embedding provider."""
-    ...

@@ -10,4 +10,3 @@
 
 class VoyageEmbeddingProvider:
     """Voyage embedding provider."""
-    ...

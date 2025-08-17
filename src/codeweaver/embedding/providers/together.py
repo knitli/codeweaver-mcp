@@ -10,4 +10,3 @@
 
 class TogetherEmbeddingProvider:
     """Together embedding provider."""
-    ...

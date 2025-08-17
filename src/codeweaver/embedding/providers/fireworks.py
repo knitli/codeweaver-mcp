@@ -10,4 +10,3 @@
 
 class FireworksEmbeddingProvider:
     """Fireworks embedding provider."""
-    ...

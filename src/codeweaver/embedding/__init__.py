@@ -27,11 +27,11 @@ embedding_provider = EmbeddingProvider
 infer_embedding_provider = infer_embedding_provider
 
 
-def get_embedding_model_provider():  # -> EmbeddingProvider[Any]:
+def get_embedding_model_provider() -> None:  # -> EmbeddingProvider[Any]:
     """Get embedding model provider."""
 
 
-def get_rerank_model_provider():  # -> EmbeddingProvider[Any]:
+def get_rerank_model_provider() -> None:  # -> EmbeddingProvider[Any]:
     """Get rerank model provider."""
 
 

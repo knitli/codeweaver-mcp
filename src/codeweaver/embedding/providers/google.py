@@ -10,4 +10,3 @@
 
 class GoogleEmbeddingProvider:
     """Google embedding provider."""
-    ...

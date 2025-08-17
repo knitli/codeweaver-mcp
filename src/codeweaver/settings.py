@@ -12,22 +12,28 @@ clear precedence hierarchy and validation.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, LiteralString
+from typing import Annotated, Any, Literal, LiteralString
 
+from fastmcp.server.auth.auth import OAuthProvider
+from fastmcp.server.middleware import Middleware
+from fastmcp.server.server import DuplicateBehavior
+from fastmcp.tools.tool import Tool
 from pydantic import BaseModel, Field, PositiveInt
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
 from pydantic_ai.settings import merge_model_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
-from codeweaver._settings import Provider, default_config_file_locations
+from codeweaver._settings import (
+    DataProviderSettings,
+    Provider,
+    ProviderKind,
+    default_config_file_locations,
+)
 from codeweaver._utils import walk_down_to_git_root
 from codeweaver.exceptions import ConfigurationError, MissingValueError
-
-
-if TYPE_CHECKING:
-    from codeweaver._settings import DataProviderSettings, ProviderKind
 
 
 DefaultDataProviderSettings = (
@@ -91,6 +97,51 @@ class ProviderSettings(BaseModel):
     """
 
 
+class FastMCPServerSettings(BaseModel):
+    """Settings for the FastMCP server."""
+
+    transport: Annotated[
+        Literal["stdio", "http"] | None,
+        Field(
+            description="Transport protocol to use for the FastMCP server. Stdio is for local use and cannot support concurrent requests. HTTP (streamable HTTP) can be used for local or remote use and supports concurrent requests. Unlike many MCP servers, CodeWeaver **defaults to http**."
+        ),
+    ] = "http"
+    host: Annotated[str | None, Field(description="Host address for the FastMCP server.")] = (
+        "127.0.0.1"
+    )
+    port: Annotated[
+        PositiveInt | None,
+        Field(description="Port number for the FastMCP server. Default is 9328 ('WEAV')"),
+    ] = 9328
+    path: Annotated[
+        str | None,
+        Field(description="Route path for the FastMCP server. Defaults to '/codeweaver/'"),
+    ] = "/codeweaver/"
+    auth: OAuthProvider | None = None
+    cache_expiration_seconds: float | None = None
+    on_duplicate_tools: DuplicateBehavior | None = None
+    on_duplicate_resources: DuplicateBehavior | None = None
+    on_duplicate_prompts: DuplicateBehavior | None = None
+    resource_prefix_format: Literal["protocol", "path"] | None = None
+    additional_middleware: list[Middleware | Callable[..., Any]] | None = None
+    additional_tools: list[Tool | Callable[..., Any]] | None = None
+    additional_dependencies: list[str] | None = None
+
+
+DefaultFastMCPServerSettings = FastMCPServerSettings(
+    transport="stdio",
+    auth=None,
+    cache_expiration_seconds=None,
+    on_duplicate_tools="warn",
+    on_duplicate_resources="warn",
+    on_duplicate_prompts="warn",
+    resource_prefix_format="path",
+    additional_middleware=None,
+    additional_tools=None,
+    additional_dependencies=None,
+)
+
+
 class CodeWeaverSettings(BaseSettings):
     """Main configuration model following pydantic-settings patterns.
 
@@ -142,6 +193,9 @@ class CodeWeaverSettings(BaseSettings):
             description="Maximum code matches to return. Because CodeWeaver primarily indexes ast-nodes, a page can return multiple matches per file, so this is not the same as the number of files returned. This is the maximum number of code matches returned in a single response.",
         ),
     ] = 75
+    fastmcp: Annotated[
+        FastMCPServerSettings, Field(description="Optionally customize FastMCP server settings.")
+    ] = DefaultFastMCPServerSettings
 
     filter_settings: Annotated[FileFilterSettings, Field(description="File filtering settings")] = (
         FileFilterSettings()
@@ -170,6 +224,18 @@ class CodeWeaverSettings(BaseSettings):
             description="Enable privacy-friendly usage telemetry. On by default. We do not collect any identifying information -- we hash all file and directory paths, repository names, and other identifiers to ensure privacy while still gathering useful aggregate data for improving CodeWeaver. You can see exactly what we collect, and how we collect it [here](services/telemetry.py). You can disable this if you prefer not to send any data. You can also provide your own PostHog Project Key to collect your own telemetry data. We will not use this information for anything else -- it is only used to improve CodeWeaver."
         ),
     ] = True
+    enable_health_endpoint: Annotated[
+        bool, Field(description="Enable the health check endpoint")
+    ] = True
+    health_endpoint_path: Annotated[
+        str | None, Field(description="Path for the health check endpoint")
+    ] = "/health/"
+    enable_statistics_endpoint: Annotated[
+        bool, Field(description="Enable the statistics endpoint")
+    ] = True
+    statistics_endpoint_path: Annotated[
+        str | None, Field(description="Path for the statistics endpoint")
+    ] = "/statistics/"
     allow_identifying_telemetry: Annotated[
         bool,
         Field(

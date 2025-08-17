@@ -21,11 +21,11 @@ from pydantic.dataclasses import dataclass
 from codeweaver._common import BaseEnum
 from codeweaver._constants import get_ext_lang_pairs
 from codeweaver._utils import normalize_ext
-from codeweaver.language import ConfigLanguage
+from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
 
 
 if TYPE_CHECKING:
-    from codeweaver.language import SemanticSearchLanguage
+    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,7 +185,7 @@ class Span:
             alias="source_id",
             exclude=False,
         ),
-    ] = uuid4()  # Unique identifier for the source of the span, usually a `chunk_id` or `file_id`.
+    ]  # Unique identifier for the source of the span, usually a `chunk_id` or `file_id`.
 
     def __hash__(self):
         return hash((self.start, self.end, self._source_id))

@@ -9,16 +9,81 @@
 from __future__ import annotations
 
 import contextlib
+import logging
 import os
 import platform
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, LiteralString, NotRequired, Required, Self, TypedDict
+from typing import Any, Literal, LiteralString, NotRequired, Required, Self, TypedDict
 
+from fastmcp.contrib.bulk_tool_caller.bulk_tool_caller import BulkToolCaller
+from fastmcp.server.middleware import MiddlewareContext
+from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware, RetryMiddleware
+from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
+from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
+from fastmcp.server.middleware.timing import DetailedTimingMiddleware
+from pydantic import PositiveInt
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
 
 from codeweaver._common import BaseEnum
 from codeweaver.exceptions import ConfigurationError
+
+
+AVAILABLE_MIDDLEWARE = (
+    BulkToolCaller,
+    ErrorHandlingMiddleware,
+    LoggingMiddleware,
+    StructuredLoggingMiddleware,
+    DetailedTimingMiddleware,
+    RateLimitingMiddleware,
+    RetryMiddleware,
+)
+
+
+class ErrorHandlingMiddlewareSettings(TypedDict, total=False):
+    """Settings for error handling middleware."""
+
+    logger: NotRequired[logging.Logger | None]
+    include_traceback: NotRequired[bool]
+    error_callback: NotRequired[Callable[[Exception, MiddlewareContext[Any]], None] | None]
+    transform_errors: NotRequired[bool]
+
+
+class RetryMiddlewareSettings(TypedDict, total=False):
+    """Settings for retry middleware."""
+
+    max_retries: NotRequired[int]
+    base_delay: NotRequired[float]
+    backoff_multiplier: NotRequired[float]
+    retry_exceptions: NotRequired[tuple[type[Exception], ...]]
+    logger: NotRequired[logging.Logger | None]
+
+
+class LoggingMiddlewareSettings(TypedDict, total=False):
+    """Settings for logging middleware (both structured and unstructured)."""
+
+    logger: NotRequired[logging.Logger | None]
+    log_level: NotRequired[int]
+    include_payloads: NotRequired[bool]
+    max_payload_length: NotRequired[int]
+    methods: NotRequired[list[str] | None]
+
+
+class DetailedTimingMiddlewareSettings(TypedDict, total=False):
+    """Settings for detailed timing middleware."""
+
+    logger: NotRequired[logging.Logger | None]
+    log_level: NotRequired[Literal[0, 10, 20, 30, 40, 50]]
+
+
+class RateLimitingMiddlewareSettings(TypedDict, total=False):
+    """Settings for rate limiting middleware."""
+
+    max_requests_per_second: NotRequired[PositiveInt]
+    burst_capacity: NotRequired[PositiveInt | None]
+    get_client_id: NotRequired[Callable[[MiddlewareContext[Any]], str] | None]
+    global_limit: NotRequired[bool]
 
 
 class BaseProviderSettings(TypedDict, total=False):

@@ -12,4 +12,3 @@ from codeweaver.embedding.providers import EmbeddingProvider
 
 class BedrockEmbeddingProvider(EmbeddingProvider):
     """Bedrock embedding provider."""
-    ...

@@ -10,4 +10,3 @@
 
 class HuggingFaceEmbeddingProvider:
     """HuggingFace embedding provider."""
-    ...

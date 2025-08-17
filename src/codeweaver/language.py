@@ -255,7 +255,7 @@ class SemanticSearchLanguage(BaseEnum):
                     ),
                     LanguageConfigFile(
                         language=self,
-                        path=next(iter(PROJECT_ROOT.glob("*.csproj"))),
+                        path=next(iter(PROJECT_ROOT.glob("*.csproj")), None),  # type: ignore
                         language_type=ConfigLanguage.XML,
                         dependency_key_paths=(
                             ("Project", "ItemGroup", "PackageReference"),

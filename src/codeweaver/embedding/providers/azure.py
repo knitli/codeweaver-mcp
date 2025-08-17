@@ -17,7 +17,7 @@ try:
 except ImportError as _import_error:  # pragma: no cover
     raise ImportError(
         "Please install the `openai` package to use the Azure provider, "
-        + 'you can use the `openai` optional group — `pip install "pydantic-ai-slim[openai]"`'
+        'you can use the `openai` optional group — `pip install "pydantic-ai-slim[openai]"`'
     ) from _import_error
 
 
@@ -26,4 +26,3 @@ class AzureEmbeddingModelProfile(EmbeddingModelProfile): ...
 
 class AzureEmbeddingProvider:
     """Azure embedding provider."""
-    ...

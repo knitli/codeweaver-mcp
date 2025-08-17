@@ -10,4 +10,3 @@
 
 class MistralEmbeddingProvider:
     """Mistral embedding provider."""
-    ...

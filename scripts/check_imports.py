@@ -11,7 +11,7 @@ import sys
 
 
 MODULES_TO_CHECK = (
-# Add the modules you want to check for importability
+    # Add the modules you want to check for importability
 )
 
 FAILED_IMPORTS = []

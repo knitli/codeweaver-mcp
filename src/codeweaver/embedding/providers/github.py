@@ -10,4 +10,3 @@
 
 class GitHubEmbeddingProvider:
     """GitHub embedding provider."""
-    ...

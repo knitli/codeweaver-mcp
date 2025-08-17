@@ -16,6 +16,7 @@ from uuid import uuid4
 from pydantic import NonNegativeInt, PositiveInt
 
 from codeweaver._data_structures import DiscoveredFile, Span
+from codeweaver._statistics import SessionStatistics
 from codeweaver._utils import estimate_tokens
 from codeweaver.exceptions import QueryError
 from codeweaver.language import SemanticSearchLanguage
@@ -48,6 +49,7 @@ async def find_code_implementation(
     include_tests: bool = False,
     focus_languages: tuple[SemanticSearchLanguage, ...] | LiteralString | None = None,
     max_results: PositiveInt = 50,  # TODO: why isn't this used?
+    statistics: SessionStatistics | None = None,
 ) -> FindCodeResponse:
     """Phase 1 implementation of find_code tool.
 
@@ -74,6 +76,11 @@ async def find_code_implementation(
         # Discover files
         discovered_files, _filtered_files = await discovery_service.get_discovered_files()
 
+        # Track discovered files in statistics
+        if statistics:
+            for file in discovered_files:
+                statistics.add_file_operation(file.path, "retrieved")
+
         # Filter by languages if specified
         if focus_languages:
             test_languages: set[str] = {str(lang) for lang in focus_languages}
@@ -87,6 +94,20 @@ async def find_code_implementation(
 
         # Calculate execution time
         execution_time_ms = (time.time() - start_time) * 1000
+
+        # Track search results and response time in statistics
+        if statistics:
+            # Track processed files for matches
+            processed_files = {match.file.path for match in matches}
+            for file_path in processed_files:
+                statistics.add_file_operation(file_path, "processed")
+
+            # Track response time
+            statistics.add_response_time(execution_time_ms)
+
+            # Track token usage
+            total_tokens = sum(estimate_tokens(match.content) for match in matches)
+            statistics.add_token_usage(search_results=total_tokens)
 
         # Create response
         return FindCodeResponse(

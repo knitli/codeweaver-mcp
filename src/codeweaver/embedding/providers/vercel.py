@@ -10,4 +10,3 @@
 
 class VercelEmbeddingProvider:
     """Vercel embedding provider."""
-    ...

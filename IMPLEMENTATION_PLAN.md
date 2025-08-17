@@ -80,7 +80,9 @@ CodeWeaver has evolved beyond its original architectural vision into a sophistic
 #### Week 1: Foundation Integration
 - ✅ **CLI Implementation**: Already completed with comprehensive server, search, and config commands
 - **Provider Registry**: Implement `_settings_registry.py` for dynamic provider registration
+- **Sophisticated statistics tracking system** in `_statistics.py` -- needs integration into architecture for continuous updating
 - **FastMCP Middleware**: Complete application state management and context handling
+   - Need to consider FastMCP server's lifespan handling. The indexer should run as a background service, so we need to ensure the lifespan for certain services can continue beyond the start and end of an MCP session.
 - **Basic Vector Store**: Complete in-memory vector store implementation
 
 #### Week 2: Core Functionality  
@@ -114,7 +116,7 @@ CodeWeaver has evolved beyond its original architectural vision into a sophistic
 
 #### Advanced Capabilities
 - **pydantic-graph Pipeline**: Implement multi-stage workflow orchestration
-- **Advanced Ranking**: Multi-signal ranking with semantic, syntactic, and keyword relevance
+- **Advanced Ranking**: Multi-signal, multi-source, ranking with semantic, syntactic, and keyword relevance
 - **Performance Optimization**: Caching, batching, and response time optimization
 - **Enhanced Metadata**: Leverage rich semantic metadata for improved search accuracy
 
@@ -122,7 +124,7 @@ CodeWeaver has evolved beyond its original architectural vision into a sophistic
 - **Comprehensive Testing**: Full test suite including unit, integration, and e2e tests
 - **Error Handling**: Graceful degradation with fallback strategies
 - **Documentation**: API documentation and usage guides
-- **Monitoring**: Telemetry integration and performance monitoring
+- **Monitoring**: Posthog telemetry integration and performance monitoring with statistics suite
 
 **Deliverable**: Production-ready MCP server with advanced search capabilities
 
@@ -141,13 +143,13 @@ The CLI is already comprehensively implemented with:
 ### Provider Registry Implementation
 ```python
 # src/codeweaver/_settings_registry.py
-from typing import Dict, Type, Any
+from typing import Any
 from codeweaver.embedding.base import EmbeddingProvider
 from codeweaver.vector_stores.base import VectorStoreProvider
 
 class ProviderRegistry:
-    _embedding_providers: Dict[str, Type[EmbeddingProvider]] = {}
-    _vector_store_providers: Dict[str, Type[VectorStoreProvider]] = {}
+    _embedding_providers: dict[str, EmbeddingProvider] = {}
+    _vector_store_providers: dict[str, VectorStoreProvider] = {}
     
     @classmethod
     def register_embedding_provider(cls, name: str, provider_class: Type[EmbeddingProvider]) -> None:

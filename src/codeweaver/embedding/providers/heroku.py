@@ -10,4 +10,3 @@
 
 class HerokuEmbeddingProvider:
     """Heroku embedding provider."""
-    ...

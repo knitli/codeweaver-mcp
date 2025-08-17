@@ -20,9 +20,9 @@ import httpx
 from pydantic import SecretStr
 from pydantic_ai.models import cached_async_http_client
 
+from codeweaver.embedding.profiles import EmbeddingModelProfile
 from codeweaver.embedding.profiles.openai import openai_model_profile
 from codeweaver.embedding.providers import EmbeddingProvider
-from codeweaver.embedding.profiles import EmbeddingModelProfile
 
 
 try:

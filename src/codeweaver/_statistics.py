@@ -1,4 +1,4 @@
-# sourcery skip: lambdas-should-be-short
+# sourcery skip: lambdas-should-be-short, no-complex-if-expressions
 # SPDX-FileCopyrightText: 2025 Knitli Inc.
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 #
@@ -10,12 +10,13 @@ Statistics tracking for CodeWeaver, including file indexing, retrieval, and sess
 from __future__ import annotations
 
 import contextlib
+import statistics
 
 from collections import Counter, defaultdict
 from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal
+from typing import Annotated, ClassVar, Literal, cast
 
 from pydantic import (
     ConfigDict,
@@ -27,13 +28,214 @@ from pydantic import (
 )
 from pydantic.dataclasses import dataclass
 
+from codeweaver._data_structures import ExtKind
 from codeweaver.language import SemanticSearchLanguage
-from codeweaver.services.discovery import process_filename
 
 
-OperationsKey = Literal["indexed", "retrieved", "processed", "reindexed", "skipped"]
-SummaryKey = Literal["total_operations", "unique_files"]
-CategoryKey = Literal["code", "config", "docs", "other"]
+type OperationsKey = Literal["indexed", "retrieved", "processed", "reindexed", "skipped"]
+type SummaryKey = Literal["total_operations", "unique_files"]
+type CategoryKey = Literal["code", "config", "docs", "other"]
+
+type McpOperationRequests = Literal[
+    "on_call_tool_requests",
+    "on_read_resource_requests",
+    "on_get_prompt_requests",
+    "on_list_tools_requests",
+    "on_list_resources_requests",
+    "on_list_resource_templates_requests",
+    "on_list_prompts_requests",
+]
+
+type TimingRequestsDict = dict[
+    Literal["averages", "counts", "lows", "medians", "highs"],
+    dict[McpOperationRequests, NonNegativeFloat],
+]
+
+
+@dataclass(config=ConfigDict(extra="forbid"))
+class TimingStatistics:
+    """By-operation timing statistics for CodeWeaver operations."""
+
+    on_call_tool_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_call_tool requests in milliseconds.",
+        ),
+    ]
+    on_read_resource_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_read_resource requests in milliseconds.",
+        ),
+    ]
+    on_get_prompt_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_get_prompt requests in milliseconds.",
+        ),
+    ]
+    on_list_tools_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_list_tools requests in milliseconds.",
+        ),
+    ]
+    on_list_resources_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_list_resources requests in milliseconds.",
+        ),
+    ]
+    on_list_resource_templates_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_list_resource_templates requests in milliseconds.",
+        ),
+    ]
+    on_list_prompts_requests: Annotated[
+        list[PositiveFloat],
+        Field(
+            default_factory=list,
+            description="Time taken for on_list_prompts requests in milliseconds.",
+        ),
+    ]
+
+    def update(self, key: McpOperationRequests, response_time: PositiveFloat) -> None:
+        """Update the timing statistics for a specific request type."""
+        if (request_list := getattr(self, key)) and isinstance(request_list, list):
+            self.__setattr__(key, [*request_list, response_time])
+
+    @computed_field
+    def timing_summary(self) -> TimingRequestsDict:
+        """Get a summary of timing statistics."""
+        return {
+            "averages": {
+                "on_call_tool_requests": (
+                    sum(self.on_call_tool_requests) / len(self.on_call_tool_requests)
+                    if self.on_call_tool_requests
+                    else 0.0
+                ),
+                "on_read_resource_requests": (
+                    sum(self.on_read_resource_requests) / len(self.on_read_resource_requests)
+                    if self.on_read_resource_requests
+                    else 0.0
+                ),
+                "on_get_prompt_requests": (
+                    sum(self.on_get_prompt_requests) / len(self.on_get_prompt_requests)
+                    if self.on_get_prompt_requests
+                    else 0.0
+                ),
+                "on_list_tools_requests": (
+                    sum(self.on_list_tools_requests) / len(self.on_list_tools_requests)
+                    if self.on_list_tools_requests
+                    else 0.0
+                ),
+                "on_list_resources_requests": (
+                    sum(self.on_list_resources_requests) / len(self.on_list_resources_requests)
+                    if self.on_list_resources_requests
+                    else 0.0
+                ),
+                "on_list_resource_templates_requests": (
+                    sum(self.on_list_resource_templates_requests)
+                    / len(self.on_list_resource_templates_requests)
+                    if self.on_list_resource_templates_requests
+                    else 0.0
+                ),
+                "on_list_prompts_requests": (
+                    sum(self.on_list_prompts_requests) / len(self.on_list_prompts_requests)
+                    if self.on_list_prompts_requests
+                    else 0.0
+                ),
+            },
+            "counts": {
+                "on_call_tool_requests": len(self.on_call_tool_requests),
+                "on_read_resource_requests": len(self.on_read_resource_requests),
+                "on_get_prompt_requests": len(self.on_get_prompt_requests),
+                "on_list_tools_requests": len(self.on_list_tools_requests),
+                "on_list_resources_requests": len(self.on_list_resources_requests),
+                "on_list_resource_templates_requests": len(
+                    self.on_list_resource_templates_requests
+                ),
+                "on_list_prompts_requests": len(self.on_list_prompts_requests),
+            },
+            "lows": {
+                "on_call_tool_requests": min(self.on_call_tool_requests)
+                if self.on_call_tool_requests
+                else 0.0,
+                "on_read_resource_requests": min(self.on_read_resource_requests)
+                if self.on_read_resource_requests
+                else 0.0,
+                "on_get_prompt_requests": min(self.on_get_prompt_requests)
+                if self.on_get_prompt_requests
+                else 0.0,
+                "on_list_tools_requests": min(self.on_list_tools_requests)
+                if self.on_list_tools_requests
+                else 0.0,
+                "on_list_resources_requests": min(self.on_list_resources_requests)
+                if self.on_list_resources_requests
+                else 0.0,
+                "on_list_resource_templates_requests": min(self.on_list_resource_templates_requests)
+                if self.on_list_resource_templates_requests
+                else 0.0,
+                "on_list_prompts_requests": min(self.on_list_prompts_requests)
+                if self.on_list_prompts_requests
+                else 0.0,
+            },
+            "medians": {
+                "on_call_tool_requests": statistics.median(self.on_call_tool_requests)
+                if self.on_call_tool_requests
+                else 0.0,
+                "on_read_resource_requests": statistics.median(self.on_read_resource_requests)
+                if self.on_read_resource_requests
+                else 0.0,
+                "on_get_prompt_requests": statistics.median(self.on_get_prompt_requests)
+                if self.on_get_prompt_requests
+                else 0.0,
+                "on_list_tools_requests": statistics.median(self.on_list_tools_requests)
+                if self.on_list_tools_requests
+                else 0.0,
+                "on_list_resources_requests": statistics.median(self.on_list_resources_requests)
+                if self.on_list_resources_requests
+                else 0.0,
+                "on_list_resource_templates_requests": statistics.median(
+                    self.on_list_resource_templates_requests
+                )
+                if self.on_list_resource_templates_requests
+                else 0.0,
+                "on_list_prompts_requests": statistics.median(self.on_list_prompts_requests)
+                if self.on_list_prompts_requests
+                else 0.0,
+            },
+            "highs": {
+                "on_call_tool_requests": max(self.on_call_tool_requests)
+                if self.on_call_tool_requests
+                else 0.0,
+                "on_read_resource_requests": max(self.on_read_resource_requests)
+                if self.on_read_resource_requests
+                else 0.0,
+                "on_get_prompt_requests": max(self.on_get_prompt_requests)
+                if self.on_get_prompt_requests
+                else 0.0,
+                "on_list_tools_requests": max(self.on_list_tools_requests)
+                if self.on_list_tools_requests
+                else 0.0,
+                "on_list_resources_requests": max(self.on_list_resources_requests)
+                if self.on_list_resources_requests
+                else 0.0,
+                "on_list_resource_templates_requests": max(self.on_list_resource_templates_requests)
+                if self.on_list_resource_templates_requests
+                else 0.0,
+                "on_list_prompts_requests": max(self.on_list_prompts_requests)
+                if self.on_list_prompts_requests
+                else 0.0,
+            },
+        }
 
 
 @dataclass(
@@ -200,11 +402,18 @@ class FileStatistics:
         if not path.is_file():
             raise ValueError(f"{path} is not a valid file")
 
-        if ext_kind := process_filename(path.name):
-            self.categories[ext_kind.kind].add_operation(ext_kind.language, operation, path)
+        # Use ExtKind to determine file category and language
+        if ext_kind := ExtKind.from_file(path):
+            # Convert ExtKind.kind to our CategoryKey
+            category_map = {"code": "code", "config": "config", "docs": "docs", "other": "other"}
+            category = category_map.get(ext_kind.kind.value, "other")
+            language = str(ext_kind.language)
+            self.categories[cast(CategoryKey, category)].add_operation(language, operation, path)
         elif self._other_files and path in self._other_files:
-            self.categories["other"].add_operation(
-                f".{path.stem}" if "." in path.name else path.name, operation, path
+            # Handle explicitly added "other" files
+            language_name = f".{path.stem}" if "." in path.name else path.name
+            self.categories[cast(CategoryKey, "other")].add_operation(
+                language_name, operation, path
             )
 
     def add_other_files(self, *files: Path) -> None:
@@ -333,7 +542,10 @@ class TokenCounter(
         raise NotImplementedError("Money saved estimation is not implemented yet.")
 
 
-@dataclass(kw_only=True, config=ConfigDict(extra="forbid", str_strip_whitespace=True))
+@dataclass(
+    kw_only=True,
+    config=ConfigDict(extra="forbid", str_strip_whitespace=True, arbitrary_types_allowed=True),
+)
 class SessionStatistics:
     """Statistics for tracking session performance and usage."""
 
@@ -346,60 +558,40 @@ class SessionStatistics:
     failed_requests: Annotated[
         NonNegativeInt | None, Field(description="Total failed requests during the session.")
     ] = None
-    _response_times: Annotated[
-        list[PositiveFloat] | None, Field(description="List of response times in milliseconds.")
+    timing_statistics: Annotated[
+        TimingStatistics | None, Field(description="Timing statistics for the session.")
     ] = None
 
     index_statistics: Annotated[
-        FileStatistics,
+        FileStatistics | None,
         Field(
-            description="Comprehensive file statistics tracking categories, languages, and operations."
+            default_factory=FileStatistics,
+            description="Comprehensive file statistics tracking categories, languages, and operations.",
         ),
-    ] = FileStatistics()
+    ] = None
     token_statistics: Annotated[
-        TokenCounter, Field(description="A typed Counter that tracks token usage statistics.")
-    ] = TokenCounter()
+        TokenCounter | None,
+        Field(
+            default_factory=TokenCounter,
+            description="A typed Counter that tracks token usage statistics.",
+        ),
+    ] = None
 
     def __post_init__(self) -> None:
         """Post-initialization processing."""
-        self._response_times = []
-        for field in (
-            "total_requests",
-            "successful_requests",
-            "failed_requests",
-            "average_response_time_ms",
-            "max_response_time_ms",
-            "min_response_time_ms",
-        ):
+        if not self.token_statistics:
+            self.token_statistics = TokenCounter()
+        self.timing_statistics = TimingStatistics([], [], [], [], [], [], [])
+        for field in ("total_requests", "successful_requests", "failed_requests"):
             if getattr(self, field) is None:
                 setattr(self, field, 0)
 
-    @computed_field
-    @property
-    def average_response_time_ms(self) -> NonNegativeFloat:
-        """Get the average response time in milliseconds."""
-        if self._response_times:
-            return sum(self._response_times) / len(self._response_times)
-        return 0.0
-
-    @computed_field
-    @property
-    def max_response_time_ms(self) -> NonNegativeFloat:
-        """Get the maximum response time in milliseconds."""
-        return max(self._response_times) if self._response_times else 0.0
-
-    @computed_field
-    @property
-    def min_response_time_ms(self) -> NonNegativeFloat:
-        """Get the minimum response time in milliseconds."""
-        return min(self._response_times) if self._response_times else 0.0
-
-    def add_response_time(self, response_time_ms: PositiveFloat) -> None:
-        """Add a response time and update statistics."""
-        if self._response_times is None:
-            self._response_times = []
-
-        self._response_times.append(response_time_ms)
+    def get_timing_statistics(self) -> TimingRequestsDict:
+        """Get the current timing statistics."""
+        if self.timing_statistics:
+            return self.timing_statistics.timing_summary()
+        self.timing_statistics = TimingStatistics([], [], [], [], [], [], [])
+        return {}
 
     def add_successful_request(self) -> None:
         """Add a successful request count."""
@@ -439,6 +631,9 @@ class SessionStatistics:
         search_results: NonNegativeInt = 0,
     ) -> None:
         """Add token usage statistics."""
+        if self.token_statistics is None:
+            self.token_statistics = TokenCounter()
+
         self.token_statistics["embedding_generated"] += embedding_generated
         self.token_statistics["reranking_generated"] += reranking_generated
         self.token_statistics["context_agent_used"] += context_agent_used
@@ -447,10 +642,12 @@ class SessionStatistics:
 
     def get_token_usage(self) -> TokenCounter:
         """Get the current token usage statistics."""
-        return self.token_statistics
+        return self.token_statistics or TokenCounter()
 
     def add_file_operation(self, path: Path, operation: OperationsKey) -> None:
         """Add a file operation to the index statistics."""
+        if not self.index_statistics:
+            self.index_statistics = FileStatistics()
         self.index_statistics.add_file(path, operation)
 
     def add_file_operations(self, *file_operations: tuple[Path, OperationsKey]) -> None:
@@ -460,6 +657,8 @@ class SessionStatistics:
 
     def add_other_files(self, *files: Path) -> None:
         """Add files to the 'other' category in index statistics."""
+        if not self.index_statistics:
+            self.index_statistics = FileStatistics()
         self.index_statistics.add_other_files(*files)
 
     def reset(self) -> None:

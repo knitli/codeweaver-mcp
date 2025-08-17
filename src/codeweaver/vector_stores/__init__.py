@@ -8,13 +8,13 @@ from typing import Any
 
 from codeweaver._settings import Provider
 from codeweaver.vector_stores.base import SearchResult, VectorStoreProvider
-from codeweaver.vector_stores.memory import InMemoryVectorStore
+from codeweaver.vector_stores.memory import InMemoryVectorStoreProvider
 
 
 def get_store(provider: Provider) -> type[VectorStoreProvider[Any]]:
     """Get the vector store provider."""
     if provider == Provider.FASTEMBED_VECTORSTORE:
-        return InMemoryVectorStore
+        return InMemoryVectorStoreProvider
     if provider == Provider.QDRANT:
         from codeweaver.vector_stores.qdrant import QdrantVectorStore
 
@@ -22,4 +22,4 @@ def get_store(provider: Provider) -> type[VectorStoreProvider[Any]]:
     raise TypeError(f"Expected VectorStoreProvider, got {type(provider)}")
 
 
-__all__ = ["InMemoryVectorStore", "SearchResult", "VectorStoreProvider"]
+__all__ = ["InMemoryVectorStoreProvider", "SearchResult", "VectorStoreProvider"]

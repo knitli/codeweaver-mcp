@@ -14,6 +14,8 @@ from codeweaver.embedding.profiles import EmbeddingModelProfile
 class EmbeddingModelSettings: ...
 
 
+"""Settings for embedding models."""
+
 #  =================================  BEGIN EXAMPLE ======================================
 # this is *the* `ModelSettings` object from `pydantic_ai.settings`. We have temporarily copied it here
 # So that we can use it as a reference for creating our `EmbeddingModelSettings` and `RerankModelSettings` objects.

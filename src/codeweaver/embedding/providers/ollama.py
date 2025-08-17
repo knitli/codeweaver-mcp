@@ -10,4 +10,3 @@
 
 class OllamaEmbeddingProvider:
     """Ollama embedding provider."""
-    ...
