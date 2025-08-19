@@ -15,16 +15,21 @@ import platform
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Literal, LiteralString, NotRequired, Required, Self, TypedDict
+from typing import Annotated, Any, Literal, LiteralString, NotRequired, Required, Self, TypedDict
 
 from fastmcp.contrib.bulk_tool_caller.bulk_tool_caller import BulkToolCaller
-from fastmcp.server.middleware import MiddlewareContext
+from fastmcp.server.auth.auth import OAuthProvider
+from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware, RetryMiddleware
 from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
 from fastmcp.server.middleware.timing import DetailedTimingMiddleware
-from pydantic import PositiveInt
+from fastmcp.server.server import DuplicateBehavior
+from fastmcp.tools.tool import Tool
+from mcp.server.lowlevel.server import LifespanResultT
+from pydantic import Field, PositiveInt
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
+from starlette.middleware import Middleware as ASGIMiddleware
 
 from codeweaver._common import BaseEnum
 from codeweaver.exceptions import ConfigurationError
@@ -39,6 +44,145 @@ AVAILABLE_MIDDLEWARE = (
     RateLimitingMiddleware,
     RetryMiddleware,
 )
+
+type FormatterID = str
+
+
+class FormattersDict(TypedDict, total=False):
+    """A dictionary of formatters for logging configuration.
+
+    This is used to define custom formatters for logging in a dictionary format.
+    Each formatter can have a `format`, `date_format`, `style`, and other optional fields.
+
+    [See the Python documentation for more details](https://docs.python.org/3/library/logging.html#logging.Formatter).
+    """
+
+    format: NotRequired[str]
+    date_format: NotRequired[str]
+    style: NotRequired[str]
+    validate: NotRequired[bool]
+    defaults: NotRequired[
+        Annotated[
+            dict[str, Any],
+            Field(
+                default_factory=dict,
+                description="Default values for the formatter. [See the Python documentation for more details](https://docs.python.org/3/library/logging.html#logging.Formatter).",
+            ),
+        ]
+    ]
+    class_name: NotRequired[
+        Annotated[
+            str,
+            Field(
+                description="The class name of the formatter in the form of an import path, like `logging.Formatter` or `rich.logging.RichFormatter`.",
+                alias="class",
+            ),
+        ]
+    ]
+
+
+type FilterID = str
+
+type FiltersDict = dict[FilterID, dict[Literal["name"] | str, Any]]  # noqa: PYI051
+
+type HandlerID = str
+
+
+class HandlersDict(TypedDict, total=False):
+    """A dictionary of handlers for logging configuration.
+
+    This is used to define custom handlers for logging in a dictionary format.
+    Each handler can have a `class_name`, `level`, and other optional fields.
+
+    [See the Python documentation for more details](https://docs.python.org/3/library/logging.html#logging.Handler).
+    """
+
+    class_name: Required[
+        Annotated[
+            str,
+            Field(
+                description="The class name of the handler in the form of an import path, like `logging.StreamHandler` or `rich.logging.RichHandler`.",
+                alias="class",
+            ),
+        ]
+    ]
+    level: NotRequired[Literal[0, 10, 20, 30, 40, 50]]  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    formatter: NotRequired[FormatterID]  # The ID of the formatter to use for this handler
+    filters: NotRequired[list[FilterID | logging.Filter]]
+
+
+type LoggerName = str
+
+
+class LoggersDict(TypedDict, total=False):
+    """A dictionary of loggers for logging configuration.
+
+    This is used to define custom loggers for logging in a dictionary format.
+    Each logger can have a `level`, `handlers`, and other optional fields.
+
+    [See the Python documentation for more details](https://docs.python.org/3/library/logging.html#logging.Logger).
+    """
+
+    level: NotRequired[Literal[0, 10, 20, 30, 40, 50]]  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    propagate: NotRequired[bool]  # Whether to propagate messages to the parent logger
+    handlers: NotRequired[list[HandlerID]]  # The IDs of the handlers to use for this logger
+    filters: NotRequired[
+        list[FilterID | logging.Filter]
+    ]  # The IDs of the filters to use for this logger, or filter instances
+
+
+class LoggingConfigDict(TypedDict, total=False):
+    """Logging configuration settings. You may optionally use this to customize logging in a very granular way.
+
+    `LoggingConfigDict` is structured to match the format expected by Python's `logging.config.dictConfig` function. You can use this to define loggers, handlers, and formatters in a dictionary format -- either programmatically or in your CodeWeaver settings file.
+    [See the Python documentation for more details](https://docs.python.org/3/library/logging.config.html).
+    """
+
+    version: Required[Literal[1]]
+    formatters: NotRequired[dict[FormatterID, FormattersDict]]
+    filters: NotRequired[FiltersDict]
+    handlers: NotRequired[dict[HandlerID, HandlersDict]]
+    loggers: NotRequired[dict[str, LoggersDict]]
+    root: NotRequired[Annotated[LoggersDict, Field(description="The root logger configuration.")]]
+    incremental: NotRequired[
+        Annotated[
+            bool,
+            Field(
+                description="Whether to apply this configuration incrementally or replace the existing configuration. [See the Python documentation for more details](https://docs.python.org/3/library/logging.config.html#logging-config-dict-incremental)."
+            ),
+        ]
+    ]
+    disable_existing_loggers: NotRequired[
+        Annotated[
+            bool,
+            Field(
+                description="Whether to disable all existing loggers when configuring logging. If not present, defaults to `True`."
+            ),
+        ]
+    ]
+
+
+class LoggingSettings(TypedDict, total=False):
+    """Global logging settings."""
+
+    level: NotRequired[Literal[0, 10, 20, 30, 40, 50]]  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    use_rich: NotRequired[bool]
+    dict_config: NotRequired[
+        Annotated[
+            LoggingConfigDict,
+            Field(
+                description="Logging configuration in dictionary format that matches the format expected by [`logging.config.dictConfig`](https://docs.python.org/3/library/logging.config.html)."
+            ),
+        ]
+    ]
+    rich_kwargs: NotRequired[
+        Annotated[
+            dict[str, Any],
+            Field(
+                description="Additional keyword arguments for the `rich` logging handler, [`rich.logging.RichHandler`], if enabled."
+            ),
+        ]
+    ]
 
 
 class ErrorHandlingMiddlewareSettings(TypedDict, total=False):
@@ -55,6 +199,7 @@ class RetryMiddlewareSettings(TypedDict, total=False):
 
     max_retries: NotRequired[int]
     base_delay: NotRequired[float]
+    max_delay: NotRequired[float]
     backoff_multiplier: NotRequired[float]
     retry_exceptions: NotRequired[tuple[type[Exception], ...]]
     logger: NotRequired[logging.Logger | None]
@@ -63,18 +208,13 @@ class RetryMiddlewareSettings(TypedDict, total=False):
 class LoggingMiddlewareSettings(TypedDict, total=False):
     """Settings for logging middleware (both structured and unstructured)."""
 
-    logger: NotRequired[logging.Logger | None]
+    logger: Annotated[NotRequired[logging.Logger | None], Field(exclude=True)]
     log_level: NotRequired[int]
     include_payloads: NotRequired[bool]
     max_payload_length: NotRequired[int]
     methods: NotRequired[list[str] | None]
 
-
-class DetailedTimingMiddlewareSettings(TypedDict, total=False):
-    """Settings for detailed timing middleware."""
-
-    logger: NotRequired[logging.Logger | None]
-    log_level: NotRequired[Literal[0, 10, 20, 30, 40, 50]]
+    use_structured_logging: NotRequired[bool]
 
 
 class RateLimitingMiddlewareSettings(TypedDict, total=False):
@@ -84,6 +224,15 @@ class RateLimitingMiddlewareSettings(TypedDict, total=False):
     burst_capacity: NotRequired[PositiveInt | None]
     get_client_id: NotRequired[Callable[[MiddlewareContext[Any]], str] | None]
     global_limit: NotRequired[bool]
+
+
+class MiddlewareSettings(TypedDict, total=False):
+    """Settings for middleware."""
+
+    error_handling: ErrorHandlingMiddlewareSettings | None
+    retry: RetryMiddlewareSettings | None
+    logging: LoggingMiddlewareSettings | None
+    rate_limiting: RateLimitingMiddlewareSettings | None
 
 
 class BaseProviderSettings(TypedDict, total=False):
@@ -131,6 +280,45 @@ class AgentProviderSettings(BaseProviderSettings):
     """A model name or a tuple of model names to use for agent in order of preference."""
     model_settings: NotRequired[AgentModelSettings | tuple[AgentModelSettings, ...] | None]
     """Settings for the agent model(s)."""
+
+
+class FastMCPHTTPRunArgs(TypedDict, total=False):
+    transport: Literal["http"]
+    host: str | None
+    port: PositiveInt | None
+    log_level: Literal["debug", "info", "warning", "error"] | None
+    path: str | None
+    uvicorn_config: dict[str, Any] | None
+    middleware: list[ASGIMiddleware] | None
+
+
+class FastMCPServerSettingsType(TypedDict, total=False):
+    """TypedDict for FastMCP server settings.
+
+    Not intended to be used directly; used for internal type checking and validation.
+    """
+
+    name: str
+    instructions: str | None
+    version: str | None
+    lifespan: LifespanResultT | None  # type: ignore  # it's purely for context
+    include_tags: set[str] | None
+    exclude_tags: set[str] | None
+    include_fastmcp_meta: bool | None
+    transport: Literal["stdio", "http"] | None
+    host: str | None
+    port: PositiveInt | None
+    path: str | None
+    auth: OAuthProvider | None
+    cache_expiration_seconds: float | None
+    on_duplicate_tools: DuplicateBehavior | None
+    on_duplicate_resources: DuplicateBehavior | None
+    on_duplicate_prompts: DuplicateBehavior | None
+    resource_prefix_format: Literal["protocol", "path"] | None
+    middleware: list[Middleware | Callable[..., Any]] | None
+    tools: list[Tool | Callable[..., Any]] | None
+    dependencies: list[str] | None
+    resources: list[str] | None
 
 
 class Provider(BaseEnum):

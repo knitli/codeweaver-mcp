@@ -10,10 +10,24 @@ Helper functions for CodeWeaver utilities.
 import contextlib
 import os
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import cache
 from pathlib import Path
-from typing import LiteralString
+from types import FunctionType
+from typing import Any, LiteralString
+
+
+# SPDX-BeginSnippet
+# SPDX-FileCopyrightText: Copyright (c) 2012-2020, Alexander Schepanovski
+# SPDX-License-Identifier: MIT
+
+
+def rpartial(func: FunctionType, *args: Any, **kwargs: dict[str, Any]) -> Callable[..., Any]:
+    """Partially applies last arguments, returning a callable. Adapted from `funcy`."""
+    return lambda *a, **kw: func(*(a + args), **dict(kwargs, **kw))
+
+
+# SPDX-EndSnippet
 
 
 def walk_down_to_git_root(path: Path | None = None) -> Path:

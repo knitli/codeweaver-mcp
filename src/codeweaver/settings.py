@@ -28,6 +28,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
 from codeweaver._settings import (
     DataProviderSettings,
+    LoggingSettings,
+    MiddlewareSettings,
     Provider,
     ProviderKind,
     default_config_file_locations,
@@ -51,10 +53,32 @@ def merge_agent_model_settings(
 
 
 class FileFilterSettings(BaseModel):
-    """Settings for file filtering."""
+    """Settings for file filtering.
 
-    excluded_dirs: Annotated[
-        frozenset[LiteralString], Field(description="Directories to exclude from analysis")
+    ## Path Resolution and Deconfliction
+
+    Any configured paths or path patterns should be relative to the project root directory.
+
+    CodeWeaver deconflicts paths in the following ways:
+    - If a file is specifically defined in `forced_includes`, it will always be included, even if it matches an exclude pattern.
+      - This doesn't apply if it is defined in `forced_includes` with a glob pattern that matches an excluded file (by extension or glob/path).
+      - This also doesn't apply to directories.
+    - Other filters like `use_gitignore`, `use_other_ignore_files`, and `ignore_hidden` will apply to all files **not in `forced_includes`**.
+      - Files in `forced_includes`, including files defined from glob patterns, will *not* be filtered by these settings.
+    - if `include_github_dir` is True (default), the glob `**/.github/**` will be added to `forced_includes`.
+    """
+
+    forced_includes: Annotated[
+        frozenset[str | Path],
+        Field(
+            description="Directories, files, or [glob patterns](https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language) to include in search and indexing. This is a set of strings, so you can use glob patterns like `**/src/**` or `**/*.py` to include directories or files."
+        ),
+    ] = frozenset()
+    excludes: Annotated[
+        frozenset[str | Path],
+        Field(
+            description="Directories, files, or [glob patterns](https://docs.python.org/3/library/pathlib.html#pathlib-pattern-language) to exclude from search and indexing. This is a set of strings, so you can use glob patterns like `**/node_modules/**` or `**/*.log` to exclude directories or files."
+        ),
     ] = DEFAULT_EXCLUDED_DIRS
     excluded_extensions: Annotated[
         frozenset[LiteralString],
@@ -71,6 +95,12 @@ class FileFilterSettings(BaseModel):
     ] = False
     ignore_hidden: Annotated[
         bool, Field(description="Whether to ignore hidden files (starting with .) for filtering")
+    ] = True
+    include_github_dir: Annotated[
+        bool,
+        Field(
+            description="Whether to include the .github directory in search and indexing. Because the .github directory is hidden, it would be otherwise discluded from default settings. Most people want to include it for work on GitHub Actions, workflows, and other GitHub-related files."
+        ),
     ] = True
 
 
@@ -179,6 +209,10 @@ class CodeWeaverSettings(BaseSettings):
         str | None, Field(description="Project name (auto-detected from directory if None)")
     ] = None
 
+    config_file: Annotated[
+        Path | None, Field(description="Path to the configuration file, if any", exclude=True)
+    ] = None
+
     # Performance settings
     token_limit: Annotated[
         PositiveInt, Field(le=130_000, description="Maximum tokens per response")
@@ -193,9 +227,17 @@ class CodeWeaverSettings(BaseSettings):
             description="Maximum code matches to return. Because CodeWeaver primarily indexes ast-nodes, a page can return multiple matches per file, so this is not the same as the number of files returned. This is the maximum number of code matches returned in a single response.",
         ),
     ] = 75
-    fastmcp: Annotated[
+    server: Annotated[
         FastMCPServerSettings, Field(description="Optionally customize FastMCP server settings.")
     ] = DefaultFastMCPServerSettings
+
+    logging: Annotated[
+        LoggingSettings | None, Field(default_factory=dict, description="Logging configuration")
+    ] = None
+
+    middleware_settings: Annotated[
+        MiddlewareSettings | None, Field(description="Middleware settings")
+    ] = None
 
     filter_settings: Annotated[FileFilterSettings, Field(description="File filtering settings")] = (
         FileFilterSettings()

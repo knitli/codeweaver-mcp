@@ -7,123 +7,27 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
-from pydantic import ConfigDict, Field, NonNegativeInt
-from pydantic.dataclasses import dataclass
 
-from codeweaver import __version__ as version
-from codeweaver._settings_registry import get_provider_registry
-from codeweaver._statistics import SessionStatistics
+from codeweaver._server import initialize_app
 from codeweaver.exceptions import CodeWeaverError
 from codeweaver.models.core import FindCodeResponse
-from codeweaver.settings import get_settings
 from codeweaver.tools.find_code import find_code_implementation
 
 
 if TYPE_CHECKING:
-    from fastmcp.server.middleware import Middleware
-
+    from codeweaver._server import AppState
     from codeweaver.language import SemanticSearchLanguage
     from codeweaver.models.intent import IntentType
-    from codeweaver.settings import CodeWeaverSettings
-
-
-@dataclass(
-    order=True,
-    kw_only=True,
-    config=ConfigDict(extra="forbid", str_strip_whitespace=True, arbitrary_types_allowed=True),
-)
-class AppState:
-    """Application state for CodeWeaver server."""
-
-    initialized: Annotated[
-        bool, Field(description="Indicates if the server has been initialized")
-    ] = False
-    config_path: Annotated[
-        Path | None, Field(description="Path to the configuration file, if any")
-    ] = None
-    settings: Annotated[
-        CodeWeaverSettings | None, Field(description="CodeWeaver configuration settings")
-    ] = None
-
-    # Provider registry integration
-    provider_registry: Annotated[
-        Any, Field(description="Provider registry for dynamic provider management")
-    ] = None
-
-    # Statistics and performance tracking
-    statistics: Annotated[
-        SessionStatistics, Field(description="Session statistics and performance tracking")
-    ] = Field(default_factory=SessionStatistics)
-
-    # Request tracking
-    request_count: Annotated[
-        NonNegativeInt, Field(description="Total number of requests processed")
-    ] = 0
-
-    # Health status
-    health: Annotated[dict[str, Any], Field(description="Health status information")] = Field(
-        default_factory=dict
-    )
-
-    # TODO: Future implementations
-    indexer: None = None  # Placeholder for background indexer
-
-    middleware_stack: Annotated[
-        tuple[type[Middleware], ...], Field(description="Loaded middleware stack")
-    ] = Field(default_factory=tuple)
-
-
-@asynccontextmanager
-async def lifespan(app: FastMCP[AppState]) -> AsyncIterator[AppState]:
-    """Context manager for application lifespan with proper initialization."""
-    # Initialize application state
-    state = AppState(initialized=False)
-
-    try:
-        # Load settings
-        state.settings = get_settings()
-
-        # Initialize provider registry
-        state.provider_registry = get_provider_registry()
-
-        # Initialize health status
-        state.health = {
-            "status": "initializing",
-            "version": version,
-            "startup_time": time.time(),
-            "features": ["basic_search", "file_discovery", "provider_registry", "statistics"],
-        }
-
-        # Mark as initialized
-        state.initialized = True
-        state.health["status"] = "healthy"
-
-        # Yield the initialized state
-        yield state
-
-    except Exception as e:
-        # Handle initialization errors
-        state.health["status"] = "unhealthy"
-        state.health["error"] = str(e)
-        state.initialized = False
-        raise
-
-    finally:
-        # Cleanup resources
-        state.initialized = False
 
 
 # Create FastMCP application
-# TODO: Add middleware, dependency injection, etc.
-app: FastMCP[AppState] = initialize_app()
+app: FastMCP[AppState] = asyncio.run(initialize_app())
 
 
 @app.tool(tags={"user", "external", "code"})
@@ -161,12 +65,12 @@ async def find_code(
         # Execute the find_code implementation
         response = await find_code_implementation(
             query=query,
-            settings=settings,
+            settings=app.state.settings if app.state else None,
             intent=intent,
             token_limit=token_limit,
             include_tests=include_tests,
             focus_languages=focus_languages,
-            statistics=app_state.statistics if app_state else None,
+            statistics=app.state.statistics if app.state else None,
         )
 
         # Record successful request
@@ -217,7 +121,7 @@ async def health() -> dict[str, Any]:
         health_info = {
             "status": "healthy",
             "version": "0.1.0-phase1",
-            "features": ["basic_search", "file_discovery", "provider_registry", "statistics"],
+            "features": ["basic_search", "file_discovery", "registry", "statistics"],
         } | {
             "initialized": app_state.initialized,
             "request_count": app_state.request_count,
@@ -244,15 +148,15 @@ async def health() -> dict[str, Any]:
             }
 
         # Add provider registry info if available
-        if app_state.provider_registry:
+        if app_state.registry:
             from codeweaver._settings import ProviderKind
 
             health_info["providers"] = {
                 "embedding_providers": len(
-                    app_state.provider_registry.list_providers(ProviderKind.EMBEDDING)
+                    app_state.registry.list_providers(ProviderKind.EMBEDDING)
                 ),
                 "vector_store_providers": len(
-                    app_state.provider_registry.list_providers(ProviderKind.VECTOR_STORE)
+                    app_state.registry.list_providers(ProviderKind.VECTOR_STORE)
                 ),
             }
 
@@ -270,21 +174,6 @@ async def health() -> dict[str, Any]:
         return health_info
 
 
-def initialize_app() -> FastMCP[AppState]:
-    """Initialize the FastMCP application."""
-    base_fast_mcp_settings = {
-        "instructions": "Ask a question, describe what you're trying to do, and get the exact context you need. CodeWeaver is an advanced code search and code context tool. It keeps an updated vector, AST, and text index of your codebase, and uses intelligent intent analysis to provide the most relevant context for AI Agents to complete tasks. It's just one easy-to-use tool - the `find_code` tool. To use it, you only need to provide a plain language description of what you want to find, and what you are trying to do. CodeWeaver will return the most relevant code matches, along with their context and precise locations.",
-        "version": version,
-        "include_tags": {"external", "user", "context"},
-        "exclude_tags": {"internal", "system", "admin"},
-        "include_fastmcp_meta": True,
-        "middleware": [],
-    }
-    settings = get_settings()
-
-    return app
-
-
 # Server startup function for CLI
 async def start_server(host: str = "localhost", port: int = 8080, *, debug: bool = False) -> None:
     """Start the FastMCP server.
@@ -295,13 +184,6 @@ async def start_server(host: str = "localhost", port: int = 8080, *, debug: bool
         debug: Enable debug mode
     """
     import uvicorn
-
-    # Get app state from context
-    app_state = app.state if hasattr(app, "state") else None
-
-    # Update request statistics
-    if app_state and app_state.statistics:
-        app_state.request_count += 1
 
     # Get settings (use from app state if available)
     settings = app_state.settings if app_state and app_state.settings else get_settings()
@@ -316,4 +198,5 @@ if __name__ == "__main__":
     # Main entry point for MCP
     import asyncio
 
+    asyncio.run(app.run_http_async())
     asyncio.run(start_server(debug=True))

@@ -117,6 +117,23 @@ class ConfigLanguage(BaseEnum):
             ConfigLanguage.YAML: (".yaml", ".yml"),
         }[self]
 
+    @property
+    def is_semantic_search_language(self) -> bool:
+        """
+        Returns True if this configuration language is also a SemanticSearchLanguage.
+        """
+        return self.value in SemanticSearchLanguage.values()
+
+    @property
+    def as_semantic_search_language(self) -> SemanticSearchLanguage | None:
+        """
+        Returns a mapping of ConfigLanguage to SemanticSearchLanguage.
+        This is used to quickly look up the SemanticSearchLanguage based on ConfigLanguage.
+        """
+        if self.is_semantic_search_language:
+            return SemanticSearchLanguage.from_string(self.value)
+        return None
+
 
 class SemanticSearchLanguage(BaseEnum):
     """
@@ -532,6 +549,17 @@ class SemanticSearchLanguage(BaseEnum):
             for lang in cls
             for ext in cls.extension_map()[lang]
             if isinstance(lang, cls) and lang.is_config_language and ext and ext != ".sh"
+        )
+
+    @property
+    def as_config_language(self) -> ConfigLanguage | None:
+        """
+        Returns the corresponding ConfigLanguage if this SemanticSearchLanguage is a configuration language.
+        """
+        return (
+            ConfigLanguage.from_string(self.value)
+            if self in type(self).config_languages()
+            else None
         )
 
     @classmethod

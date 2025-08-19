@@ -9,14 +9,13 @@ Statistics tracking for CodeWeaver, including file indexing, retrieval, and sess
 
 from __future__ import annotations
 
-import contextlib
 import statistics
 
 from collections import Counter, defaultdict
 from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal, cast
+from typing import Annotated, ClassVar, Literal, TypedDict, cast
 
 from pydantic import (
     ConfigDict,
@@ -28,14 +27,15 @@ from pydantic import (
 )
 from pydantic.dataclasses import dataclass
 
-from codeweaver._data_structures import ExtKind
-from codeweaver.language import SemanticSearchLanguage
+from codeweaver._data_structures import ChunkKind, ExtKind
+from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
 
 
-type OperationsKey = Literal["indexed", "retrieved", "processed", "reindexed", "skipped"]
-type SummaryKey = Literal["total_operations", "unique_files"]
-type CategoryKey = Literal["code", "config", "docs", "other"]
+type ToolOrResourceName = str
 
+type McpComponentRequests = Literal[
+    "on_call_tool_requests", "on_read_resource_requests", "on_get_prompt_requests"
+]
 type McpOperationRequests = Literal[
     "on_call_tool_requests",
     "on_read_resource_requests",
@@ -46,10 +46,53 @@ type McpOperationRequests = Literal[
     "on_list_prompts_requests",
 ]
 
-type TimingRequestsDict = dict[
-    Literal["averages", "counts", "lows", "medians", "highs"],
-    dict[McpOperationRequests, NonNegativeFloat],
+
+class McpTimingDict(TypedDict):
+    combined: NonNegativeFloat
+    by_component: dict[ToolOrResourceName, NonNegativeFloat]
+
+
+class McpComponentTimingDict(TypedDict):
+    on_call_tool_requests: McpTimingDict
+    on_read_resource_requests: McpTimingDict
+    on_get_prompt_requests: McpTimingDict
+
+
+class CallHookTimingDict(TypedDict):
+    """Typed dictionary for MCP timing statistics."""
+
+    on_call_tool_requests: McpTimingDict
+    on_read_resource_requests: McpTimingDict
+    on_get_prompt_requests: McpTimingDict
+    on_list_tools_requests: NonNegativeFloat
+    on_list_resources_requests: NonNegativeFloat
+    on_list_resource_templates_requests: NonNegativeFloat
+    on_list_prompts_requests: NonNegativeFloat
+
+
+class TimingStatisticsDict(TypedDict):
+    """Typed dictionary for MCP timing statistics."""
+
+    averages: CallHookTimingDict
+    counts: CallHookTimingDict
+    lows: CallHookTimingDict
+    medians: CallHookTimingDict
+    highs: CallHookTimingDict
+
+
+type RequestKind = Literal[
+    "on_call_tool",
+    "on_read_resource",
+    "on_get_prompt",
+    "on_list_tools",
+    "on_list_resources",
+    "on_list_resource_templates",
+    "on_list_prompts",
 ]
+
+type OperationsKey = Literal["indexed", "retrieved", "processed", "reindexed", "skipped"]
+type SummaryKey = Literal["total_operations", "unique_files"]
+type CategoryKey = Literal["code", "config", "docs", "other"]
 
 
 @dataclass(config=ConfigDict(extra="forbid"))
@@ -57,23 +100,23 @@ class TimingStatistics:
     """By-operation timing statistics for CodeWeaver operations."""
 
     on_call_tool_requests: Annotated[
-        list[PositiveFloat],
+        dict[ToolOrResourceName, list[PositiveFloat]],
         Field(
-            default_factory=list,
+            default_factory=dict,
             description="Time taken for on_call_tool requests in milliseconds.",
         ),
     ]
     on_read_resource_requests: Annotated[
-        list[PositiveFloat],
+        dict[ToolOrResourceName, list[PositiveFloat]],
         Field(
-            default_factory=list,
+            default_factory=dict,
             description="Time taken for on_read_resource requests in milliseconds.",
         ),
     ]
     on_get_prompt_requests: Annotated[
-        list[PositiveFloat],
+        dict[ToolOrResourceName, list[PositiveFloat]],
         Field(
-            default_factory=list,
+            default_factory=dict,
             description="Time taken for on_get_prompt requests in milliseconds.",
         ),
     ]
@@ -106,57 +149,99 @@ class TimingStatistics:
         ),
     ]
 
-    def update(self, key: McpOperationRequests, response_time: PositiveFloat) -> None:
+    def update(
+        self,
+        key: McpOperationRequests,
+        response_time: PositiveFloat,
+        tool_or_resource_name: ToolOrResourceName | None = None,
+    ) -> None:
         """Update the timing statistics for a specific request type."""
+        if key in ("on_call_tool_requests", "on_read_resource_requests", "on_get_prompt_requests"):
+            if tool_or_resource_name is None:
+                raise ValueError(
+                    f"{key} requires a tool or resource name to update timing statistics."
+                )
+            # Ensure the dictionary exists for the specific tool/resource
+            if not (request_dict := getattr(self, key)):
+                request_dict: dict[ToolOrResourceName, list[PositiveFloat]] = {}
+                self.__setattr__(key, request_dict)
+            if tool_or_resource_name not in request_dict:
+                request_dict[tool_or_resource_name] = []
+            request_dict[tool_or_resource_name].append(response_time)
         if (request_list := getattr(self, key)) and isinstance(request_list, list):
             self.__setattr__(key, [*request_list, response_time])
 
-    @computed_field
-    def timing_summary(self) -> TimingRequestsDict:
-        """Get a summary of timing statistics."""
+    def _compute_for_mcp_timing_dict(
+        self, key: McpComponentRequests
+    ) -> dict[Literal["averages", "counts", "highs", "medians", "lows"], McpTimingDict]:
+        """Compute the timing statistics for a specific MCP operation."""
+        component_data = getattr(self, key)
+        combined_times = [time for times in component_data.values() for time in times if times]
+
         return {
             "averages": {
-                "on_call_tool_requests": (
-                    sum(self.on_call_tool_requests) / len(self.on_call_tool_requests)
-                    if self.on_call_tool_requests
-                    else 0.0
-                ),
-                "on_read_resource_requests": (
-                    sum(self.on_read_resource_requests) / len(self.on_read_resource_requests)
-                    if self.on_read_resource_requests
-                    else 0.0
-                ),
-                "on_get_prompt_requests": (
-                    sum(self.on_get_prompt_requests) / len(self.on_get_prompt_requests)
-                    if self.on_get_prompt_requests
-                    else 0.0
-                ),
-                "on_list_tools_requests": (
-                    sum(self.on_list_tools_requests) / len(self.on_list_tools_requests)
-                    if self.on_list_tools_requests
-                    else 0.0
-                ),
-                "on_list_resources_requests": (
-                    sum(self.on_list_resources_requests) / len(self.on_list_resources_requests)
-                    if self.on_list_resources_requests
-                    else 0.0
-                ),
-                "on_list_resource_templates_requests": (
-                    sum(self.on_list_resource_templates_requests)
-                    / len(self.on_list_resource_templates_requests)
-                    if self.on_list_resource_templates_requests
-                    else 0.0
-                ),
-                "on_list_prompts_requests": (
-                    sum(self.on_list_prompts_requests) / len(self.on_list_prompts_requests)
-                    if self.on_list_prompts_requests
-                    else 0.0
-                ),
+                "combined": statistics.mean(combined_times) if combined_times else 0.0,
+                "by_component": {
+                    k: statistics.mean(v) if v else 0.0 for k, v in component_data.items()
+                },
             },
             "counts": {
-                "on_call_tool_requests": len(self.on_call_tool_requests),
-                "on_read_resource_requests": len(self.on_read_resource_requests),
-                "on_get_prompt_requests": len(self.on_get_prompt_requests),
+                "combined": len(combined_times),
+                "by_component": {k: len(v) for k, v in component_data.items()},
+            },
+            "highs": {
+                "combined": max(combined_times, default=0.0),
+                "by_component": {k: max(v, default=0.0) for k, v in component_data.items()},
+            },
+            "medians": {
+                "combined": statistics.median(combined_times) if combined_times else 0.0,
+                "by_component": {
+                    k: statistics.median(v) if v else 0.0 for k, v in component_data.items()
+                },
+            },
+            "lows": {
+                "combined": min(combined_times, default=0.0),
+                "by_component": {k: min(v, default=0.0) for k, v in component_data.items()},
+            },
+        }
+
+    @computed_field
+    def timing_summary(self) -> TimingStatisticsDict:
+        """Get a summary of timing statistics."""
+        # Compute all statistics for component-based requests once
+        tool_stats = self._compute_for_mcp_timing_dict("on_call_tool_requests")
+        resource_stats = self._compute_for_mcp_timing_dict("on_read_resource_requests")
+        prompt_stats = self._compute_for_mcp_timing_dict("on_get_prompt_requests")
+
+        # Helper for simple list-based statistics
+        def safe_mean(data: list[PositiveFloat]) -> NonNegativeFloat:
+            return statistics.mean(data) if data else 0.0
+
+        def safe_median(data: list[PositiveFloat]) -> NonNegativeFloat:
+            return statistics.median(data) if data else 0.0
+
+        def safe_max(data: list[PositiveFloat]) -> NonNegativeFloat:
+            return max(data) if data else 0.0
+
+        def safe_min(data: list[PositiveFloat]) -> NonNegativeFloat:
+            return min(data) if data else 0.0
+
+        return {
+            "averages": {
+                "on_call_tool_requests": tool_stats["averages"],
+                "on_read_resource_requests": resource_stats["averages"],
+                "on_get_prompt_requests": prompt_stats["averages"],
+                "on_list_tools_requests": safe_mean(self.on_list_tools_requests),
+                "on_list_resources_requests": safe_mean(self.on_list_resources_requests),
+                "on_list_resource_templates_requests": safe_mean(
+                    self.on_list_resource_templates_requests
+                ),
+                "on_list_prompts_requests": safe_mean(self.on_list_prompts_requests),
+            },
+            "counts": {
+                "on_call_tool_requests": tool_stats["counts"],
+                "on_read_resource_requests": resource_stats["counts"],
+                "on_get_prompt_requests": prompt_stats["counts"],
                 "on_list_tools_requests": len(self.on_list_tools_requests),
                 "on_list_resources_requests": len(self.on_list_resources_requests),
                 "on_list_resource_templates_requests": len(
@@ -165,75 +250,37 @@ class TimingStatistics:
                 "on_list_prompts_requests": len(self.on_list_prompts_requests),
             },
             "lows": {
-                "on_call_tool_requests": min(self.on_call_tool_requests)
-                if self.on_call_tool_requests
-                else 0.0,
-                "on_read_resource_requests": min(self.on_read_resource_requests)
-                if self.on_read_resource_requests
-                else 0.0,
-                "on_get_prompt_requests": min(self.on_get_prompt_requests)
-                if self.on_get_prompt_requests
-                else 0.0,
-                "on_list_tools_requests": min(self.on_list_tools_requests)
-                if self.on_list_tools_requests
-                else 0.0,
-                "on_list_resources_requests": min(self.on_list_resources_requests)
-                if self.on_list_resources_requests
-                else 0.0,
-                "on_list_resource_templates_requests": min(self.on_list_resource_templates_requests)
-                if self.on_list_resource_templates_requests
-                else 0.0,
-                "on_list_prompts_requests": min(self.on_list_prompts_requests)
-                if self.on_list_prompts_requests
-                else 0.0,
+                "on_call_tool_requests": tool_stats["lows"],
+                "on_read_resource_requests": resource_stats["lows"],
+                "on_get_prompt_requests": prompt_stats["lows"],
+                "on_list_tools_requests": safe_min(self.on_list_tools_requests),
+                "on_list_resources_requests": safe_min(self.on_list_resources_requests),
+                "on_list_resource_templates_requests": safe_min(
+                    self.on_list_resource_templates_requests
+                ),
+                "on_list_prompts_requests": safe_min(self.on_list_prompts_requests),
             },
             "medians": {
-                "on_call_tool_requests": statistics.median(self.on_call_tool_requests)
-                if self.on_call_tool_requests
-                else 0.0,
-                "on_read_resource_requests": statistics.median(self.on_read_resource_requests)
-                if self.on_read_resource_requests
-                else 0.0,
-                "on_get_prompt_requests": statistics.median(self.on_get_prompt_requests)
-                if self.on_get_prompt_requests
-                else 0.0,
-                "on_list_tools_requests": statistics.median(self.on_list_tools_requests)
-                if self.on_list_tools_requests
-                else 0.0,
-                "on_list_resources_requests": statistics.median(self.on_list_resources_requests)
-                if self.on_list_resources_requests
-                else 0.0,
-                "on_list_resource_templates_requests": statistics.median(
+                "on_call_tool_requests": tool_stats["medians"],
+                "on_read_resource_requests": resource_stats["medians"],
+                "on_get_prompt_requests": prompt_stats["medians"],
+                "on_list_tools_requests": safe_median(self.on_list_tools_requests),
+                "on_list_resources_requests": safe_median(self.on_list_resources_requests),
+                "on_list_resource_templates_requests": safe_median(
                     self.on_list_resource_templates_requests
-                )
-                if self.on_list_resource_templates_requests
-                else 0.0,
-                "on_list_prompts_requests": statistics.median(self.on_list_prompts_requests)
-                if self.on_list_prompts_requests
-                else 0.0,
+                ),
+                "on_list_prompts_requests": safe_median(self.on_list_prompts_requests),
             },
             "highs": {
-                "on_call_tool_requests": max(self.on_call_tool_requests)
-                if self.on_call_tool_requests
-                else 0.0,
-                "on_read_resource_requests": max(self.on_read_resource_requests)
-                if self.on_read_resource_requests
-                else 0.0,
-                "on_get_prompt_requests": max(self.on_get_prompt_requests)
-                if self.on_get_prompt_requests
-                else 0.0,
-                "on_list_tools_requests": max(self.on_list_tools_requests)
-                if self.on_list_tools_requests
-                else 0.0,
-                "on_list_resources_requests": max(self.on_list_resources_requests)
-                if self.on_list_resources_requests
-                else 0.0,
-                "on_list_resource_templates_requests": max(self.on_list_resource_templates_requests)
-                if self.on_list_resource_templates_requests
-                else 0.0,
-                "on_list_prompts_requests": max(self.on_list_prompts_requests)
-                if self.on_list_prompts_requests
-                else 0.0,
+                "on_call_tool_requests": tool_stats["highs"],
+                "on_read_resource_requests": resource_stats["highs"],
+                "on_get_prompt_requests": prompt_stats["highs"],
+                "on_list_tools_requests": safe_max(self.on_list_tools_requests),
+                "on_list_resources_requests": safe_max(self.on_list_resources_requests),
+                "on_list_resource_templates_requests": safe_max(
+                    self.on_list_resource_templates_requests
+                ),
+                "on_list_prompts_requests": safe_max(self.on_list_prompts_requests),
             },
         }
 
@@ -245,8 +292,10 @@ class _LanguageStatistics:
     """Statistics for a specific language within a category."""
 
     language: Annotated[
-        str,
-        Field(description="Lower case string name for the language, e.g. 'python', 'javascript'."),
+        str | SemanticSearchLanguage | ConfigLanguage,
+        Field(
+            description="`SemanticSearchLanguage` member, `ConfigLanguage` member, or string representing the language."
+        ),
     ]
     indexed: Annotated[
         NonNegativeInt, Field(description="Number of files indexed for this language.")
@@ -267,12 +316,12 @@ class _LanguageStatistics:
         Annotated[set[Path], Field(default_factory=set, init=False, repr=False, exclude=True)]
     ] = set()
 
-    @property
+    @computed_field
     def unique_count(self) -> NonNegativeInt:
         """Get the number of unique files for this language (excluding skipped)."""
         return len(self.unique_files) if self.unique_files else 0
 
-    @property
+    @computed_field
     def total_operations(self) -> NonNegativeInt:
         """Get the total number of operations for this language."""
         return self.indexed + self.retrieved + self.processed + self.reindexed + self.skipped
@@ -299,10 +348,13 @@ LanguageSummary = dict[OperationsKey | SummaryKey, NonNegativeInt]
 
 
 @cache
-def to_semantic_lang(lang: str) -> SemanticSearchLanguage | None:
-    """Convert a language string to a SemanticSearchLanguage."""
-    with contextlib.suppress(KeyError):
-        return SemanticSearchLanguage.from_string(lang)
+def normalize_language(language: str) -> str | SemanticSearchLanguage | ConfigLanguage:
+    """Normalize a language string to a SemanticSearchLanguage or ConfigLanguage."""
+    if language in SemanticSearchLanguage.values():
+        return SemanticSearchLanguage.from_string(language)
+    if language in ConfigLanguage.values():
+        return ConfigLanguage.from_string(language)
+    return language
 
 
 @dataclass(
@@ -312,18 +364,27 @@ class _CategoryStatistics:
     """Statistics for a file category (code, config, docs, other)."""
 
     category: Annotated[
-        CategoryKey, Field(description="The category of the files (code, config, docs, other).")
+        ChunkKind,
+        Field(
+            description="The category of the files, e.g. 'code', 'config', 'docs', 'other'. A [`_data_structures.ChunkKind`] member."
+        ),
     ]
     languages: Annotated[
-        dict[str, _LanguageStatistics],
+        dict[str | SemanticSearchLanguage | ConfigLanguage, _LanguageStatistics],
         Field(
             default_factory=dict,
-            description="Language statistics in this category. Keys are language names, values are _LanguageStatistics objects.",
+            description="Language statistics in this category. Keys are language names, SemanticSearchLanguage members, or ConfigLanguage members; values are _LanguageStatistics objects.",
         ),
     ]
 
-    def get_language_stats(self, language: str) -> _LanguageStatistics:
+    def get_language_stats(
+        self, language: str | SemanticSearchLanguage | ConfigLanguage
+    ) -> _LanguageStatistics:
         """Get or create language statistics for this category."""
+        if isinstance(language, str) and not isinstance(
+            language, (SemanticSearchLanguage | ConfigLanguage)
+        ):
+            language = normalize_language(language)
         if language not in self.languages:
             self.languages[language] = _LanguageStatistics(language=language)
         return self.languages[language]
@@ -336,24 +397,38 @@ class _CategoryStatistics:
             all_files.update(lang_stats.unique_files)
         return len(all_files)
 
-    @property
-    def _semantic_languages(self) -> frozenset[SemanticSearchLanguage]:
+    @computed_field(return_type=dict[SemanticSearchLanguage, _LanguageStatistics])
+    def semantic_languages(self) -> MappingProxyType[SemanticSearchLanguage, _LanguageStatistics]:
         """Get all semantic search languages in this category."""
-        if (
-            semantic_languages := [
-                to_semantic_lang(lang) for lang in self.languages if to_semantic_lang(lang)
-            ]
-        ) and (filtered_languages := frozenset(filter(None, semantic_languages))):
-            return filtered_languages
-        return frozenset()
+        # This is verbose to keep the type checker happy
+        filtered_languages: set[SemanticSearchLanguage | ConfigLanguage | None] = {
+            lang.as_semantic_search_language
+            if isinstance(lang, ConfigLanguage)
+            else (lang if isinstance(lang, SemanticSearchLanguage) else None)
+            for lang in self.languages
+            if lang
+        }
+        filtered_languages.discard(None)
+        mapped_languages: dict[SemanticSearchLanguage, _LanguageStatistics] = {}
+        for lang in filtered_languages:
+            if isinstance(lang, SemanticSearchLanguage):
+                mapped_languages[lang] = self.languages[lang]
+            elif isinstance(lang, ConfigLanguage):
+                mapped_languages[cast(SemanticSearchLanguage, lang.as_semantic_search_language)] = (
+                    self.languages[lang]
+                )
+        return MappingProxyType(mapped_languages)
+
+    @property
+    def _semantic_language_values(self) -> frozenset[str]:
+        """Get the string values of all semantic search languages in this category."""
+        return frozenset(lang.value for lang in self.semantic_languages())
 
     @property
     def operations_with_semantic_support(self) -> NonNegativeInt:
         """Get the total operations with semantic support across all languages in this category."""
         return sum(
-            lang_stats.total_operations
-            for lang_stats in self.languages.values()
-            if lang_stats.language in SemanticSearchLanguage.values()
+            lang_stats.total_operations() for lang_stats in self.semantic_languages().values()
         )
 
     @property
@@ -367,14 +442,25 @@ class _CategoryStatistics:
     @property
     def total_operations(self) -> NonNegativeInt:
         """Get the total operations across all languages in this category."""
-        return sum(lang_stats.total_operations for lang_stats in self.languages.values())
+        return sum(lang_stats.total_operations() for lang_stats in self.languages.values())
 
     def add_operation(
-        self, language: str, operation: OperationsKey, path: Path | None = None
+        self,
+        language: str | SemanticSearchLanguage | ConfigLanguage,
+        operation: OperationsKey,
+        path: Path | None = None,
     ) -> None:
         """Add an operation for a specific language in this category."""
         lang_stats = self.get_language_stats(language)
         lang_stats.add_operation(operation, path)
+
+    @classmethod
+    def from_ext_kind(cls, ext_kind: ExtKind) -> _CategoryStatistics:
+        """Create a _CategoryStatistics from an ExtKind."""
+        return cls(
+            category=ext_kind.kind,
+            languages={ext_kind.language: _LanguageStatistics(language=ext_kind.language)},
+        )
 
 
 @dataclass(
@@ -383,38 +469,34 @@ class _CategoryStatistics:
 class FileStatistics:
     """Comprehensive file statistics tracking categories, languages, and operations."""
 
-    categories: dict[CategoryKey, _CategoryStatistics] = Field(
+    categories: dict[ChunkKind, _CategoryStatistics] = Field(
         default_factory=lambda: {
-            "code": _CategoryStatistics(category="code", languages={}),
-            "config": _CategoryStatistics(category="config", languages={}),
-            "docs": _CategoryStatistics(category="docs", languages={}),
-            "other": _CategoryStatistics(category="other", languages={}),
+            ChunkKind.CODE: _CategoryStatistics(category=ChunkKind.CODE, languages={}),
+            ChunkKind.CONFIG: _CategoryStatistics(category=ChunkKind.CONFIG, languages={}),
+            ChunkKind.DOCS: _CategoryStatistics(category=ChunkKind.DOCS, languages={}),
+            ChunkKind.OTHER: _CategoryStatistics(category=ChunkKind.OTHER, languages={}),
         }
     )
 
-    # TODO: This needs to come from the config; it consists of any optional includes the user sets
     _other_files: ClassVar[
         Annotated[set[Path], Field(default_factory=set, init=False, repr=False, exclude=True)]
     ] = set()
 
-    def add_file(self, path: Path, operation: OperationsKey) -> None:
+    def add_file(
+        self, path: Path, operation: OperationsKey, ext_kind: ExtKind | None = None
+    ) -> None:
         """Add a file operation, automatically categorizing by extension."""
         if not path.is_file():
             raise ValueError(f"{path} is not a valid file")
-
         # Use ExtKind to determine file category and language
-        if ext_kind := ExtKind.from_file(path):
-            # Convert ExtKind.kind to our CategoryKey
-            category_map = {"code": "code", "config": "config", "docs": "docs", "other": "other"}
-            category = category_map.get(ext_kind.kind.value, "other")
-            language = str(ext_kind.language)
-            self.categories[cast(CategoryKey, category)].add_operation(language, operation, path)
+        if ext_kind := ext_kind or ExtKind.from_file(path):
+            category = ext_kind.kind
+            language = ext_kind.language
+            self.categories[category].add_operation(language, operation, path)
         elif self._other_files and path in self._other_files:
             # Handle explicitly added "other" files
             language_name = f".{path.stem}" if "." in path.name else path.name
-            self.categories[cast(CategoryKey, "other")].add_operation(
-                language_name, operation, path
-            )
+            self.categories[ChunkKind.OTHER].add_operation(language_name, operation, path)
 
     def add_other_files(self, *files: Path) -> None:
         """Add files to the 'other' category."""
@@ -435,7 +517,7 @@ class FileStatistics:
         """Get the total operations across all categories."""
         return sum(cat_stats.total_operations for cat_stats in self.categories.values())
 
-    def get_summary_by_category(self) -> dict[CategoryKey, dict[str, NonNegativeInt]]:
+    def get_summary_by_category(self) -> dict[ChunkKind, dict[str, NonNegativeInt]]:
         """Get a summary of unique files and operations by category."""
         return {
             category: {
@@ -446,26 +528,32 @@ class FileStatistics:
             for category, cat_stats in self.categories.items()
         }
 
-    def get_summary_by_language(self) -> MappingProxyType[str, LanguageSummary]:
+    def get_summary_by_language(
+        self,
+    ) -> MappingProxyType[str | SemanticSearchLanguage | ConfigLanguage, LanguageSummary]:
         """Get a summary of statistics by language across all categories."""
-        language_summary: dict[str, LanguageSummary] = defaultdict(
-            lambda: {
-                "unique_files": 0,
-                "total_operations": 0,
-                "indexed": 0,
-                "retrieved": 0,
-                "processed": 0,
-                "reindexed": 0,
-                "skipped": 0,
-            }
+        language_summary: dict[str | SemanticSearchLanguage | ConfigLanguage, LanguageSummary] = (
+            defaultdict(
+                lambda: {
+                    "unique_files": 0,
+                    "total_operations": 0,
+                    "indexed": 0,
+                    "retrieved": 0,
+                    "processed": 0,
+                    "reindexed": 0,
+                    "skipped": 0,
+                }
+            )
         )
 
-        all_files_by_language: dict[str, set[Path]] = defaultdict(set)
+        all_files_by_language: dict[str | SemanticSearchLanguage | ConfigLanguage, set[Path]] = (
+            defaultdict(set)
+        )
 
         for cat_stats in self.categories.values():
             for lang, lang_stats in cat_stats.languages.items():
                 all_files_by_language[lang].update(lang_stats.unique_files)
-                language_summary[lang]["unique_files"] += lang_stats.unique_count
+                language_summary[lang]["unique_files"] += lang_stats.unique_count()
                 language_summary[lang] = self._summarize_stats_for_language(lang_stats)
 
         return MappingProxyType(language_summary)
@@ -473,7 +561,7 @@ class FileStatistics:
     def _summarize_stats_for_language(self, lang_stats: _LanguageStatistics) -> LanguageSummary:
         """Summarize language statistics into the overall language summary."""
         return {
-            "total_operations": lang_stats.total_operations,
+            "total_operations": lang_stats.total_operations(),
             "indexed": lang_stats.indexed,
             "retrieved": lang_stats.retrieved,
             "processed": lang_stats.processed,
@@ -579,19 +667,37 @@ class SessionStatistics:
 
     def __post_init__(self) -> None:
         """Post-initialization processing."""
+        if not self.index_statistics:
+            self.index_statistics = FileStatistics()
         if not self.token_statistics:
             self.token_statistics = TokenCounter()
-        self.timing_statistics = TimingStatistics([], [], [], [], [], [], [])
-        for field in ("total_requests", "successful_requests", "failed_requests"):
-            if getattr(self, field) is None:
-                setattr(self, field, 0)
+        self.timing_statistics = TimingStatistics(
+            on_call_tool_requests={},
+            on_read_resource_requests={},
+            on_get_prompt_requests={},
+            on_list_tools_requests=[],
+            on_list_resources_requests=[],
+            on_list_resource_templates_requests=[],
+            on_list_prompts_requests=[],
+        )
+        self.successful_requests = self.successful_requests or 0
+        self.failed_requests = self.failed_requests or 0
+        self.total_requests = self.total_requests or 0
 
-    def get_timing_statistics(self) -> TimingRequestsDict:
+    def get_timing_statistics(self) -> TimingStatisticsDict:
         """Get the current timing statistics."""
         if self.timing_statistics:
             return self.timing_statistics.timing_summary()
-        self.timing_statistics = TimingStatistics([], [], [], [], [], [], [])
-        return {}
+        self.timing_statistics = TimingStatistics(
+            on_call_tool_requests={},
+            on_read_resource_requests={},
+            on_get_prompt_requests={},
+            on_list_tools_requests=[],
+            on_list_resources_requests=[],
+            on_list_resource_templates_requests=[],
+            on_list_prompts_requests=[],
+        )
+        return self.timing_statistics.timing_summary()
 
     def add_successful_request(self) -> None:
         """Add a successful request count."""
@@ -616,7 +722,8 @@ class SessionStatistics:
         else:
             self.failed_requests += 1
 
-    def get_success_rate(self) -> NonNegativeFloat | None:
+    @computed_field
+    def success_rate(self) -> NonNegativeFloat | None:
         """Calculate the success rate of requests."""
         if self.total_requests and self.total_requests > 0:
             return (self.successful_requests or 0) / self.total_requests
@@ -666,6 +773,14 @@ class SessionStatistics:
         self.total_requests = None
         self.successful_requests = None
         self.failed_requests = None
-        self._response_times = None
+        self.timing_statistics = TimingStatistics(
+            on_call_tool_requests={},
+            on_read_resource_requests={},
+            on_get_prompt_requests={},
+            on_list_tools_requests=[],
+            on_list_resources_requests=[],
+            on_list_resource_templates_requests=[],
+            on_list_prompts_requests=[],
+        )
         self.index_statistics = FileStatistics()
         self.token_statistics = TokenCounter()
