@@ -139,6 +139,7 @@ ignore = [
     "Q001",
     "Q002",
     "Q003",
+    "PYI051", # redundant annotation with Literal and str -- we like to be explicit here
     "COM812",
     "COM819",
     "ISC001",
