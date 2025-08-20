@@ -27,11 +27,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENSIONS
 from codeweaver._settings import (
+    AgentProviderSettings,
     DataProviderSettings,
+    EmbeddingModelSettings,
+    EmbeddingProviderSettings,
     LoggingSettings,
     MiddlewareOptions,
     Provider,
     ProviderKind,
+    RerankingModelSettings,
+    RerankingProviderSettings,
     UvicornServerSettings,
     default_config_file_locations,
 )
@@ -43,6 +48,29 @@ DefaultDataProviderSettings = (
     DataProviderSettings(provider=Provider.TAVILY, enabled=False, api_key=None, extra=None),
     # DuckDuckGo
     DataProviderSettings(provider=Provider.DUCKDUCKGO, enabled=True, api_key=None, extra=None),
+)
+
+DefaultEmbeddingProviderSettings = (
+    EmbeddingProviderSettings(
+        provider=Provider.VOYAGE,
+        enabled=True,
+        model_settings=EmbeddingModelSettings(model="voyage-code-3"),
+    ),
+)
+
+DefaultRerankingProviderSettings = (
+    RerankingProviderSettings(
+        provider=Provider.VOYAGE,
+        enabled=True,
+        model_settings=RerankingModelSettings(model="rerank-2.5"),
+    ),
+)
+
+DefaultAgentProviderSettings = AgentProviderSettings(
+    provider=Provider.ANTHROPIC,
+    enabled=True,
+    models=("claude-sonnet-4-latest",),
+    model_settings=AgentModelSettings(),
 )
 
 
@@ -116,20 +144,22 @@ class ProviderSettings(BaseModel):
         tuple[DataProviderSettings, ...] | None, Field(description="Data provider configuration")
     ] = DefaultDataProviderSettings
 
-    """ COMMENTED OUT WHILE IMPLEMENTING...
     embedding: Annotated[
         tuple[EmbeddingProviderSettings, ...], Field(description="Embedding provider configuration")
-    ] = (VoyageEmbeddingProviderSettings(),)
+    ] = DefaultEmbeddingProviderSettings
 
+    reranking: Annotated[
+        tuple[RerankingProviderSettings, ...], Field(description="Reranking provider configuration")
+    ] = DefaultRerankingProviderSettings
+    """
     vector: Annotated[
         tuple[BaseVectorStoreConfig, ...],
         Field(default_factory=QdrantVectorStore, description="Vector store provider configuration"),
     ] = QdrantConfig()
-
+    """
     agent: Annotated[
         tuple[AgentProviderSettings, ...] | None, Field(description="Agent provider configuration")
-    ] = (DefaultAgentProviderSettings(),) = None
-    """
+    ] = DefaultAgentProviderSettings
 
 
 class FastMcpServerSettings(BaseModel):

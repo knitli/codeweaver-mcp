@@ -14,18 +14,14 @@ from __future__ import annotations as _annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, fields, replace
-from typing import Self
+from typing import Annotated, Self
 
-from pydantic_ai.profiles import InlineDefsJsonSchemaTransformer, JsonSchemaTransformer
+from pydantic import Field
+
+from codeweaver.embedding import EmbeddingModelCapabilities
 
 
-__all__ = [
-    "DEFAULT_PROFILE",
-    "EmbeddingModelProfile",
-    "EmbeddingModelProfileSpec",
-    "InlineDefsJsonSchemaTransformer",
-    "JsonSchemaTransformer",
-]
+__all__ = ["DEFAULT_PROFILE", "EmbeddingModelProfile", "EmbeddingModelProfileSpec"]
 
 # This is a placeholder implementation for the embedding model profile.
 # We need to create the profiles for the providers and finish the factory function here.
@@ -33,16 +29,26 @@ __all__ = [
 
 
 @dataclass
-class EmbeddingModelProfile:
+class EmbeddingModelProfile[EmbeddingModelCapabilities]:
     """Describes how requests to a specific model or family of models need to be constructed to get the best results, independent of the model and provider classes used."""
 
-    @classmethod
-    def from_profile(cls, profile: EmbeddingModelProfile | None) -> Self:
-        """Build a ModelProfile subclass instance from a ModelProfile instance."""
-        return profile if isinstance(profile, cls) else cls().update(profile)
+    _capabilities: Annotated[
+        EmbeddingModelCapabilities, Field(default_factory=EmbeddingModelCapabilities.default)
+    ]
 
-    def update(self, profile: EmbeddingModelProfile | None) -> Self:
-        """Update this EmbeddingModelProfile (subclass) instance with the non-default values from another ModelProfile instance."""
+    @classmethod
+    def from_profile(
+        cls, profile: EmbeddingModelProfile[EmbeddingModelCapabilities] | None
+    ) -> Self:
+        """Build a ModelProfile subclass instance from a ModelProfile instance."""
+        return (
+            profile
+            if isinstance(profile, cls)
+            else cls(EmbeddingModelCapabilities()).update(profile)
+        )
+
+    def update(self, profile: EmbeddingModelProfile[EmbeddingModelCapabilities] | None) -> Self:
+        """Update this EmbeddingModelProfile (subclass) instance with the non-default values from another EmbeddingModelProfile instance."""
         if not profile:
             return self
         field_names = {f.name for f in fields(self)}
@@ -55,7 +61,8 @@ class EmbeddingModelProfile:
 
 
 type EmbeddingModelProfileSpec = (
-    EmbeddingModelProfile | Callable[[str], EmbeddingModelProfile | None]
+    EmbeddingModelProfile[EmbeddingModelCapabilities]
+    | Callable[[str], EmbeddingModelProfile[EmbeddingModelCapabilities] | None]
 )
 
-DEFAULT_PROFILE = EmbeddingModelProfile()
+DEFAULT_PROFILE = EmbeddingModelProfile(EmbeddingModelCapabilities())

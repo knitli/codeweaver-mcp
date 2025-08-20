@@ -259,12 +259,31 @@ class MiddlewareOptions(TypedDict, total=False):
 # ===========================================================================
 
 
+class ConnectionRateLimitConfig(TypedDict, total=False):
+    """Settings for connection rate limiting."""
+
+    max_requests_per_second: PositiveInt | None
+    burst_capacity: PositiveInt | None
+    backoff_multiplier: PositiveFloat | None
+    max_retries: PositiveInt | None
+
+
+class ConnectionConfiguration(TypedDict, total=False):
+    """Settings for connection configuration. Only required for non-default transports."""
+
+    host: str | None
+    port: PositiveInt | None
+    headers: NotRequired[dict[str, str] | None]
+    rate_limits: NotRequired[ConnectionRateLimitConfig | None]
+
+
 class BaseProviderSettings(TypedDict, total=False):
     """Base settings for all providers."""
 
     provider: Required[Provider]
     enabled: Required[bool]
     api_key: NotRequired[LiteralString | None]
+    connection: NotRequired[ConnectionConfiguration | None]
     extra: NotRequired[dict[str, Any] | None]
 
 
@@ -272,37 +291,44 @@ class DataProviderSettings(BaseProviderSettings):
     """Settings for data providers."""
 
 
-class EmbeddingModelSettings:
-    """Embedding model settings stub."""
+class EmbeddingModelSettings(TypedDict, total=False):
+    """Embedding model settings."""
+
+    model: Required[str]
+    dimension: NotRequired[PositiveInt | None]
+    data_type: NotRequired[str | None]
+    custom_prompt: NotRequired[str | None]
 
 
-class RerankModelSettings:
-    """Rerank model settings stub."""
+class RerankingModelSettings(TypedDict, total=False):
+    """Rerank model settings."""
+
+    model: Required[str]
+    custom_prompt: NotRequired[str | None]
 
 
 class EmbeddingProviderSettings(BaseProviderSettings):
     """Settings for embedding models."""
 
-    model: Required[str]
-    model_settings: NotRequired[EmbeddingModelSettings | None]
+    model_settings: Required[EmbeddingModelSettings | None]
 
 
-class RerankProviderSettings(BaseProviderSettings):
+class RerankingProviderSettings(BaseProviderSettings):
     """Settings for re-ranking models."""
 
-    models: Required[str | tuple[str, ...]]  # Tuple of model names
-    """A model name or a tuple of model names to use for re-ranking in order of preference."""
-    model_settings: NotRequired[RerankModelSettings | tuple[RerankModelSettings, ...] | None]
+    model_settings: Required[RerankingModelSettings | tuple[RerankingModelSettings, ...] | None]
     """Settings for the re-ranking model(s)."""
-    extra: NotRequired[dict[str, Any] | None]
+    top_k: NotRequired[PositiveInt | None]
+
+
+# Agent model settings are imported/defined from `pydantic_ai`
 
 
 class AgentProviderSettings(BaseProviderSettings):
     """Settings for agent models."""
 
-    models: Required[str | tuple[str, ...]]
-    """A model name or a tuple of model names to use for agent in order of preference."""
-    model_settings: NotRequired[AgentModelSettings | tuple[AgentModelSettings, ...] | None]
+    models: Required[tuple[str, ...] | str | None]
+    model_settings: Required[AgentModelSettings | tuple[AgentModelSettings, ...] | None]
     """Settings for the agent model(s)."""
 
 
@@ -563,7 +589,7 @@ class ProviderKind(BaseEnum):
         if self == ProviderKind.EMBEDDING:
             return EmbeddingProviderSettings
         if self == ProviderKind.RERANKING:
-            return RerankProviderSettings
+            return RerankingProviderSettings
         if self == ProviderKind.AGENT:
             return AgentProviderSettings
         raise ConfigurationError(f"ProviderKind {self} does not have a settings object.")

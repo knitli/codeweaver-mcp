@@ -45,15 +45,23 @@ from codeweaver._utils import normalize_ext
 from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
 
 
-class SearchResult(BaseModel):
-    """Result from vector search operations."""
+class ChunkKind(BaseEnum):
+    """Represents the kind of a code chunk."""
 
-    file_path: Path
-    content: str
-    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
-    metadata: Annotated[
-        Metadata | None, Field(description="Additional metadata about the result")
-    ] = None
+    CODE = "code"
+    CONFIG = "config"
+    DOCS = "docs"
+    OTHER = "other"
+
+
+class ChunkType(BaseEnum):
+    """Represents the type of a code chunk -- basically how it was extracted."""
+
+    TEXT_BLOCK = "text_block"
+    FILE = "file"  # the whole file is the chunk
+    SEMANTIC = "semantic"  # semantic chunking, e.g. from AST nodes
+    EXAMPLE = "example"  # from example files or documentation examples
+    RESEARCH = "research"  # from internet or similar research sources, not from code files
 
 
 class SemanticMetadata(TypedDict, total=False):
@@ -96,6 +104,17 @@ class Metadata(TypedDict, total=False):
     ]
 
 
+class SearchResult(BaseModel):
+    """Result from vector search operations."""
+
+    file_path: Path
+    content: str | CodeChunk
+    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
+    metadata: Annotated[
+        Metadata | None, Field(description="Additional metadata about the result")
+    ] = None
+
+
 class CodeChunk(BaseModel):
     """Represents a chunk of code with metadata."""
 
@@ -108,7 +127,7 @@ class CodeChunk(BaseModel):
         ),
     ] = None
     language: SemanticSearchLanguage | LiteralString | None = None
-    chunk_type: str = "text_block"  # For Phase 1, simple text blocks
+    chunk_type: ChunkType = ChunkType.TEXT_BLOCK  # For Phase 1, simple text blocks
     timestamp: Annotated[
         PositiveFloat,
         Field(
@@ -123,6 +142,10 @@ class CodeChunk(BaseModel):
             default_factory=uuid4, kw_only=True, description="Unique identifier for the code chunk"
         ),
     ] = uuid4()
+    parent_id: Annotated[
+        UUID4 | None,
+        Field(default=None, description="Parent chunk ID, such as the file ID, if applicable"),
+    ] = None
     metadata: Annotated[
         Metadata | None,
         Field(
@@ -170,15 +193,6 @@ def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
     ):
         return found_lang
     return None
-
-
-class ChunkKind(BaseEnum):
-    """Represents the kind of a code chunk."""
-
-    CODE = "code"
-    CONFIG = "config"
-    DOCS = "docs"
-    OTHER = "other"
 
 
 class ExtKind(NamedTuple):

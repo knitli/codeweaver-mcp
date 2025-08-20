@@ -18,7 +18,7 @@ from fastmcp.server.middleware.error_handling import ErrorHandlingMiddleware, Re
 from fastmcp.server.middleware.logging import LoggingMiddleware, StructuredLoggingMiddleware
 from fastmcp.server.middleware.middleware import Middleware
 from fastmcp.server.middleware.rate_limiting import RateLimitingMiddleware
-from pydantic import ConfigDict, Field, NonNegativeInt
+from pydantic import ConfigDict, Field, NonNegativeInt, computed_field
 from pydantic.dataclasses import dataclass
 
 from codeweaver import __version__ as version
@@ -35,7 +35,7 @@ from codeweaver._settings import (
     UvicornServerSettings,
     UvicornServerSettingsType,
 )
-from codeweaver._settings_registry import get_provider_registry
+from codeweaver._settings_registry import ProviderRegistry, get_provider_registry
 from codeweaver._statistics import SessionStatistics
 from codeweaver._utils import rpartial
 from codeweaver.middleware import StatisticsMiddleware
@@ -49,6 +49,40 @@ from codeweaver.settings import (
 
 _STORE: dict[Literal["settings", "runargs", "server", "lifespan_func", "app_start_func"], Any]
 _STATE: AppState | None = None
+
+
+def get_state() -> AppState:
+    """Get the current application state."""
+    global _STATE
+    if _STATE is None:
+        raise RuntimeError("Application state has not been initialized.")
+    return _STATE
+
+
+def get_store() -> dict[
+    Literal["settings", "runargs", "server", "lifespan_func", "app_start_func"], Any
+]:
+    """Get the current application store."""
+    global _STORE
+    if _STORE is None:  # type: ignore  # we're going to check anyway
+        raise RuntimeError("Application store has not been initialized.")
+    return _STORE
+
+
+def get_statistics() -> SessionStatistics:
+    """Get the current session statistics."""
+    state = get_state()
+    if not state.statistics:
+        raise RuntimeError("Session statistics have not been initialized.")
+    return state.statistics
+
+
+def get_health_info() -> HealthInfo:
+    """Get the current health information."""
+    state = get_state()
+    if not state.health:
+        raise RuntimeError("Health information has not been initialized.")
+    return state.health
 
 
 @dataclass(order=True, kw_only=True, config=ConfigDict(extra="forbid", str_strip_whitespace=True))
@@ -169,18 +203,17 @@ class AppState:
 
     # Provider registry integration
     registry: Annotated[
-        Any, Field(description="Provider registry for dynamic provider management")
-    ] = None
+        ProviderRegistry,
+        Field(
+            default_factory=ProviderRegistry.get_instance,
+            description="Provider registry for dynamic provider management",
+        ),
+    ]
 
     # Statistics and performance tracking
     statistics: Annotated[
         SessionStatistics, Field(description="Session statistics and performance tracking")
     ] = Field(default_factory=SessionStatistics)
-
-    # Request tracking
-    request_count: Annotated[
-        NonNegativeInt, Field(description="Total number of requests processed")
-    ] = 0
 
     # Health status
     health: Annotated[HealthInfo, Field(description="Health status information")] = HealthInfo()
@@ -199,6 +232,16 @@ class AppState:
     def __post_init__(self) -> None:
         global _STATE
         _STATE = self  # type: ignore  # Store the state globally for easy access
+
+    @computed_field
+    @property
+    def request_count(self) -> NonNegativeInt:
+        """Computed field for the number of requests handled by the server."""
+        return (
+            self.statistics.total_requests
+            if self.statistics and self.statistics.total_requests is not None
+            else 0
+        )
 
 
 @asynccontextmanager

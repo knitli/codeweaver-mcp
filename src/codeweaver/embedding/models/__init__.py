@@ -8,183 +8,93 @@
 # applies to new/modified code in this directory (`src/codeweaver/embedding/`)
 """Entrypoint for CodeWeaver's heavily-pydantic-ai-inspired embedding model system."""
 
-from codeweaver.embedding.profiles import EmbeddingModelProfile
+from collections.abc import Callable, Sequence
+from typing import Annotated, Literal, Self
+
+from pydantic import BaseModel, Field, PositiveInt, SecretStr
+
+from codeweaver._data_structures import CodeChunk
+from codeweaver._settings import Provider
 
 
-class EmbeddingModelSettings: ...
+class EmbeddingModelCapabilities(BaseModel):
+    """Describes the capabilities of an embedding model, such as the default dimension."""
 
+    name: Annotated[
+        str, Field(min_length=3, description="The name of the model or family of models.")
+    ] = ""
+    provider: Annotated[
+        Provider,
+        Field(
+            description="The provider of the model. Since available settings vary across providers, each capabilities instance is tied to a provider."
+        ),
+    ] = Provider._UNSET  # type: ignore
+    output_transformer: Callable[..., Sequence[CodeChunk]] | None = None
+    version: Annotated[
+        str | int | None,
+        Field(
+            description="The version of the model, if applicable. Can be a string or an integer. If not specified, defaults to `None`."
+        ),
+    ] = None
+    default_dimension: Annotated[PositiveInt, Field(multiple_of=8)] = 512
+    output_dimensions: Annotated[
+        tuple[PositiveInt, ...] | None,
+        Field(
+            multiple_of=8,
+            description="Supported output dimensions, if the model and provider support multiple output dimensions. If not specified, defaults to `None`.",
+        ),
+    ] = None
+    default_dtype: Annotated[
+        str | None,
+        Field(
+            description="A string representing the default data type of the model, such as `float`, if the provider/model accepts different data types. If not specified, defaults to `None`."
+        ),
+    ] = None
+    output_dtypes: Annotated[
+        tuple[str, ...] | None,
+        Field(
+            description="A list of accepted values for output data types, if the model/provider allows different output data types. When available, you can use this to reduce the size of the returned vectors, at the cost of some accuracy (depending on which you choose).",
+            examples=[
+                "VoyageAI: `('float', 'uint8', 'int8', 'binary', 'ubinary')` for the voyage 3-series models."
+            ],
+        ),
+    ] = None
+    api_key: Annotated[
+        SecretStr | None, Field(description="The API key for the model, if required.")
+    ] = None
+    requires_api_key: bool = False
+    supports_batching: bool = False
+    is_normalized: bool = False
+    context_window: Annotated[PositiveInt, Field(ge=256)] = 512
+    supports_context_chunk_embedding: bool = False
+    tokenizer: Literal["tokenizers", "tiktoken"] | None = None
+    tokenizer_model: Annotated[
+        str | None,
+        Field(
+            min_length=3,
+            description="The tokenizer model used by the embedding model. If the tokenizer is `tokenizers`, this should be the full name of the tokenizer or model (if it's listed by its model name), *including the organization*. Like: `voyageai/voyage-code-3`",
+        ),
+    ] = None
+    _version: Annotated[
+        str,
+        Field(
+            init=False,
+            pattern=r"^\d{1,2}\.\d{1,3}\.\d{1,3}$",
+            description="The version for the capabilities schema.",
+        ),
+    ] = "1.0.0"
 
-"""Settings for embedding models."""
+    @classmethod
+    def default(cls) -> Self:
+        """Create a default instance of the model profile."""
+        return cls()
 
-#  =================================  BEGIN EXAMPLE ======================================
-# this is *the* `ModelSettings` object from `pydantic_ai.settings`. We have temporarily copied it here
-# So that we can use it as a reference for creating our `EmbeddingModelSettings` and `RerankModelSettings` objects.
-# We also re-export this in `codeweaver.settings` as `AgentModelSettings`.
+    @property
+    def schema_version(self) -> str:
+        """Get the schema version of the capabilities."""
+        return self._version
 
-from typing import TypedDict
-
-from httpx import Timeout
-
-
-class ModelSettings(TypedDict, total=False):
-    """Settings to configure an LLM.
-
-    Here we include only settings which apply to multiple models / model providers,
-    though not all of these settings are supported by all models.
-    """
-
-    max_tokens: int
-    """The maximum number of tokens to generate before stopping.
-
-    Supported by:
-
-    * Gemini
-    * Anthropic
-    * OpenAI
-    * Groq
-    * Cohere
-    * Mistral
-    * Bedrock
-    * MCP Sampling
-    """
-
-    temperature: float
-    """Amount of randomness injected into the response.
-
-    Use `temperature` closer to `0.0` for analytical / multiple choice, and closer to a model's
-    maximum `temperature` for creative and generative tasks.
-
-    Note that even with `temperature` of `0.0`, the results will not be fully deterministic.
-
-    Supported by:
-
-    * Gemini
-    * Anthropic
-    * OpenAI
-    * Groq
-    * Cohere
-    * Mistral
-    * Bedrock
-    """
-
-    top_p: float
-    """An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass.
-
-    So 0.1 means only the tokens comprising the top 10% probability mass are considered.
-
-    You should either alter `temperature` or `top_p`, but not both.
-
-    Supported by:
-
-    * Gemini
-    * Anthropic
-    * OpenAI
-    * Groq
-    * Cohere
-    * Mistral
-    * Bedrock
-    """
-
-    timeout: float | Timeout
-    """Override the client-level default timeout for a request, in seconds.
-
-    Supported by:
-
-    * Gemini
-    * Anthropic
-    * OpenAI
-    * Groq
-    * Mistral
-    """
-
-    parallel_tool_calls: bool
-    """Whether to allow parallel tool calls.
-
-    Supported by:
-
-    * OpenAI (some models, not o1)
-    * Groq
-    * Anthropic
-    """
-
-    seed: int
-    """The random seed to use for the model, theoretically allowing for deterministic results.
-
-    Supported by:
-
-    * OpenAI
-    * Groq
-    * Cohere
-    * Mistral
-    """
-
-    presence_penalty: float
-    """Penalize new tokens based on whether they have appeared in the text so far.
-
-    Supported by:
-
-    * OpenAI
-    * Groq
-    * Cohere
-    * Gemini
-    * Mistral
-    """
-
-    frequency_penalty: float
-    """Penalize new tokens based on their existing frequency in the text so far.
-    High settings can lead to odd results, as the model may avoid using punctuation, for example.
-
-    Supported by:
-
-    * OpenAI
-    * Groq
-    * Cohere
-    * Gemini
-    * Mistral
-    """
-
-    logit_bias: dict[str, int]
-    """Modify the likelihood of specified tokens appearing in the completion.
-
-    Supported by:
-
-    * OpenAI
-    * Groq
-    """
-
-    stop_sequences: list[str]
-    """Sequences that will cause the model to stop generating.
-
-    Supported by:
-
-    * OpenAI
-    * Anthropic
-    * Bedrock
-    * Mistral
-    * Groq
-    * Cohere
-    * Google
-    """
-
-    extra_headers: dict[str, str]
-    """Extra headers to send to the model.
-
-    Supported by:
-
-    * OpenAI
-    * Anthropic
-    * Groq
-    """
-
-    extra_body: object
-    """Extra body to send to the model.
-
-    Supported by:
-
-    * OpenAI
-    * Anthropic
-    * Groq
-    """
-
-
-#  =================================  END EXAMPLE ======================================
+    @classmethod
+    def validate_settings(cls, settings: EmbeddingModelSettings) -> Self:
+        """Validate and create an instance from the provided settings."""
+        # TODO, we need a way to resolve the provider capabilities from the settings.

@@ -9,30 +9,22 @@
 """Entrypoint for CodeWeaver's heavily-pydantic-ai-inspired embedding model system."""
 
 # sourcery skip: avoid-global-variables
+from __future__ import annotations
+
 from typing import Literal
 
-from codeweaver.embedding.profiles import (
-    DEFAULT_PROFILE,
-    EmbeddingModelProfile,
-    EmbeddingModelProfileSpec,
-)
+from codeweaver.embedding.profiles import DEFAULT_PROFILE, EmbeddingModelProfile
 from codeweaver.embedding.providers import EmbeddingProvider, infer_embedding_provider
 
 
 # placeholders just to keep the imports here withut ruff removing them
-default_profile = DEFAULT_PROFILE
 embedding_model_profile = EmbeddingModelProfile
-embedding_model_profile_spec = EmbeddingModelProfileSpec
 embedding_provider = EmbeddingProvider
 infer_embedding_provider = infer_embedding_provider
 
 
 def get_embedding_model_provider() -> None:  # -> EmbeddingProvider[Any]:
     """Get embedding model provider."""
-
-
-def get_rerank_model_provider() -> None:  # -> EmbeddingProvider[Any]:
-    """Get rerank model provider."""
 
 
 type KnownEmbeddingModelName = Literal[
@@ -92,25 +84,4 @@ type KnownEmbeddingModelName = Literal[
     "voyage:voyage-3.5-lite",
     "voyage:voyage-code-3",
     "voyage:voyage-context-3",
-]
-
-type KnownRerankModelName = Literal[
-    "voyage:voyage-rerank-2.5",
-    "voyage:voyage-rerank-2.5-lite",
-    "cohere:rerank-v3.5",
-    "cohere:rerank-english-v3.0",
-    "cohere:rerank-multilingual-v3.0",
-    "bedrock:amazon.rerank-v1:0",
-    "bedrock:cohere.rerank-v3-5:0",
-    "huggingface:BAAI/bge-reranker-v2-m3",
-    "huggingface:BAAI/bge-reranker-large",
-    "huggingface:Qwen/Qwen3-Reranker-0.6B",
-    "huggingface:Qwen/Qwen3-Reranker-4B",
-    "huggingface:Qwen/Qwen3-Reranker-8B",
-    "huggingface:mixedbread-ai/mxbai-rerank-large-v1",
-    "huggingface:mixedbread-ai/mxbai-rerank-large-v2",
-    "huggingface:jinaai/jina-reranker-m0",
-    "huggingface:Alibaba-NLP/gte-multilingual-reranker-base",
-    "huggingface:mixedbread-ai/mxbai-rerank-xsmall-v1",
-    "huggingface:mixedbread-ai/mxbai-rerank-base-v1",
 ]
