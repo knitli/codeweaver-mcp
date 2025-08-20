@@ -14,6 +14,8 @@ from typing import Any, TypeVar
 from codeweaver._settings import Provider, ProviderKind
 from codeweaver.embedding.providers import EmbeddingProvider
 from codeweaver.exceptions import ConfigurationError
+from codeweaver.reranking.base import RerankingProvider
+from codeweaver.vector_stores
 from codeweaver.vector_stores.base import VectorStoreProvider
 
 
@@ -35,7 +37,7 @@ class ProviderRegistry:
 
         # Provider instance caches (for singleton behavior where needed)
         self._embedding_instances: MutableMapping[Provider, EmbeddingProvider[Any]] = {}
-        self._vector_store_instances: MutableMapping[Provider, VectorStoreProvider[Any]] = {}
+        self._vector_store_instances: MutableMapping[Provider, VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]] = {}
 
         # Initialize with built-in providers
         self._register_builtin_providers()

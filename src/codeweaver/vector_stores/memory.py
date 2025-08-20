@@ -17,6 +17,7 @@ from pydantic import UUID4, TypeAdapter
 
 from codeweaver._settings import Provider
 from codeweaver.exceptions import ConfigurationError
+from codeweaver.reranking.base import RerankingProvider
 from codeweaver.services._filter import Filter
 from codeweaver.vector_stores.base import CodeChunk, SearchResult, VectorStoreProvider
 
@@ -45,12 +46,13 @@ class FastembedVectorstoreProvider(
 
     _client: FastembedVectorstore | None
     _embedder: FastembedVectorstore | None
-    _reranker: None = None
+    _reranker: RerankingProvider[Any] | None = None
 
     def __init__(
         self,
         embedder: FastembedVectorstore | None = None,
         embedding_model: str = "BAAI/bge-small-en-v1.5",
+        reranker: RerankingProvider[Any] | None = None,
         path: Path | None = None,
         **kwargs: Any,
     ) -> None:
@@ -63,6 +65,7 @@ class FastembedVectorstoreProvider(
         """
         self._embedding_model = embedding_model
         self._path = path
+        self._reranker = reranker or None
 
         # Initialize the vector store
         self._initialize_store()
@@ -274,7 +277,7 @@ class FastembedVectorstoreProvider(
             self._initialize_store()
 
 
-class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any],]):
+class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any], None, None]):
     """Simple in-memory vector store implementation using Python dictionaries.
 
     This is a fallback implementation when fastembed_vectorstore is not available.

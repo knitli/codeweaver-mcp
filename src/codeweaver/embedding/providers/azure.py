@@ -14,7 +14,6 @@ try:
     EmbeddingModelProfile
     cohere_model_profile
     Provider
-    AsyncAzureOpenAI
     AsyncOpenAI
 except ImportError as _import_error:  # pragma: no cover
     raise ImportError(
@@ -23,8 +22,10 @@ except ImportError as _import_error:  # pragma: no cover
     ) from _import_error
 
 
-class AzureEmbeddingModelProfile(EmbeddingModelProfile): ...
+class AzureEmbeddingModelProfile[AsyncAzureOpenAI](EmbeddingModelProfile): ...
 
 
 class AzureEmbeddingProvider:
     """Azure embedding provider."""
+
+    _client: AsyncAzureOpenAI

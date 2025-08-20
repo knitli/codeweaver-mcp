@@ -9,68 +9,10 @@
 
 """Entry point for embedding providers. Defines the abstract base class and includes a utility for retrieving specific provider implementations."""
 
-from abc import ABC, abstractmethod
 from typing import Any
 
 from codeweaver._settings import Provider
-from codeweaver.embedding.profiles import EmbeddingModelProfile
-
-
-type NonClient = None
-
-
-class EmbeddingProvider[InterfaceClient](ABC):
-    """
-    Abstract class for an embedding provider.
-
-    This class mirrors `pydantic_ai.providers.Provider` class to make it simple to use
-    existing implementations of `pydantic_ai.providers.Provider` as embedding providers.
-
-    We chose to separate this from the `pydantic_ai.providers.Provider` class for clarity. That class is re-exported in `codeweaver.agent_providers.py` as `AgentProvider`, which is used for agent operations.
-    We didn't want folks accidentally conflating agent operations with embedding operations. That's kind of a 'dogs and cats living together' 🐕🐈 situation.
-
-    Each provider only supports a specific interface, but an interface can be used by multiple providers.
-
-    The primary example of this one-to-many relationship is the OpenAI provider, which supports any OpenAI-compatible provider (Azure, Ollama, Fireworks, Heroku, Together, Github).
-    """
-
-    _client: InterfaceClient
-
-    @property
-    @abstractmethod
-    def name(self) -> Provider:
-        """Get the name of the embedding provider."""
-
-    @property
-    @abstractmethod
-    def base_url(self) -> str | None:
-        """Get the base URL of the embedding provider, if any."""
-
-    @abstractmethod
-    async def embed_documents(self, documents: list[str]) -> list[list[float]]:
-        """Embed a list of documents into vectors."""
-
-    @abstractmethod
-    async def embed_query(self, query: str) -> list[float]:
-        """Embed a query into a vector."""
-
-    @abstractmethod
-    def get_vector_name(self) -> str:
-        """Get the name of the vector for the collection."""
-
-    @abstractmethod
-    def get_vector_size(self) -> int:
-        """Get the size of the vector for the collection."""
-
-    @property
-    @abstractmethod
-    def client(self) -> InterfaceClient:
-        """Get the client for the embedding provider."""
-
-    @property
-    def model_profile(self) -> EmbeddingModelProfile | None:
-        """Get the model profile for the embedding provider."""
-        return None
+from codeweaver.embedding.providers.base import EmbeddingProvider
 
 
 def _infer_embedding_provider_class(provider: Provider) -> type[EmbeddingProvider[Any]]:  # noqa: C901  # long? yes. Complex. No.

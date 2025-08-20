@@ -4,17 +4,28 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Qdrant provider for vector and hybrid search/store."""
 
+from codeweaver.embedding.providers import EmbeddingProvider
+from codeweaver.exceptions import ProviderError
+from codeweaver.reranking import RerankingProvider
 from codeweaver.vector_stores.base import VectorStoreProvider
 
 
 QdrantClient = None
+
 try:
     from qdrant_client import AsyncQdrantClient
 
-    QdrantClient = AsyncQdrantClient
-except ImportError:
-    QdrantClient = None
+except ImportError as e:
+    raise ProviderError(
+        "Qdrant client is required for QdrantVectorStore. Install it with: pip install qdrant-client"
+    ) from e
 
 
-class QdrantVectorStore(VectorStoreProvider[QdrantClient]):
+class QdrantVectorStore(
+    VectorStoreProvider[AsyncQdrantClient, EmbeddingProvider[Embedder], RerankingProvider[Reranker]]
+):
     """Qdrant vector store provider."""
+
+    _client: AsyncQdrantClient
+    _embedder: EmbeddingProvider[Embedder]
+    _reranker: RerankingProvider[Reranker] | None = None

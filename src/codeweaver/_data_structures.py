@@ -9,19 +9,128 @@ from __future__ import annotations
 import contextlib
 
 from collections.abc import Iterator, Sequence
+from datetime import UTC, datetime
 from functools import cache
 from hashlib import sha256
 from pathlib import Path
-from typing import Annotated, Any, LiteralString, NamedTuple, Self, TypeGuard
+from typing import (
+    Annotated,
+    Any,
+    LiteralString,
+    NamedTuple,
+    NotRequired,
+    Required,
+    Self,
+    TypedDict,
+    TypeGuard,
+)
 from uuid import uuid4
 
-from pydantic import UUID4, Field, NonNegativeInt, computed_field, model_validator
+from ast_grep_py import SgNode
+from pydantic import (
+    UUID4,
+    BaseModel,
+    Field,
+    NonNegativeFloat,
+    NonNegativeInt,
+    PositiveFloat,
+    computed_field,
+    model_validator,
+)
 from pydantic.dataclasses import dataclass
 
 from codeweaver._common import BaseEnum
 from codeweaver._constants import get_ext_lang_pairs
 from codeweaver._utils import normalize_ext
 from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
+
+
+class SearchResult(BaseModel):
+    """Result from vector search operations."""
+
+    file_path: Path
+    content: str
+    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
+    metadata: Annotated[
+        Metadata | None, Field(description="Additional metadata about the result")
+    ] = None
+
+
+class SemanticMetadata(TypedDict, total=False):
+    """Metadata associated with the semantics of a code chunk."""
+
+    language: SemanticSearchLanguage | LiteralString | None
+    primary_node: SgNode | None
+    nodes: tuple[SgNode, ...] | None
+
+
+class Metadata(TypedDict, total=False):
+    """Metadata associated with a code chunk."""
+
+    chunk_id: Required[Annotated[UUID4, Field(description="Unique identifier for the code chunk")]]
+    created_at: Required[
+        Annotated[PositiveFloat, Field(description="Timestamp when the chunk was created")]
+    ]
+    name: NotRequired[
+        Annotated[str | None, Field(description="Name of the code chunk, if applicable")]
+    ]
+    updated_at: NotRequired[
+        Annotated[
+            PositiveFloat | None,
+            Field(description="Timestamp when the chunk was last updated or checked for accuracy."),
+        ]
+    ]
+    tags: NotRequired[
+        Annotated[
+            tuple[str] | None,
+            Field(description="Tags associated with the code chunk, if applicable"),
+        ]
+    ]
+    semantic_meta: NotRequired[
+        Annotated[
+            SemanticMetadata | None,
+            Field(
+                description="Semantic metadata associated with the code chunk, if applicable. Should be included if the code chunk was from semantic chunking."
+            ),
+        ]
+    ]
+
+
+class CodeChunk(BaseModel):
+    """Represents a chunk of code with metadata."""
+
+    content: str
+    line_range: Annotated[Span, Field(description="Line range in the source file")]
+    file_path: Annotated[
+        Path | None,
+        Field(
+            description="Path to the source file. Not all chunks are from files, so this can be None."
+        ),
+    ] = None
+    language: SemanticSearchLanguage | LiteralString | None = None
+    chunk_type: str = "text_block"  # For Phase 1, simple text blocks
+    timestamp: Annotated[
+        PositiveFloat,
+        Field(
+            default_factory=datetime.now(UTC).timestamp,
+            kw_only=True,
+            description="Timestamp of the code chunk creation or modification",
+        ),
+    ] = datetime.now(UTC).timestamp()
+    chunk_id: Annotated[
+        UUID4,
+        Field(
+            default_factory=uuid4, kw_only=True, description="Unique identifier for the code chunk"
+        ),
+    ] = uuid4()
+    metadata: Annotated[
+        Metadata | None,
+        Field(
+            default_factory=dict,
+            kw_only=True,
+            description="Additional metadata about the code chunk",
+        ),
+    ] = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -11,5 +11,7 @@
 from codeweaver.embedding.providers import EmbeddingProvider
 
 
-class BedrockEmbeddingProvider(EmbeddingProvider):
+class BedrockEmbeddingProvider(EmbeddingProvider[BedrockClient]):
     """Bedrock embedding provider."""
+
+    _client: BedrockClient

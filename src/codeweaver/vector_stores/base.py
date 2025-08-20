@@ -6,23 +6,20 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from datetime import UTC, datetime
+from abc import abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, LiteralString, NotRequired, Required, TypedDict
-from uuid import uuid4
+from typing import TYPE_CHECKING, Any
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field, NonNegativeFloat, PositiveFloat
+from pydantic import UUID4, BaseModel, ConfigDict
 
 from codeweaver._common import BaseEnum
 from codeweaver._settings import Provider
+from codeweaver.embedding.providers import EmbeddingProvider
+from codeweaver._data_structures import CodeChunk, Metadata, SearchResult
+from codeweaver.reranking.base import RerankingProvider
 
 
 if TYPE_CHECKING:
-    from ast_grep_py import SgNode
-
-    from codeweaver._data_structures import Span
-    from codeweaver.language import SemanticSearchLanguage
     from codeweaver.services._filter import Filter
 
 type NonClient = None
@@ -63,103 +60,14 @@ class Entry(BaseModel):
 
 # SPDX-SnippetEnd
 
-
-class SearchResult(BaseModel):
-    """Result from vector search operations."""
-
-    file_path: Path
-    content: str
-    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
-    metadata: Annotated[
-        Metadata | None, Field(description="Additional metadata about the result")
-    ] = None
-
-
-class SemanticMetadata(TypedDict, total=False):
-    """Metadata associated with the semantics of a code chunk."""
-
-    language: SemanticSearchLanguage | LiteralString | None
-    primary_node: SgNode | None
-    nodes: tuple[SgNode, ...] | None
-
-
-class Metadata(TypedDict, total=False):
-    """Metadata associated with a code chunk."""
-
-    chunk_id: Required[Annotated[UUID4, Field(description="Unique identifier for the code chunk")]]
-    created_at: Required[
-        Annotated[PositiveFloat, Field(description="Timestamp when the chunk was created")]
-    ]
-    name: NotRequired[
-        Annotated[str | None, Field(description="Name of the code chunk, if applicable")]
-    ]
-    updated_at: NotRequired[
-        Annotated[
-            PositiveFloat | None,
-            Field(description="Timestamp when the chunk was last updated or checked for accuracy."),
-        ]
-    ]
-    tags: NotRequired[
-        Annotated[
-            tuple[str] | None,
-            Field(description="Tags associated with the code chunk, if applicable"),
-        ]
-    ]
-    semantic_meta: NotRequired[
-        Annotated[
-            SemanticMetadata | None,
-            Field(
-                description="Semantic metadata associated with the code chunk, if applicable. Should be included if the code chunk was from semantic chunking."
-            ),
-        ]
-    ]
-
-
-class CodeChunk(BaseModel):
-    """Represents a chunk of code with metadata."""
-
-    content: str
-    line_range: Annotated[Span, Field(description="Line range in the source file")]
-    file_path: Annotated[
-        Path | None,
-        Field(
-            description="Path to the source file. Not all chunks are from files, so this can be None."
-        ),
-    ] = None
-    language: SemanticSearchLanguage | LiteralString | None = None
-    chunk_type: str = "text_block"  # For Phase 1, simple text blocks
-    timestamp: Annotated[
-        PositiveFloat,
-        Field(
-            default_factory=datetime.now(UTC).timestamp,
-            kw_only=True,
-            description="Timestamp of the code chunk creation or modification",
-        ),
-    ] = datetime.now(UTC).timestamp()
-    chunk_id: Annotated[
-        UUID4,
-        Field(
-            default_factory=uuid4, kw_only=True, description="Unique identifier for the code chunk"
-        ),
-    ] = uuid4()
-    metadata: Annotated[
-        Metadata | None,
-        Field(
-            default_factory=dict,
-            kw_only=True,
-            description="Additional metadata about the code chunk",
-        ),
-    ] = None
-
-
-class VectorStoreProvider[VectorStoreClient, Embedder, Reranker](BaseModel, ABC):
+class VectorStoreProvider[VectorStoreClient, EmbeddingProvider[Any], RerankingProvider[Any]](BaseModel, ABC):
     """Abstract interface for vector storage providers."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="allow")
 
     _client: VectorStoreClient
-    _embedder: Embedder
-    _reranker: Reranker | None = None
+    _embedder: EmbeddingProvider[Any]
+    _reranker: RerankingProvider[Any] | None = None
 
     @property
     def client(self) -> VectorStoreClient:
@@ -167,12 +75,12 @@ class VectorStoreProvider[VectorStoreClient, Embedder, Reranker](BaseModel, ABC)
         return self._client
 
     @property
-    def embedder(self) -> Embedder:
+    def embedder(self) -> EmbeddingProvider[Any]:
         """Returns the embedder instance."""
         return self._embedder
 
     @property
-    def reranker(self) -> Reranker | None:
+    def reranker(self) -> RerankingProvider[Any] | None:
         """Returns the reranker instance if available, otherwise None."""
         return self._reranker
 
