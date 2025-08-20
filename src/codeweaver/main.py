@@ -8,15 +8,26 @@
 from __future__ import annotations
 
 import asyncio
-import time
 
+from types import FunctionType
 from typing import TYPE_CHECKING, Any
 
 from fastmcp import Context, FastMCP
+from pydantic import TypeAdapter
+from typing_extensions import TypeIs
 
-from codeweaver._server import initialize_app
+from codeweaver import __version__ as version
+from codeweaver._server import (
+    _STATE,  # pyright: ignore[reportPrivateUsage]
+    Feature,
+    HealthInfo,
+    HealthStatus,
+    initialize_app,
+)
+from codeweaver._statistics import SessionStatistics
 from codeweaver.exceptions import CodeWeaverError
 from codeweaver.models.core import FindCodeResponse
+from codeweaver.settings import get_settings
 from codeweaver.tools.find_code import find_code_implementation
 
 
@@ -26,16 +37,24 @@ if TYPE_CHECKING:
     from codeweaver.models.intent import IntentType
 
 
+def is_fastmcp_instance(app: Any) -> TypeIs[FastMCP[AppState]]:
+    """Validate if the given app is an instance of FastMCP."""
+    return isinstance(app, FastMCP)
+
+
 # Create FastMCP application
-app: FastMCP[AppState] = asyncio.run(initialize_app())
+app, run_method = asyncio.run(initialize_app())  # type: ignore  # the types are just below :arrow_lower_left:
+if not is_fastmcp_instance(app):
+    raise TypeError("Expected app to be an instance of FastMCP")
+run_method: FunctionType
 
 
 @app.tool(tags={"user", "external", "code"})
 async def find_code(
     query: str,
     intent: IntentType | None = None,
-    token_limit: int = 10000,
     *,
+    token_limit: int = 10000,
     include_tests: bool = False,
     focus_languages: tuple[SemanticSearchLanguage, ...] | None = None,
     context: Context | None = None,
@@ -46,9 +65,8 @@ async def find_code(
     Future phases will add semantic embeddings and AI-powered intent analysis.
 
     Args:
-        query: Natural language description of information needed
-        intent: Optional hint about the type of task (auto-detected if None)
-        token_limit: Maximum tokens to include in response
+        query: Natural language description of the information you need
+        intent: An optional hint about the type of information you need based on the user's task to you. One of "understand", "implement", "debug", "optimize", "test", "configure", or "document".
         include_tests: Whether to include test files in results
         focus_languages: Limit search to specific programming languages
         context: FastMCP context (injected automatically)
@@ -65,28 +83,28 @@ async def find_code(
         # Execute the find_code implementation
         response = await find_code_implementation(
             query=query,
-            settings=app.state.settings if app.state else None,
+            settings=_STATE.settings if _STATE and _STATE.settings else get_settings(),
             intent=intent,
             token_limit=token_limit,
             include_tests=include_tests,
             focus_languages=focus_languages,
-            statistics=app.state.statistics if app.state else None,
+            statistics=_STATE.statistics if _STATE else None,
         )
 
         # Record successful request
-        if app_state and app_state.statistics:
-            app_state.statistics.add_successful_request()
+        if _STATE and _STATE.statistics:
+            _STATE.statistics.add_successful_request()
 
     except CodeWeaverError:
         # Record failed request
-        if app_state and app_state.statistics:
-            app_state.statistics.add_failed_request()
+        if _STATE and _STATE.statistics:
+            _STATE.statistics.add_failed_request()
         # Re-raise CodeWeaver errors as-is
         raise
     except Exception as e:
         # Record failed request
-        if app_state and app_state.statistics:
-            app_state.statistics.add_failed_request()
+        if _STATE and _STATE.statistics:
+            _STATE.statistics.add_failed_request()
 
         # Wrap other exceptions in CodeWeaver error
         from codeweaver.exceptions import QueryError
@@ -99,104 +117,66 @@ async def find_code(
         return response
 
 
-# TODO: This shouldn't be a tool, but a proper health check endpoint. We can also expose it as a Resource. But not a tool.
-@app.tool()
-async def health() -> dict[str, Any]:
+@app.custom_route("/stats", methods=["GET"], tags={"system", "stats"}, include_in_schema=True)  # type: ignore
+async def stats_info() -> bytes:
+    """Get the current statistics information."""
+    return TypeAdapter(_STATE.statistics).dump_json(_STATE.statistics, indent=2)  # pyright: ignore[reportUnknownMemberType, reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
+
+
+@app.custom_route("/settings", methods=["GET"], tags={"system", "settings"}, include_in_schema=True)  # type: ignore
+async def settings_info() -> bytes:
+    """Get the current settings information."""
+    return _STATE.settings.model_dump_json(indent=2)  # pyright: ignore[reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
+
+
+@app.custom_route("/version", methods=["GET"], tags={"system", "version"}, include_in_schema=True)  # type: ignore
+async def version_info() -> bytes:
+    """Get the current version information."""
+    return f"CodeWeaver version: {version}".encode()
+
+
+@app.custom_route("/health", methods=["GET"], tags={"system", "health"}, include_in_schema=True)  # type: ignore
+async def health() -> bytes:
     """Health check endpoint for monitoring server status.
 
     Returns:
         Health status information with statistics
     """
-    try:
-        # Get app state
-        app_state: AppState | None = app.state if hasattr(app, "state") else None
-        if not app_state:
-            return {
-                "status": "unhealthy",
-                "error": "App state not initialized",
-                "version": "0.1.0-phase1",
-                "timestamp": time.time(),
-            }
-
-        health_info = {
-            "status": "healthy",
-            "version": "0.1.0-phase1",
-            "features": ["basic_search", "file_discovery", "registry", "statistics"],
-        } | {
-            "initialized": app_state.initialized,
-            "request_count": app_state.request_count,
-            "uptime_seconds": time.time() - app_state.health.get("startup_time", time.time()),
-        }
-        # Add statistics if available
-        if hasattr(app_state, "statistics"):
-            stats = app_state.statistics
-            health_info["statistics"] = {
-                "total_requests": stats.total_requests or 0,
-                "successful_requests": stats.successful_requests or 0,
-                "failed_requests": stats.failed_requests or 0,
-                "success_rate": stats.get_success_rate(),
-                "average_response_time_ms": stats.average_response_time_ms,
-                "max_response_time_ms": stats.max_response_time_ms,
-                "min_response_time_ms": stats.min_response_time_ms,
-                "total_files_indexed": stats.index_statistics.total_unique_files,
-                "total_operations": stats.index_statistics.total_operations,
-                "token_usage": {
-                    "total_generated": stats.token_statistics.total_generated,
-                    "total_used": stats.token_statistics.total_used,
-                    "context_saved": stats.token_statistics.context_saved,
-                },
-            }
-
-        # Add provider registry info if available
-        if app_state.registry:
-            from codeweaver._settings import ProviderKind
-
-            health_info["providers"] = {
-                "embedding_providers": len(
-                    app_state.registry.list_providers(ProviderKind.EMBEDDING)
-                ),
-                "vector_store_providers": len(
-                    app_state.registry.list_providers(ProviderKind.VECTOR_STORE)
-                ),
-            }
-
-        if settings := get_settings():
-            health_info["project_path"] = str(settings.project_path)
-
-    except Exception as e:
-        return {
-            "status": "unhealthy",
-            "error": str(e),
-            "version": "0.1.0-phase1",
-            "timestamp": time.time(),
-        }
-    else:
-        return health_info
+    global _STATE
+    if _STATE and _STATE.health:
+        # Return existing health info if available
+        dumped_health: bytes = TypeAdapter(_STATE.health).dump_json(_STATE.health, indent=2)  # type: ignore
+        return dumped_health
+    unhealthy_status: HealthInfo = HealthInfo(
+        status=HealthStatus.UNHEALTHY,
+        version=version,
+        features=(Feature._UNKNOWN,),  # pyright: ignore[reportPrivateUsage]
+    )
+    return TypeAdapter(unhealthy_status).dump_json(unhealthy_status, indent=2)  # type: ignore
 
 
-# Server startup function for CLI
-async def start_server(host: str = "localhost", port: int = 8080, *, debug: bool = False) -> None:
-    """Start the FastMCP server.
+def is_health_instance(health_info: Any) -> TypeIs[HealthInfo]:
+    """Check if the provided health_info is a valid HealthInfo instance."""
+    return isinstance(health_info, HealthInfo) and health_info.status in HealthStatus
 
-    Args:
-        host: Server host address
-        port: Server port
-        debug: Enable debug mode
-    """
-    import uvicorn
 
-    # Get settings (use from app state if available)
-    settings = app_state.settings if app_state and app_state.settings else get_settings()
+def is_appstate_instance(state: Any) -> TypeIs[AppState]:
+    """Check if the provided state is a valid AppState instance."""
+    return isinstance(state, AppState)
 
-    # TODO: the typechecker doesn't like this and probably neither does uvicorn.
-    config = uvicorn.Config(app, host=host, port=port, log_level="debug" if debug else "info")
-    server = uvicorn.Server(config)
-    await server.serve()
+
+def is_statistics_instance(statistics: Any) -> TypeIs[SessionStatistics]:
+    """Check if the provided statistics is a valid Statistics instance."""
+    return isinstance(statistics, SessionStatistics)
 
 
 if __name__ == "__main__":
     # Main entry point for MCP
-    import asyncio
-
+    asyncio.run(run_method(app))  # type: ignore
     asyncio.run(app.run_http_async())
-    asyncio.run(start_server(debug=True))
+    if not is_appstate_instance(_STATE):
+        raise TypeError("Expected _STATE to be an instance of AppState")
+    if not is_health_instance(_STATE.health):
+        raise TypeError("Expected _STATE.health to be an instance of HealthInfo")
+    if not is_statistics_instance(_STATE.statistics):
+        raise TypeError("Expected _STATE.statistics to be an instance of SessionStatistics")

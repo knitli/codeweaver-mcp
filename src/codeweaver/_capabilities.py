@@ -30,7 +30,8 @@ PROVIDER_CAPABILITIES: MappingProxyType[Provider, frozenset[ProviderKind]] = Map
     Provider.FIREWORKS: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
     Provider.GITHUB: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
     Provider.GOOGLE: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
-    Provider.GROK: frozenset({ProviderKind.AGENT}),
+    Provider.X_AI: frozenset({ProviderKind.AGENT}),
+    Provider.GROQ: frozenset({ProviderKind.AGENT}),
     Provider.HEROKU: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
     Provider.HUGGINGFACE: frozenset({
         ProviderKind.EMBEDDING,

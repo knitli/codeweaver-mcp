@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import contextlib
 import json
+import re
 
 from pathlib import Path
 from typing import Any
 
-from pydantic import UUID4
+from pydantic import UUID4, TypeAdapter
 
 from codeweaver._settings import Provider
 from codeweaver.exceptions import ConfigurationError
@@ -21,6 +22,8 @@ from codeweaver.vector_stores.base import CodeChunk, SearchResult, VectorStorePr
 
 
 try:
+    import json
+
     from fastembed_vectorstore import FastembedEmbeddingModel, FastembedVectorstore
 
 except ImportError as e:
@@ -32,12 +35,21 @@ type FastembedResult = tuple[str, float]
 type FastembedResults = list[FastembedResult]
 """Fastembed search result type. A list of tuples, where each inner tuple contains the document text and its similarity score."""
 
+path_pattern = re.compile(r"")
 
-class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | None]):
+
+class FastembedVectorstoreProvider(
+    VectorStoreProvider[FastembedVectorstore | None, FastembedVectorstore | None, None]
+):
     """In-memory vector store using FastEmbed for embeddings and storage."""
+
+    _client: FastembedVectorstore | None
+    _embedder: FastembedVectorstore | None
+    _reranker: None = None
 
     def __init__(
         self,
+        embedder: FastembedVectorstore | None = None,
         embedding_model: str = "BAAI/bge-small-en-v1.5",
         path: Path | None = None,
         **kwargs: Any,
@@ -51,7 +63,6 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
         """
         self._embedding_model = embedding_model
         self._path = path
-        self._client: FastembedVectorstore | None = None
 
         # Initialize the vector store
         self._initialize_store()
@@ -59,6 +70,7 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
             raise ConfigurationError(
                 "Failed to initialize FastembedVectorstore. Ensure the embedding model is valid and fastembed_vectorstore is installed."
             )
+        self._embedder = embedder or self._client
 
     def _initialize_store(self) -> None:
         """Initialize the FastEmbed vector store."""
@@ -105,7 +117,7 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
     @property
     def collection(self) -> str | None:
         """Get the collection name (not applicable for FastEmbed)."""
-        return None
+        return str(self._path) if self._path else None
 
     def list_collections(self) -> list[str] | None:
         """List collections (not applicable for FastEmbed)."""
@@ -130,6 +142,8 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
             # FastembedVectorstore doesn't support vector search directly,
             # it expects string queries. For now, we'll return empty results
             # and implement proper vector search in a future enhancement.
+            # Though, anything we come up with will probably be slower...
+            # so maybe it's just best to work with it.
             return []
         except Exception:
             return []
@@ -155,17 +169,13 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
                 # Convert FastEmbed result to our SearchResult format
                 try:
                     # Parse the stored JSON content back to CodeChunk
-                    chunk_data = (
-                        json.loads(result.content)
-                        if isinstance(result.content, str)
-                        else result.content
-                    )
-
+                    document_text, score = result
+                    document_text = json.loads(document_text)
                     search_result = SearchResult(
-                        file_path=Path(chunk_data.get("file_path", "")),
-                        content=chunk_data.get("content", ""),
-                        score=float(result.score) if hasattr(result, "score") else 0.0,
-                        metadata=chunk_data.get("metadata"),
+                        file_path=Path(document_text.get("file_path", "")),
+                        content=document_text.get("content"),
+                        score=score,
+                        metadata=None,
                     )
                     search_results.append(search_result)
                 except (json.JSONDecodeError, KeyError, TypeError):
@@ -188,16 +198,16 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
 
         try:
             # Serialize chunks for storage
-            documents = []
+            documents: list[str] = []
             for chunk in chunks:
-                # Create a document that combines content with searchable metadata
-                document_content = (
-                    f"{chunk.content}\n\nFile: {chunk.file_path}\nLanguage: {chunk.language}"
-                )
-                documents.append(document_content)
+                jsonified_chunk: bytes = TypeAdapter(chunk).dump_json(chunk)  # type: ignore
+                chunk_as_string: str = jsonified_chunk.decode("utf-8")
+                documents.append(chunk_as_string)
 
             # Embed and store documents
-            self._client.embed_documents(documents)
+            if embedded := self._client.embed_documents(documents):
+                # add to stats
+                pass
 
             # Save to disk if path is configured
             await self._save_if_configured()
@@ -248,11 +258,13 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
                 self._path.parent.mkdir(parents=True, exist_ok=True)
 
                 # Save the vector store
-                self._client.save(str(self._path))
+                if self._client.save(str(self._path)):
+                    # TODO: add to logging and stats
+                    pass
 
             except Exception:
                 # Log the error but don't fail the operation
-                # TODO: Use proper logging when available
+                # TODO: Add to logging and stats
                 pass
 
     def clear(self) -> None:
@@ -262,7 +274,7 @@ class FastembedVectorstoreProvider(VectorStoreProvider[FastembedVectorstore | No
             self._initialize_store()
 
 
-class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any]]):
+class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any],]):
     """Simple in-memory vector store implementation using Python dictionaries.
 
     This is a fallback implementation when fastembed_vectorstore is not available.
@@ -306,7 +318,7 @@ class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any]]):
         """
         # Simple implementation that returns all chunks
         # Real semantic search would require vector similarity
-        results = []
+        results: list[SearchResult] = []
         for chunk_data in self._client["chunks"]:
             try:
                 result = SearchResult(
@@ -330,19 +342,7 @@ class InMemoryVectorStoreProvider(VectorStoreProvider[dict[str, Any]]):
             chunks: List of code chunks to store
         """
         for chunk in chunks:
-            chunk_data = {
-                "chunk_id": str(chunk.chunk_id),
-                "content": chunk.content,
-                "file_path": str(chunk.file_path) if chunk.file_path else None,
-                "language": chunk.language,
-                "chunk_type": chunk.chunk_type,
-                "timestamp": chunk.timestamp,
-                "metadata": chunk.metadata,
-                "line_range": {
-                    "start": chunk.line_range.start if hasattr(chunk.line_range, "start") else 0,
-                    "end": chunk.line_range.end if hasattr(chunk.line_range, "end") else 0,
-                },
-            }
+            chunk_data = TypeAdapter(CodeChunk).dump_python(chunk, mode="python")
 
             # Simple upsert: remove existing and add new
             self._client["chunks"] = [

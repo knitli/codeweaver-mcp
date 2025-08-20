@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, LiteralString, NotRequired, Required, TypedDict
 from uuid import uuid4
 
-from pydantic import UUID4, BaseModel, Field, NonNegativeFloat, PositiveFloat
+from pydantic import UUID4, BaseModel, ConfigDict, Field, NonNegativeFloat, PositiveFloat
 
 from codeweaver._common import BaseEnum
 from codeweaver._settings import Provider
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from codeweaver.services._filter import Filter
 
 type NonClient = None
+
 
 # SPDX-SnippetBegin
 # SPDX-FileCopyrightText: 2022-2025 Qdrant Solutions GmbH
@@ -151,10 +152,29 @@ class CodeChunk(BaseModel):
     ] = None
 
 
-class VectorStoreProvider[VectorStoreClient](BaseModel, ABC):
+class VectorStoreProvider[VectorStoreClient, Embedder, Reranker](BaseModel, ABC):
     """Abstract interface for vector storage providers."""
 
+    model_config = ConfigDict(str_strip_whitespace=True, extra="allow")
+
     _client: VectorStoreClient
+    _embedder: Embedder
+    _reranker: Reranker | None = None
+
+    @property
+    def client(self) -> VectorStoreClient:
+        """Returns the vector store client instance."""
+        return self._client
+
+    @property
+    def embedder(self) -> Embedder:
+        """Returns the embedder instance."""
+        return self._embedder
+
+    @property
+    def reranker(self) -> Reranker | None:
+        """Returns the reranker instance if available, otherwise None."""
+        return self._reranker
 
     @property
     @abstractmethod

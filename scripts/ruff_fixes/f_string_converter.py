@@ -26,7 +26,7 @@ class FStringConverter(ast.NodeTransformer):
         """Initialize FStringConverter."""
         self.changes_made = False
 
-    def visit_Call(self, node: ast.Call) -> ast.Call:  # noqa: N802
+    def visit_Call(self, node: ast.Call) -> ast.Call:
         """Convert f-strings in logging method calls."""
         self.generic_visit(node)
 

@@ -49,6 +49,7 @@ dependencies = [
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
     "typing_extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -172,8 +173,9 @@ recommended = [
     "rignore>=0.6.4",
     "tomli-w>=1.2.0",
     "tiktoken>=0.1.0",
-    "transformers>=4.55.2",
+    "tokenizers>=0.21.4",
     "typing_extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -193,8 +195,9 @@ recommended-no-telemetry = [
     "rignore>=0.6.4",
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
-    "transformers>=4.55.2",
+    "tokenizers>=0.21.4",
     "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
     "voyageai>=0.3.4",
     "watchfiles>=1.1.0",
 ]
@@ -215,8 +218,8 @@ recommended-local-only = [
     "rignore>=0.6.4",
     "tiktoken>=0.1.0",
     "tomli-w>=1.2.0",
-    "transformers>=4.55.2",
     "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
     "watchfiles>=1.1.0",
 ]
 
@@ -234,6 +237,7 @@ minimal = [
     "fastembed-vectorstore>=0.2.0",    # assuming you want something light weight here.. if not, you can pick and choose from below
     "rignore>=0.6.4",
     "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
 ]
 
 # =================  A-La-Carte =================
@@ -261,6 +265,7 @@ required-core = [
     "rignore>=0.6.4",
     "typing-extensions>=4.14.1",
     "tiktoken>=0.1.0",
+    "uvicorn[standard]>=0.35.0",
 ]
 
 cli = ["cyclopts>=3.22.5", "rich>=14.0.0", "tomli-w>=1.2.0"]
@@ -283,7 +288,7 @@ provider-google = ["pydantic-ai-slim[google]>=0.6.2"]
 provider-openai = ["pydantic-ai-slim[openai]>=0.6.2"]
 # OpenAI includes support for:
 #   DeekSeek, Ollama, OpenRouter, Vercel, Perplexity, Moonshot, FireworksAI, 
-#   TogetherAI, Azure AI Foundry, Heroku, and Github Models
+#   TogetherAI, Azure AI Foundry, Heroku, and Github Models, X-AI
 # which all use the OpenAI API
 provider-mistral = ["pydantic-ai-slim[mistral]>=0.6.2"]
 
@@ -299,7 +304,12 @@ provider-fastembed-gpu = ["fastembed-gpu>=0.7.1", "transformers>=4.55.2"]
 # Requires additional setup, see https://qdrant.github.io/fastembed/examples/FastEmbed_GPU/
 
 # ==== Vector Stores ====
-# provider-in-memory = ["fastembed-vectorstore>=0.1.6", "transformers>=4.55.2"]
+provider-in-memory = ["fastembed-vectorstore>=0.1.6", "transformers>=4.55.2"]
+provider-in-memory-gpu = [
+    "fastembed-vectorstore>=0.1.6",
+    "transformers>=4.55.2",
+    "fastembed-gpu>=0.7.1",
+]
 provider-qdrant = ["qdrant-client>=1.15.0"]
 
 # ==== Data Sources ====
@@ -445,6 +455,8 @@ pythonVersion = "3.12"
 reportCallnDefaultInitializer = "information"
 reportImplicitStringConcatenation = "error"
 reportImportCycles = "warning"
+reportPrivateImportUsage = "none"
+reportPrivateUsage = "none" # It's our own internal use...
 reportPropertyTypeMismatch = "error"
 reportShadowedImports = "error"
 reportUninitializedInstanceVariable = "information"

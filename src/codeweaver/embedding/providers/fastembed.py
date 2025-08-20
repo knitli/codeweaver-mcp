@@ -1,3 +1,10 @@
+# SPDX=FileCopyrightText: 2024-2025 (c) Qdrant Solutions GmBh
+# SPDX-LicenseIdentifier: Apache-2.0
+# This file is partly derived from code in the `mcp-server-qdrant` project
+#
+# SPDX-FileCopyrightText: 2025 (c) 2025 Knitli Inc.
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 """FastEmbed embedding provider implementation.
 
 FastEmbed is a lightweight and efficient library for generating embeddings locally.
@@ -25,6 +32,7 @@ class FastEmbedProvider(EmbeddingProvider[NonClient]):
     model_name: The name of the FastEmbed model to use.
     """
 
+    # TODO: Not sure the whole 'no client' thing is the right approach; the FastEmbed app can be treated as a client here.
     _client: NonClient = None  # FastEmbed does not require a client
     _model_profile: EmbeddingModelProfile
 

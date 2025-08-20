@@ -12,7 +12,7 @@ from collections.abc import Iterator, Sequence
 from functools import cache
 from hashlib import sha256
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any, LiteralString, NamedTuple, Self, TypeGuard
+from typing import Annotated, Any, LiteralString, NamedTuple, Self, TypeGuard
 from uuid import uuid4
 
 from pydantic import UUID4, Field, NonNegativeInt, computed_field, model_validator
@@ -22,10 +22,6 @@ from codeweaver._common import BaseEnum
 from codeweaver._constants import get_ext_lang_pairs
 from codeweaver._utils import normalize_ext
 from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
-
-
-if TYPE_CHECKING:
-    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,6 +40,7 @@ class DiscoveredFile:
         return None
 
     @computed_field
+    @property
     def size(self) -> NonNegativeInt:
         """Return the size of the file in bytes."""
         return self.path.stat().st_size
@@ -202,7 +199,7 @@ class Span:
         """Return the union of two spans."""
         if self._source_id != other._source_id:
             return self
-        return Span(min(self.start, other.start), max(self.end, other.end))
+        return Span(min(self.start, other.start), max(self.end, other.end), self._source_id)
 
     def __and__(self, other: Span) -> Span | None:  # Intersection
         """Return the intersection between two spans."""
@@ -210,7 +207,7 @@ class Span:
             return None
         start = max(self.start, other.start)
         end = min(self.end, other.end)
-        return Span(start, end) if start <= end else None
+        return Span(start, end, self._source_id) if start <= end else None
 
     def __sub__(self, other: Span) -> Span | tuple[Span, Span] | None:  # Difference
         """Return the difference between two spans."""
@@ -222,10 +219,15 @@ class Span:
         if other.start <= self.start and other.end >= self.end:
             return None  # Fully covered
         if other.start > self.start and other.end < self.end:
-            return (Span(self.start, other.start - 1), Span(other.end + 1, self.end))
+            return (
+                Span(self.start, other.start - 1, self._source_id),
+                Span(other.end + 1, self.end, self._source_id),
+            )
         if other.start <= self.start:
-            return Span(other.end + 1, self.end) if other.end < self.end else None
-        return Span(self.start, other.start - 1) if other.start > self.start else None
+            return Span(other.end + 1, self.end, self._source_id) if other.end < self.end else None
+        return (
+            Span(self.start, other.start - 1, self._source_id) if other.start > self.start else None
+        )
 
     def __xor__(self, other: Span) -> tuple[Span, ...] | None:  # Symmetric Difference
         """Return the symmetric difference between two spans."""

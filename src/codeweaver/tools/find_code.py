@@ -102,9 +102,6 @@ async def find_code_implementation(
             for file_path in processed_files:
                 statistics.add_file_operation(file_path, "processed")
 
-            # Track response time
-            statistics.add_response_time(execution_time_ms)
-
             # Track token usage
             total_tokens = sum(estimate_tokens(match.content) for match in matches)
             statistics.add_token_usage(search_results=total_tokens)

@@ -20,7 +20,7 @@ from fastmcp.server.auth.auth import OAuthProvider
 from fastmcp.server.middleware import Middleware
 from fastmcp.server.server import DuplicateBehavior
 from fastmcp.tools.tool import Tool
-from pydantic import BaseModel, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
 from pydantic_ai.settings import merge_model_settings
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -29,9 +29,10 @@ from codeweaver._constants import DEFAULT_EXCLUDED_DIRS, DEFAULT_EXCLUDED_EXTENS
 from codeweaver._settings import (
     DataProviderSettings,
     LoggingSettings,
-    MiddlewareSettings,
+    MiddlewareOptions,
     Provider,
     ProviderKind,
+    UvicornServerSettings,
     default_config_file_locations,
 )
 from codeweaver._utils import walk_down_to_git_root
@@ -67,6 +68,10 @@ class FileFilterSettings(BaseModel):
       - Files in `forced_includes`, including files defined from glob patterns, will *not* be filtered by these settings.
     - if `include_github_dir` is True (default), the glob `**/.github/**` will be added to `forced_includes`.
     """
+
+    model_config = ConfigDict(
+        json_schema_extra={"NoTelemetryProps": ["forced_includes", "excludes"]}
+    )
 
     forced_includes: Annotated[
         frozenset[str | Path],
@@ -127,8 +132,21 @@ class ProviderSettings(BaseModel):
     """
 
 
-class FastMCPServerSettings(BaseModel):
+class FastMcpServerSettings(BaseModel):
     """Settings for the FastMCP server."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "TelemetryBoolProps": [
+                "host",
+                "port",
+                "path",
+                "additional_dependencies",
+                "additional_middleware",
+                "additional_tools",
+            ]
+        }
+    )
 
     transport: Annotated[
         Literal["stdio", "http"] | None,
@@ -158,7 +176,7 @@ class FastMCPServerSettings(BaseModel):
     additional_dependencies: list[str] | None = None
 
 
-DefaultFastMCPServerSettings = FastMCPServerSettings(
+DefaultFastMcpServerSettings = FastMcpServerSettings(
     transport="stdio",
     auth=None,
     cache_expiration_seconds=None,
@@ -195,6 +213,7 @@ class CodeWeaverSettings(BaseSettings):
         validate_assignment=True,
         cli_kebab_case=True,
         extra="allow",  # Allow extra fields in the configuration for plugins/extensions
+        json_schema_extra={"NoTelemetryProps": ["project_path", "project_name", "config_file"]},
     )
 
     # Core settings
@@ -228,15 +247,15 @@ class CodeWeaverSettings(BaseSettings):
         ),
     ] = 75
     server: Annotated[
-        FastMCPServerSettings, Field(description="Optionally customize FastMCP server settings.")
-    ] = DefaultFastMCPServerSettings
+        FastMcpServerSettings, Field(description="Optionally customize FastMCP server settings.")
+    ] = DefaultFastMcpServerSettings
 
     logging: Annotated[
         LoggingSettings | None, Field(default_factory=dict, description="Logging configuration")
     ] = None
 
     middleware_settings: Annotated[
-        MiddlewareSettings | None, Field(description="Middleware settings")
+        MiddlewareOptions | None, Field(description="Middleware settings")
     ] = None
 
     filter_settings: Annotated[FileFilterSettings, Field(description="File filtering settings")] = (
@@ -297,6 +316,11 @@ class CodeWeaverSettings(BaseSettings):
     agent_settings: Annotated[
         AgentModelSettings | None,
         Field(description="Model settings for ai agents. Required for `enable_precontext`"),
+    ] = None
+
+    uvicorn_settings: Annotated[
+        UvicornServerSettings | None,
+        Field(default_factory=UvicornServerSettings, description="Settings for the Uvicorn server"),
     ] = None
 
     __version__: Annotated[

@@ -6,7 +6,7 @@ from pathlib import Path
 from src.codeweaver._statistics import FileStatistics, SessionStatistics
 
 
-def main():
+def main() -> None:
     """Demonstrate the statistics system."""
     # Create file statistics
     file_stats = FileStatistics()

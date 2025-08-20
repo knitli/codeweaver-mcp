@@ -56,9 +56,9 @@ class ProviderRegistry:
             self._embedding_providers[Provider.VOYAGE] = VoyageEmbeddingProvider
 
         with contextlib.suppress(ImportError):
-            from codeweaver.embedding.providers.fastembed import FastEmbedEmbeddingProvider
+            from codeweaver.embedding.providers.fastembed import FastEmbedProvider
 
-            self._embedding_providers[Provider.FASTEMBED] = FastEmbedEmbeddingProvider
+            self._embedding_providers[Provider.FASTEMBED] = FastEmbedProvider
 
         with contextlib.suppress(ImportError):
             from codeweaver.embedding.providers.openai import OpenAIEmbeddingProvider
@@ -67,9 +67,9 @@ class ProviderRegistry:
 
         # Register vector store providers dynamically
         with contextlib.suppress(ImportError):
-            from codeweaver.vector_stores.qdrant import QdrantVectorStoreProvider
+            from codeweaver.vector_stores.qdrant import QdrantVectorStore
 
-            self._vector_store_providers[Provider.QDRANT] = QdrantVectorStoreProvider
+            self._vector_store_providers[Provider.QDRANT] = QdrantVectorStore
 
         with contextlib.suppress(ImportError):
             from codeweaver.vector_stores.memory import FastembedVectorstoreProvider
@@ -87,7 +87,7 @@ class ProviderRegistry:
             provider: The provider enum identifier
             provider_class: The provider implementation class
         """
-        if not issubclass(provider_class, EmbeddingProvider):
+        if not issubclass(provider_class, EmbeddingProvider):  # type: ignore
             raise TypeError(
                 f"Provider class must be a subclass of EmbeddingProvider, got {provider_class}"
             )
@@ -103,7 +103,7 @@ class ProviderRegistry:
             provider: The provider enum identifier
             provider_class: The provider implementation class
         """
-        if not issubclass(provider_class, VectorStoreProvider):
+        if not issubclass(provider_class, VectorStoreProvider):  # type: ignore
             raise TypeError(
                 f"Provider class must be a subclass of VectorStoreProvider, got {provider_class}"
             )

@@ -462,6 +462,7 @@ dependencies = [
     { name = "tiktoken" },
     { name = "tomli-w" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
     { name = "voyageai" },
     { name = "watchfiles" },
 ]
@@ -489,6 +490,7 @@ minimal = [
     { name = "pydantic-settings" },
     { name = "rignore" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
 ]
 pre-context = [
     { name = "cyclopts" },
@@ -522,6 +524,15 @@ provider-groq = [
 provider-huggingface = [
     { name = "pydantic-ai-slim", extra = ["huggingface"] },
 ]
+provider-in-memory = [
+    { name = "fastembed-vectorstore" },
+    { name = "transformers" },
+]
+provider-in-memory-gpu = [
+    { name = "fastembed-gpu" },
+    { name = "fastembed-vectorstore" },
+    { name = "transformers" },
+]
 provider-mistral = [
     { name = "pydantic-ai-slim", extra = ["mistral"] },
 ]
@@ -551,6 +562,7 @@ recommended = [
     { name = "tomli-w" },
     { name = "transformers" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
     { name = "voyageai" },
     { name = "watchfiles" },
 ]
@@ -571,6 +583,7 @@ recommended-local-only = [
     { name = "tomli-w" },
     { name = "transformers" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
     { name = "watchfiles" },
 ]
 recommended-no-telemetry = [
@@ -590,6 +603,7 @@ recommended-no-telemetry = [
     { name = "tomli-w" },
     { name = "transformers" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
     { name = "voyageai" },
     { name = "watchfiles" },
 ]
@@ -603,6 +617,7 @@ required-core = [
     { name = "rignore" },
     { name = "tiktoken" },
     { name = "typing-extensions" },
+    { name = "uvicorn", extra = ["standard"] },
 ]
 source-duckduckgo = [
     { name = "pydantic-ai-slim", extra = ["duckduckgo"] },
@@ -684,7 +699,10 @@ requires-dist = [
     { name = "fastembed", marker = "extra == 'provider-fastembed'", specifier = ">=0.7.1" },
     { name = "fastembed", marker = "extra == 'recommended-local-only'", specifier = ">=0.7.1" },
     { name = "fastembed-gpu", marker = "extra == 'provider-fastembed-gpu'", specifier = ">=0.7.1" },
+    { name = "fastembed-gpu", marker = "extra == 'provider-in-memory-gpu'", specifier = ">=0.7.1" },
     { name = "fastembed-vectorstore", marker = "extra == 'minimal'", specifier = ">=0.2.0" },
+    { name = "fastembed-vectorstore", marker = "extra == 'provider-in-memory'", specifier = ">=0.1.6" },
+    { name = "fastembed-vectorstore", marker = "extra == 'provider-in-memory-gpu'", specifier = ">=0.1.6" },
     { name = "fastmcp", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'minimal'", specifier = ">=2.10.6" },
     { name = "fastmcp", marker = "extra == 'recommended'", specifier = ">=2.10.6" },
@@ -759,6 +777,8 @@ requires-dist = [
     { name = "tomli-w", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.2.0" },
     { name = "transformers", marker = "extra == 'provider-fastembed'", specifier = ">=4.55.2" },
     { name = "transformers", marker = "extra == 'provider-fastembed-gpu'", specifier = ">=4.55.2" },
+    { name = "transformers", marker = "extra == 'provider-in-memory'", specifier = ">=4.55.2" },
+    { name = "transformers", marker = "extra == 'provider-in-memory-gpu'", specifier = ">=4.55.2" },
     { name = "transformers", marker = "extra == 'recommended'", specifier = ">=4.55.2" },
     { name = "transformers", marker = "extra == 'recommended-local-only'", specifier = ">=4.55.2" },
     { name = "transformers", marker = "extra == 'recommended-no-telemetry'", specifier = ">=4.55.2" },
@@ -768,6 +788,12 @@ requires-dist = [
     { name = "typing-extensions", marker = "extra == 'recommended-local-only'", specifier = ">=4.14.1" },
     { name = "typing-extensions", marker = "extra == 'recommended-no-telemetry'", specifier = ">=4.14.1" },
     { name = "typing-extensions", marker = "extra == 'required-core'", specifier = ">=4.14.1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'minimal'", specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'recommended'", specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'recommended-local-only'", specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'recommended-no-telemetry'", specifier = ">=0.35.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'required-core'", specifier = ">=0.35.0" },
     { name = "voyageai", specifier = ">=0.3.4" },
     { name = "voyageai", marker = "extra == 'provider-voyageai'", specifier = ">=0.3.4" },
     { name = "voyageai", marker = "extra == 'recommended'", specifier = ">=0.3.4" },
@@ -779,7 +805,7 @@ requires-dist = [
     { name = "watchfiles", marker = "extra == 'recommended-no-telemetry'", specifier = ">=1.1.0" },
     { name = "watchfiles", marker = "extra == 'source-filesystem'", specifier = ">=1.1.0" },
 ]
-provides-extras = ["auth-eunomia", "auth-permitio", "cli", "minimal", "pre-context", "provider-anthropic", "provider-bedrock", "provider-cohere", "provider-fastembed", "provider-fastembed-gpu", "provider-google", "provider-groq", "provider-huggingface", "provider-mistral", "provider-openai", "provider-qdrant", "provider-voyageai", "recommended", "recommended-local-only", "recommended-no-telemetry", "required-core", "source-duckduckgo", "source-filesystem", "source-tavily"]
+provides-extras = ["auth-eunomia", "auth-permitio", "cli", "minimal", "pre-context", "provider-anthropic", "provider-bedrock", "provider-cohere", "provider-fastembed", "provider-fastembed-gpu", "provider-google", "provider-groq", "provider-huggingface", "provider-in-memory", "provider-in-memory-gpu", "provider-mistral", "provider-openai", "provider-qdrant", "provider-voyageai", "recommended", "recommended-local-only", "recommended-no-telemetry", "required-core", "source-duckduckgo", "source-filesystem", "source-tavily"]
 
 [package.metadata.requires-dev]
 build = [

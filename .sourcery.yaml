@@ -4,6 +4,8 @@ rule_settings:
     - gpsg
   disable:
     - dont-self-assign-variables
+    - do-not-use-staticmethod
+    - avoid-global-variables
   python_version: '3.11'
   rule_types:
     - refactoring

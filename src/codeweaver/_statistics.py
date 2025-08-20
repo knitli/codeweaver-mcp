@@ -12,26 +12,32 @@ from __future__ import annotations
 import statistics
 
 from collections import Counter, defaultdict
-from functools import cache
+from collections.abc import Callable, Sequence
+from functools import cache, wraps
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal, TypedDict, cast
+from typing import Annotated, Any, ClassVar, Literal, TypedDict, cast
 
 from pydantic import (
+    AnyUrl,
     ConfigDict,
     Field,
     NonNegativeFloat,
     NonNegativeInt,
     PositiveFloat,
     computed_field,
+    field_serializer,
 )
 from pydantic.dataclasses import dataclass
 
+from codeweaver._common import BaseEnum
 from codeweaver._data_structures import ChunkKind, ExtKind
+from codeweaver._settings import Provider
 from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
 
 
-type ToolOrResourceName = str
+type ToolOrPromptName = str
+type ResourceUri = AnyUrl
 
 type McpComponentRequests = Literal[
     "on_call_tool_requests", "on_read_resource_requests", "on_get_prompt_requests"
@@ -49,7 +55,7 @@ type McpOperationRequests = Literal[
 
 class McpTimingDict(TypedDict):
     combined: NonNegativeFloat
-    by_component: dict[ToolOrResourceName, NonNegativeFloat]
+    by_component: dict[ToolOrPromptName | ResourceUri, NonNegativeFloat]
 
 
 class McpComponentTimingDict(TypedDict):
@@ -100,21 +106,21 @@ class TimingStatistics:
     """By-operation timing statistics for CodeWeaver operations."""
 
     on_call_tool_requests: Annotated[
-        dict[ToolOrResourceName, list[PositiveFloat]],
+        dict[ToolOrPromptName, list[PositiveFloat]],
         Field(
             default_factory=dict,
             description="Time taken for on_call_tool requests in milliseconds.",
         ),
     ]
     on_read_resource_requests: Annotated[
-        dict[ToolOrResourceName, list[PositiveFloat]],
+        dict[ResourceUri, list[PositiveFloat]],
         Field(
             default_factory=dict,
             description="Time taken for on_read_resource requests in milliseconds.",
         ),
     ]
     on_get_prompt_requests: Annotated[
-        dict[ToolOrResourceName, list[PositiveFloat]],
+        dict[ToolOrPromptName, list[PositiveFloat]],
         Field(
             default_factory=dict,
             description="Time taken for on_get_prompt requests in milliseconds.",
@@ -153,7 +159,7 @@ class TimingStatistics:
         self,
         key: McpOperationRequests,
         response_time: PositiveFloat,
-        tool_or_resource_name: ToolOrResourceName | None = None,
+        tool_or_resource_name: ToolOrPromptName | ResourceUri | None = None,
     ) -> None:
         """Update the timing statistics for a specific request type."""
         if key in ("on_call_tool_requests", "on_read_resource_requests", "on_get_prompt_requests"):
@@ -162,9 +168,7 @@ class TimingStatistics:
                     f"{key} requires a tool or resource name to update timing statistics."
                 )
             # Ensure the dictionary exists for the specific tool/resource
-            if not (request_dict := getattr(self, key)):
-                request_dict: dict[ToolOrResourceName, list[PositiveFloat]] = {}
-                self.__setattr__(key, request_dict)
+            request_dict = getattr(self, key, {})
             if tool_or_resource_name not in request_dict:
                 request_dict[tool_or_resource_name] = []
             request_dict[tool_or_resource_name].append(response_time)
@@ -206,6 +210,7 @@ class TimingStatistics:
         }
 
     @computed_field
+    @property
     def timing_summary(self) -> TimingStatisticsDict:
         """Get a summary of timing statistics."""
         # Compute all statistics for component-based requests once
@@ -317,11 +322,13 @@ class _LanguageStatistics:
     ] = set()
 
     @computed_field
+    @property
     def unique_count(self) -> NonNegativeInt:
         """Get the number of unique files for this language (excluding skipped)."""
         return len(self.unique_files) if self.unique_files else 0
 
     @computed_field
+    @property
     def total_operations(self) -> NonNegativeInt:
         """Get the total number of operations for this language."""
         return self.indexed + self.retrieved + self.processed + self.reindexed + self.skipped
@@ -389,6 +396,7 @@ class _CategoryStatistics:
             self.languages[language] = _LanguageStatistics(language=language)
         return self.languages[language]
 
+    @computed_field
     @property
     def unique_count(self) -> NonNegativeInt:
         """Get the total unique file count across all languages in this category."""
@@ -398,6 +406,7 @@ class _CategoryStatistics:
         return len(all_files)
 
     @computed_field(return_type=dict[SemanticSearchLanguage, _LanguageStatistics])
+    @property
     def semantic_languages(self) -> MappingProxyType[SemanticSearchLanguage, _LanguageStatistics]:
         """Get all semantic search languages in this category."""
         # This is verbose to keep the type checker happy
@@ -422,14 +431,12 @@ class _CategoryStatistics:
     @property
     def _semantic_language_values(self) -> frozenset[str]:
         """Get the string values of all semantic search languages in this category."""
-        return frozenset(lang.value for lang in self.semantic_languages())
+        return frozenset(lang.value for lang in self.semantic_languages)
 
     @property
     def operations_with_semantic_support(self) -> NonNegativeInt:
         """Get the total operations with semantic support across all languages in this category."""
-        return sum(
-            lang_stats.total_operations() for lang_stats in self.semantic_languages().values()
-        )
+        return sum(lang_stats.total_operations for lang_stats in self.semantic_languages.values())
 
     @property
     def unique_files(self) -> frozenset[Path]:
@@ -442,7 +449,7 @@ class _CategoryStatistics:
     @property
     def total_operations(self) -> NonNegativeInt:
         """Get the total operations across all languages in this category."""
-        return sum(lang_stats.total_operations() for lang_stats in self.languages.values())
+        return sum(lang_stats.total_operations for lang_stats in self.languages.values())
 
     def add_operation(
         self,
@@ -553,7 +560,7 @@ class FileStatistics:
         for cat_stats in self.categories.values():
             for lang, lang_stats in cat_stats.languages.items():
                 all_files_by_language[lang].update(lang_stats.unique_files)
-                language_summary[lang]["unique_files"] += lang_stats.unique_count()
+                language_summary[lang]["unique_files"] += lang_stats.unique_count
                 language_summary[lang] = self._summarize_stats_for_language(lang_stats)
 
         return MappingProxyType(language_summary)
@@ -561,7 +568,7 @@ class FileStatistics:
     def _summarize_stats_for_language(self, lang_stats: _LanguageStatistics) -> LanguageSummary:
         """Summarize language statistics into the overall language summary."""
         return {
-            "total_operations": lang_stats.total_operations(),
+            "total_operations": lang_stats.total_operations,
             "indexed": lang_stats.indexed,
             "retrieved": lang_stats.retrieved,
             "processed": lang_stats.processed,
@@ -570,39 +577,63 @@ class FileStatistics:
         }
 
 
-class TokenCounter(
-    Counter[
-        Literal[
-            "embedding_generated",
-            "reranking_generated",
-            "context_agent_used",
-            "user_agent_received",
-            "search_results",
-        ]
-    ]
-):
+class TokenCategory(BaseEnum):
+    """Categories of token usage for vector store operations."""
+
+    EMBEDDING = "embedding"
+    """Tokens generated for storing/using in embedding operations. Includes query tokens."""
+    RERANKING = "reranking"
+    """Embeddings generated for reranking search results."""
+
+    CONTEXT_AGENT = "context_agent"
+    """Tokens expended by CodeWeaver's internal agent to process the user's request. It's the number of tokens used during the execution of the `find_code` tool."""
+    SEARCH_RESULTS = "search_results"
+    """Represents the *agent* token equivalent of total search results (from all strategies/sources). Many of these are never actually turned *into* tokens. The difference between these tokens and the `user_agent` tokens is the number of tokens that CodeWeaver saved from the users agent's context (and API costs)."""
+    USER_AGENT = "user_agent"
+    """Tokens that CodeWeaver *returned* to the user's agent after intelligently sifting through results. It's the number of tokens for the results returned by the `find_code` tool."""
+
+    @property
+    def is_agent_token(self) -> bool:
+        """Check if the token category is related to agent usage."""
+        return self in (TokenCategory.CONTEXT_AGENT, TokenCategory.USER_AGENT)
+
+    @property
+    def is_data_token(self) -> bool:
+        """Check if the token category is related to data usage."""
+        return self == TokenCategory.SEARCH_RESULTS
+
+    @property
+    def is_embedding_type_token(self) -> bool:
+        """Represents tokens generated for embedding operations."""
+        return self in (TokenCategory.EMBEDDING, TokenCategory.RERANKING)
+
+
+class TokenCounter(Counter[TokenCategory]):
     """A counter for tracking token usage by operation."""
 
     def __init__(self) -> None:
         super().__init__()
         self.update({
-            "embedding_generated": 0,
-            "reranking_generated": 0,
-            "context_agent_used": 0,
-            "user_agent_received": 0,
-            "search_results": 0,
+            TokenCategory.EMBEDDING: 0,
+            TokenCategory.RERANKING: 0,
+            TokenCategory.CONTEXT_AGENT: 0,
+            TokenCategory.USER_AGENT: 0,
+            TokenCategory.SEARCH_RESULTS: 0,
         })
 
+    @computed_field
     @property
     def total_generated(self) -> NonNegativeInt:
         """Get the total number of tokens generated across all operations."""
-        return sum((self["embedding_generated"], self["reranking_generated"]))
+        return sum((self[TokenCategory.EMBEDDING], self[TokenCategory.RERANKING]))
 
+    @computed_field
     @property
     def total_used(self) -> NonNegativeInt:
         """Get the total number of tokens used across all operations."""
-        return sum((self["context_agent_used"], self["user_agent_received"]))
+        return sum((self[TokenCategory.CONTEXT_AGENT], self[TokenCategory.USER_AGENT]))
 
+    @computed_field
     @property
     def context_saved(self) -> NonNegativeInt:
         """
@@ -618,7 +649,7 @@ class TokenCounter(
 
             Even if we had those numbers, they would still be lower bounds, because they don't account for increases in overall turns and token expenditure if CodeWeaver was never used. Let's call this the "blind bumbling savings" of CodeWeaver.
         """
-        return self["search_results"] - self["user_agent_received"]
+        return self[TokenCategory.SEARCH_RESULTS] - self[TokenCategory.USER_AGENT]
 
     @property
     def money_saved(self) -> NonNegativeFloat:
@@ -665,6 +696,9 @@ class SessionStatistics:
         ),
     ] = None
 
+    _successful_request_log: list[str] = Field(default_factory=list, init=False, repr=False)
+    _failed_request_log: list[str] = Field(default_factory=list, init=False, repr=False)
+
     def __post_init__(self) -> None:
         """Post-initialization processing."""
         if not self.index_statistics:
@@ -684,10 +718,17 @@ class SessionStatistics:
         self.failed_requests = self.failed_requests or 0
         self.total_requests = self.total_requests or 0
 
+    @field_serializer("token_statistics")
+    def serialize_token_statistics(
+        self, value: TokenCounter
+    ) -> dict[TokenCategory, NonNegativeInt]:
+        """Serialize the token statistics to a dictionary."""
+        return dict(value)
+
     def get_timing_statistics(self) -> TimingStatisticsDict:
         """Get the current timing statistics."""
         if self.timing_statistics:
-            return self.timing_statistics.timing_summary()
+            return self.timing_statistics.timing_summary
         self.timing_statistics = TimingStatistics(
             on_call_tool_requests={},
             on_read_resource_requests={},
@@ -697,17 +738,17 @@ class SessionStatistics:
             on_list_resource_templates_requests=[],
             on_list_prompts_requests=[],
         )
-        return self.timing_statistics.timing_summary()
+        return self.timing_statistics.timing_summary
 
-    def add_successful_request(self) -> None:
+    def add_successful_request(self, request_id: str | None = None) -> None:
         """Add a successful request count."""
-        self._add_request(successful=True)
+        self._add_request(successful=True, request_id=request_id)
 
-    def add_failed_request(self) -> None:
+    def add_failed_request(self, request_id: str | None = None) -> None:
         """Add a failed request count."""
         self._add_request(successful=False)
 
-    def _add_request(self, *, successful: bool) -> None:
+    def _add_request(self, *, successful: bool, request_id: str | None = None) -> None:
         """Internal method to add a request count."""
         if self.total_requests is None:
             self.total_requests = 0
@@ -715,6 +756,10 @@ class SessionStatistics:
             self.successful_requests = 0
         if self.failed_requests is None:
             self.failed_requests = 0
+        if request_id and successful:
+            self._successful_request_log.append(request_id)
+        elif request_id:
+            self._failed_request_log.append(request_id)
 
         self.total_requests += 1
         if successful:
@@ -723,10 +768,19 @@ class SessionStatistics:
             self.failed_requests += 1
 
     @computed_field
+    @property
     def success_rate(self) -> NonNegativeFloat | None:
         """Calculate the success rate of requests."""
         if self.total_requests and self.total_requests > 0:
             return (self.successful_requests or 0) / self.total_requests
+        return None
+
+    @computed_field
+    @property
+    def failure_rate(self) -> NonNegativeFloat | None:
+        """Calculate the failure rate of requests."""
+        if self.total_requests and self.total_requests > 0:
+            return (self.failed_requests or 0) / self.total_requests
         return None
 
     def add_token_usage(
@@ -741,11 +795,11 @@ class SessionStatistics:
         if self.token_statistics is None:
             self.token_statistics = TokenCounter()
 
-        self.token_statistics["embedding_generated"] += embedding_generated
-        self.token_statistics["reranking_generated"] += reranking_generated
-        self.token_statistics["context_agent_used"] += context_agent_used
-        self.token_statistics["user_agent_received"] += user_agent_received
-        self.token_statistics["search_results"] += search_results
+        self.token_statistics[TokenCategory.EMBEDDING] += embedding_generated
+        self.token_statistics[TokenCategory.RERANKING] += reranking_generated
+        self.token_statistics[TokenCategory.CONTEXT_AGENT] += context_agent_used
+        self.token_statistics[TokenCategory.USER_AGENT] += user_agent_received
+        self.token_statistics[TokenCategory.SEARCH_RESULTS] += search_results
 
     def get_token_usage(self) -> TokenCounter:
         """Get the current token usage statistics."""
@@ -756,6 +810,15 @@ class SessionStatistics:
         if not self.index_statistics:
             self.index_statistics = FileStatistics()
         self.index_statistics.add_file(path, operation)
+
+    def add_file_operations_by_extkind(
+        self, operations: Sequence[tuple[Path, ExtKind, OperationsKey]]
+    ) -> None:
+        """Add file operations to the index statistics by extension kind."""
+        if not self.index_statistics:
+            self.index_statistics = FileStatistics()
+        for path, ext_kind, operation in operations:
+            self.index_statistics.add_file(path, operation, ext_kind=ext_kind)
 
     def add_file_operations(self, *file_operations: tuple[Path, OperationsKey]) -> None:
         """Add multiple file operations to the index statistics."""
@@ -784,3 +847,23 @@ class SessionStatistics:
         )
         self.index_statistics = FileStatistics()
         self.token_statistics = TokenCounter()
+
+
+def get_tokenizer(provider: Provider) -> tuple[str, str]:
+    """Get the tokenizer for a specific provider."""
+    match provider:
+        case Provider.FASTEMBED | Provider.FASTEMBED_VECTORSTORE:
+            return "transformers.AutoTokenizer", "{{model}}"
+        case Provider.QDRANT:
+            return "transformers.AutoTokenizer", "{{model}}"
+
+
+def embedding_counter[Func](provider: Provider) -> Callable[..., Func]:
+    """Method decorator to count embeddings generated by an embedding provider."""
+
+    def decorator(func: Callable[..., Func]) -> Callable[..., Func]:
+        """Decorator to count embeddings generated by an embedding provider."""
+
+        @wraps(func)
+        async def wrapper(*args: tuple[Any], **kwargs: dict[str, Any]) -> Callable[..., Func]:
+            """Wrapper function to count embeddings."""

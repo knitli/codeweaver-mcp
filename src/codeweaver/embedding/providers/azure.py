@@ -1,3 +1,5 @@
+"""Azure embedding provider."""
+
 from __future__ import annotations as _annotations
 
 from pydantic_ai.profiles.cohere import cohere_model_profile

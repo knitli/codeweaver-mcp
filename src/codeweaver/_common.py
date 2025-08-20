@@ -23,22 +23,49 @@ class BaseEnum(Enum):
     BaseEnum provides convenience methods for converting between strings and enum members, checking membership, and retrieving members and members' values, and adding new members dynamically.
     """
 
+    @staticmethod
+    def _deconstruct_string(value: str) -> list[str]:
+        """Deconstruct a string into its component parts."""
+        value = value.strip().lower()
+        for underscore_length in range(4, 0, -1):
+            value = value.replace("_" * underscore_length, "_")
+        return [v for v in value.split("_") if v]
+
     @classmethod
     def from_string(cls, value: str) -> Self:
         """Convert a string to the corresponding enum member."""
         try:
             if cls._value_type() is int and value.isdigit():
                 return cls(int(value))
-            normalized_value = value.replace("-", "_").replace(" ", "_").upper()
+            normalized_value = cls._encode_name(value).upper()
             cls.__members__: dict[str, type[BaseEnum]]  # type: ignore  # noqa: B032
             return cast(Self, cls.__members__[normalized_value])
-        except KeyError:
-            try:
-                # try without any dividers
-                normalized_value = value.replace("-", "").replace(" ", "").upper()
-                return cast(Self, cls.__members__[normalized_value])
-            except KeyError as e:
-                raise ValueError(f"{value} is not a valid {cls.__qualname__} value") from e
+        except KeyError as e:
+            value_parts = cls._deconstruct_string(value)
+            if found_member := next(
+                (member for member in cls if cls._deconstruct_string(member.name) == value_parts),
+                None,
+            ):
+                return found_member
+            raise ValueError(f"{value} is not a valid {cls.__qualname__} member") from e
+
+    @staticmethod
+    def _encode_name(value: str) -> str:
+        """
+        Encode a string for use as an enum member name.
+
+        Provides a fully reversible encoding to normalize enum members and values. Doesn't handle all possible cases (by a long shot), but works for what we need without harming readability.
+        """
+        if value.lower() == "grok":
+            return "x_ai"  # Pydantic-AI uses "grok", but we found that confusing since there's also a `groq` provider, and because it doesn't follow the pattern of using the company name and not the model series names.
+        return value.lower().replace("-", "__").replace(":", "___").replace(" ", "____")
+
+    @staticmethod
+    def _decode_name(value: str, *, for_pydantic_ai: bool = False) -> str:
+        """Decodes an enum member or value into its original form."""
+        if for_pydantic_ai and value.lower() == "x_ai":
+            return "grok"  # handles the special case where we use "x_ai" for the "grok" provider in Pydantic-AI
+        return value.lower().replace("____", " ").replace("___", ":").replace("__", "-")
 
     @classmethod
     def _value_type(cls) -> type[int | str]:
@@ -63,7 +90,17 @@ class BaseEnum(Enum):
     @classmethod
     def is_member(cls, value: str | int) -> bool:
         """Check if a value is a member of the enum."""
-        return value in cls.values()
+        return (
+            ((cls._encode_name(value) if isinstance(value, str) else value) in cls.values())
+            or (value == "grok")
+            or (
+                isinstance(value, str)
+                and any(
+                    cls._deconstruct_string(member.name.lower()) == cls._deconstruct_string(value)
+                    for member in cls
+                )
+            )
+        )
 
     @property
     def value_type(self) -> type[int | str]:
@@ -73,7 +110,7 @@ class BaseEnum(Enum):
     @property
     def as_variable(self) -> str:
         """Return the string representation of the enum member as a variable name."""
-        return self.name.lower()
+        return self.value if self.value_type is str else str(self.value)
 
     @classmethod
     def members(cls) -> Generator[Self]:
@@ -97,8 +134,10 @@ class BaseEnum(Enum):
     @classmethod
     def add_member(cls, name: str, value: str | int) -> Self:
         """Dynamically add a new member to the enum."""
+        if isinstance(value, str):
+            value = cls._encode_name(value).lower()
         return extend_enum(
-            cls,  # type: ignore -- aenum has no typing, but its EnumType and Enum are derived from stdlib Enum... the author of aenum *is* the stdlib Enum author
-            name.upper().replace("-", "_").replace(" ", "_"),
+            cls,
+            cls._encode_name(name).upper(),
             value,  # type: ignore
         )

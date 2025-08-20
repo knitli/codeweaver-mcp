@@ -30,6 +30,7 @@ exclude = [
     "node_modules",
     "site-packages",
     "venv",
+    "typings",
 ]
 extend-include = ["*.ipynb"]
 
@@ -154,6 +155,7 @@ exclude = [
     "**/_vendor",
     "setuptools/_distutils",
     "setuptools/config/_validate_pyproject",
+    "typings",
 ]
 
 [lint.pydocstyle]

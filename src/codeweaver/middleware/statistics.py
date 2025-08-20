@@ -30,6 +30,7 @@ from mcp.types import (
     ReadResourceRequestParams,
     ReadResourceResult,
 )
+from pydantic import AnyUrl
 from typing_extensions import TypeIs
 
 from codeweaver._statistics import (
@@ -65,11 +66,11 @@ class StatisticsMiddleware(Middleware):
         self.log_level = log_level or logging.INFO
         self._we_are_not_none()
 
-    def _stats_is_stats(self) -> TypeIs[SessionStatistics]:  # type: ignore
-        return isinstance(self.statistics, SessionStatistics)  # type: ignore
+    def _stats_is_stats(self, statistics: Any) -> TypeIs[SessionStatistics]:
+        return isinstance(statistics, SessionStatistics)
 
-    def _timing_stats_is_stats(self) -> TypeIs[TimingStatistics]:  # type: ignore
-        return isinstance(self.timing_statistics, TimingStatistics)  # type: ignore
+    def _timing_stats_is_stats(self, timing: Any) -> TypeIs[TimingStatistics]:
+        return isinstance(timing, TimingStatistics)
 
     def _we_are_not_none(self) -> None:
         """Ensure that all required statistics are present."""
@@ -78,13 +79,14 @@ class StatisticsMiddleware(Middleware):
         if not self.timing_statistics:
             raise ProviderError("Failed to initialize timing statistics.")
 
-    # Trust me, I tried to define this with generics, but it was a nightmare. I blame the fastmcp types.
+    # Trust me, I tried to define this with generics, but it was a nightmare. I blame the fastmcp types (but it's probably me).
     @overload
     async def _time_operation(
         self,
         context: MiddlewareContext[CallToolRequestParams],
         call_next: CallNext[CallToolRequestParams, CallToolResult],
         operation_name: str,
+        tool_or_resource_name: str,
     ) -> CallToolResult: ...
     @overload
     async def _time_operation(
@@ -92,6 +94,7 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[ReadResourceRequestParams],
         call_next: CallNext[ReadResourceRequestParams, ReadResourceResult],
         operation_name: str,
+        tool_or_resource_name: AnyUrl,
     ) -> ReadResourceResult: ...
     @overload
     async def _time_operation(
@@ -99,6 +102,7 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[GetPromptRequestParams],
         call_next: CallNext[GetPromptRequestParams, GetPromptResult],
         operation_name: str,
+        tool_or_resource_name: str,
     ) -> GetPromptResult: ...
     @overload
     async def _time_operation(
@@ -106,6 +110,7 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[ListResourcesRequest],
         call_next: CallNext[ListResourcesRequest, list[Resource]],
         operation_name: str,
+        tool_or_resource_name: None = None,
     ) -> list[Resource]: ...
     @overload
     async def _time_operation(
@@ -113,6 +118,7 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[ListResourceTemplatesRequest],
         call_next: CallNext[ListResourceTemplatesRequest, list[ResourceTemplate]],
         operation_name: str,
+        tool_or_resource_name: None = None,
     ) -> list[ResourceTemplate]: ...
     @overload
     async def _time_operation(
@@ -120,6 +126,7 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[ListPromptsRequest],
         call_next: CallNext[ListPromptsRequest, list[Prompt]],
         operation_name: str,
+        tool_or_resource_name: None = None,
     ) -> list[Prompt]: ...
     @overload
     async def _time_operation(
@@ -127,23 +134,38 @@ class StatisticsMiddleware(Middleware):
         context: MiddlewareContext[ListToolsRequest],
         call_next: CallNext[ListToolsRequest, list[Tool]],
         operation_name: str,
+        tool_or_resource_name: None = None,
     ) -> list[Tool]: ...
     async def _time_operation(
-        self, context: MiddlewareContext[Any], call_next: CallNext[Any, Any], operation_name: str
+        self,
+        context: MiddlewareContext[Any],
+        call_next: CallNext[Any, Any],
+        operation_name: str,
+        tool_or_resource_name: str | AnyUrl | None = None,
     ) -> Any:
         """Helper method to time any operation."""
-        if not self._stats_is_stats() or not self._timing_stats_is_stats():
+        if not self._stats_is_stats(self.statistics) or not self._timing_stats_is_stats(
+            self.timing_statistics
+        ):
             raise ProviderError("Statistics middleware is not properly initialized.")
         start_time = time.perf_counter()
+        request_id = (
+            context.fastmcp_context.request_id if context and context.fastmcp_context else None
+        )
+
         try:
             result = await call_next(context)
             duration_ms = (time.perf_counter() - start_time) * 1000
-            self.statistics.add_successful_request()
-            self.timing_statistics.update(cast(McpOperationRequests, operation_name), duration_ms)
+            self.statistics.add_successful_request(request_id=request_id)
+            self.timing_statistics.update(
+                cast(McpOperationRequests, operation_name),
+                duration_ms,
+                tool_or_resource_name=tool_or_resource_name,
+            )
 
         except Exception:
             duration_ms = (time.perf_counter() - start_time) * 1000
-            self.statistics.add_failed_request()
+            self.statistics.add_failed_request(request_id=request_id)
             self.logger.exception(
                 "Operation in %s failed after %.2fms",
                 operation_name,
@@ -160,7 +182,9 @@ class StatisticsMiddleware(Middleware):
         call_next: CallNext[CallToolRequestParams, CallToolResult],
     ) -> CallToolResult:
         """Handle incoming requests and track statistics."""
-        return await self._time_operation(context, call_next, "on_call_tool_requests", context.)
+        return await self._time_operation(
+            context, call_next, "on_call_tool_requests", context.message.name
+        )
 
     async def on_read_resource(
         self,
@@ -168,7 +192,9 @@ class StatisticsMiddleware(Middleware):
         call_next: CallNext[ReadResourceRequestParams, ReadResourceResult],
     ) -> ReadResourceResult:
         """Handle resource read requests and track statistics."""
-        return await self._time_operation(context, call_next, "on_read_resource_requests")
+        return await self._time_operation(
+            context, call_next, "on_read_resource_requests", context.message.uri
+        )
 
     async def on_get_prompt(
         self,
@@ -176,7 +202,9 @@ class StatisticsMiddleware(Middleware):
         call_next: CallNext[GetPromptRequestParams, GetPromptResult],
     ) -> GetPromptResult:
         """Handle prompt retrieval requests and track statistics."""
-        return await self._time_operation(context, call_next, "on_get_prompt_requests")
+        return await self._time_operation(
+            context, call_next, "on_get_prompt_requests", context.message.name
+        )
 
     async def on_list_tools(
         self,
@@ -224,7 +252,7 @@ class StatisticsMiddleware(Middleware):
         Returns:
             Current timing statistics
         """
-        return self.timing_statistics.timing_summary()
+        return self.timing_statistics.timing_summary
 
     def reset_statistics(self) -> None:
         """Reset all statistics to initial state."""

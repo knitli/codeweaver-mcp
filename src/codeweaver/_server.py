@@ -1,6 +1,8 @@
 # sourcery skip: snake-case-variable-declarations
 """Initialize the FastMCP application with default middleware and settings."""
 
+from __future__ import annotations
+
 import logging
 import re
 import time
@@ -24,12 +26,14 @@ from codeweaver._common import BaseEnum
 from codeweaver._logger import setup_logger
 from codeweaver._settings import (
     ErrorHandlingMiddlewareSettings,
-    FastMCPHTTPRunArgs,
-    FastMCPServerSettingsType,
+    FastMcpHttpRunArgs,
+    FastMcpServerSettingsType,
     LoggingMiddlewareSettings,
-    MiddlewareSettings,
+    MiddlewareOptions,
     RateLimitingMiddlewareSettings,
     RetryMiddlewareSettings,
+    UvicornServerSettings,
+    UvicornServerSettingsType,
 )
 from codeweaver._settings_registry import get_provider_registry
 from codeweaver._statistics import SessionStatistics
@@ -37,13 +41,14 @@ from codeweaver._utils import rpartial
 from codeweaver.middleware import StatisticsMiddleware
 from codeweaver.settings import (
     CodeWeaverSettings,
-    FastMCPServerSettings,
+    FastMcpServerSettings,
     FileFilterSettings,
     get_settings,
 )
 
 
-_STORE: dict[Literal["settings", "server", "lifespan_func", "app_start_func"], Any] = {}
+_STORE: dict[Literal["settings", "runargs", "server", "lifespan_func", "app_start_func"], Any]
+_STATE: AppState | None = None
 
 
 @dataclass(order=True, kw_only=True, config=ConfigDict(extra="forbid", str_strip_whitespace=True))
@@ -52,7 +57,10 @@ class StoredSettings:
 
     settings: Annotated[CodeWeaverSettings, Field(description="Resolved CodeWeaver settings")]
     server: Annotated[
-        FastMCPServerSettingsType, Field(description="Resolved FastMCP server settings")
+        FastMcpServerSettingsType, Field(description="Resolved FastMCP server settings")
+    ]
+    runargs: Annotated[
+        FastMcpHttpRunArgs | None, Field(description="Run arguments for the FastMCP server")
     ]
     lifespan_func: Annotated[
         FunctionType, Field(description="Lifespan function for the application")
@@ -65,7 +73,7 @@ class StoredSettings:
         from pydantic import TypeAdapter
 
         global _STORE
-        _STORE = TypeAdapter(self).dump_python(mode="python")
+        _STORE = TypeAdapter(self).dump_python(mode="python")  # type: ignore
 
 
 class Feature(BaseEnum):
@@ -93,6 +101,8 @@ class Feature(BaseEnum):
     RATE_LIMITING = "rate_limiting"
     STATISTICS = "statistics"
 
+    _UNKNOWN = "unknown"
+
 
 class HealthStatus(BaseEnum):
     """Enum for health status of the CodeWeaver server."""
@@ -111,6 +121,7 @@ class HealthInfo:
     )
     version: Annotated[str, Field(description="Version of the CodeWeaver server")] = version
     startup_time: Annotated[float, Field(description="Startup time of the server")] = time.time()
+    # TODO: This should come from the registry, not hardcoded
     features: Annotated[
         tuple[Feature],
         Field(default_factory=tuple, description="List of features supported by the server"),
@@ -121,6 +132,21 @@ class HealthInfo:
         Feature.STATISTICS,
     )  # type: ignore
     error: Annotated[str | None, Field(description="Error message if any")] = None
+
+    @classmethod
+    def initialize(cls) -> HealthInfo:
+        """Initialize health information with default values."""
+        return cls(
+            status=HealthStatus.HEALTHY,
+            version=version,
+            startup_time=time.time(),
+            features=(
+                Feature.BASIC_SEARCH,
+                Feature.FILE_DISCOVERY,
+                Feature.PROVIDER_REGISTRY,
+                Feature.STATISTICS,
+            ),  # type: ignore
+        )
 
 
 @dataclass(
@@ -163,8 +189,16 @@ class AppState:
     indexer: None = None  # Placeholder for background indexer
 
     middleware_stack: Annotated[
-        tuple[Middleware, ...], Field(description="Loaded middleware stack")
-    ] = Field(default_factory=tuple)
+        tuple[Middleware, ...],
+        Field(
+            default_factory=lambda data: tuple(data["settings"]["middleware"]),
+            description="Loaded middleware stack",
+        ),
+    ]
+
+    def __post_init__(self) -> None:
+        global _STATE
+        _STATE = self  # type: ignore  # Store the state globally for easy access
 
 
 @asynccontextmanager
@@ -220,9 +254,9 @@ async def lifespan(
         state.initialized = False
 
 
-def get_default_middleware_settings(logger: logging.Logger, log_level: int) -> MiddlewareSettings:
+def get_default_middleware_settings(logger: logging.Logger, log_level: int) -> MiddlewareOptions:
     """Get the default middleware settings."""
-    return MiddlewareSettings(
+    return MiddlewareOptions(
         error_handling=ErrorHandlingMiddlewareSettings(
             logger=logger, include_traceback=True, error_callback=None, transform_errors=False
         ),
@@ -315,7 +349,7 @@ def _setup_logger(settings: CodeWeaverSettings) -> tuple[logging.Logger, int]:
 
 def _configure_middleware(
     settings: CodeWeaverSettings, logger: logging.Logger, level: int
-) -> tuple[MiddlewareSettings, Any]:
+) -> tuple[MiddlewareOptions, Any]:
     """Configure middleware settings and determine logging middleware type.
 
     Returns:
@@ -327,10 +361,10 @@ def _configure_middleware(
     logging_middleware = (
         StructuredLoggingMiddleware if use_structured_logging else LoggingMiddleware
     )
-    middleware_defaults: MiddlewareSettings = get_default_middleware_settings(logger, level)
+    middleware_defaults: MiddlewareOptions = get_default_middleware_settings(logger, level)
     if middleware_settings := settings.middleware_settings or None:  # type: ignore
         middleware_defaults |= middleware_settings
-    middleware_settings: MiddlewareSettings = middleware_defaults
+    middleware_settings: MiddlewareOptions = middleware_defaults
     return middleware_settings, logging_middleware
 
 
@@ -338,9 +372,9 @@ def _create_base_fastmcp_settings(
     session_statistics: SessionStatistics,
     logger: logging.Logger,
     level: int,
-    middleware_settings: MiddlewareSettings,
+    middleware_settings: MiddlewareOptions,
     logging_middleware: type[LoggingMiddleware | StructuredLoggingMiddleware],
-) -> FastMCPServerSettingsType:
+) -> FastMcpServerSettingsType:
     """Create the base FastMCP settings dictionary.
 
     Returns:
@@ -369,8 +403,8 @@ type SettingsKey = Literal["dependencies", "middleware", "tools"]
 
 
 def _integrate_user_settings(
-    settings: FastMCPServerSettings, base_fast_mcp_settings: FastMCPServerSettingsType
-) -> FastMCPServerSettingsType:
+    settings: FastMcpServerSettings, base_fast_mcp_settings: FastMcpServerSettingsType
+) -> FastMcpServerSettingsType:
     """Integrate user-provided settings with base FastMCP settings.
 
     Args:
@@ -399,7 +433,7 @@ def _integrate_user_settings(
         mode="python", exclude_defaults=True, exclude_unset=True, exclude_none=True
     )
 
-    return {**base_fast_mcp_settings, **cast(FastMCPServerSettingsType, server_settings)}
+    return {**base_fast_mcp_settings, **cast(FastMcpServerSettingsType, server_settings)}
 
 
 def _setup_file_filters_and_lifespan(
@@ -420,16 +454,16 @@ def _setup_file_filters_and_lifespan(
     return rpartial(lifespan, settings, session_statistics)
 
 
-def _filter_server_settings(server_settings: FastMCPServerSettings) -> FastMCPServerSettingsType:
+def _filter_server_settings(server_settings: FastMcpServerSettings) -> FastMcpServerSettingsType:
     """Filter server settings to remove keys not recognized by FastMCP."""
     filtered_settings = server_settings.model_dump(mode="python")
     to_remove = ("additional_middleware", "additional_tools", "additional_dependencies")
     for key in to_remove:
         filtered_settings.pop(key, None)
-    return cast(FastMCPServerSettingsType, filtered_settings)
+    return cast(FastMcpServerSettingsType, filtered_settings)
 
 
-def _create_start_method(fastmcp_settings: dict[str, Any]) -> str:
+def _get_start_method_name(transport_setting: Literal["http", "stdio"]) -> str:
     """Create the start method for the FastMCP application.
 
     Args:
@@ -439,14 +473,12 @@ def _create_start_method(fastmcp_settings: dict[str, Any]) -> str:
     Returns:
         Function to start the FastMCP application
     """
-    return (
-        "run_http_async"
-        if fastmcp_settings.get("transport", "http") == "http"
-        else "run_stdio_async"
-    )
+    return "run_http_async" if transport_setting == "http" else "run_async"
 
 
-def _get_fastmcp_run_args(server_settings: FastMCPServerSettingsType) -> FastMCPHTTPRunArgs | None:
+def _get_fastmcp_run_args(
+    server_settings: FastMcpServerSettings, uvicorn_config: UvicornServerSettings, log_level: int
+) -> FastMcpHttpRunArgs | None:
     """Get the FastMCP run arguments from the server settings.
 
     Args:
@@ -457,17 +489,36 @@ def _get_fastmcp_run_args(server_settings: FastMCPServerSettingsType) -> FastMCP
     """
     if not server_settings:
         return None
-    if server_settings.get("transport", "http") != "http":
+    # We only need runargs for http transport, as other transports do not use it.
+    if server_settings.transport != "http":
         return None
 
-    return FastMCPHTTPRunArgs(
-        transport=server_settings.get("transport", "http"),  # type: ignore
-        host=server_settings.get("host"),
-        port=server_settings.get("port"),
-        log_level=server_settings.get("log_level"),
-        path=server_settings.get("path"),
-        uvicorn_config=server_settings.get("uvicorn_config"),
-        middleware=[],
+    match log_level:
+        case 0:
+            stringified_log_level = "debug"
+        case 10:
+            stringified_log_level = "debug"
+        case 20:
+            stringified_log_level = "info"
+        case 30:
+            stringified_log_level = "warning"
+        case 40:
+            stringified_log_level = "error"
+        case 50:
+            stringified_log_level = "error"
+        case _:
+            stringified_log_level = "info"
+
+    return FastMcpHttpRunArgs(
+        transport=server_settings.transport,
+        host=server_settings.host,
+        port=server_settings.port,
+        log_level=stringified_log_level,
+        path=server_settings.path,
+        uvicorn_config=cast(
+            UvicornServerSettingsType, uvicorn_config.model_dump(mode="python", exclude_none=True)
+        ),
+        # TODO: Allow for custom uvicorn middleware
     )
 
 
@@ -484,6 +535,25 @@ async def initialize_app() -> FastMCP[AppState]:
     base_fast_mcp_settings = _integrate_user_settings(settings.server, filtered_server_settings)
     lifespan_fn = _setup_file_filters_and_lifespan(settings, session_statistics)
     base_fast_mcp_settings["lifespan"] = lifespan_fn
-    run_args = _get_fastmcp_run_args(settings.server)
-    start_method = getattr(FastMCP, _create_start_method(base_fast_mcp_settings), None)  # type: ignore
-    return FastMCP[AppState](**base_fast_mcp_settings)
+    runargs = _get_fastmcp_run_args(
+        settings.server, settings.uvicorn_settings or UvicornServerSettings(), level
+    )
+    run_method: type[FunctionType] = getattr(  # type: ignore
+        FastMCP,
+        _get_start_method_name(
+            cast(Literal["http", "stdio"], base_fast_mcp_settings.pop("transport", "http"))
+        ),
+        FastMCP.run_http_async,  # type: ignore
+    )  # type: ignore
+    if runargs:
+        run_method = rpartial(run_method, **runargs)  # type: ignore  # good luck typing this
+        for key in runargs:
+            _ = base_fast_mcp_settings.pop(key, None)
+    StoredSettings(
+        settings=settings,
+        server=filtered_server_settings,
+        runargs=runargs,
+        lifespan_func=lifespan_fn,
+        app_start_func=run_method,  # type: ignore
+    )  # type: ignore
+    return FastMCP[AppState](**base_fast_mcp_settings), run_method  # type: ignore  # we just removed the keys it's complaining about

@@ -8,12 +8,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import logging
 import os
 import platform
+import ssl
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Annotated, Any, Literal, LiteralString, NotRequired, Required, Self, TypedDict
 
@@ -27,9 +29,17 @@ from fastmcp.server.middleware.timing import DetailedTimingMiddleware
 from fastmcp.server.server import DuplicateBehavior
 from fastmcp.tools.tool import Tool
 from mcp.server.lowlevel.server import LifespanResultT
-from pydantic import Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, SecretStr
 from pydantic_ai.settings import ModelSettings as AgentModelSettings
 from starlette.middleware import Middleware as ASGIMiddleware
+from uvicorn.config import (
+    SSL_PROTOCOL_VERSION,
+    HTTPProtocolType,
+    InterfaceType,
+    LifespanType,
+    LoopSetupType,
+    WSProtocolType,
+)
 
 from codeweaver._common import BaseEnum
 from codeweaver.exceptions import ConfigurationError
@@ -44,6 +54,10 @@ AVAILABLE_MIDDLEWARE = (
     RateLimitingMiddleware,
     RetryMiddleware,
 )
+
+# ===========================================================================
+# *  TypedDict classes for Python Stdlib Logging Configuration (`dictConfig``)
+# ===========================================================================
 
 type FormatterID = str
 
@@ -83,7 +97,7 @@ class FormattersDict(TypedDict, total=False):
 
 type FilterID = str
 
-type FiltersDict = dict[FilterID, dict[Literal["name"] | str, Any]]  # noqa: PYI051
+type FiltersDict = dict[FilterID, dict[Literal["name"] | str, Any]]
 
 type HandlerID = str
 
@@ -185,6 +199,11 @@ class LoggingSettings(TypedDict, total=False):
     ]
 
 
+# ===========================================================================
+# *          TypedDict classes for Middleware Settings
+# ===========================================================================
+
+
 class ErrorHandlingMiddlewareSettings(TypedDict, total=False):
     """Settings for error handling middleware."""
 
@@ -226,13 +245,18 @@ class RateLimitingMiddlewareSettings(TypedDict, total=False):
     global_limit: NotRequired[bool]
 
 
-class MiddlewareSettings(TypedDict, total=False):
+class MiddlewareOptions(TypedDict, total=False):
     """Settings for middleware."""
 
     error_handling: ErrorHandlingMiddlewareSettings | None
     retry: RetryMiddlewareSettings | None
     logging: LoggingMiddlewareSettings | None
     rate_limiting: RateLimitingMiddlewareSettings | None
+
+
+# ===========================================================================
+# *            Provider Settings classes
+# ===========================================================================
 
 
 class BaseProviderSettings(TypedDict, total=False):
@@ -282,17 +306,17 @@ class AgentProviderSettings(BaseProviderSettings):
     """Settings for the agent model(s)."""
 
 
-class FastMCPHTTPRunArgs(TypedDict, total=False):
+class FastMcpHttpRunArgs(TypedDict, total=False):
     transport: Literal["http"]
     host: str | None
     port: PositiveInt | None
     log_level: Literal["debug", "info", "warning", "error"] | None
     path: str | None
-    uvicorn_config: dict[str, Any] | None
+    uvicorn_config: UvicornServerSettingsType | None
     middleware: list[ASGIMiddleware] | None
 
 
-class FastMCPServerSettingsType(TypedDict, total=False):
+class FastMcpServerSettingsType(TypedDict, total=False):
     """TypedDict for FastMCP server settings.
 
     Not intended to be used directly; used for internal type checking and validation.
@@ -304,7 +328,6 @@ class FastMCPServerSettingsType(TypedDict, total=False):
     lifespan: LifespanResultT | None  # type: ignore  # it's purely for context
     include_tags: set[str] | None
     exclude_tags: set[str] | None
-    include_fastmcp_meta: bool | None
     transport: Literal["stdio", "http"] | None
     host: str | None
     port: PositiveInt | None
@@ -318,7 +341,154 @@ class FastMCPServerSettingsType(TypedDict, total=False):
     middleware: list[Middleware | Callable[..., Any]] | None
     tools: list[Tool | Callable[..., Any]] | None
     dependencies: list[str] | None
-    resources: list[str] | None
+
+
+# ===========================================================================
+# *                        UVICORN Server Settings
+# ===========================================================================
+
+
+class UvicornServerSettings(BaseModel):
+    """
+    Uvicorn server settings. Besides the port, these are all defaults for uvicorn.
+
+    We expose them so you can configure them for advanced deployments inside your codeweaver.toml (or yaml or json).
+    """
+
+    # For the following, we just want to track if it's the default value or not (True/False), not the actual value.
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        json_schema_extra={
+            "TelemetryBoolProps": [
+                "host",
+                "name",
+                "ssl_keyfile",
+                "ssl_certfile",
+                "ssl_keyfile_password",
+                "ssl_version",
+                "ssl_cert_reqs",
+                "ssl_ca_certs",
+                "ssl_ciphers",
+                "root_path",
+                "headers",
+                "server_header",
+                "data_header",
+                "forwarded_allow_ips",
+                "env_file",
+                "log_config",
+            ]
+        },
+    )
+
+    name: Annotated[str, Field(exclude=True)] = "CodeWeaver_http"
+    host: str = "127.0.0.1"
+    port: PositiveInt = 9328
+    uds: str | None = None
+    fd: int | None = None
+    loop: LoopSetupType | str = "auto"
+    http: type[asyncio.Protocol] | HTTPProtocolType | str = "auto"
+    ws: type[asyncio.Protocol] | WSProtocolType | str = "auto"
+    ws_max_size: PositiveInt = 16777216  # 16 MiB
+    ws_max_queue: PositiveInt = 32
+    ws_ping_interval: PositiveFloat = 20.0
+    ws_ping_timeout: PositiveFloat = 20.0
+    ws_per_message_deflate: bool = True
+    lifespan: LifespanType = "auto"
+    env_file: str | os.PathLike[str] | None = None
+    log_config: LoggingConfigDict | None = None
+    log_level: str | int | None = "info"
+    access_log: bool = True
+    use_colors: bool | None = None
+    interface: InterfaceType = "auto"
+    reload: bool = False  # TODO: We should add it, but we need to manage handling it mid-request.
+    reload_dirs: list[str] | str | None = None
+    reload_delay: PositiveFloat = 0.25
+    reload_includes: list[str] | str | None = None
+    reload_excludes: list[str] | str | None = None
+    workers: int | None = None
+    proxy_headers: bool = True
+    server_header: bool = True
+    data_header: bool = True
+    forwarded_allow_ips: str | list[str] | None = None
+    root_path: str = ""
+    limit_concurrency: PositiveInt | None = None
+    limit_max_requests: PositiveInt | None = None
+    backlog: PositiveInt = 2048
+    timeout_keep_alive: PositiveInt = 5
+    timeout_notify: PositiveInt = 30
+    timeout_graceful_shutdown: PositiveInt | None = None
+    callback_notify: Callable[..., Awaitable[None]] | None = None
+    ssl_keyfile: str | os.PathLike[str] | None = None
+    ssl_certfile: str | os.PathLike[str] | None = None
+    ssl_keyfile_password: SecretStr | None = None
+    ssl_version: int | None = SSL_PROTOCOL_VERSION
+    ssl_cert_reqs: int = ssl.CERT_NONE
+    ssl_ca_certs: SecretStr | None = None
+    ssl_ciphers: str = "TLSv1"
+    headers: list[tuple[str, str]] | None = None
+    factory: bool = False
+    h11_max_incomplete_event_size: int | None = None
+
+
+class UvicornServerSettingsType(TypedDict, total=False):
+    """TypedDict for Uvicorn server settings.
+
+    Not intended to be used directly; used for internal type checking and validation.
+    """
+
+    name: str
+    host: str
+    port: PositiveInt
+    uds: str | None
+    fd: int | None
+    loop: LoopSetupType | str
+    http: type[asyncio.Protocol] | HTTPProtocolType | str
+    ws: type[asyncio.Protocol] | WSProtocolType | str
+    ws_max_size: PositiveInt
+    ws_max_queue: PositiveInt
+    ws_ping_interval: PositiveFloat
+    ws_ping_timeout: PositiveFloat
+    ws_per_message_deflate: bool
+    lifespan: LifespanType
+    env_file: str | os.PathLike[str] | None
+    log_config: LoggingConfigDict | None
+    log_level: str | int | None
+    access_log: bool
+    use_colors: bool | None
+    interface: InterfaceType
+    reload: bool
+    reload_dirs: list[str] | str | None
+    reload_delay: PositiveFloat
+    reload_includes: list[str] | str | None
+    reload_excludes: list[str] | str | None
+    workers: int | None
+    proxy_headers: bool
+    server_header: bool
+    data_header: bool
+    forwarded_allow_ips: str | list[str] | None
+    root_path: str
+    limit_concurrency: PositiveInt | None
+    limit_max_requests: PositiveInt | None
+    backlog: PositiveInt
+    timeout_keep_alive: PositiveInt
+    timeout_notify: PositiveInt
+    timeout_graceful_shutdown: PositiveInt | None
+    callback_notify: Callable[..., Awaitable[None]] | None
+    ssl_keyfile: str | os.PathLike[str] | None
+    ssl_certfile: str | os.PathLike[str] | None
+    ssl_keyfile_password: SecretStr | None
+    ssl_version: int | None
+    ssl_cert_reqs: int
+    ssl_ca_certs: SecretStr | None
+    ssl_ciphers: str
+    headers: list[tuple[str, str]] | None
+    factory: bool
+    h11_max_incomplete_event_size: int | None
+
+
+# ===========================================================================
+# *     PROVIDER ENUM - main provider enum for all Codeweaver providers
+# ===========================================================================
 
 
 class Provider(BaseEnum):
@@ -330,27 +500,28 @@ class Provider(BaseEnum):
     QDRANT = "qdrant"
     FASTEMBED_VECTORSTORE = "fastembed_vectorstore"
 
-    OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    COHERE = "cohere"
-    MISTRAL = "mistral"
-    GOOGLE = "google"
-    GROK = "grok"
     BEDROCK = "bedrock"
+    COHERE = "cohere"
+    GOOGLE = "google"
+    X_AI = "x_ai"
     HUGGINGFACE = "huggingface"
+    MISTRAL = "mistral"
+    OPENAI = "openai"
 
     # OpenAI Compatible with OpenAIModel
+    AZURE = "azure"  # supports rerank, but not w/ OpenAI API
     DEEPSEEK = "deepseek"
+    FIREWORKS = "fireworks"
+    GITHUB = "github"
+    GROQ = "groq"  # yes, it's different from Grok...
+    HEROKU = "heroku"
+    MOONSHOT = "moonshot"
     OLLAMA = "ollama"  # supports rerank, but not w/ OpenAI API
     OPENROUTER = "openrouter"
-    VERCEL = "vercel"
     PERPLEXITY = "perplexity"
-    MOONSHOT = "moonshot"
-    FIREWORKS = "fireworks"
     TOGETHER = "together"
-    AZURE = "azure"  # supports rerank, but not w/ OpenAI API
-    HEROKU = "heroku"
-    GITHUB = "github"
+    VERCEL = "vercel"
 
     DUCKDUCKGO = "duckduckgo"
     TAVILY = "tavily"

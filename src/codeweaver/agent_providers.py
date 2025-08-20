@@ -62,7 +62,7 @@ def get_agent_model_provider(provider: Provider) -> type[AgentProvider[Self]]:  
         from pydantic_ai.providers.google import GoogleProvider as GoogleAgentProvider
 
         return GoogleAgentProvider
-    if provider == Provider.GROK:
+    if provider == Provider.X_AI:
         from pydantic_ai.providers.grok import GrokProvider as GrokAgentProvider
 
         return GrokAgentProvider

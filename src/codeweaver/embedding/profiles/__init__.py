@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 # applies to new/modified code in this directory (`src/codeweaver/embedding_providers/`)
-
 """
 Embedding model profiles for different providers.
 """

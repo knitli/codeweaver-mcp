@@ -1,3 +1,4 @@
+"""Bedrock embedding provider."""
 # Copyright (c) 2024 to present Pydantic Services Inc
 # SPDX-License-Identifier: MIT
 # Applies to original code in this directory (`src/codeweaver/embedding_providers/`) from `pydantic_ai`.
