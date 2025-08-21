@@ -18,36 +18,28 @@ from typing import Annotated, Self
 
 from pydantic import Field
 
-from codeweaver.embedding import EmbeddingModelCapabilities
+from codeweaver.embedding.models import EmbeddingModelCapabilities
 
 
 __all__ = ["DEFAULT_PROFILE", "EmbeddingModelProfile", "EmbeddingModelProfileSpec"]
 
-# This is a placeholder implementation for the embedding model profile.
-# We need to create the profiles for the providers and finish the factory function here.
-# To see the overall idea, we're copying the pattern in [`pydantic_ai.profiles`](https://github.com/pydantic/pydantic-ai/tree/main/pydantic_ai_slim/src/profiles)
+DefaultCapabilities = EmbeddingModelCapabilities()
 
 
 @dataclass
-class EmbeddingModelProfile[EmbeddingModelCapabilities]:
+class EmbeddingModelProfile[ModelCapabilities]:
     """Describes how requests to a specific model or family of models need to be constructed to get the best results, independent of the model and provider classes used."""
 
     _capabilities: Annotated[
-        EmbeddingModelCapabilities, Field(default_factory=EmbeddingModelCapabilities.default)
+        EmbeddingModelCapabilities, Field(default_factory=EmbeddingModelCapabilities)
     ]
 
     @classmethod
-    def from_profile(
-        cls, profile: EmbeddingModelProfile[EmbeddingModelCapabilities] | None
-    ) -> Self:
+    def from_profile(cls, profile: EmbeddingModelProfile[ModelCapabilities] | None) -> Self:
         """Build a ModelProfile subclass instance from a ModelProfile instance."""
-        return (
-            profile
-            if isinstance(profile, cls)
-            else cls(EmbeddingModelCapabilities()).update(profile)
-        )
+        return profile if isinstance(profile, cls) else cls(cls._capabilities).update(profile)
 
-    def update(self, profile: EmbeddingModelProfile[EmbeddingModelCapabilities] | None) -> Self:
+    def update(self, profile: EmbeddingModelProfile[ModelCapabilities] | None) -> Self:
         """Update this EmbeddingModelProfile (subclass) instance with the non-default values from another EmbeddingModelProfile instance."""
         if not profile:
             return self
@@ -65,4 +57,6 @@ type EmbeddingModelProfileSpec = (
     | Callable[[str], EmbeddingModelProfile[EmbeddingModelCapabilities] | None]
 )
 
-DEFAULT_PROFILE = EmbeddingModelProfile(EmbeddingModelCapabilities())
+DEFAULT_PROFILE: EmbeddingModelProfile[EmbeddingModelCapabilities] = EmbeddingModelProfile(
+    DefaultCapabilities
+)

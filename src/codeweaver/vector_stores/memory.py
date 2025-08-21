@@ -29,7 +29,7 @@ try:
 
 except ImportError as e:
     raise ImportError(
-        "fastembed_vectorstore is required for FastembedVectorstoreProvider. Install it with: pip install fastembed-vectorstore"
+        "fastembed_vectorstore is required for FastembedVectorstore. Install it with: pip install fastembed-vectorstore"
     ) from e
 
 type FastembedResult = tuple[str, float]
@@ -39,7 +39,7 @@ type FastembedResults = list[FastembedResult]
 path_pattern = re.compile(r"")
 
 
-class FastembedVectorstoreProvider(
+class FastembedVectorstore(
     VectorStoreProvider[FastembedVectorstore | None, FastembedVectorstore | None, None]
 ):
     """In-memory vector store using FastEmbed for embeddings and storage."""

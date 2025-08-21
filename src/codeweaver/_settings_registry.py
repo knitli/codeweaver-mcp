@@ -9,35 +9,36 @@ from __future__ import annotations
 import contextlib
 
 from collections.abc import MutableMapping
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from codeweaver._settings import Provider, ProviderKind
 from codeweaver.embedding.providers import EmbeddingProvider
 from codeweaver.exceptions import ConfigurationError
 from codeweaver.reranking.base import RerankingProvider
-from codeweaver.vector_stores
 from codeweaver.vector_stores.base import VectorStoreProvider
 
 
-# Type variables for provider classes
-EP = TypeVar("EP", bound=EmbeddingProvider[Any])
-VP = TypeVar("VP", bound=VectorStoreProvider[Any])
+if TYPE_CHECKING:
+    from codeweaver.settings import CodeWeaverSettings
 
 
 class ProviderRegistry:
     """Registry for managing provider implementations and settings."""
 
     _instance: ProviderRegistry | None = None
+    _settings: CodeWeaverSettings | None = None
 
     def __init__(self) -> None:
         """Initialize the provider registry."""
         # Provider implementation registries
         self._embedding_providers: MutableMapping[Provider, type[EmbeddingProvider[Any]]] = {}
-        self._vector_store_providers: MutableMapping[Provider, type[VectorStoreProvider[Any]]] = {}
-
-        # Provider instance caches (for singleton behavior where needed)
+        self._vector_store_providers: MutableMapping[
+            Provider, type[VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]]
+        ] = {}
         self._embedding_instances: MutableMapping[Provider, EmbeddingProvider[Any]] = {}
-        self._vector_store_instances: MutableMapping[Provider, VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]] = {}
+        self._vector_store_instances: MutableMapping[
+            Provider, VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]
+        ] = {}
 
         # Initialize with built-in providers
         self._register_builtin_providers()
@@ -48,6 +49,21 @@ class ProviderRegistry:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
+
+    def register(
+        self, provider: Provider, provider_kind: ProviderKind, provider_class: type
+    ) -> None:
+        """Register a provider implementation.
+
+        Args:
+            provider: The provider enum identifier
+            provider_kind: The type of provider (embedding or vector store)
+            provider_class: The provider implementation class
+        """
+        if provider_kind == ProviderKind.EMBEDDING:
+            self.register_embedding_provider(provider, provider_class)
+        elif provider_kind == ProviderKind.VECTOR_STORE:
+            self.register_vector_store_provider(provider, provider_class)
 
     def _register_builtin_providers(self) -> None:
         """Register built-in provider implementations."""
@@ -74,11 +90,13 @@ class ProviderRegistry:
             self._vector_store_providers[Provider.QDRANT] = QdrantVectorStore
 
         with contextlib.suppress(ImportError):
-            from codeweaver.vector_stores.memory import FastembedVectorstoreProvider
+            from codeweaver.vector_stores.memory import FastembedVectorstore
 
-            self._vector_store_providers[Provider.FASTEMBED_VECTORSTORE] = (
-                FastembedVectorstoreProvider
-            )
+            self._vector_store_providers[Provider.FASTEMBED_VECTORSTORE] = FastembedVectorstore  # pyright: ignore[reportArgumentType]
+
+    def add_settings(self, settings: CodeWeaverSettings) -> None:
+        """Add settings to the provider registry."""
+        self._settings = settings
 
     def register_embedding_provider(
         self, provider: Provider, provider_class: type[EmbeddingProvider[Any]]
@@ -97,7 +115,11 @@ class ProviderRegistry:
         self._embedding_providers[provider] = provider_class
 
     def register_vector_store_provider(
-        self, provider: Provider, provider_class: type[VectorStoreProvider[Any]]
+        self,
+        provider: Provider,
+        provider_class: type[
+            VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]
+        ],
     ) -> None:
         """Register a vector store provider implementation.
 
@@ -105,7 +127,7 @@ class ProviderRegistry:
             provider: The provider enum identifier
             provider_class: The provider implementation class
         """
-        if not issubclass(provider_class, VectorStoreProvider):  # type: ignore
+        if not issubclass(provider_class, VectorStoreProvider):  # type: ignore  # this one of those "just check anyway" situations
             raise TypeError(
                 f"Provider class must be a subclass of VectorStoreProvider, got {provider_class}"
             )
@@ -129,7 +151,9 @@ class ProviderRegistry:
 
         return self._embedding_providers[provider]
 
-    def get_vector_store_provider_class(self, provider: Provider) -> type[VectorStoreProvider[Any]]:
+    def get_vector_store_provider_class(
+        self, provider: Provider
+    ) -> type[VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]]:
         """Get a vector store provider class by provider enum.
 
         Args:
@@ -163,7 +187,7 @@ class ProviderRegistry:
 
     def create_vector_store_provider(
         self, provider: Provider, **kwargs: Any
-    ) -> VectorStoreProvider[Any]:
+    ) -> VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]:
         """Create a vector store provider instance.
 
         Args:
@@ -201,7 +225,7 @@ class ProviderRegistry:
 
     def get_vector_store_provider_instance(
         self, provider: Provider, *, singleton: bool = False, **kwargs: Any
-    ) -> VectorStoreProvider[Any]:
+    ) -> VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]:
         """Get a vector store provider instance, optionally cached.
 
         Args:
@@ -281,7 +305,8 @@ def register_embedding_provider(
 
 
 def register_vector_store_provider(
-    provider: Provider, provider_class: type[VectorStoreProvider[Any]]
+    provider: Provider,
+    provider_class: type[VectorStoreProvider[Any, EmbeddingProvider[Any], RerankingProvider[Any]]],
 ) -> None:
     """Register a vector store provider with the global registry.
 

@@ -6,23 +6,19 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import UUID4, BaseModel, ConfigDict
 
 from codeweaver._common import BaseEnum
-from codeweaver._settings import Provider
-from codeweaver.embedding.providers import EmbeddingProvider
 from codeweaver._data_structures import CodeChunk, Metadata, SearchResult
-from codeweaver.reranking.base import RerankingProvider
+from codeweaver._settings import Provider
 
 
 if TYPE_CHECKING:
     from codeweaver.services._filter import Filter
-
-type NonClient = None
 
 
 # SPDX-SnippetBegin
@@ -60,14 +56,15 @@ class Entry(BaseModel):
 
 # SPDX-SnippetEnd
 
-class VectorStoreProvider[VectorStoreClient, EmbeddingProvider[Any], RerankingProvider[Any]](BaseModel, ABC):
+
+class VectorStoreProvider[VectorStoreClient, EmbeddingProvider, RerankingProvider](BaseModel, ABC):
     """Abstract interface for vector storage providers."""
 
     model_config = ConfigDict(str_strip_whitespace=True, extra="allow")
 
     _client: VectorStoreClient
-    _embedder: EmbeddingProvider[Any]
-    _reranker: RerankingProvider[Any] | None = None
+    _embedder: EmbeddingProvider
+    _reranker: RerankingProvider | None = None
 
     @property
     def client(self) -> VectorStoreClient:
@@ -75,12 +72,12 @@ class VectorStoreProvider[VectorStoreClient, EmbeddingProvider[Any], RerankingPr
         return self._client
 
     @property
-    def embedder(self) -> EmbeddingProvider[Any]:
+    def embedder(self) -> EmbeddingProvider:
         """Returns the embedder instance."""
         return self._embedder
 
     @property
-    def reranker(self) -> RerankingProvider[Any] | None:
+    def reranker(self) -> RerankingProvider | None:
         """Returns the reranker instance if available, otherwise None."""
         return self._reranker
 

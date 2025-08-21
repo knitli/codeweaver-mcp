@@ -41,6 +41,14 @@ class CodeWeaverError(Exception):
         self.suggestions = suggestions or []
 
 
+class InitializationError(CodeWeaverError):
+    """Initialization and startup errors.
+
+    Raised when there are issues during application startup, such as missing
+    dependencies, configuration errors, or environment setup problems.
+    """
+
+
 class ConfigurationError(CodeWeaverError):
     """Configuration and settings errors.
 

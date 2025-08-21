@@ -1,20 +1,86 @@
 # Copyright (c) 2024 to present Pydantic Services Inc
 # SPDX-License-Identifier: MIT
 # Applies to original code in this directory (`src/codeweaver/embedding/`) from `pydantic_ai`.
+# in files that are marked like this one.
 #
 # SPDX-FileCopyrightText: (c) 2025 Knitli Inc.
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # SPDX-FileContributor: Adam Poulemanos <adam@knit.li>
 # applies to new/modified code in this directory (`src/codeweaver/embedding/`)
+
 """Entrypoint for CodeWeaver's heavily-pydantic-ai-inspired embedding model system."""
 
 from collections.abc import Callable, Sequence
-from typing import Annotated, Literal, Self
+from typing import Annotated, Any, Literal, NotRequired, Required, Self, TypedDict
 
-from pydantic import BaseModel, Field, PositiveInt, SecretStr
+from pydantic import BaseModel, Field, PositiveInt
 
 from codeweaver._data_structures import CodeChunk
-from codeweaver._settings import Provider
+from codeweaver._settings import EmbeddingModelSettings, Provider
+
+
+type PartialCapabilities = dict[
+    Literal[
+        "name",
+        "provider",
+        "output_transformer",
+        "version",
+        "default_dimension",
+        "output_dimensions",
+        "default_dtype",
+        "output_dtypes",
+        "requires_api_key",
+        "supports_batching",
+        "preferred_metrics",
+        "is_normalized",
+        "context_window",
+        "supports_custom_prompts",
+        "custom_document_prompt",
+        "custom_query_prompt",
+        "supports_context_chunk_embedding",
+        "tokenizer",
+        "tokenizer_model",
+        "input_transformer",
+    ],
+    Literal[
+        "tokenizers", "tiktoken", "dot", "cosine", "euclidean", "manhattan", "hamming", "chebyshev"
+    ]
+    | str
+    | PositiveInt
+    | bool
+    | Provider
+    | None
+    | tuple[str, ...]
+    | tuple[PositiveInt, ...]
+    | Callable[[list[CodeChunk]], Any]
+    | Callable[..., Sequence[CodeChunk]],
+]
+
+
+class EmbeddingCapabilities(TypedDict):
+    """Describes the capabilities of an embedding model, such as the default dimension."""
+
+    name: Required[str]
+    provider: Required[Provider]
+    output_transformer: NotRequired[Callable[..., Sequence[CodeChunk]] | None]
+    version: NotRequired[str | int | None]
+    default_dimension: NotRequired[PositiveInt]
+    output_dimensions: NotRequired[tuple[PositiveInt, ...] | None]
+    default_dtype: NotRequired[str | None]
+    output_dtypes: NotRequired[tuple[str, ...] | None]
+    requires_api_key: NotRequired[bool]
+    supports_batching: NotRequired[bool]
+    supports_custom_prompts: NotRequired[bool]
+    custom_document_prompt: NotRequired[str] | None
+    custom_query_prompt: NotRequired[str] | None
+    is_normalized: NotRequired[bool]
+    context_window: NotRequired[PositiveInt]
+    supports_context_chunk_embedding: NotRequired[bool]
+    tokenizer: NotRequired[Literal["tokenizers", "tiktoken"]]
+    tokenizer_model: NotRequired[str]
+    preferred_metrics: NotRequired[
+        tuple[Literal["dot", "cosine", "euclidean", "manhattan", "hamming", "chebyshev"], ...]
+    ]
 
 
 class EmbeddingModelCapabilities(BaseModel):
@@ -29,7 +95,10 @@ class EmbeddingModelCapabilities(BaseModel):
             description="The provider of the model. Since available settings vary across providers, each capabilities instance is tied to a provider."
         ),
     ] = Provider._UNSET  # type: ignore
-    output_transformer: Callable[..., Sequence[CodeChunk]] | None = None
+    input_transformer: Callable[[list[CodeChunk]], Any] | None = None
+    output_transformer: (
+        Callable[..., Sequence[Sequence[float]] | Sequence[Sequence[int]]] | None
+    ) = None
     version: Annotated[
         str | int | None,
         Field(
@@ -59,9 +128,6 @@ class EmbeddingModelCapabilities(BaseModel):
             ],
         ),
     ] = None
-    api_key: Annotated[
-        SecretStr | None, Field(description="The API key for the model, if required.")
-    ] = None
     requires_api_key: bool = False
     supports_batching: bool = False
     is_normalized: bool = False
@@ -75,6 +141,15 @@ class EmbeddingModelCapabilities(BaseModel):
             description="The tokenizer model used by the embedding model. If the tokenizer is `tokenizers`, this should be the full name of the tokenizer or model (if it's listed by its model name), *including the organization*. Like: `voyageai/voyage-code-3`",
         ),
     ] = None
+    preferred_metrics: Annotated[
+        tuple[Literal["dot", "cosine", "euclidean", "manhattan", "hamming", "chebyshev"], ...],
+        Field(
+            description="A tuple of preferred metrics for comparing embeddings.",
+            examples=[
+                "VoyageAI: `('dot',)` for the voyage 3-series models, since they are normalized to length 1."
+            ],
+        ),
+    ] = ("cosine", "dot", "euclidean")
     _version: Annotated[
         str,
         Field(
@@ -97,4 +172,3 @@ class EmbeddingModelCapabilities(BaseModel):
     @classmethod
     def validate_settings(cls, settings: EmbeddingModelSettings) -> Self:
         """Validate and create an instance from the provided settings."""
-        # TODO, we need a way to resolve the provider capabilities from the settings.

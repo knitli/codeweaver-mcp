@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 
 def get_agent_model_provider(provider: Provider) -> type[AgentProvider[Self]]:  # type: ignore  # noqa: C901
+    # It's long, but it's not complex.
     # sourcery skip: low-code-quality, no-long-functions
     """Get the agent model provider."""
     if provider == Provider.OPENAI:

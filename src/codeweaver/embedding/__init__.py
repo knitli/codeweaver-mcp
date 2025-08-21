@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from codeweaver.embedding.profiles import DEFAULT_PROFILE, EmbeddingModelProfile
+from codeweaver.embedding.profiles import EmbeddingModelProfile
 from codeweaver.embedding.providers import EmbeddingProvider, infer_embedding_provider
 
 
@@ -40,6 +40,22 @@ type KnownEmbeddingModelName = Literal[
     "cohere:embed-multilingual-light-v3.0",
     "cohere:embed-multilingual-v3.0",
     "cohere:embed-v4.0",
+    "fastembed:BAAI/bge-base-en-v1.5",
+    "fastembed:BAAI/bge-large-en-v1.5",
+    "fastembed:BAAI/bge-small-en-v1.5",
+    "fastembed:mixedbread-ai/mxbai-embed-large-v1",
+    "fastembed:snowflake/snowflake-arctic-embed-xs",
+    "fastembed:snowflake/snowflake-arctic-embed-s",
+    "fastembed:snowflake/snowflake-arctic-embed-m",
+    "fastembed:snowflake/snowflake-arctic-embed-m-long",
+    "fastembed:snowflake/snowflake-arctic-embed-l",
+    "fastembed:sentence-transformers/all-MiniLM-L6-v2",  # onnx
+    "fastembed:jinaai/jina-embeddings-v2-base-code",
+    "fastembed:thenlper/gte-base",
+    "fastembed:thenlper/gte-large",
+    "fastembed:nomic-ai/nomic-embed-text-v1.5",
+    "fastembed:nomic-ai/nomic-embed-text-v1.5-Q",
+    "fastembed:jinaai/jina-embeddings-v3",
     "fireworks:WhereIsAI/UAE-Large-V1",
     "fireworks:nomic-ai/nomic-embed-text-v1",
     "fireworks:nomic-ai/nomic-embed-text-v1.5",

@@ -66,11 +66,13 @@ DefaultRerankingProviderSettings = (
     ),
 )
 
-DefaultAgentProviderSettings = AgentProviderSettings(
-    provider=Provider.ANTHROPIC,
-    enabled=True,
-    models=("claude-sonnet-4-latest",),
-    model_settings=AgentModelSettings(),
+DefaultAgentProviderSettings = (
+    AgentProviderSettings(
+        provider=Provider.ANTHROPIC,
+        enabled=True,
+        models=("claude-sonnet-4-latest",),
+        model_settings=AgentModelSettings(),
+    ),
 )
 
 

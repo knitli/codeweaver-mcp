@@ -18,16 +18,18 @@ from typing_extensions import TypeIs
 
 from codeweaver import __version__ as version
 from codeweaver._server import (
-    _STATE,  # pyright: ignore[reportPrivateUsage]
     Feature,
     HealthInfo,
     HealthStatus,
+    get_health_info,
+    get_state,
+    get_statistics,
     initialize_app,
 )
+from codeweaver._server import get_settings as get_app_settings
 from codeweaver._statistics import SessionStatistics
 from codeweaver.exceptions import CodeWeaverError
 from codeweaver.models.core import FindCodeResponse
-from codeweaver.settings import get_settings
 from codeweaver.tools.find_code import find_code_implementation
 
 
@@ -79,38 +81,36 @@ async def find_code(
         query="database connection pooling configuration"
         query="user registration validation logic"
     """
+    statistics = get_statistics()
+    settings = get_app_settings()
     try:
         # Execute the find_code implementation
         response = await find_code_implementation(
             query=query,
-            settings=_STATE.settings if _STATE and _STATE.settings else get_settings(),
+            settings=settings,
             intent=intent,
             token_limit=token_limit,
             include_tests=include_tests,
             focus_languages=focus_languages,
-            statistics=_STATE.statistics if _STATE else None,
+            statistics=statistics,
         )
 
         # Record successful request
-        if _STATE and _STATE.statistics:
-            _STATE.statistics.add_successful_request()
+        if statistics:
+            statistics.add_successful_request()
 
     except CodeWeaverError:
-        # Record failed request
-        if _STATE and _STATE.statistics:
-            _STATE.statistics.add_failed_request()
-        # Re-raise CodeWeaver errors as-is
+        if statistics:
+            statistics.log_request_from_context(context, successful=False)
         raise
     except Exception as e:
-        # Record failed request
-        if _STATE and _STATE.statistics:
-            _STATE.statistics.add_failed_request()
+        if statistics:
+            statistics.log_request_from_context(context, successful=False)
 
-        # Wrap other exceptions in CodeWeaver error
         from codeweaver.exceptions import QueryError
 
         raise QueryError(
-            f"Unexpected error in find_code: {e!s}",
+            f"Unexpected error in `find_code`: {e!s}",
             suggestions=["Try a simpler query", "Check server logs for details"],
         ) from e
     else:
@@ -120,13 +120,14 @@ async def find_code(
 @app.custom_route("/stats", methods=["GET"], tags={"system", "stats"}, include_in_schema=True)  # type: ignore
 async def stats_info() -> bytes:
     """Get the current statistics information."""
-    return TypeAdapter(_STATE.statistics).dump_json(_STATE.statistics, indent=2)  # pyright: ignore[reportUnknownMemberType, reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
+    statistics = get_statistics()
+    return TypeAdapter(statistics).dump_json(statistics, indent=2)  # pyright: ignore[reportUnknownMemberType, reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
 
 
 @app.custom_route("/settings", methods=["GET"], tags={"system", "settings"}, include_in_schema=True)  # type: ignore
 async def settings_info() -> bytes:
     """Get the current settings information."""
-    return _STATE.settings.model_dump_json(indent=2)  # pyright: ignore[reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
+    return get_state().settings.model_dump_json(indent=2)  # pyright: ignore[reportReturnType,reportOptionalMemberAccess]  # we establish it exists down in the initialization
 
 
 @app.custom_route("/version", methods=["GET"], tags={"system", "version"}, include_in_schema=True)  # type: ignore
@@ -142,10 +143,9 @@ async def health() -> bytes:
     Returns:
         Health status information with statistics
     """
-    global _STATE
-    if _STATE and _STATE.health:
+    if health := get_health_info():
         # Return existing health info if available
-        dumped_health: bytes = TypeAdapter(_STATE.health).dump_json(_STATE.health, indent=2)  # type: ignore
+        dumped_health: bytes = TypeAdapter(health).dump_json(health, indent=2)  # type: ignore
         return dumped_health
     unhealthy_status: HealthInfo = HealthInfo(
         status=HealthStatus.UNHEALTHY,
@@ -174,9 +174,9 @@ if __name__ == "__main__":
     # Main entry point for MCP
     asyncio.run(run_method(app))  # type: ignore
     asyncio.run(app.run_http_async())
-    if not is_appstate_instance(_STATE):
-        raise TypeError("Expected _STATE to be an instance of AppState")
-    if not is_health_instance(_STATE.health):
-        raise TypeError("Expected _STATE.health to be an instance of HealthInfo")
-    if not is_statistics_instance(_STATE.statistics):
-        raise TypeError("Expected _STATE.statistics to be an instance of SessionStatistics")
+    if not is_appstate_instance(get_state()):
+        raise TypeError("Expected get_state() to be an instance of AppState")
+    if not is_health_instance(get_health_info()):
+        raise TypeError("Expected get_health_info() to be an instance of HealthInfo")
+    if not is_statistics_instance(get_statistics()):
+        raise TypeError("Expected get_statistics() to be an instance of SessionStatistics")

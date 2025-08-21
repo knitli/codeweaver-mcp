@@ -7,11 +7,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from enum import Enum, unique
 from typing import Self, cast
 
-from aenum import extend_enum  # type: ignore
+from aenum import extend_enum  # pyright: ignore[reportMissingTypeStubs, reportUnknownVariableType]
+
+
+type EnumExtend = Callable[[Enum, str], Enum]
+extend_enum: EnumExtend = extend_enum  # pyright: ignore[reportUnknownVariableType]
 
 
 @unique
@@ -38,7 +42,7 @@ class BaseEnum(Enum):
             if cls._value_type() is int and value.isdigit():
                 return cls(int(value))
             normalized_value = cls._encode_name(value).upper()
-            cls.__members__: dict[str, type[BaseEnum]]  # type: ignore  # noqa: B032
+            cls.__members__: dict[str, type[BaseEnum]]  # noqa: B032
             return cast(Self, cls.__members__[normalized_value])
         except KeyError as e:
             value_parts = cls._deconstruct_string(value)
@@ -136,8 +140,5 @@ class BaseEnum(Enum):
         """Dynamically add a new member to the enum."""
         if isinstance(value, str):
             value = cls._encode_name(value).lower()
-        return extend_enum(
-            cls,
-            cls._encode_name(name).upper(),
-            value,  # type: ignore
-        )
+        extend_enum(cls, cls._encode_name(name).upper(), value)  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+        return cls(value)

@@ -38,6 +38,7 @@ from codeweaver._settings import (
 from codeweaver._settings_registry import ProviderRegistry, get_provider_registry
 from codeweaver._statistics import SessionStatistics
 from codeweaver._utils import rpartial
+from codeweaver.exceptions import InitializationError
 from codeweaver.middleware import StatisticsMiddleware
 from codeweaver.settings import (
     CodeWeaverSettings,
@@ -47,8 +48,13 @@ from codeweaver.settings import (
 )
 
 
+# this is initialized after we setup logging.
+logger: logging.Logger
+
 _STORE: dict[Literal["settings", "runargs", "server", "lifespan_func", "app_start_func"], Any]
 _STATE: AppState | None = None
+
+BRACKET_PATTERN: re.Pattern[str] = re.compile(r"\[.+\]")
 
 
 def get_state() -> AppState:
@@ -194,13 +200,19 @@ class AppState:
     initialized: Annotated[
         bool, Field(description="Indicates if the server has been initialized")
     ] = False
-    config_path: Annotated[
-        Path | None, Field(description="Path to the configuration file, if any")
-    ] = None
+
     settings: Annotated[
-        CodeWeaverSettings | None, Field(description="CodeWeaver configuration settings")
+        CodeWeaverSettings | None,
+        Field(default_factory=CodeWeaverSettings, description="CodeWeaver configuration settings"),
     ] = None
 
+    config_path: Annotated[
+        Path | None,
+        Field(
+            default_factory=lambda data: data["settings"].get("config_file", None),
+            description="Path to the configuration file, if any",
+        ),
+    ] = None
     # Provider registry integration
     registry: Annotated[
         ProviderRegistry,
@@ -212,11 +224,18 @@ class AppState:
 
     # Statistics and performance tracking
     statistics: Annotated[
-        SessionStatistics, Field(description="Session statistics and performance tracking")
-    ] = Field(default_factory=SessionStatistics)
+        SessionStatistics,
+        Field(
+            default_factory=SessionStatistics,
+            description="Session statistics and performance tracking",
+        ),
+    ]
 
     # Health status
-    health: Annotated[HealthInfo, Field(description="Health status information")] = HealthInfo()
+    health: Annotated[
+        HealthInfo,
+        Field(default_factory=HealthInfo.initialize, description="Health status information"),
+    ]
 
     # TODO: Future implementation
     indexer: None = None  # Placeholder for background indexer
@@ -254,17 +273,28 @@ async def lifespan(
     statistics = statistics or SessionStatistics()
     settings = settings or get_settings()
     if not hasattr(app, "state"):
-        setattr(  # noqa: B010
+        setattr(  # noqa: B010  # Ruff, it's not safer, but it does make pylance complain less
             app,
             "state",
             AppState(
                 initialized=False,
+                settings=settings,
+                health=HealthInfo.initialize(),
+                statistics=statistics,
                 config_path=settings.config_file if settings else None,
                 registry=get_provider_registry(),
                 middleware_stack=tuple(getattr(app, "middleware", ())),
             ),
-        )  # type: ignore
+        )
     state: AppState = app.state  # type: ignore
+    if not isinstance(state, AppState):
+        raise InitializationError(
+            "AppState should be an instance of AppState, but isn't. Something is wrong. Please report this issue.",
+            details={"state": state},
+        )
+    if not hasattr(state, "registry"):
+        state.registry = ProviderRegistry.get_instance()
+    state.registry.add_settings(settings)
     try:
         # Initialize health status
         state.health = HealthInfo(
@@ -297,17 +327,19 @@ async def lifespan(
         state.initialized = False
 
 
-def get_default_middleware_settings(logger: logging.Logger, log_level: int) -> MiddlewareOptions:
+def get_default_middleware_settings(
+    app_logger: logging.Logger, log_level: int
+) -> MiddlewareOptions:
     """Get the default middleware settings."""
     return MiddlewareOptions(
         error_handling=ErrorHandlingMiddlewareSettings(
-            logger=logger, include_traceback=True, error_callback=None, transform_errors=False
+            logger=app_logger, include_traceback=True, error_callback=None, transform_errors=False
         ),
         retry=RetryMiddlewareSettings(
-            max_retries=5, base_delay=1.0, max_delay=60.0, backoff_multiplier=2.0, logger=logger
+            max_retries=5, base_delay=1.0, max_delay=60.0, backoff_multiplier=2.0, logger=app_logger
         ),
         logging=LoggingMiddlewareSettings(
-            logger=logger, log_level=log_level, include_payloads=False
+            logger=app_logger, log_level=log_level, include_payloads=False
         ),
         rate_limiting=RateLimitingMiddlewareSettings(
             max_requests_per_second=75, get_client_id=None, burst_capacity=150, global_limit=True
@@ -317,7 +349,7 @@ def get_default_middleware_settings(logger: logging.Logger, log_level: int) -> M
 
 def resolve_globs(path_string: str, repo_root: Path) -> set[Path]:
     """Resolve glob patterns in a path string."""
-    if "*" in path_string or "?" in path_string or re.search(r"\[.+\]", path_string):
+    if "*" in path_string or "?" in path_string or BRACKET_PATTERN.search(path_string):
         return set(repo_root.glob(path_string))
     if (path := (repo_root / path_string)) and path.exists():
         return {path} if path.is_file() else set(path.glob("**/*"))
@@ -369,29 +401,37 @@ def resolve_includes_and_excludes(
     return frozenset(other_files), frozenset(excludes)
 
 
+def setup_local_logger(level: int = logging.INFO) -> None:
+    """Set up a local logger for the current module."""
+    global logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level)
+
+
 def _setup_logger(settings: CodeWeaverSettings) -> tuple[logging.Logger, int]:
     """Set up the logger from settings.
 
     Returns:
         Tuple of (logger, log_level)
     """
-    logger_settings = settings.logging or {}
-    level = logger_settings.get("level", 20)
-    rich = logger_settings.get("use_rich", True)
-    rich_kwargs = logger_settings.get("rich_kwargs", {})
-    logging_kwargs = logger_settings.get("dict_config", None)
-    logger = setup_logger(
+    app_logger_settings = settings.logging or {}
+    level = app_logger_settings.get("level", 20)
+    rich = app_logger_settings.get("use_rich", True)
+    rich_kwargs = app_logger_settings.get("rich_kwargs", {})
+    logging_kwargs = app_logger_settings.get("dict_config", None)
+    app_logger = setup_logger(
         name="codeweaver",
         level=level,
         rich=rich,
         rich_kwargs=rich_kwargs,
         logging_kwargs=logging_kwargs,
     )
-    return logger, level
+    setup_local_logger(level)
+    return app_logger, level
 
 
 def _configure_middleware(
-    settings: CodeWeaverSettings, logger: logging.Logger, level: int
+    settings: CodeWeaverSettings, app_logger: logging.Logger, level: int
 ) -> tuple[MiddlewareOptions, Any]:
     """Configure middleware settings and determine logging middleware type.
 
@@ -404,7 +444,7 @@ def _configure_middleware(
     logging_middleware = (
         StructuredLoggingMiddleware if use_structured_logging else LoggingMiddleware
     )
-    middleware_defaults: MiddlewareOptions = get_default_middleware_settings(logger, level)
+    middleware_defaults: MiddlewareOptions = get_default_middleware_settings(app_logger, level)
     if middleware_settings := settings.middleware_settings or None:  # type: ignore
         middleware_defaults |= middleware_settings
     middleware_settings: MiddlewareOptions = middleware_defaults
@@ -413,7 +453,7 @@ def _configure_middleware(
 
 def _create_base_fastmcp_settings(
     session_statistics: SessionStatistics,
-    logger: logging.Logger,
+    app_logger: logging.Logger,
     level: int,
     middleware_settings: MiddlewareOptions,
     logging_middleware: type[LoggingMiddleware | StructuredLoggingMiddleware],
@@ -429,16 +469,14 @@ def _create_base_fastmcp_settings(
         "lifespan": lifespan,
         "include_tags": {"external", "user", "context"},
         "exclude_tags": {"internal", "system", "admin"},
-        "include_fastmcp_meta": True,
         "middleware": [
-            StatisticsMiddleware(session_statistics, logger=logger, log_level=level),
-            logging_middleware(**middleware_settings["logging"]),  # type: ignore
-            ErrorHandlingMiddleware(**middleware_settings["error_handling"]),  # type: ignore
-            RetryMiddleware(**middleware_settings["retry"]),  # type: ignore
-            RateLimitingMiddleware(**middleware_settings["rate_limiting"]),  # type: ignore
+            StatisticsMiddleware(session_statistics, logger=app_logger, log_level=level),
+            logging_middleware(**middleware_settings["logging"]),  # pyright: ignore[reportTypedDictNotRequiredAccess,reportCallIssue]
+            ErrorHandlingMiddleware(**middleware_settings["error_handling"]),  # pyright: ignore[reportTypedDictNotRequiredAccess,reportCallIssue]
+            RetryMiddleware(**middleware_settings["retry"]),  # pyright: ignore[reportTypedDictNotRequiredAccess,reportCallIssue]
+            RateLimitingMiddleware(**middleware_settings["rate_limiting"]),  # pyright: ignore[reportTypedDictNotRequiredAccess,reportCallIssue]
         ],
         "tools": [],
-        "resources": [],
     }
 
 
@@ -461,16 +499,16 @@ def _integrate_user_settings(
     for key in additional_keys:
         if (value := getattr(settings, key, None)) and isinstance(value, list):
             if key in {"additional_dependencies", "additional_tools"} and (
-                all(isinstance(item, str) for item in value)  # type: ignore
+                all(isinstance(item, str) for item in value)  # pyright: ignore[reportUnknownVariableType]  # the type of `item` doesn't matter, because we filter for strings
             ):
                 # If it's a list of strings, we can directly append it
                 settings_key: SettingsKey = cast(SettingsKey, key.replace("additional_", ""))
-                base_fast_mcp_settings[settings_key].extend(value)  # type: ignore
+                base_fast_mcp_settings[settings_key].extend(value)  # pyright: ignore[reportUnknownArgumentType, reportTypedDictNotRequiredAccess,reportOptionalMemberAccess] # we established the types right above it
                 continue
             if key == "additional_middleware" and (
-                all(isinstance(item, Middleware | Callable) for item in value)  # type: ignore
+                all(isinstance(item, Middleware | Callable) for item in value)
             ):
-                base_fast_mcp_settings["middleware"].extend(value)  # type: ignore
+                base_fast_mcp_settings["middleware"].extend(value)  # pyright: ignore[reportUnknownArgumentType, reportTypedDictNotRequiredAccess,reportOptionalMemberAccess]
 
     server_settings = settings.model_dump(
         mode="python", exclude_defaults=True, exclude_unset=True, exclude_none=True
@@ -565,23 +603,29 @@ def _get_fastmcp_run_args(
     )
 
 
-async def initialize_app() -> FastMCP[AppState]:
+async def initialize_app() -> tuple[FastMCP[AppState], FunctionType]:
     """Initialize the FastMCP application."""
     session_statistics = SessionStatistics()
     settings = get_settings()
-    logger, level = _setup_logger(settings)
-    middleware_settings, logging_middleware = _configure_middleware(settings, logger, level)
+    app_logger, level = _setup_logger(settings)
+    local_logger: logging.Logger = globals()["logger"]  # type: ignore  # we set it in setup_local_logger
+    local_logger.info("Initializing CodeWeaver server. Initial settings retrieved. Logging setup.")
+    local_logger.debug("Settings dump \n", extra=settings.model_dump())
+    middleware_settings, logging_middleware = _configure_middleware(settings, app_logger, level)
     filtered_server_settings = _filter_server_settings(settings.server or {})
     base_fast_mcp_settings = _create_base_fastmcp_settings(
-        session_statistics, logger, level, middleware_settings, logging_middleware
+        session_statistics, app_logger, level, middleware_settings, logging_middleware
     )
     base_fast_mcp_settings = _integrate_user_settings(settings.server, filtered_server_settings)
+    local_logger.info("Base FastMCP settings created and merged with user settings.")
+    local_logger.debug("Base FastMCP settings dump \n", extra=base_fast_mcp_settings)
     lifespan_fn = _setup_file_filters_and_lifespan(settings, session_statistics)
     base_fast_mcp_settings["lifespan"] = lifespan_fn
+
     runargs = _get_fastmcp_run_args(
         settings.server, settings.uvicorn_settings or UvicornServerSettings(), level
     )
-    run_method: type[FunctionType] = getattr(  # type: ignore
+    run_method: FunctionType = getattr(  # type: ignore
         FastMCP,
         _get_start_method_name(
             cast(Literal["http", "stdio"], base_fast_mcp_settings.pop("transport", "http"))
@@ -592,11 +636,15 @@ async def initialize_app() -> FastMCP[AppState]:
         run_method = rpartial(run_method, **runargs)  # type: ignore  # good luck typing this
         for key in runargs:
             _ = base_fast_mcp_settings.pop(key, None)
-    StoredSettings(
+    local_logger.info("FastMCP run arguments extracted and stored.")
+    local_logger.debug("FastMCP run arguments dump \n", extra=runargs or {})
+    local_logger.debug("Lifespan function: ", extra={"lifespan_fn": lifespan_fn})
+    local_logger.debug("Run method: ", extra={"run_method": run_method})
+    _ = StoredSettings(
         settings=settings,
         server=filtered_server_settings,
         runargs=runargs,
         lifespan_func=lifespan_fn,
-        app_start_func=run_method,  # type: ignore
-    )  # type: ignore
-    return FastMCP[AppState](**base_fast_mcp_settings), run_method  # type: ignore  # we just removed the keys it's complaining about
+        app_start_func=run_method,
+    )
+    return FastMCP[AppState](**base_fast_mcp_settings), run_method  # pyright: ignore[reportCallIssue]  # we popped those keys a few lines up
