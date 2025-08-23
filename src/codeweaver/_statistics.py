@@ -767,7 +767,7 @@ class SessionStatistics:
         else:
             self.failed_requests += 1
 
-    def request_in_log(self, request_id: str) -> bool:
+    def request_in_log(self, request_id: str | int) -> bool:
         """Check if a request ID is in the successful or failed request logs."""
         return request_id in self._successful_request_log or request_id in self._failed_request_log
 

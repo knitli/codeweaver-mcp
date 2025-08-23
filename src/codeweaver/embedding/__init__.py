@@ -11,16 +11,65 @@
 # sourcery skip: avoid-global-variables
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal, cast
 
-from codeweaver.embedding.profiles import EmbeddingModelProfile
-from codeweaver.embedding.providers import EmbeddingProvider, infer_embedding_provider
+from codeweaver._settings import EmbeddingModelSettings, EmbeddingProviderSettings, Provider
 
 
-# placeholders just to keep the imports here withut ruff removing them
-embedding_model_profile = EmbeddingModelProfile
-embedding_provider = EmbeddingProvider
-infer_embedding_provider = infer_embedding_provider
+def _add_compatible_keys(
+    model_settings: EmbeddingModelSettings, compatible_keys: dict[str, str]
+) -> dict[str, Any]:
+    """Add any keys in settings that are compatible with the provider.
+
+    Args:
+        model_settings: The model settings to process.
+        compatible_keys: A mapping of keys in the model settings to keys expected by the provider.
+    """
+    compatible_settings: dict[str, Any] = {
+        compatible_keys[key]: value
+        for key, value in model_settings.items()
+        if key in compatible_keys
+    }
+    return compatible_settings
+
+
+def _process_model_settings(model_settings: EmbeddingModelSettings) -> dict[str, Any]:
+    """Process model settings to ensure they are valid."""
+    provider = Provider.from_string(model_settings["model"].split(":")[0])
+    processed_settings = {
+        "provider": provider,
+        "model": "".join(model_settings["model"].split(":")[1:]),
+    }
+    match provider:
+        case Provider.VOYAGE:
+            return processed_settings | _add_compatible_keys(
+                model_settings,
+                {
+                    "dimension": "output_dimension",
+                    "data_type": "output_dtype",
+                    "client_kwargs": "kwargs",
+                },
+            )
+        case _:
+            return processed_settings | _add_compatible_keys(
+                model_settings, {"client_kwargs": "kwargs"}
+            )
+
+    return processed_settings
+
+
+def user_settings_to_provider_settings(
+    user_settings: EmbeddingProviderSettings,
+) -> dict[str, Any] | list[dict[str, Any]]:
+    """Convert user settings to provider settings."""
+    model_settings: EmbeddingModelSettings | tuple[EmbeddingModelSettings, ...] = user_settings[
+        "model_settings"
+    ]
+    return (
+        [_process_model_settings(ms) for ms in model_settings]
+        if isinstance(model_settings, tuple)
+        else _process_model_settings(model_settings)
+    )
 
 
 def get_embedding_model_provider() -> None:  # -> EmbeddingProvider[Any]:
@@ -49,7 +98,7 @@ type KnownEmbeddingModelName = Literal[
     "fastembed:snowflake/snowflake-arctic-embed-m",
     "fastembed:snowflake/snowflake-arctic-embed-m-long",
     "fastembed:snowflake/snowflake-arctic-embed-l",
-    "fastembed:sentence-transformers/all-MiniLM-L6-v2",  # onnx
+    "fastembed:sentence-transformers/all-MiniLM-L6-v2",
     "fastembed:jinaai/jina-embeddings-v2-base-code",
     "fastembed:thenlper/gte-base",
     "fastembed:thenlper/gte-large",
@@ -76,10 +125,9 @@ type KnownEmbeddingModelName = Literal[
     "huggingface:Salesforce/codet5p-110m-embedding",
     "huggingface:Snowflake/snowflake-arctic-embed-1-v2.0",
     "huggingface:jinaai/jina-embeddings-v2-base-code",
-    "huggingface:jinaai/jina-embeddings-v4-text-code-GGUF",
+    "huggingface:jinaai/jina-embeddings-v4",
     "huggingface:mixedbread-ai/mxbai-embed-large-v1",
     "huggingface:nomic-ai/nomic-embed-code",
-    "huggingface:nomic-ai/nomic-embed-code-GGUF",
     "huggingface:nomic-ai/nomic-embed-text-v2-moe",
     "huggingface:nvidia/NV-EmbedCode-7b-v1",
     "mistral:codestral-embed",

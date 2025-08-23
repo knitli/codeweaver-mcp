@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import LiteralString
 
 
@@ -23,24 +24,24 @@ class Tokenizer[Encoder](ABC):
         """Initialize the tokenizer with a specific encoder."""
 
     @abstractmethod
-    def encode(self, text: str | bytes) -> list[int]:
+    def encode(self, text: str | bytes) -> Sequence[int]:
         """Encode text into a list of token IDs."""
 
     @abstractmethod
-    def encode_batch(self, texts: list[str | bytes]) -> list[list[int]]:
+    def encode_batch(self, texts: Sequence[str] | Sequence[bytes]) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
 
     @abstractmethod
-    def decode(self, tokens: list[int]) -> str:
+    def decode(self, tokens: Sequence[int]) -> str:
         """Decode a list of token IDs back into text."""
 
     @abstractmethod
-    def decode_batch(self, token_lists: list[list[int]]) -> list[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
         """Decode a batch of token ID lists back into text."""
 
     @staticmethod
     @abstractmethod
-    def encoders() -> list[str]:
+    def encoders() -> Sequence[str]:
         """List all available encoder names."""
 
     @property
@@ -58,6 +59,6 @@ class Tokenizer[Encoder](ABC):
         """Estimate the number of tokens in the given text."""
         return len(self.encode(text))
 
-    def estimate_batch(self, texts: list[str | bytes]) -> int:
+    def estimate_batch(self, texts: Sequence[str] | Sequence[bytes]) -> int:
         """Estimate the number of tokens in a batch of texts."""
         return sum(len(batch) for batch in self.encode_batch(texts))

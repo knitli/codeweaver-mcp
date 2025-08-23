@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Tokenizer implementation using the Tiktoken library."""
 
+from collections.abc import Sequence
+
 import tiktoken
 
 from codeweaver.tokenizers.base import Tokenizer
@@ -22,23 +24,23 @@ class TiktokenTokenizer(Tokenizer[tiktoken.Encoding]):
         self._encoder = tiktoken.get_encoding(encoder)
         self.encoder_name = self._encoder.name
 
-    def encode(self, text: str | bytes) -> list[int]:
+    def encode(self, text: str | bytes) -> Sequence[int]:
         """Encode text into a list of token IDs."""
         return self._encoder.encode(self._to_string(text))
 
-    def encode_batch(self, texts: list[str | bytes]) -> list[list[int]]:
+    def encode_batch(self, texts: Sequence[str] | Sequence[bytes]) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
         return self._encoder.encode_batch([self._to_string(text) for text in texts])
 
-    def decode(self, tokens: list[int]) -> str:
+    def decode(self, tokens: Sequence[int]) -> str:
         """Decode a list of token IDs back into text."""
         return self._encoder.decode(tokens)
 
-    def decode_batch(self, token_lists: list[list[int]]) -> list[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
         """Decode a batch of token ID lists back into texts."""
         return self._encoder.decode_batch(token_lists)
 
     @staticmethod
-    def encoders() -> list[str]:
+    def encoders() -> Sequence[str]:
         """List all available encoder names."""
         return tiktoken.list_encoding_names()

@@ -26,7 +26,6 @@ type KnownRerankModelName = Literal[
     "huggingface:Qwen/Qwen3-Reranker-0.6B",
     "huggingface:Qwen/Qwen3-Reranker-4B",
     "huggingface:Qwen/Qwen3-Reranker-8B",
-    "huggingface:mixedbread-ai/mxbai-rerank-large-v1",
     "huggingface:mixedbread-ai/mxbai-rerank-large-v2",
     "huggingface:jinaai/jina-reranker-m0",
     "huggingface:Alibaba-NLP/gte-multilingual-reranker-base",

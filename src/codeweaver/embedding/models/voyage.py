@@ -20,49 +20,8 @@ Nevertheless, because we use semantic chunking for most code, you're not likely 
 
 """
 
-from collections.abc import Sequence
-
-from pydantic import PositiveInt
-
-from codeweaver._server import get_statistics
 from codeweaver._settings import Provider
-from codeweaver.embedding.models import EmbeddingModelCapabilities, PartialCapabilities
-from codeweaver.exceptions import ConfigurationError
-
-
-try:
-    from voyageai.object.contextualized_embeddings import ContextualizedEmbeddingsObject
-    from voyageai.object.embeddings import EmbeddingsObject
-
-except ImportError as e:
-    raise ConfigurationError(
-        "Voyage AI SDK is not installed. Use `pip install voyageai` to install it."
-    ) from e
-
-
-def _add_tokens(token_count: PositiveInt) -> None:
-    """Add tokens to the statistics."""
-    stats = get_statistics()
-    stats.add_token_usage(embedding_generated=token_count)
-
-
-def voyage_context_output_transformer(
-    result: ContextualizedEmbeddingsObject,
-) -> Sequence[Sequence[float]] | Sequence[Sequence[int]]:
-    """Transform the output of the Voyage AI context chunk embedding model."""
-    _add_tokens(result.total_tokens)
-    embeddings: list[list[float] | list[int]] = []
-    for res in result.results:
-        embeddings.extend(res.embeddings)
-    return embeddings
-
-
-def voyage_output_transformer(
-    result: EmbeddingsObject,
-) -> Sequence[Sequence[float] | Sequence[int]]:
-    """Transform the output of the Voyage AI model."""
-    _add_tokens(result.total_tokens)
-    return result.embeddings
+from codeweaver.embedding.models.base import EmbeddingModelCapabilities, PartialCapabilities
 
 
 def _get_shared_capabilities() -> PartialCapabilities:
@@ -73,29 +32,21 @@ def _get_shared_capabilities() -> PartialCapabilities:
         "output_dimensions": (256, 512, 1024, 2048),
         "default_dtype": "int8",
         "output_dtypes": ("float", "uint8", "int8", "ubinary", "binary"),
-        "requires_api_key": True,
         "is_normalized": True,
         "context_window": 32_000,
-        "supports_batching": False,
-        # I guess it depends on what you mean by "batching", but there is not an exposed batch API.
         "tokenizer": "tokenizers",
         "tokenizer_model": "voyageai/",
         "preferred_metrics": ("dot",),
         # All voyageai models are normalized to length 1, so dot product will produce identical results to cosine similarity or Euclidean distance -- but is faster to compute.
-        # See:
     }
 
 
 def get_voyage_capabilities() -> tuple[EmbeddingModelCapabilities, ...]:
     """Get the capabilities for Voyage AI embedding models."""
     models = "voyage-3-large", "voyage-3.5", "voyage-3.5-lite", "voyage-code-3", "voyage-context-3"
-    return tuple(
-        EmbeddingModelCapabilities(
-            **_get_shared_capabilities(),  # pyright: ignore[reportArgumentType]
-            name=model,
-            version="3" if "3.5" not in model else "3.5",
-            tokenizer_model=f"{_get_shared_capabilities()['tokenizer_model']}{model}",
-            supports_context_chunk_embedding="context" in model,
-        )
-        for model in models
-    )
+    settings = [{**_get_shared_capabilities()} for _ in models]
+    for i, model in enumerate(models):
+        settings[i]["name"] = model
+        settings[i]["version"] = "3" if "3.5" not in model else "3.5"
+        settings[i]["tokenizer_model"] = f"{settings[i]['tokenizer_model']}{model}"
+    return tuple(EmbeddingModelCapabilities.model_validate({**s}) for s in settings)

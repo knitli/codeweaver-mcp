@@ -298,6 +298,7 @@ class EmbeddingModelSettings(TypedDict, total=False):
     dimension: NotRequired[PositiveInt | None]
     data_type: NotRequired[str | None]
     custom_prompt: NotRequired[str | None]
+    client_kwargs: NotRequired[dict[str, Any] | None]
 
 
 class RerankingModelSettings(TypedDict, total=False):
@@ -305,12 +306,13 @@ class RerankingModelSettings(TypedDict, total=False):
 
     model: Required[str]
     custom_prompt: NotRequired[str | None]
+    client_kwargs: NotRequired[dict[str, Any] | None]
 
 
 class EmbeddingProviderSettings(BaseProviderSettings):
     """Settings for embedding models."""
 
-    model_settings: Required[EmbeddingModelSettings | None]
+    model_settings: Required[tuple[EmbeddingModelSettings, ...] | EmbeddingModelSettings]
 
 
 class RerankingProviderSettings(BaseProviderSettings):
@@ -516,6 +518,34 @@ class UvicornServerSettingsType(TypedDict, total=False):
 # *     PROVIDER ENUM - main provider enum for all Codeweaver providers
 # ===========================================================================
 
+type ProviderEnvVarInfo = tuple[str, str]
+
+
+class ProviderEnvVars(TypedDict, total=False):
+    """Provides information about environment variables used by a provider's client that are not part of CodeWeaver's settings.
+
+    You can optionally use these to configure the provider's client, or you can use the equivalent CodeWeaver environment variables or settings.
+
+    Each setting is a tuple of the form `(env_var_name, description)`, where `env_var_name` is the name of the environment variable and `description` is a brief description of what it does or the expected format.
+    """
+
+    note: NotRequired[str]
+    api_key: NotRequired[ProviderEnvVarInfo]
+    host: NotRequired[ProviderEnvVarInfo]
+    """URL or hostname of the provider's API endpoint."""
+    log_level: NotRequired[ProviderEnvVarInfo]
+    tls_cert_path: NotRequired[ProviderEnvVarInfo]
+    tls_key_path: NotRequired[ProviderEnvVarInfo]
+    tls_on_off: NotRequired[ProviderEnvVarInfo]
+    tls_version: NotRequired[ProviderEnvVarInfo]
+    config_path: NotRequired[ProviderEnvVarInfo]
+
+    port: NotRequired[ProviderEnvVarInfo]
+    path: NotRequired[ProviderEnvVarInfo]
+    oauth: NotRequired[ProviderEnvVarInfo]
+
+    other: NotRequired[dict[str, ProviderEnvVarInfo]]
+
 
 class Provider(BaseEnum):
     """Enumeration of available providers."""
@@ -562,6 +592,79 @@ class Provider(BaseEnum):
                 return value_in_self
         # TODO: We need to allow for dynamic providers in the future, we would check if there's a provider class registered for the value, then register the provider here with `cls.add_member("NEW_PROVIDER", "new_provider")`.
         raise ConfigurationError(f"Invalid provider: {value}")
+
+    @property
+    def other_env_vars(self) -> ProviderEnvVars | None:
+        """Get the environment variables used by the provider's client that are not part of CodeWeaver's settings."""
+        match self:
+            case Provider.QDRANT:
+                return ProviderEnvVars(
+                    note="Qdrant supports setting **all** configuration options using environment variables. Like with CodeWeaver, nested variables are separated by double underscores (`__`). For all options, see [the Qdrant documentation](https://qdrant.tech/documentation/guides/configuration/)",
+                    log_level=("QDRANT__LOG_LEVEL", "DEBUG, INFO, WARNING, or ERROR"),
+                    api_key=("QDRANT__SERVICE__API_KEY", "API key for Qdrant service"),
+                    tls_on_off=(
+                        "QDRANT__SERVICE__ENABLE_TLS",
+                        "Enable TLS for Qdrant service, expects truthy or false value (e.g. 1 for on, 0 for off)",
+                    ),
+                    tls_cert_path=(
+                        "QDRANT__TLS__CERT",
+                        "Path to the TLS certificate file for Qdrant service",
+                    ),
+                    host=("QDRANT__SERVICE__HOST", "Hostname or URL of the Qdrant service"),
+                    port=("QDRANT__SERVICE__HTTP_PORT", "Port number for the Qdrant service"),
+                )
+            case Provider.VOYAGE:
+                return ProviderEnvVars(api_key=("VOYAGE_API_KEY", "API key for Voyage service"))
+            case (
+                Provider.OPENAI
+                | Provider.AZURE
+                | Provider.DEEPSEEK
+                | Provider.FIREWORKS
+                | Provider.GITHUB
+                | Provider.X_AI
+                | Provider.GROQ
+                | Provider.HEROKU
+                | Provider.MOONSHOT
+                | Provider.OLLAMA
+                | Provider.OPENROUTER
+                | Provider.PERPLEXITY
+                | Provider.TOGETHER
+                | Provider.VERCEL
+            ):
+                return ProviderEnvVars(
+                    note="These variables are for any OpenAI-compatible service, including OpenAI itself, Azure OpenAI, and others -- any provider that we use the OpenAI client to connect to.",
+                    api_key=(
+                        "OPENAI_API_KEY",
+                        "API key for OpenAI-compatible services (not necessarily an API key *for* OpenAI)",
+                    ),
+                    log_level=("OPENAI_LOG", "One of: 'debug', 'info', 'warning', 'error'"),
+                )
+            case Provider.HUGGINGFACE:
+                return ProviderEnvVars(
+                    note="Hugging Face allows for setting many configuration options by environment variable. See [the Hugging Face documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables) for more details.",
+                    api_key=("HF_TOKEN", "API key/token for Hugging Face service"),
+                    log_level=(
+                        "HF_HUB_VERBOSITY",
+                        "One of: 'debug', 'info', 'warning', 'error', or 'critical'",
+                    ),
+                )
+            case Provider.BEDROCK:
+                return ProviderEnvVars(
+                    note="AWS allows for setting many configuration options by environment variable. See [the AWS documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html#using-environment-variables) for more details. Because AWS has multiple authentication methods, and ways to configure settings, we don't provide them here. We'd just confuse people."
+                )
+            case Provider.COHERE:
+                return ProviderEnvVars(
+                    api_key=("COHERE_API_KEY", "Your Cohere API Key"),
+                    host=("CO_API_URL", "Host URL for Cohere service"),
+                )
+            case Provider.TAVILY:
+                return ProviderEnvVars(api_key=("TAVILY_API_KEY", "Your Tavily API Key"))
+            case Provider.GOOGLE:
+                return ProviderEnvVars(api_key=("GEMINI_API_KEY", "Your Google Gemini API Key"))
+            case Provider.MISTRAL:
+                return ProviderEnvVars(api_key=("MISTRAL_API_KEY", "Your Mistral API Key"))
+            case _:
+                return None
 
 
 class ProviderKind(BaseEnum):

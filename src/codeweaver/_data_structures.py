@@ -45,6 +45,11 @@ from codeweaver._utils import normalize_ext
 from codeweaver.language import ConfigLanguage, SemanticSearchLanguage
 
 
+# ------------------------------------------------
+# *          Metadata Types and Enums          *
+# ------------------------------------------------
+
+
 class ChunkKind(BaseEnum):
     """Represents the kind of a code chunk."""
 
@@ -104,159 +109,9 @@ class Metadata(TypedDict, total=False):
     ]
 
 
-class SearchResult(BaseModel):
-    """Result from vector search operations."""
-
-    file_path: Path
-    content: str | CodeChunk
-    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
-    metadata: Annotated[
-        Metadata | None, Field(description="Additional metadata about the result")
-    ] = None
-
-
-class CodeChunk(BaseModel):
-    """Represents a chunk of code with metadata."""
-
-    content: str
-    line_range: Annotated[Span, Field(description="Line range in the source file")]
-    file_path: Annotated[
-        Path | None,
-        Field(
-            description="Path to the source file. Not all chunks are from files, so this can be None."
-        ),
-    ] = None
-    language: SemanticSearchLanguage | LiteralString | None = None
-    chunk_type: ChunkType = ChunkType.TEXT_BLOCK  # For Phase 1, simple text blocks
-    timestamp: Annotated[
-        PositiveFloat,
-        Field(
-            default_factory=datetime.now(UTC).timestamp,
-            kw_only=True,
-            description="Timestamp of the code chunk creation or modification",
-        ),
-    ] = datetime.now(UTC).timestamp()
-    chunk_id: Annotated[
-        UUID4,
-        Field(
-            default_factory=uuid4, kw_only=True, description="Unique identifier for the code chunk"
-        ),
-    ] = uuid4()
-    parent_id: Annotated[
-        UUID4 | None,
-        Field(default=None, description="Parent chunk ID, such as the file ID, if applicable"),
-    ] = None
-    metadata: Annotated[
-        Metadata | None,
-        Field(
-            default_factory=dict,
-            kw_only=True,
-            description="Additional metadata about the code chunk",
-        ),
-    ] = None
-
-
-@dataclass(frozen=True, slots=True)
-class DiscoveredFile:
-    path: Annotated[Path, Field(description="Relative path to the discovered file")]
-    ext_kind: ExtKind
-
-    file_hash: Annotated[str, Field(description="sha256 hash of the file contents", init=False)]
-
-    @classmethod
-    def from_path(cls, path: Path) -> DiscoveredFile | None:
-        """Create a DiscoveredFile from a file path."""
-        if ext_kind := (ext_kind := ExtKind.from_file(path)):
-            file_hash = sha256(path.read_bytes()).hexdigest()
-            return cls(path=path, ext_kind=ext_kind, file_hash=file_hash)
-        return None
-
-    @computed_field
-    @property
-    def size(self) -> NonNegativeInt:
-        """Return the size of the file in bytes."""
-        return self.path.stat().st_size
-
-
-@cache
-def _is_semantic_config_ext(ext: str) -> bool:
-    """Check if the given extension is a semantic config file."""
-    ext = normalize_ext(ext)
-    return any(ext == config_ext for config_ext in SemanticSearchLanguage.config_language_exts())
-
-
-@cache
-def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
-    """Check if the given extension is a semantic search language."""
-    if found_lang := next(
-        (lang for lang_ext, lang in SemanticSearchLanguage.ext_pairs() if lang_ext == ext), None
-    ):
-        return found_lang
-    return None
-
-
-class ExtKind(NamedTuple):
-    """Represents a file extension and its associated kind."""
-
-    language: LiteralString | SemanticSearchLanguage | ConfigLanguage
-    kind: ChunkKind
-
-    def __str__(self) -> str:
-        """Return a string representation of the extension kind."""
-        return f"{self.kind}: {self.language}"
-
-    @classmethod
-    def from_string(
-        cls, language: LiteralString | SemanticSearchLanguage, kind: str | ChunkKind
-    ) -> ExtKind | None:
-        """Create an ExtKind from a string representation."""
-        if not isinstance(language, SemanticSearchLanguage):
-            with contextlib.suppress(KeyError):
-                if semantic := SemanticSearchLanguage.from_string(language):
-                    language = semantic
-        if not isinstance(kind, ChunkKind):
-            kind = ChunkKind.from_string(kind)  # if this fails something is wrong...
-        return cls(language=language, kind=kind)
-
-    @classmethod
-    def from_file(cls, file: str | Path) -> ExtKind | None:
-        """
-        Create an ExtKind from a file path.
-        """
-        filename = Path(file).name if isinstance(file, str) else file.name
-        # The order we do this in is important:
-        if semantic_config_file := next(
-            (
-                config
-                for config in iter(SemanticSearchLanguage.filename_pairs())
-                if config.filename == filename
-            ),
-            None,
-        ):
-            return cls(language=semantic_config_file.language, kind=ChunkKind.CONFIG)
-
-        filename_parts = tuple(part for part in filename.split(".") if part)
-        extension = (
-            normalize_ext(filename_parts[-1]) if filename_parts else filename_parts[0].lower()
-        )
-
-        if (
-            semantic_config_language := _has_semantic_extension(extension)
-        ) and _is_semantic_config_ext(extension):
-            return cls(language=semantic_config_language.value, kind=ChunkKind.CONFIG)
-
-        if semantic_language := _has_semantic_extension(extension):
-            return cls(language=semantic_language.value, kind=ChunkKind.CODE)
-
-        return next(
-            (
-                cls(language=extpair.language, kind=ChunkKind.from_string(extpair.category))
-                for extpair in get_ext_lang_pairs()
-                if extpair.is_same(filename)
-            ),
-            None,
-        )
-
+# ===========================================================================
+# *                            Span API
+# ===========================================================================
 
 SpanTuple = tuple[
     NonNegativeInt, NonNegativeInt, UUID4
@@ -502,6 +357,29 @@ class SpanGroup:
         self.spans = self.spans or set()
         self._normalize()
 
+    @computed_field
+    @property
+    def is_unform(self) -> bool:
+        """Check if the span group is uniform, meaning all spans have the same source_id."""
+        if not self.spans:
+            return True
+        first_source_id = next(iter(self.spans)).source_id
+        return all(span.source_id == first_source_id for span in self.spans)
+
+    @computed_field
+    @property
+    def source_id(self) -> UUID4 | None:
+        """Get the source_id of the span group."""
+        if not self.spans or not self.is_unform:
+            return None
+        return next(iter(self.spans)).source_id
+
+    @computed_field
+    @property
+    def sources(self) -> frozenset[UUID4]:
+        """Get the source_ids of the span group."""
+        return frozenset(span.source_id for span in self.spans)
+
     @classmethod
     def from_simple_spans(cls, simple_spans: Sequence[tuple[int, int]]) -> SpanGroup:
         """
@@ -576,3 +454,166 @@ class SpanGroup:
 
     def __repr__(self) -> str:
         return f"SpanGroup({list(self)})"
+
+
+# ---------------------------------------------------------------------------
+# *                    Code Search and Chunks
+# ---------------------------------------------------------------------------
+
+
+class SearchResult(BaseModel):
+    """Result from vector search operations."""
+
+    file_path: Path
+    content: str | CodeChunk
+    score: Annotated[NonNegativeFloat, Field(description="Similarity score")]
+    metadata: Annotated[
+        Metadata | None, Field(description="Additional metadata about the result")
+    ] = None
+
+
+class CodeChunk(BaseModel):
+    """Represents a chunk of code with metadata."""
+
+    content: str
+    line_range: Annotated[Span, Field(description="Line range in the source file")]
+    file_path: Annotated[
+        Path | None,
+        Field(
+            description="Path to the source file. Not all chunks are from files, so this can be None."
+        ),
+    ] = None
+    language: SemanticSearchLanguage | LiteralString | None = None
+    chunk_type: ChunkType = ChunkType.TEXT_BLOCK  # For Phase 1, simple text blocks
+    timestamp: Annotated[
+        PositiveFloat,
+        Field(
+            default_factory=datetime.now(UTC).timestamp,
+            kw_only=True,
+            description="Timestamp of the code chunk creation or modification",
+        ),
+    ] = datetime.now(UTC).timestamp()
+    chunk_id: Annotated[
+        UUID4,
+        Field(
+            default_factory=uuid4, kw_only=True, description="Unique identifier for the code chunk"
+        ),
+    ] = uuid4()
+    parent_id: Annotated[
+        UUID4 | None,
+        Field(default=None, description="Parent chunk ID, such as the file ID, if applicable"),
+    ] = None
+    metadata: Annotated[
+        Metadata | None,
+        Field(
+            default_factory=dict,
+            kw_only=True,
+            description="Additional metadata about the code chunk",
+        ),
+    ] = None
+
+    def serialize(self) -> str:
+        """Serialize the CodeChunk to a dictionary."""
+        return self.model_dump_json(round_trip=True, exclude_none=True)
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredFile:
+    path: Annotated[Path, Field(description="Relative path to the discovered file")]
+    ext_kind: ExtKind
+
+    file_hash: Annotated[str, Field(description="sha256 hash of the file contents", init=False)]
+
+    @classmethod
+    def from_path(cls, path: Path) -> DiscoveredFile | None:
+        """Create a DiscoveredFile from a file path."""
+        if ext_kind := (ext_kind := ExtKind.from_file(path)):
+            file_hash = sha256(path.read_bytes()).hexdigest()
+            return cls(path=path, ext_kind=ext_kind, file_hash=file_hash)
+        return None
+
+    @computed_field
+    @property
+    def size(self) -> NonNegativeInt:
+        """Return the size of the file in bytes."""
+        return self.path.stat().st_size
+
+
+@cache
+def _is_semantic_config_ext(ext: str) -> bool:
+    """Check if the given extension is a semantic config file."""
+    ext = normalize_ext(ext)
+    return any(ext == config_ext for config_ext in SemanticSearchLanguage.config_language_exts())
+
+
+@cache
+def _has_semantic_extension(ext: str) -> SemanticSearchLanguage | None:
+    """Check if the given extension is a semantic search language."""
+    if found_lang := next(
+        (lang for lang_ext, lang in SemanticSearchLanguage.ext_pairs() if lang_ext == ext), None
+    ):
+        return found_lang
+    return None
+
+
+class ExtKind(NamedTuple):
+    """Represents a file extension and its associated kind."""
+
+    language: LiteralString | SemanticSearchLanguage | ConfigLanguage
+    kind: ChunkKind
+
+    def __str__(self) -> str:
+        """Return a string representation of the extension kind."""
+        return f"{self.kind}: {self.language}"
+
+    @classmethod
+    def from_string(
+        cls, language: LiteralString | SemanticSearchLanguage, kind: str | ChunkKind
+    ) -> ExtKind | None:
+        """Create an ExtKind from a string representation."""
+        if not isinstance(language, SemanticSearchLanguage):
+            with contextlib.suppress(KeyError):
+                if semantic := SemanticSearchLanguage.from_string(language):
+                    language = semantic
+        if not isinstance(kind, ChunkKind):
+            kind = ChunkKind.from_string(kind)  # if this fails something is wrong...
+        return cls(language=language, kind=kind)
+
+    @classmethod
+    def from_file(cls, file: str | Path) -> ExtKind | None:
+        """
+        Create an ExtKind from a file path.
+        """
+        filename = Path(file).name if isinstance(file, str) else file.name
+        # The order we do this in is important:
+        if semantic_config_file := next(
+            (
+                config
+                for config in iter(SemanticSearchLanguage.filename_pairs())
+                if config.filename == filename
+            ),
+            None,
+        ):
+            return cls(language=semantic_config_file.language, kind=ChunkKind.CONFIG)
+
+        filename_parts = tuple(part for part in filename.split(".") if part)
+        extension = (
+            normalize_ext(filename_parts[-1]) if filename_parts else filename_parts[0].lower()
+        )
+
+        if (
+            semantic_config_language := _has_semantic_extension(extension)
+        ) and _is_semantic_config_ext(extension):
+            return cls(language=semantic_config_language.value, kind=ChunkKind.CONFIG)
+
+        if semantic_language := _has_semantic_extension(extension):
+            return cls(language=semantic_language.value, kind=ChunkKind.CODE)
+
+        return next(
+            (
+                cls(language=extpair.language, kind=ChunkKind.from_string(extpair.category))
+                for extpair in get_ext_lang_pairs()
+                if extpair.is_same(filename)
+            ),
+            None,
+        )

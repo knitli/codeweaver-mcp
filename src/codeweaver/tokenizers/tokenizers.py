@@ -8,6 +8,7 @@ Tokenizer for the Tokenizers library.
 
 import logging
 
+from collections.abc import Sequence
 from typing import Any
 
 from typing_extensions import TypeIs
@@ -49,20 +50,20 @@ class Tokenizers(Tokenizer[TokenizersTokenizer]):
         """Encode text into a list of token IDs."""
         return self._encoder.encode(self._to_string(text))  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def encode_batch(self, texts: list[str | bytes]) -> list[list[int]]:
+    def encode_batch(self, texts: Sequence[str | bytes]) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
         return self._encoder.encode_batch(self._to_string(txt) for txt in texts)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def decode(self, tokens: list[int]) -> str:
+    def decode(self, tokens: Sequence[int]) -> str:
         """Decode a list of token IDs back into text."""
         return self._encoder.decode(tokens)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def decode_batch(self, token_lists: list[list[int]]) -> list[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
         """Decode a batch of token ID lists back into texts."""
         return self._encoder.decode_batch(token_lists)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
     @staticmethod
-    def encoders() -> list[str]:
+    def encoders() -> Sequence[str]:
         """List all available encoder names.
 
         The Tokenizers library can load any Hugging Face tokenizer, but they're all based on four models, so we return those.

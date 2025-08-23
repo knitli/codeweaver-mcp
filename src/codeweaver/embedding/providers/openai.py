@@ -13,15 +13,11 @@ from __future__ import annotations as _annotations
 
 import os
 
-from typing import Literal
-
 import httpx
 
 from pydantic import SecretStr
 from pydantic_ai.models import cached_async_http_client
 
-from codeweaver.embedding.profiles import EmbeddingModelProfile
-from codeweaver.embedding.profiles.openai import openai_model_profile
 from codeweaver.embedding.providers import EmbeddingProvider
 
 
@@ -37,23 +33,9 @@ class OpenAIEmbeddingProvider(EmbeddingProvider[AsyncOpenAI]):
     """Provider for OpenAI API."""
 
     @property
-    def name(self) -> Literal["openai"]:
-        """OpenAI."""
-        return "openai"
-
-    @property
     def base_url(self) -> str:
         """Base URL for OpenAI API."""
         return str(self.client.base_url)
-
-    @property
-    def client(self) -> AsyncOpenAI:
-        """The OpenAI async client."""
-        return self._client
-
-    def model_profile(self, model_name: str) -> EmbeddingModelProfile | None:
-        """Get the model profile for the specified model name."""
-        return openai_model_profile(model_name)
 
     def __init__(
         self,

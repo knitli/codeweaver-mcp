@@ -13,7 +13,7 @@ import os
 from collections.abc import Callable, Sequence
 from functools import cache
 from pathlib import Path
-from types import FunctionType
+from types import FunctionType, MethodType
 from typing import Any, LiteralString
 
 
@@ -22,7 +22,9 @@ from typing import Any, LiteralString
 # SPDX-License-Identifier: MIT
 
 
-def rpartial(func: FunctionType, *args: Any, **kwargs: dict[str, Any]) -> Callable[..., Any]:
+def rpartial(
+    func: FunctionType | MethodType, *args: Any, **kwargs: dict[str, Any]
+) -> Callable[..., Any]:
     """Partially applies last arguments, returning a callable. Adapted from `funcy`."""
     return lambda *a, **kw: func(*(a + args), **dict(kwargs, **kw))
 
