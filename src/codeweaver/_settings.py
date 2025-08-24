@@ -309,10 +309,26 @@ class RerankingModelSettings(TypedDict, total=False):
     client_kwargs: NotRequired[dict[str, Any] | None]
 
 
+class FastembedGPUProviderSettings(TypedDict, total=False):
+    """Special settings for Fastembed-GPU provider.
+
+    These settings only apply if you are using a Fastembed provider, installed the `codeweaver-mcp[provider-fastembed-gpu]` extra, have a CUDA-capable GPU, and have properly installed and configured the ONNX GPU runtime.
+    You can provide these settings with your CodeWeaver embedding provider settings, or rerank provider settings. If you're using fastembed-gpu for both, we'll assume you are using the same settings for both if we find one of them.
+    """
+
+    cuda: NotRequired[bool | None]
+    """Whether to use CUDA (if available). If `None`, will auto-detect. We'll generally assume you want to use CUDA if it's available unless you provide a `False` value here."""
+    device_ids: NotRequired[list[int] | None]
+    """List of GPU device IDs to use. If `None`, we will try to detect available GPUs using `nvidia-smi` if we can find it. We recommend specifying them because our checks aren't perfect."""
+
+
 class EmbeddingProviderSettings(BaseProviderSettings):
     """Settings for embedding models."""
 
     model_settings: Required[tuple[EmbeddingModelSettings, ...] | EmbeddingModelSettings]
+    """Settings for the embedding model(s)."""
+    fastembed_gpu: NotRequired[FastembedGPUProviderSettings | None]
+    """Optional settings specific to the Fastembed-GPU provider."""
 
 
 class RerankingProviderSettings(BaseProviderSettings):
@@ -321,6 +337,8 @@ class RerankingProviderSettings(BaseProviderSettings):
     model_settings: Required[RerankingModelSettings | tuple[RerankingModelSettings, ...] | None]
     """Settings for the re-ranking model(s)."""
     top_k: NotRequired[PositiveInt | None]
+    fastembed_gpu: NotRequired[FastembedGPUProviderSettings | None]
+    """Optional settings specific to the Fastembed-GPU provider."""
 
 
 # Agent model settings are imported/defined from `pydantic_ai`

@@ -24,18 +24,40 @@ from codeweaver.embedding.models.base import EmbeddingModelCapabilities
 from codeweaver.embedding.providers import EmbeddingProvider
 
 
-def fastembed_all_kwargs(**kwargs: dict[str, Any]) -> dict[str, Any]:
-    """Keyword args for both document and query embedding methods for Fastembed."""
-    kwargs = kwargs or {}
-    return {"parallel": multiprocessing.cpu_count() - 1, **kwargs}
-
-
 try:
     from fastembed.text import TextEmbedding
 except ImportError as e:
     raise ImportError(
         "FastEmbed is not installed. Please install it with `pip install fastembed`."
     ) from e
+
+
+def fastembed_all_kwargs(**kwargs: dict[str, Any] | None) -> dict[str, Any]:
+    """Get all possible kwargs for FastEmbed embedding methods."""
+    default_kwargs: dict[str, Any] = {"threads": multiprocessing.cpu_count(), "lazy_load": True}
+    if kwargs:
+        device_ids: list[int] | None = kwargs.get("device_ids")  # pyright: ignore[reportAssignmentType]
+        cuda: bool | None = kwargs.get("cuda")  # pyright: ignore[reportAssignmentType]
+        if cuda == False:  # user **explicitly** disabled cuda  # noqa: E712
+            return default_kwargs | kwargs
+        cuda = bool(cuda)
+        from codeweaver._utils import decide_fastembed_runtime
+
+        decision = decide_fastembed_runtime(explicit_cuda=cuda, explicit_device_ids=device_ids)
+        if isinstance(decision, tuple) and len(decision) == 2:
+            cuda = True
+            device_ids = decision[1]
+        elif decision == "gpu":
+            cuda = True
+            device_ids = [0]
+        else:
+            cuda = False
+            device_ids = None
+        if cuda:
+            kwargs["cuda"] = True  # pyright: ignore[reportArgumentType]
+            kwargs["device_ids"] = device_ids  # pyright: ignore[reportArgumentType]
+            kwargs["providers"] = ["CUDAExecutionProvider"]  # pyright: ignore[reportArgumentType]
+    return default_kwargs
 
 
 def fastembed_output_transformer(
@@ -61,9 +83,14 @@ class FastEmbedProvider(EmbeddingProvider[TextEmbedding]):
     _output_transformer: ClassVar[
         Callable[[Any], Sequence[Sequence[float]] | Sequence[Sequence[int]]]
     ] = fastembed_output_transformer
-    
+
     def _initialize(self) -> None:
-        
+        """Initialize the FastEmbed client."""
+        if "model_name" not in self._doc_kwargs:
+            model = self._caps.name
+            type(self)._doc_kwargs["model_name"] = model
+            type(self)._query_kwargs["model_name"] = model
+        self._client = TextEmbedding(**self._doc_kwargs)
 
     @property
     def base_url(self) -> str | None:

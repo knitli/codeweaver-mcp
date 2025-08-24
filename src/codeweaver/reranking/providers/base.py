@@ -4,11 +4,13 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Base class for reranking providers."""
 
-from abc import ABC
+import logging
+
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Sequence
 from typing import Any, NamedTuple, cast, overload
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, PositiveInt
 
 from codeweaver._data_structures import CodeChunk
 from codeweaver._server import get_statistics
@@ -22,6 +24,8 @@ type StructuredDataSequence = (
     Sequence[str] | Sequence[bytes] | Sequence[bytearray] | Sequence[CodeChunk]
 )
 
+logger = logging.getLogger(__name__)
+
 
 class RerankingResult(NamedTuple):
     """Result of a reranking operation."""
@@ -30,6 +34,39 @@ class RerankingResult(NamedTuple):
     batch_rank: int
     score: float
     chunk: CodeChunk
+
+
+def default_reranking_input_transformer(
+    documents: StructuredDataSequence | StructuredDataInput,
+) -> Sequence[str]:
+    """Default input transformer that converts documents to strings."""
+    if isinstance(documents, list | tuple | set):
+        return [doc.serialize() if isinstance(doc, CodeChunk) else str(doc) for doc in documents]
+    return [documents.serialize()] if isinstance(documents, CodeChunk) else [str(documents)]
+
+
+def default_reranking_output_transformer(
+    results: Sequence[float], chunks: Sequence[CodeChunk]
+) -> Sequence[RerankingResult]:
+    """Default output transformer that converts results and chunks to RerankingResult.
+
+    This transformer handles the most common case where the results are a sequence of floats with
+    the same length as the input chunks, and each float represents the score for the corresponding chunk
+    """
+    processed_results: list[RerankingResult] = []
+    mapped_scores = sorted(
+        ((i, score) for i, score in enumerate(results)), key=lambda x: x[1], reverse=True
+    )
+    processed_results.extend(
+        RerankingResult(
+            original_index=i,
+            batch_rank=next((j + 1 for j, (idx, _) in enumerate(mapped_scores) if idx == i), -1),
+            score=score,
+            chunk=chunk,
+        )
+        for i, (score, chunk) in enumerate(zip(results, chunks, strict=True))
+    )
+    return processed_results
 
 
 class RerankingProvider[RerankingClient](BaseModel, ABC):
@@ -43,14 +80,20 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
     _caps: RerankingModelCapabilities
 
     _rerank_kwargs: dict[str, Any]
-    _input_transformer: Callable[[StructuredDataSequence | StructuredDataInput], Sequence[str]]
-    _output_transformer: Callable[[Any, Sequence[CodeChunk]], Sequence[RerankingResult]]
+    _input_transformer: Callable[[StructuredDataSequence | StructuredDataInput], Sequence[str]] = (
+        staticmethod(default_reranking_input_transformer)
+    )
+    _output_transformer: Callable[[Any, Sequence[CodeChunk]], Sequence[RerankingResult]] = (
+        staticmethod(default_reranking_output_transformer)
+    )
+    """The output transformer is a function that takes the raw results from the provider and returns a Sequence of RerankingResult."""
 
     def __init__(
         self,
         client: RerankingClient,
         capabilities: RerankingModelCapabilities,
         prompt: str | None = None,
+        top_k: PositiveInt = 40,
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Initialize the RerankingProvider."""
@@ -58,7 +101,21 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
         self._prompt = prompt
         self._caps = capabilities
         self.kwargs = {**(type(self)._rerank_kwargs or {}), **(kwargs or {})}
+        logger.debug("RerankingProvider kwargs", extra=self.kwargs)
+        self._top_k = cast(int, self.kwargs.get("top_k", top_k))
+        logger.debug("Initialized RerankingProvider with top_k=%d", self._top_k)
 
+        self._initialize()
+
+    def _initialize(self) -> None:
+        """_initialize is an optional function in subclasses for any additional setup."""
+
+    @property
+    def top_k(self) -> PositiveInt:
+        """Get the top_k value."""
+        return self._top_k
+
+    @abstractmethod
     async def _execute_rerank(
         self,
         query: str,
@@ -67,14 +124,17 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
         top_k: int = 40,
         **kwargs: dict[str, Any] | None,
     ) -> Any:
-        """Execute the reranking process."""
+        """Execute the reranking process.
+
+        _execute_rerank must be a function in subclasses that takes a query string and document Sequence,
+        and returns the unprocessed reranked results from the provider's API.
+        """
         raise NotImplementedError
 
     async def rerank(
         self,
         query: str,
         documents: StructuredDataInput | StructuredDataSequence,
-        top_k: int = 40,
         **kwargs: dict[str, Any] | None,
     ) -> Sequence[RerankingResult]:
         """Rerank the given documents based on the query."""
@@ -82,14 +142,24 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
         transformed_docs = self._process_documents(documents)
         transformed_docs = self._input_transformer(transformed_docs)
         reranked = await self._execute_rerank(
-            query, transformed_docs, top_k=top_k, **processed_kwargs
+            query, transformed_docs, top_k=self.top_k, **processed_kwargs
         )
-        return self._process_results(reranked, transformed_docs)
+        processed_results = self._process_results(reranked, transformed_docs)
+        if len(processed_results) > self.top_k:
+            # results already sorted in descending order
+            processed_results = processed_results[: self.top_k]
+        self._report_token_savings(processed_results, transformed_docs)
+        return processed_results
 
     @property
     def client(self) -> RerankingClient:
         """Get the client for the reranking provider."""
         return self._client
+
+    @property
+    def provider(self) -> Provider:
+        """Get the provider for the reranking provider."""
+        return self._provider
 
     @property
     def model_capabilities(self) -> RerankingModelCapabilities:
@@ -156,13 +226,23 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
         self, results: Any, transformed_docs: Sequence[str]
     ) -> Sequence[RerankingResult]:
         """Process the results from the reranking."""
-        chunks = [self.to_code_chunk(doc) for doc in transformed_docs]
+        # voyage returns token count, others do not
+        if self.provider != Provider.VOYAGE:
+            self._update_token_stats(from_docs=transformed_docs)
+        chunks: list[CodeChunk] = []
+        for doc in transformed_docs:
+            chunk_result = self.to_code_chunk(doc)
+            if isinstance(chunk_result, CodeChunk):
+                chunks.append(chunk_result)
+            else:
+                # chunk_result is Sequence[CodeChunk]
+                chunks.extend(chunk_result)
         return self._output_transformer(results, chunks)
 
     @staticmethod
     def to_code_chunk(
         text: StructuredDataInput | StructuredDataSequence,
-    ) -> CodeChunk | tuple[CodeChunk, ...]:
+    ) -> CodeChunk | Sequence[CodeChunk]:
         """Convert text to a CodeChunk."""
         if isinstance(text, list | tuple | set):
             return tuple(
@@ -173,3 +253,26 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
             if isinstance(text, CodeChunk)
             else CodeChunk.model_validate_json(cast(str | bytes | bytearray, text))
         )
+
+    def _report_token_savings(
+        self, results: Sequence[RerankingResult], processed_chunks: Sequence[str]
+    ) -> None:
+        """Report token savings from the reranking process."""
+        if (context_saved := self._calculate_context_saved(results, processed_chunks)) > 0:
+            statistics = get_statistics()
+            statistics.add_token_usage(saved_by_reranking=context_saved)
+
+    def _calculate_context_saved(
+        self, results: Sequence[RerankingResult], processed_chunks: Sequence[str]
+    ) -> int:
+        """Calculate the context saved by the reranking process."""
+        if len(results) == len(processed_chunks):
+            return 0
+        result_indices = {res.original_index for res in results}
+        discarded_chunks = (
+            chunk for i, chunk in enumerate(processed_chunks) if i not in result_indices
+        )
+        # Because we are working in terms of context saved from the *user's agent*, we need calculate tokens for the user's tokenizer.
+        # To keep things simple, we default to `cl100k_base`, as this is the tokenizer used by most LLMs.
+        tokenizer = get_tokenizer("tiktoken", "cl100k_base")
+        return tokenizer.estimate_batch(discarded_chunks)  # pyright: ignore[reportArgumentType]

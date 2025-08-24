@@ -6,7 +6,7 @@
 
 from typing import Literal
 
-from codeweaver.reranking.base import RerankingProvider
+from codeweaver.reranking.providers.base import RerankingProvider
 
 
 type KnownRerankModelName = Literal[
@@ -20,7 +20,7 @@ type KnownRerankModelName = Literal[
     "fastembed:Xenova/ms-marco-MiniLM-6-v2",
     "fastembed:Xenova/ms-marco-MiniLM-12-v2",
     "fastembed:BAAI/bge-reranker-base",
-    "fastembed:jinaai/jina-reranked-v2-base-multilingual",
+    "fastembed:jinaai/jina-reranker-v2-base-multilingual",
     "huggingface:BAAI/bge-reranker-v2-m3",
     "huggingface:BAAI/bge-reranker-large",
     "huggingface:Qwen/Qwen3-Reranker-0.6B",

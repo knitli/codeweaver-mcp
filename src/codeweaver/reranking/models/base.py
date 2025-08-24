@@ -61,7 +61,7 @@ type PartialRerankingCapabilities = dict[
     | bool
     | None
     | Provider
-    | Callable[[list[CodeChunk]], Any]
+    | Callable[[Sequence[CodeChunk], str], Any]
     | Callable[..., Sequence[Sequence[float]] | Sequence[Sequence[int]]]
     | tuple[bool, NonNegativeInt],
 ]
@@ -74,9 +74,11 @@ class RerankingCapabilities(TypedDict, total=False):
     provider: Required[Provider]
     max_query: NotRequired[PositiveInt | None]
     max_input: (
-        NotRequired[PositiveInt] | Callable[[list[CodeChunk]], tuple[bool, NonNegativeInt]] | None
+        NotRequired[PositiveInt]
+        | Callable[[Sequence[CodeChunk], str], tuple[bool, NonNegativeInt]]
+        | None
     )
-    input_transformer: NotRequired[Callable[[list[CodeChunk]], Any] | None]
+    input_transformer: NotRequired[Callable[[Sequence[CodeChunk]], Any] | None]
     output_transformer: NotRequired[
         Callable[..., Sequence[Sequence[float]] | Sequence[Sequence[int]]] | None
     ]
@@ -97,12 +99,12 @@ class RerankingModelCapabilities(BaseModel):
         Field(description="The maximum number of tokens the model can handle for a single query."),
     ] = None
     max_input: Annotated[
-        Callable[[list[CodeChunk], str], tuple[bool, NonNegativeInt]] | PositiveInt | None,
+        Callable[[Sequence[CodeChunk], str], tuple[bool, NonNegativeInt]] | PositiveInt | None,
         Field(
             description="In the simple case, takes an integer for the maximum number of tokens the model can handle. A function that returns a tuple where the first value is a boolean indicating if the passed input exceeds the model's maximum input length, and the second value is an integer -- if the returned boolean is True (within limits), will be 0, but if it exceeds limits, the integer will be the maximum safe index of the input that can be provided. Callable receives a list of CodeChunks and the query string."
         ),
     ] = None
-    input_transformer: Callable[[list[CodeChunk]], Any] | None = None
+    input_transformer: Callable[[Sequence[CodeChunk]], Any] | None = None
     output_transformer: (
         Callable[..., Sequence[Sequence[float]] | Sequence[Sequence[int]]] | None
     ) = default_output_transformer
@@ -139,7 +141,7 @@ class RerankingModelCapabilities(BaseModel):
         return self.token_processor.estimate(query) <= self.max_query
 
     def _process_max_input_with_tokenizer(
-        self, input_chunks: list[str]
+        self, input_chunks: Sequence[str]
     ) -> tuple[bool, NonNegativeInt]:
         """Process max_input using the specified tokenizer."""
         # TODO: We need to handle the case where the first chunk is larger than the max_input.
@@ -158,14 +160,14 @@ class RerankingModelCapabilities(BaseModel):
                 summed_count += count
         return False, len(chunk_counts) - 1
 
-    def _handle_int_max_input(self, input_chunks: list[str]) -> tuple[bool, NonNegativeInt]:
+    def _handle_int_max_input(self, input_chunks: Sequence[str]) -> tuple[bool, NonNegativeInt]:
         """Handle integer max_input case."""
         if not isinstance(self.max_input, int):
             raise TypeError(f"Expected max_input to be an int, got {type(self.max_input).__name__}")
         return self._process_max_input_with_tokenizer(input_chunks)
 
     def is_within_limits(
-        self, input_chunks: list[CodeChunk], query: str
+        self, input_chunks: Sequence[CodeChunk], query: str
     ) -> tuple[bool, NonNegativeInt]:
         """Check if the input chunks are within the model's limits."""
         if not self.max_input:

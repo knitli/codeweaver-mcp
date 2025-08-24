@@ -16,9 +16,10 @@ from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Annotated, ClassVar, Literal, TypedDict, cast
+from typing import Annotated, Any, ClassVar, Literal, TypedDict, cast
 
 from fastmcp import Context
+from mcp.shared.context import RequestContext
 from pydantic import (
     AnyUrl,
     ConfigDict,
@@ -592,6 +593,9 @@ class TokenCategory(BaseEnum):
     USER_AGENT = "user_agent"
     """Tokens that CodeWeaver *returned* to the user's agent after intelligently sifting through results. It's the number of tokens for the results returned by the `find_code` tool."""
 
+    SAVED_BY_RERANKING = "saved_by_reranking"
+    """Tokens that were saved by reranking the results."""
+
     @property
     def is_agent_token(self) -> bool:
         """Check if the token category is related to agent usage."""
@@ -649,7 +653,9 @@ class TokenCounter(Counter[TokenCategory]):
 
             Even if we had those numbers, they would still be lower bounds, because they don't account for increases in overall turns and token expenditure if CodeWeaver was never used. Let's call this the "blind bumbling savings" of CodeWeaver.
         """
-        return self[TokenCategory.SEARCH_RESULTS] - self[TokenCategory.USER_AGENT]
+        return (self[TokenCategory.SEARCH_RESULTS] - self[TokenCategory.USER_AGENT]) + self[
+            TokenCategory.SAVED_BY_RERANKING
+        ]
 
     @property
     def money_saved(self) -> NonNegativeFloat:
@@ -696,8 +702,8 @@ class SessionStatistics:
         ),
     ] = None
 
-    _successful_request_log: list[str | int] = Field(default_factory=list, init=False, repr=False)
-    _failed_request_log: list[str | int] = Field(default_factory=list, init=False, repr=False)
+    _successful_request_log: list[str | int] = Field(default_factory=list, init=False, repr=False)  # pyright: ignore[reportUnknownVariableType]
+    _failed_request_log: list[str | int] = Field(default_factory=list, init=False, repr=False)  # pyright: ignore[reportUnknownVariableType]
 
     def __post_init__(self) -> None:
         """Post-initialization processing."""
@@ -714,6 +720,8 @@ class SessionStatistics:
             on_list_resource_templates_requests=[],
             on_list_prompts_requests=[],
         )
+        self._successful_request_log = self._successful_request_log or []
+        self._failed_request_log = self._failed_request_log or []
         self.successful_requests = self.successful_requests or 0
         self.failed_requests = self.failed_requests or 0
         self.total_requests = self.total_requests or 0
@@ -795,6 +803,7 @@ class SessionStatistics:
         context_agent_used: NonNegativeInt = 0,
         user_agent_received: NonNegativeInt = 0,
         search_results: NonNegativeInt = 0,
+        saved_by_reranking: NonNegativeInt = 0,
     ) -> None:
         """Add token usage statistics."""
         if self.token_statistics is None:
@@ -805,6 +814,7 @@ class SessionStatistics:
         self.token_statistics[TokenCategory.CONTEXT_AGENT] += context_agent_used
         self.token_statistics[TokenCategory.USER_AGENT] += user_agent_received
         self.token_statistics[TokenCategory.SEARCH_RESULTS] += search_results
+        self.token_statistics[TokenCategory.SAVED_BY_RERANKING] += saved_by_reranking
 
     def get_token_usage(self) -> TokenCounter:
         """Get the current token usage statistics."""
@@ -860,12 +870,23 @@ class SessionStatistics:
 
         Note: This is fastmcp.Context, *not* fastmcp.middleware.MiddlewareContext
         """
+        if context is None:
+            return
+
+        from typing import TYPE_CHECKING, cast
+
+        if TYPE_CHECKING:
+            from codeweaver._server import AppState
+        try:
+            ctx = cast(RequestContext[Any, AppState, Any], context.request_context)
+        except LookupError:
+            return
+
         if (
-            context is not None
-            and (ctx := context.request_context)
+            ctx
             and (request_id := ctx.request_id)
             and not self.request_in_log(request_id=request_id)
-        ):  # pyright: ignore[reportArgumentType, reportUnknownVariableType, reportUnknownMemberType]
+        ):
             if successful:
                 self.add_successful_request(request_id=request_id)
             else:

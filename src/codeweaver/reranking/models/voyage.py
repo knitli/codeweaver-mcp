@@ -1,5 +1,7 @@
 """Reranking models for VoyageAI."""
 
+from collections.abc import Sequence
+
 from pydantic import NonNegativeInt
 
 from codeweaver._data_structures import CodeChunk
@@ -11,8 +13,6 @@ from codeweaver.reranking.models.base import (
 
 
 try:
-    from voyageai.object.reranking import RerankingObject, RerankingResult
-
     from codeweaver.tokenizers import get_tokenizer
 
 except ImportError as e:
@@ -21,12 +21,12 @@ except ImportError as e:
     ) from e
 
 
-def _handle_too_big(token_list: list[int]) -> list[tuple[int, int]]:
+def _handle_too_big(token_list: Sequence[int]) -> Sequence[tuple[int, int]]:
     """Handle the case where a single token exceeds the maximum size."""
     return [(i, size) for i, size in enumerate(token_list) if size > 32_000]
 
 
-def _handle_too_large(token_list: list[int]) -> tuple[bool, NonNegativeInt]:
+def _handle_too_large(token_list: Sequence[int]) -> tuple[bool, NonNegativeInt]:
     """Determine if the token list fits within the total limit and where to cut."""
     summed: int = 0
     for i, size in enumerate(token_list):
@@ -36,11 +36,11 @@ def _handle_too_large(token_list: list[int]) -> tuple[bool, NonNegativeInt]:
     return True, 0
 
 
-def _voyage_max_limit(chunks: list[CodeChunk], prompt: str) -> tuple[bool, NonNegativeInt]:
+def _voyage_max_limit(chunks: list[CodeChunk], query: str) -> tuple[bool, NonNegativeInt]:
     """Check if the number of chunks exceeds the maximum limit."""
     tokenizer = get_tokenizer("tokenizers", "voyageai/voyage-rerank-2.5")
     stringified_chunks = [chunk.serialize() for chunk in chunks]
-    sizes = [tokenizer.estimate(chunk) + tokenizer.estimate(prompt) for chunk in stringified_chunks]
+    sizes = [tokenizer.estimate(chunk) + tokenizer.estimate(query) for chunk in stringified_chunks]
     too_large = sum(sizes) > 600_000
     too_many = len(stringified_chunks) > 1000
     too_big = any(size > 32_000 for size in sizes)
@@ -57,7 +57,7 @@ def _voyage_max_limit(chunks: list[CodeChunk], prompt: str) -> tuple[bool, NonNe
         truncated_chunks = chunks[:1000]
         truncated_strings = [chunk.serialize() for chunk in truncated_chunks]
         truncated_sizes = [
-            tokenizer.estimate(c) + tokenizer.estimate(prompt) for c in truncated_strings
+            tokenizer.estimate(c) + tokenizer.estimate(query) for c in truncated_strings
         ]
         # If still too large, determine where to cut; otherwise accept the truncated set.
         if sum(truncated_sizes) > 600_000:
@@ -72,10 +72,9 @@ def _get_voyage_capabilities() -> PartialRerankingCapabilities:
         "name": "rerank-2.5",
         "provider": Provider.VOYAGE,
         "max_query": 8_000,
-        "max_input": _voyage_max_limit,
+        "max_input": _voyage_max_limit,  # pyright: ignore[reportReturnType]
         "context_window": 32_000,
-        "supports_custom_prompt": True,
-        "custom_prompt": "Please re-rank the following options:",
+        "supports_custom_prompt": False,
         "tokenizer": "tokenizers",
         "tokenizer_model": "voyageai/voyage-rerank-2.5",
     }
