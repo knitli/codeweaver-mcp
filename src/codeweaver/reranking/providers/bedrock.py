@@ -1,20 +1,49 @@
-# sourcery skip: no-complex-if-expressions
+# sourcery skip: avoid-single-character-names-variables, no-complex-if-expressions
+"""Bedrock reranking provider.
+
+Pydantic models and provider class for Bedrock reranking. Excuse the many pyright ignores -- boto3 is boto3.
+"""
+
+import asyncio
 import logging
 
 from collections.abc import Sequence
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, Field, JsonValue, PositiveInt, model_validator
+from pydantic import (
+    AliasGenerator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
+    PositiveInt,
+    model_validator,
+)
+from pydantic.alias_generators import to_camel, to_snake
 
 from codeweaver._data_structures import CodeChunk
-from codeweaver._settings import Provider
-from codeweaver.reranking.models.base import RerankingModelCapabilities
+from codeweaver._settings import AWSProviderSettings, Provider
+from codeweaver.reranking.capabilities.amazon import get_amazon_reranking_capabilities
+from codeweaver.reranking.capabilities.base import RerankingModelCapabilities
 from codeweaver.reranking.providers.base import (
     RerankingProvider,
     RerankingResult,
     StructuredDataInput,
     StructuredDataSequence,
 )
+
+
+class BaseBedrockModel(BaseModel):
+    """Base model for Bedrock-related Pydantic models."""
+
+    model_config = ConfigDict(
+        alias_generator=AliasGenerator(validation_alias=to_snake, serialization_alias=to_camel),
+        str_strip_whitespace=True,
+        # spellchecker:off
+        ser_json_inf_nan="null",
+        # spellchecker:on
+        serialize_by_alias=True,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +53,7 @@ VALID_REGIONS = ["us-west-2", "ap-northeast-1", "ca-central-1", "eu-central-1"]
 VALID_REGION_PATTERN = "|".join(VALID_REGIONS)
 
 
-class BedrockTextQuery(BaseModel):
+class BedrockTextQuery(BaseBedrockModel):
     """A query for reranking."""
 
     text_query: Annotated[
@@ -32,7 +61,7 @@ class BedrockTextQuery(BaseModel):
             Literal["text"],
             Annotated[str, Field(description="The text of the query.", max_length=32_000)],
         ],
-        Field(description="The text query.", serialization_alias="textQuery"),
+        Field(description="The text query."),
     ]
     # we need to avoid the `type` keyword in python
     kind: Annotated[
@@ -40,67 +69,69 @@ class BedrockTextQuery(BaseModel):
     ] = "TEXT"
 
 
-class BedrockRerankModelConfiguration(BaseModel):
+class BedrockRerankModelConfiguration(BaseBedrockModel):
     """Configuration for a Bedrock reranking model."""
 
     additional_model_request_fields: Annotated[
         None,
         Field(
-            description="A json object where each key is a model parameter and the value is the value for that parameter. Currently there's not any values worth setting that can't be set elsewhere.",
-            serialization_alias="additionalModelRequestFields",
+            description="A json object where each key is a model parameter and the value is the value for that parameter. Currently there's not any values worth setting that can't be set elsewhere."
         ),
     ] = None
     model_arn: Annotated[
         str,
         Field(
             description="The ARN of the model.",
-            serialization_alias="modelArn",
             pattern=r"^arn:aws:bedrock:(" + VALID_REGION_PATTERN + r"):\d{12}:.*$",
         ),
     ]
 
 
-class BedrockRerankConfiguration(BaseModel):
+class BedrockRerankConfiguration(BaseBedrockModel):
     """Configuration for Bedrock reranking."""
 
     model_configuration: Annotated[
-        BedrockRerankModelConfiguration,
-        Field(description="The model configuration.", serialization_alias="modelConfiguration"),
+        BedrockRerankModelConfiguration, Field(description="The model configuration.")
     ]
     number_of_results: Annotated[
         PositiveInt, Field(description="Number of results to return -- this is `top_k`.")
     ] = 40
 
 
-class RerankConfiguration(BaseModel):
+class RerankConfiguration(BaseBedrockModel):
     """Configuration for reranking."""
 
     bedrock_reranking_configuration: Annotated[
-        BedrockRerankConfiguration,
-        Field(
-            description="Configuration for reranking.",
-            serialization_alias="bedrockRerankingConfiguration",
-        ),
+        BedrockRerankConfiguration, Field(description="Configuration for reranking.")
     ]
     kind: Annotated[
         Literal["BEDROCK_RERANKING_MODEL"],
         Field(description="The kind of configuration.", serialization_alias="type"),
     ] = "BEDROCK_RERANKING_MODEL"
 
+    @classmethod
+    def from_arn(cls, arn: str, top_k: PositiveInt = 40) -> Self:
+        """Create a RerankConfiguration from a Bedrock model ARN."""
+        return cls.model_validate({
+            "bedrock_reranking_configuration": {
+                "model_configuration": {"model_arn": arn},
+                "number_of_results": top_k,
+            }
+        })
 
-class DocumentSource(BaseModel):
+
+class DocumentSource(BaseBedrockModel):
     """A document source for reranking."""
 
     json_document: Annotated[
         dict[str, JsonValue] | None,
         Field(
-            description="A Json document to rerank against. Practically, CodeWeaver will always use this.",
-            serialization_alias="jsonDocument",
+            description="A Json document to rerank against. Practically, CodeWeaver will always use this."
         ),
     ]
     text_document: Annotated[
         dict[Literal["text"], str] | None,
-        Field(description="A text document to rerank against.", serialization_alias="textDocument"),
+        Field(description="A text document to rerank against.", max_length=32_000),
     ] = None
     kind: Annotated[
         Literal["JSON", "TEXT"],
@@ -117,15 +148,11 @@ class DocumentSource(BaseModel):
         return self
 
 
-class BedrockInlineDocumentSource(BaseModel):
+class BedrockInlineDocumentSource(BaseBedrockModel):
     """An inline document source for reranking."""
 
     inline_document_source: Annotated[
-        DocumentSource,
-        Field(
-            description="The inline document source to rerank.",
-            serialization_alias="inlineDocumentSource",
-        ),
+        DocumentSource, Field(description="The inline document source to rerank.")
     ]
     kind: Annotated[
         Literal["INLINE"],
@@ -133,26 +160,23 @@ class BedrockInlineDocumentSource(BaseModel):
     ] = "INLINE"
 
 
-class BedrockRerankRequest(BaseModel):
+class BedrockRerankRequest(BaseBedrockModel):
     """Request for Bedrock reranking."""
 
     queries: Annotated[
         list[BedrockTextQuery], Field(description="List of text queries to rerank against.")
     ]
     reranking_configuration: Annotated[
-        RerankConfiguration,
-        Field(
-            description="Configuration for reranking.", serialization_alias="rerankingConfiguration"
-        ),
+        RerankConfiguration, Field(description="Configuration for reranking.")
     ]
     sources: Annotated[
         list[BedrockInlineDocumentSource],
         Field(description="List of document sources to rerank against."),
     ]
-    next_token: Annotated[str | None, Field(serialization_alias="nextToken")] = None
+    next_token: Annotated[str | None, Field()] = None
 
 
-class BedrockRerankResultItem(BaseModel):
+class BedrockRerankResultItem(BaseBedrockModel):
     """A single reranked result item."""
 
     document: Annotated[DocumentSource, Field(description="The document that was reranked.")]
@@ -163,49 +187,93 @@ class BedrockRerankResultItem(BaseModel):
     relevance_score: Annotated[
         float,
         Field(
-            description="The relevance score of the document. Higher values indicate greater relevance.",
-            serialization_alias="relevanceScore",
+            description="The relevance score of the document. Higher values indicate greater relevance."
         ),
     ]
 
 
-class BedrockRerankingResult(BaseModel):
+class BedrockRerankingResult(BaseBedrockModel):
     """Result of a Bedrock reranking request."""
 
     results: Annotated[
         list[BedrockRerankResultItem], Field(description="List of reranked results.")
     ]
     next_token: Annotated[
-        str | None,
-        Field(
-            description="Token for the next set of results, if any.",
-            serialization_alias="nextToken",
-        ),
+        str | None, Field(description="Token for the next set of results, if any.")
     ] = None
 
 
 try:
     from boto3 import client as boto3_client  # pyright: ignore[reportUnknownVariableType]
 
-    bedrock_client = boto3_client("bedrock")  # pyright: ignore[reportUnknownVariableType]
 
 except ImportError as e:
     logger.exception("Failed to import boto3")
     raise ImportError("boto3 is not installed. Please install it with `pip install boto3`.") from e
 
 
-class BedrockRerankingProvider(RerankingProvider[bedrock_client]):
+class BedrockRerankingProvider(RerankingProvider[boto3_client]):
     """Provider for Bedrock reranking."""
 
-    _client: boto3_client = bedrock_client
+    _client: boto3_client  # pyright: ignore[reportGeneralTypeIssues]
     _provider = Provider.BEDROCK
-    _caps: RerankingModelCapabilities
+    _caps: RerankingModelCapabilities = get_amazon_reranking_capabilities()[0]
+    _model_configuration: RerankConfiguration
 
-    _rerank_kwargs: dict[str, Any] | None
+    _kwargs: dict[str, Any] | None
+
+    def __init__(
+        self,
+        bedrock_provider_settings: AWSProviderSettings,
+        model_config: RerankConfiguration | None = None,
+        capabilities: RerankingModelCapabilities | None = None,
+        client: boto3_client | None = None,  # pyright: ignore[reportGeneralTypeIssues, reportUnknownParameterType]
+        top_k: PositiveInt = 40,
+        prompt: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Override base init to set up Bedrock-specific client and configuration."""
+        self._bedrock_provider_settings = bedrock_provider_settings
+        self._model_configuration = model_config or RerankConfiguration.from_arn(
+            bedrock_provider_settings["model_arn"], kwargs.get("top_k", 40) if kwargs else top_k
+        )
+        _ = bedrock_provider_settings.pop("model_arn")
+        self._client = boto3_client("bedrock-runtime", **self._bedrock_provider_settings)  # pyright: ignore[reportCallIssue]  # we just popped it
+        self._capabilities = capabilities or self._caps or get_amazon_reranking_capabilities()[0]
+
+        super().__init__(  # pyright: ignore[reportUnknownMemberType]
+            client=client,  # pyright: ignore[reportArgumentType]
+            capabilities=capabilities,  # pyright: ignore[reportArgumentType]
+            top_k=top_k,
+            prompt=prompt,
+            **kwargs,  # pyright: ignore[reportArgumentType]
+        )
 
     def _initialize(self) -> None:
-        self._input_transformer = self.bedrock_reranking_input_transformer
+        # Our input transformer can't conform to the expected signature because we need the query and model config to construct the full object. We'll handle that in the rerank method.
+        self._input_transformer = self.bedrock_reranking_input_transformer  # pyright: ignore[reportAttributeAccessIssue]
         self._output_transformer = self.bedrock_reranking_output_transformer
+
+    async def _execute_rerank(  # pyright: ignore[reportIncompatibleMethodOverride]
+        self,
+        query: str,
+        documents: Sequence[BedrockInlineDocumentSource],
+        *,
+        top_k: int = 40,
+        **kwargs: dict[str, Any] | None,
+    ) -> Any:
+        """
+        Execute the reranking process.
+        """
+        query_obj = BedrockTextQuery.model_validate({"text_query": {"text": query}})
+        config = self._model_configuration
+        request = BedrockRerankRequest.model_validate({
+            "queries": [query_obj],
+            "sources": documents,
+            "reranking_configuration": config,
+        })
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, self.client.rerank, request)  # pyright: ignore[reportFunctionMemberAccess, reportUnknownMemberType]
 
     @staticmethod
     def _to_doc_sources(documents: list[DocumentSource]) -> list[BedrockInlineDocumentSource]:
@@ -219,7 +287,11 @@ class BedrockRerankingProvider(RerankingProvider[bedrock_client]):
     def bedrock_reranking_input_transformer(
         self, documents: StructuredDataInput | StructuredDataSequence
     ) -> list[BedrockInlineDocumentSource]:  # this is the sources field of BedrockRerankRequest
-        """Transform input documents into the format expected by the Bedrock API."""
+        """Transform input documents into the format expected by the Bedrock API.
+
+        We can't actually produce the full objects we need here with just the documents. We need the query and model config to construct the full object.
+        We're going to handle that in the rerank method, and break type override law. 👮
+        """
         # Transform the input documents into the format expected by the Bedrock API
         if isinstance(documents, list | tuple | set):
             docs = [
@@ -243,6 +315,7 @@ class BedrockRerankingProvider(RerankingProvider[bedrock_client]):
                     })
                 ]
                 if isinstance(documents, CodeChunk)
+                # this will never happen, but we do it to satisfy the type checker:
                 else [
                     DocumentSource.model_validate({
                         "text_document": {"text": str(documents)},
@@ -257,9 +330,11 @@ class BedrockRerankingProvider(RerankingProvider[bedrock_client]):
         self, response: BedrockRerankingResult, original_chunks: Sequence[CodeChunk]
     ) -> Sequence[RerankingResult]:
         """Transform the Bedrock API response into the format expected by the reranking provider."""
+        parsed_response = BedrockRerankingResult.model_validate_json(response)
         results: list[RerankingResult] = []
-        for item in response.results:
-            chunk = CodeChunk.model_validate_json(item.document.json_document)  # pyright: ignore[reportUnknownArgumentType]
+        for item in parsed_response.results:
+            # pyright doesn't know that this will always be CodeChunk-as-JSON because that's what we send.
+            chunk = CodeChunk.model_validate_json(item.document.json_document)  # pyright: ignore[reportUnknownArgumentType, reportArgumentType]
             results.append(
                 RerankingResult(
                     original_index=original_chunks.index(chunk),

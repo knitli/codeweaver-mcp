@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import LiteralString
+from typing import Any, LiteralString
 
 
 type EncoderName = LiteralString
@@ -20,23 +20,25 @@ class Tokenizer[Encoder](ABC):
     _encoder: Encoder
 
     @abstractmethod
-    def __init__(self, encoder: EncoderName) -> None:
+    def __init__(self, encoder: EncoderName, **kwargs: Any) -> None:
         """Initialize the tokenizer with a specific encoder."""
 
     @abstractmethod
-    def encode(self, text: str | bytes) -> Sequence[int]:
+    def encode(self, text: str | bytes, **kwargs: Any) -> Sequence[int]:
         """Encode text into a list of token IDs."""
 
     @abstractmethod
-    def encode_batch(self, texts: Sequence[str] | Sequence[bytes]) -> Sequence[Sequence[int]]:
+    def encode_batch(
+        self, texts: Sequence[str] | Sequence[bytes], **kwargs: Any
+    ) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
 
     @abstractmethod
-    def decode(self, tokens: Sequence[int]) -> str:
+    def decode(self, tokens: Sequence[int], **kwargs: Any) -> str:
         """Decode a list of token IDs back into text."""
 
     @abstractmethod
-    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]], **kwargs: Any) -> Sequence[str]:
         """Decode a batch of token ID lists back into text."""
 
     @staticmethod
@@ -55,10 +57,10 @@ class Tokenizer[Encoder](ABC):
             return value.decode("utf-8", errors="ignore")
         return value
 
-    def estimate(self, text: str | bytes) -> int:
+    def estimate(self, text: str | bytes, **kwargs: Any) -> int:
         """Estimate the number of tokens in the given text."""
-        return len(self.encode(text))
+        return len(self.encode(text, **kwargs))
 
-    def estimate_batch(self, texts: Sequence[str] | Sequence[bytes]) -> int:
+    def estimate_batch(self, texts: Sequence[str] | Sequence[bytes], **kwargs: Any) -> int:
         """Estimate the number of tokens in a batch of texts."""
-        return sum(len(batch) for batch in self.encode_batch(texts))
+        return sum(len(batch) for batch in self.encode_batch(texts, **kwargs))

@@ -39,28 +39,28 @@ class Tokenizers(Tokenizer[TokenizersTokenizer]):
 
     _encoder: TokenizersTokenizer
 
-    def __init__(self, encoder: str) -> None:
+    def __init__(self, encoder: str, **kwargs: dict[str, Any] | None) -> None:
         """Initialize tokenizers encoder."""
         # pyright can't handle the dynamic import of tokenizers, even with `TypeIs`, so we use a few ignores here
-        self._encoder = TokenizersTokenizer.from_pretrained(encoder)  # pyright: ignore[reportUnknownMemberType]
+        self._encoder = TokenizersTokenizer.from_pretrained(encoder, **(kwargs or {}))  # pyright: ignore[reportUnknownMemberType]
         if not _is_tokenizer(self._encoder):  # pyright: ignore[reportUnknownMemberType]
             raise TypeError(f"Expected a Tokenizers instance, got {type(self._encoder)}")  # pyright: ignore[reportUnknownArgumentType, reportUnknownMemberType]
 
-    def encode(self, text: str | bytes) -> list[int]:
+    def encode(self, text: str | bytes, **kwargs: Any) -> list[int]:
         """Encode text into a list of token IDs."""
-        return self._encoder.encode(self._to_string(text))  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return self._encoder.encode(self._to_string(text), **kwargs)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def encode_batch(self, texts: Sequence[str | bytes]) -> Sequence[Sequence[int]]:
+    def encode_batch(self, texts: Sequence[str | bytes], **kwargs: Any) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
-        return self._encoder.encode_batch(self._to_string(txt) for txt in texts)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return self._encoder.encode_batch((self._to_string(txt) for txt in texts), **kwargs)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def decode(self, tokens: Sequence[int]) -> str:
+    def decode(self, tokens: Sequence[int], **kwargs: Any) -> str:
         """Decode a list of token IDs back into text."""
-        return self._encoder.decode(tokens)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return self._encoder.decode(tokens, **kwargs)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
-    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]], **kwargs: Any) -> Sequence[str]:
         """Decode a batch of token ID lists back into texts."""
-        return self._encoder.decode_batch(token_lists)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
+        return self._encoder.decode_batch(token_lists, **kwargs)  # pyright: ignore[reportUnknownVariableType, reportUnknownMemberType]
 
     @staticmethod
     def encoders() -> Sequence[str]:

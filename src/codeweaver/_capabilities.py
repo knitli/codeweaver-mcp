@@ -7,8 +7,7 @@ from codeweaver._settings import Provider, ProviderKind
 
 # TODO: The vector provider capabilities aren't what they need to be.... it needs to be things like sparse vectors, quantization, etc.
 VECTOR_PROVIDER_CAPABILITIES: MappingProxyType[Provider, str] = MappingProxyType({
-    Provider.QDRANT: "placeholder",
-    Provider.FASTEMBED_VECTORSTORE: "placeholder",
+    Provider.QDRANT: "placeholder"
 })
 
 PROVIDER_CAPABILITIES: MappingProxyType[Provider, frozenset[ProviderKind]] = MappingProxyType({
@@ -33,12 +32,7 @@ PROVIDER_CAPABILITIES: MappingProxyType[Provider, frozenset[ProviderKind]] = Map
     Provider.X_AI: frozenset({ProviderKind.AGENT}),
     Provider.GROQ: frozenset({ProviderKind.AGENT}),
     Provider.HEROKU: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
-    Provider.HUGGINGFACE: frozenset({
-        ProviderKind.EMBEDDING,
-        ProviderKind.RERANKING,
-        ProviderKind.AGENT,
-    }),
-    Provider.FASTEMBED_VECTORSTORE: frozenset({ProviderKind.EMBEDDING}),
+    Provider.HUGGINGFACE: frozenset({ProviderKind.EMBEDDING, ProviderKind.AGENT}),
     Provider.MISTRAL: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
     Provider.MOONSHOT: frozenset({ProviderKind.AGENT}),
     Provider.OLLAMA: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
@@ -46,6 +40,7 @@ PROVIDER_CAPABILITIES: MappingProxyType[Provider, frozenset[ProviderKind]] = Map
     Provider.OPENROUTER: frozenset({ProviderKind.AGENT}),
     Provider.PERPLEXITY: frozenset({ProviderKind.AGENT}),
     Provider.QDRANT: frozenset({ProviderKind.VECTOR_STORE}),
+    Provider.SENTENCE_TRANSFORMERS: frozenset({ProviderKind.EMBEDDING, ProviderKind.RERANKING}),
     Provider.TAVILY: frozenset({ProviderKind.DATA}),
     Provider.TOGETHER: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),
     Provider.VERCEL: frozenset({ProviderKind.AGENT, ProviderKind.EMBEDDING}),

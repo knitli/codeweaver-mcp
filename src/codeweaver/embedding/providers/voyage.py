@@ -15,7 +15,7 @@ from typing import Any, ClassVar
 
 from codeweaver._data_structures import CodeChunk
 from codeweaver._settings import Provider
-from codeweaver.embedding.models.base import EmbeddingModelCapabilities
+from codeweaver.embedding.capabilities.base import EmbeddingModelCapabilities
 from codeweaver.embedding.providers import EmbeddingProvider
 from codeweaver.embedding.providers.base import (
     default_input_transformer,

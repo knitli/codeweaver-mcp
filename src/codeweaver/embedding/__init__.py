@@ -11,7 +11,7 @@
 # sourcery skip: avoid-global-variables
 from __future__ import annotations
 
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from codeweaver._settings import EmbeddingModelSettings, EmbeddingProviderSettings, Provider
 
@@ -84,7 +84,6 @@ type KnownEmbeddingModelName = Literal[
     "bedrock:amazon.titan-embed-text-v2:0",
     "bedrock:cohere.embed-english-v3.0",
     "bedrock:cohere.embed-multilingual-v3.0",
-    "bedrock:twelvelabs.marengo-embed-2-7-v1:0",
     "cohere:embed-english-v3.0",
     "cohere:embed-multilingual-light-v3.0",
     "cohere:embed-multilingual-v3.0",
@@ -92,19 +91,18 @@ type KnownEmbeddingModelName = Literal[
     "fastembed:BAAI/bge-base-en-v1.5",
     "fastembed:BAAI/bge-large-en-v1.5",
     "fastembed:BAAI/bge-small-en-v1.5",
-    "fastembed:mixedbread-ai/mxbai-embed-large-v1",
-    "fastembed:snowflake/snowflake-arctic-embed-xs",
-    "fastembed:snowflake/snowflake-arctic-embed-s",
-    "fastembed:snowflake/snowflake-arctic-embed-m",
-    "fastembed:snowflake/snowflake-arctic-embed-m-long",
-    "fastembed:snowflake/snowflake-arctic-embed-l",
-    "fastembed:sentence-transformers/all-MiniLM-L6-v2",
     "fastembed:jinaai/jina-embeddings-v2-base-code",
-    "fastembed:thenlper/gte-base",
-    "fastembed:thenlper/gte-large",
+    "fastembed:jinaai/jina-embeddings-v3",
     "fastembed:nomic-ai/nomic-embed-text-v1.5",
     "fastembed:nomic-ai/nomic-embed-text-v1.5-Q",
-    "fastembed:jinaai/jina-embeddings-v3",
+    "fastembed:sentence-transformers/all-MiniLM-L6-v2",
+    "fastembed:snowflake/snowflake-arctic-embed-l",
+    "fastembed:snowflake/snowflake-arctic-embed-m",
+    "fastembed:snowflake/snowflake-arctic-embed-m-long",
+    "fastembed:snowflake/snowflake-arctic-embed-s",
+    "fastembed:snowflake/snowflake-arctic-embed-xs",
+    "fastembed:thenlper/gte-base",
+    "fastembed:thenlper/gte-large",
     "fireworks:WhereIsAI/UAE-Large-V1",
     "fireworks:nomic-ai/nomic-embed-text-v1",
     "fireworks:nomic-ai/nomic-embed-text-v1.5",
@@ -124,9 +122,9 @@ type KnownEmbeddingModelName = Literal[
     "huggingface:Salesforce/SFR-Embedding-Code-400M_R",
     "huggingface:Salesforce/codet5p-110m-embedding",
     "huggingface:Snowflake/snowflake-arctic-embed-1-v2.0",
-    "huggingface:jinaai/jina-embeddings-v2-base-code",
     "huggingface:jinaai/jina-embeddings-v4",
-    "huggingface:mixedbread-ai/mxbai-embed-large-v1",
+    "huggingface:mixedbread-ai/mxbai-embed-base-v2",
+    "huggingface:mixedbread-ai/mxbai-embed-large-v2",
     "huggingface:nomic-ai/nomic-embed-code",
     "huggingface:nomic-ai/nomic-embed-text-v2-moe",
     "huggingface:nvidia/NV-EmbedCode-7b-v1",
@@ -137,6 +135,15 @@ type KnownEmbeddingModelName = Literal[
     "ollama:nomic-embed-text",
     "openai:text-embedding-3-large",
     "openai:text-embedding-3-small",
+    "sentence-transformers:Alibaba-NLP/gte-multilingual-base",
+    "sentence-transformers:Alibaba-NLP/gte-modernbert-base",
+    "sentence-transformers:BAAI/bge-m3",
+    "sentence-transformers:Qwen/Qwen3-Embedding-0.6B",
+    "sentence-transformers:Qwen/Qwen3-Embedding-4B",
+    "sentence-transformers:Qwen/Qwen3-Embedding-8B",
+    "sentence-transformers:all-MiniLM-L12-v2",
+    "sentence-transformers:all-MiniLM-L6-v2",
+    "sentence-transformers:jinaai/jina-embeddings-v4",
     "together:Alibaba-NLP/gte-modernbert-base",
     "together:BAAI/bge-base-en-v1.5",
     "together:BAAI/bge-large-en-v1.5",
@@ -148,4 +155,14 @@ type KnownEmbeddingModelName = Literal[
     "voyage:voyage-3.5-lite",
     "voyage:voyage-code-3",
     "voyage:voyage-context-3",
+]
+
+
+type KnownSparseEmbeddingModelName = Literal[
+    "fastembed:prithivida/Splade_PP_en_v2",
+    "fastembed:Qdrant/bm42-all-minilm-l6-v2-attentions",
+    "fastembed:Qdrant/bm25",
+    "sentence-transformers:prithivida/Splade_PP_en_v2",
+    "sentence-transformers:ibm-granite/granite-embedding-30m-sparse",
+    "sentence-transformers:opensearch-project/opensearch-neural-sparse-encoding-doc-v2-mini",
 ]

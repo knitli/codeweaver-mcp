@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict
 from codeweaver._data_structures import CodeChunk
 from codeweaver._server import get_statistics
 from codeweaver._settings import Provider
-from codeweaver.embedding.models.base import EmbeddingModelCapabilities
+from codeweaver.embedding.capabilities.base import EmbeddingModelCapabilities
 from codeweaver.tokenizers import Tokenizer, get_tokenizer
 
 

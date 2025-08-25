@@ -5,6 +5,7 @@
 """Tokenizer implementation using the Tiktoken library."""
 
 from collections.abc import Sequence
+from typing import Any
 
 import tiktoken
 
@@ -19,26 +20,28 @@ class TiktokenTokenizer(Tokenizer[tiktoken.Encoding]):
 
     _encoder: tiktoken.Encoding
 
-    def __init__(self, encoder: str) -> None:
+    def __init__(self, encoder: str, **kwargs: Any) -> None:
         """Initialize tiktoken encoder."""
-        self._encoder = tiktoken.get_encoding(encoder)
+        self._encoder = tiktoken.get_encoding(encoder, **kwargs)
         self.encoder_name = self._encoder.name
 
-    def encode(self, text: str | bytes) -> Sequence[int]:
+    def encode(self, text: str | bytes, **kwargs: Any) -> Sequence[int]:
         """Encode text into a list of token IDs."""
-        return self._encoder.encode(self._to_string(text))
+        return self._encoder.encode(self._to_string(text), **kwargs)
 
-    def encode_batch(self, texts: Sequence[str] | Sequence[bytes]) -> Sequence[Sequence[int]]:
+    def encode_batch(
+        self, texts: Sequence[str] | Sequence[bytes], **kwargs: Any
+    ) -> Sequence[Sequence[int]]:
         """Encode a batch of texts into a list of token ID lists."""
-        return self._encoder.encode_batch([self._to_string(text) for text in texts])
+        return self._encoder.encode_batch([self._to_string(text) for text in texts], **kwargs)
 
-    def decode(self, tokens: Sequence[int]) -> str:
+    def decode(self, tokens: Sequence[int], **kwargs: Any) -> str:
         """Decode a list of token IDs back into text."""
-        return self._encoder.decode(tokens)
+        return self._encoder.decode(tokens, **kwargs)
 
-    def decode_batch(self, token_lists: Sequence[Sequence[int]]) -> Sequence[str]:
+    def decode_batch(self, token_lists: Sequence[Sequence[int]], **kwargs: Any) -> Sequence[str]:
         """Decode a batch of token ID lists back into texts."""
-        return self._encoder.decode_batch(token_lists)
+        return self._encoder.decode_batch(token_lists, **kwargs)
 
     @staticmethod
     def encoders() -> Sequence[str]:

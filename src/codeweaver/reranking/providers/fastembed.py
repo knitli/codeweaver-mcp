@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Any, ClassVar
 
 from codeweaver._settings import Provider
-from codeweaver.reranking.models.base import RerankingModelCapabilities
+from codeweaver.reranking.capabilities.base import RerankingModelCapabilities
 from codeweaver.reranking.providers.base import RerankingProvider
 
 

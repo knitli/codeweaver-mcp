@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 """Base class for reranking providers."""
 
+import asyncio
 import logging
 
 from abc import ABC, abstractmethod
@@ -15,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, PositiveInt
 from codeweaver._data_structures import CodeChunk
 from codeweaver._server import get_statistics
 from codeweaver._settings import Provider
-from codeweaver.reranking.models.base import RerankingModelCapabilities
+from codeweaver.reranking.capabilities.base import RerankingModelCapabilities
 from codeweaver.tokenizers import Tokenizer, get_tokenizer
 
 
@@ -76,8 +77,8 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
 
     _client: RerankingClient
     _provider: Provider
-    _prompt: str | None
     _caps: RerankingModelCapabilities
+    _prompt: str | None = None
 
     _rerank_kwargs: dict[str, Any]
     _input_transformer: Callable[[StructuredDataSequence | StructuredDataInput], Sequence[str]] = (
@@ -144,11 +145,14 @@ class RerankingProvider[RerankingClient](BaseModel, ABC):
         reranked = await self._execute_rerank(
             query, transformed_docs, top_k=self.top_k, **processed_kwargs
         )
+        loop = asyncio.get_event_loop()
         processed_results = self._process_results(reranked, transformed_docs)
         if len(processed_results) > self.top_k:
             # results already sorted in descending order
             processed_results = processed_results[: self.top_k]
-        self._report_token_savings(processed_results, transformed_docs)
+        await loop.run_in_executor(
+            None, self._report_token_savings, processed_results, transformed_docs
+        )
         return processed_results
 
     @property

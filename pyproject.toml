@@ -145,7 +145,6 @@ docs = [
     "pygments>=2.19.1",
 ]
 dev = [
-    "fastembed-vectorstore>=0.2.0",
     "ruff>=0.12.4",
     "superclaude>=3.0.0.2",
     "uv>=0.8.2,<0.9.0",
@@ -155,8 +154,46 @@ dev = [
     "pdbpp>=0.11.7",
     "pyperclip>=1.9.0",
     "pydantic-ai>=0.6.2",
-    "fastembed-vectorstore>=0.2.0",
     "basedpyright>=1.31.3",
+    "types-boto3-custom",
+]
+all-dev = [
+    "basedpyright>=1.31.3",
+    "copychat>=0.7.2",
+    "dirty-equals>=0.9.0",
+    "hatchling>=1.14.1",
+    "httpx>=0.28.1",
+    "ipython>=9.4.0",
+    "jsonlines>=4.0.0",
+    "mkdocs-awesome-nav>=3.1.2",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.3.0",
+    "mkdocs-material>=9.6.15",
+    "mkdocs-minify-plugin>=0.8.0",
+    "mkdocs-redirects>=1.0.0",
+    "mkdocs-rss-plugin==1.17.3",
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]>=0.30.0",
+    "pdbpp>=0.11.7",
+    "pdbpp>=0.11.7",
+    "pydantic-ai>=0.6.2",
+    "pygments>=2.19.1",
+    "pymdown-extensions>=10.16.1",
+    "pyperclip>=1.9.0",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
+    "pytest-env>=1.1.5",
+    "pytest-flakefinder>=1.1.0",
+    "pytest-httpx>=0.35.0",
+    "pytest-mock>=3.14.1",
+    "pytest-report>=0.2.1",
+    "pytest-timeout>=2.4.0",
+    "pytest>=8.4.1",
+    "ruff>=0.12.4",
+    "superclaude>=3.0.0.2",
+    "types-boto3-custom",
+    "uv-dynamic-versioning>=0.7.0",
+    "uv>=0.8.2,<0.9.0",
 ]
 
 [project.optional-dependencies]
@@ -214,7 +251,6 @@ recommended-no-telemetry = [
 recommended-local-only = [
     "aenum>=3.1.16",
     "fastembed>=0.7.1",
-    "transformers>=4.55.2",
     "ast-grep-py>=0.39.1",
     "cyclopts>=3.22.5",
     "fastmcp>=2.10.6",
@@ -229,30 +265,11 @@ recommended-local-only = [
     "rich>=14.0.0",
     "rignore>=0.6.4",
     "tiktoken>=0.1.0",
+    "tokenizers>=0.21.4",
     "tomli-w>=1.2.0",
     "typing-extensions>=4.14.1",
     "uvicorn[standard]>=0.35.0",
     "watchfiles>=1.1.0",
-]
-
-# Absolute bare minimum to run CodeWeaver
-# This is the minimum set of dependencies required to run CodeWeaver without any additional features or providers. No CLI, no telemetry, no advanced features.
-# Uses `fastembed-vectorstore` for vector in-memory and json-based simple storage, and for local embedding generation.
-minimal = [
-    "aenum>=3.1.16",
-    "ast-grep-py>=0.39.1",
-    "fastmcp>=2.10.6",
-    "langchain-text-splitters>=0.3.9",
-    "mcp>=1.13.0",
-    "numpy>=2.3.0",
-    "pydantic-settings>=2.10.1",
-    "pydantic-ai-slim[openai]>=0.6.2", # really any pydantic-ai-slim, this just gives a lot of providers for one dependency
-    "pydantic-graph>=0.6.2",
-    "pydantic>=2.11.7",
-    "fastembed-vectorstore>=0.2.0",    # assuming you want something light weight here.. if not, you can pick and choose from below
-    "rignore>=0.6.4",
-    "typing-extensions>=4.14.1",
-    "uvicorn[standard]>=0.35.0",
 ]
 
 # =================  A-La-Carte =================
@@ -316,15 +333,15 @@ provider-cohere = ["pydantic-ai-slim[cohere]>=0.6.2"]
 
 #    --- Embedding and Rerank Only --- (no agent)
 provider-voyageai = ["voyageai>=0.3.4"]
-provider-fastembed = ["fastembed>=0.7.1", "transformers>=4.55.2"]
-provider-fastembed-gpu = ["fastembed-gpu>=0.7.1", "transformers>=4.55.2"]
+provider-fastembed = ["fastembed>=0.7.1"]
+provider-fastembed-gpu = ["fastembed-gpu>=0.7.1"]
 # Requires additional setup, see https://qdrant.github.io/fastembed/examples/FastEmbed_GPU/
 
 # ==== Vector Stores ====
-provider-in-memory = ["fastembed-vectorstore>=0.1.6", "transformers>=4.55.2"]
+provider-in-memory = ["fastembed-vectorstore>=0.1.6", "tokenizers>=0.13.2"]
 provider-in-memory-gpu = [
     "fastembed-vectorstore>=0.1.6",
-    "transformers>=4.55.2",
+    "tokenizers>=0.13.2",
     "fastembed-gpu>=0.7.1",
 ]
 provider-qdrant = ["qdrant-client>=1.15.0"]
@@ -357,6 +374,69 @@ auth-eunomia = ["eunomia-mcp>=0.3.9"]
 #     configure the AuthKit provider
 #     FASTMCP_SERVER_AUTH_AUTHKITPROVIDER_AUTHKIT_DOMAIN="https://your-project-12345.authkit.app"
 #     FASTMCP_SERVER_AUTH_AUTHKITPROVIDER_BASE_URL="http://localhost:8000"
+
+# All groups for users
+all = [
+    "aenum>=3.1.16",
+    "ast-grep-py>=0.39.1",
+    "eunomia-mcp>=0.3.9",
+    "cyclopts>=3.22.5",
+    "fastembed>=0.7.1",
+    "fastmcp>=2.10.6",
+    "httpx>=0.28.1",
+    "langchain-text-splitters>=0.3.9",
+    "mcp>=1.13.0",
+    "numpy>=2.3.0",
+    "posthog>=6.3.0",
+    "permit-fastmcp>=0.1.1",
+    "pydantic-ai>=0.6.2",
+    "pydantic-ai-slim[cohere,bedrock,huggingface,mistral,openai,google,groq,anthropic]>=0.6.2",
+    "pydantic-graph>=0.6.2",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "rignore>=0.6.4",
+    "sentence-transformers[onnx]>=5.1.0",
+    "tiktoken>=0.1.0",
+    "tokenizers>=0.13.2",
+    "tomli-w>=1.2.0",
+    "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
+    "voyageai>=0.3.4",
+    "watchfiles>=1.1.0",
+]
+
+all-gpu = [
+    "aenum>=3.1.16",
+    "ast-grep-py>=0.39.1",
+    "eunomia-mcp>=0.3.9",
+    "cyclopts>=3.22.5",
+    "fastembed-gpu>=0.7.1",
+    "fastmcp>=2.10.6",
+    "httpx>=0.28.1",
+    "langchain-text-splitters>=0.3.9",
+    "mcp>=1.13.0",
+    "numpy>=2.3.0",
+    "posthog>=6.3.0",
+    "permit-fastmcp>=0.1.1",
+    "pydantic-ai>=0.6.2",
+    "pydantic-ai-slim[cohere,bedrock,huggingface,mistral,openai,google,groq,anthropic]>=0.6.2",
+    "pydantic-graph>=0.6.2",
+    "pydantic-settings>=2.10.1",
+    "pydantic>=2.11.7",
+    "qdrant-client>=1.15.0",
+    "rich>=14.0.0",
+    "rignore>=0.6.4",
+    "sentence-transformers[onnx-gpu]>=5.1.0",
+    "tiktoken>=0.1.0",
+    "tokenizers>=0.13.2",
+    "tomli-w>=1.2.0",
+    "typing-extensions>=4.14.1",
+    "uvicorn[standard]>=0.35.0",
+    "voyageai>=0.3.4",
+    "watchfiles>=1.1.0",
+]
 
 [tool.uv-dynamic-versioning]
 vcs = "git"
@@ -469,7 +549,6 @@ autoImportCompletions = true
 deprecateTypingAliases = true
 pythonPlatform = "Linux"
 pythonVersion = "3.12"
-reportCallnDefaultInitializer = "information"
 reportImplicitStringConcatenation = "error"
 reportImportCycles = "warning"
 reportPrivateImportUsage = "none"
@@ -486,3 +565,6 @@ venvPath = ".venv"
 # we use standard for internal scripts and tooling,
 # the `strict` parameter above sets strict for the main codebase
 typeCheckingMode = "standard"
+
+[tool.uv.sources]
+types-boto3-custom = { path = "vendored/types_boto3_custom-1.40.16-py3-none-any.whl" }

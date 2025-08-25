@@ -29,7 +29,7 @@ uv = "latest"
 yamlfmt = "latest"
 
 [env]
-GH_REPO="knitli/codeweaver-mcp"
+GH_REPO = "knitli/codeweaver-mcp"
 
 [hooks]
 enter = """
@@ -68,7 +68,7 @@ hk init --mise &&
 echo "Setting up development environment..."
 uv venv --allow-existing .venv &&
 source .venv/bin/activate
-uv sync --all-groups &&
+uv sync --group all-dev --extra all &&
 # Determine if we're in CI
 if [ "$GITHUB_ACTIONS" == true ]; then
     export CI=true

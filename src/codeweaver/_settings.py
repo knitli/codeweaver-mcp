@@ -309,6 +309,22 @@ class RerankingModelSettings(TypedDict, total=False):
     client_kwargs: NotRequired[dict[str, Any] | None]
 
 
+class AWSProviderSettings(TypedDict, total=False):
+    """Settings for AWS provider.
+
+    You need to provide these settings if you are using Bedrock, and you need to provide them for each Bedrock model you use. It might be repetitive, but a lot of people have different credentials for different models/services.
+    """
+
+    region_name: Required[str]
+    model_arn: Required[str]
+    aws_access_key_id: NotRequired[str | None]
+    """Optional AWS access key ID. If not provided, we'll assume you have you have your AWS credentials configured in another way, such as environment variables, AWS config files, or IAM roles."""
+    aws_secret_access_key: NotRequired[SecretStr | None]
+    """Optional AWS secret access key. If not provided, we'll assume you have you have your AWS credentials configured in another way, such as environment variables, AWS config files, or IAM roles."""
+    aws_session_token: NotRequired[SecretStr | None]
+    """Optional AWS session token. If not provided, we'll assume you have you have your AWS credentials configured in another way, such as environment variables, AWS config files, or IAM roles."""
+
+
 class FastembedGPUProviderSettings(TypedDict, total=False):
     """Special settings for Fastembed-GPU provider.
 
@@ -580,6 +596,7 @@ class Provider(BaseEnum):
     GOOGLE = "google"
     X_AI = "x_ai"
     HUGGINGFACE = "huggingface"
+    SENTENCE_TRANSFORMERS = "sentence_transformers"
     MISTRAL = "mistral"
     OPENAI = "openai"
 
